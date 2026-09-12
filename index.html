@@ -388,7 +388,7 @@
     <div class="field"><input id="loginUsername" data-i18n-ph="usernamePh" placeholder="帳號"></div>
     <div class="field"><input id="loginPassword" type="password" data-i18n-ph="passwordPh" placeholder="密碼"></div>
     <button id="loginBtn" data-action="login" data-i18n="loginBtn">登入</button>
-    <div id="loginVersion">v1.7 正式版</div>
+    <div id="loginVersion">v1.7.1 正式版</div>
   </div>
 </div>
 
@@ -396,7 +396,7 @@
   <header>
     <div class="title" data-i18n="appTitleShort">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.7</span>
+      <span class="ver">v1.7.1</span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
         <div class="bb8-toggle__container">
@@ -484,7 +484,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const CURRENT_VERSION = 'v1.7';
+const CURRENT_VERSION = 'v1.7.1';
 const AI_KEY = 'ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API = 'https://note3-prev-api.askdiandian.com/v1/chat/completions';
 const AI_MODEL = 'dots3-note-prev';
@@ -507,7 +507,6 @@ async function checkVersion(){
   try {
     const snap = await get(ref(db, 'meta/version'));
     if (!snap.exists()) {
-      // 沒設定就不檢查
       versionChecking = false;
       return;
     }
@@ -544,7 +543,6 @@ function showVersionModal(serverVersion){
   document.body.appendChild(modal);
 
   document.getElementById('vmGoBtn').onclick = () => {
-    // 保存所有狀態到 sessionStorage，然後強制重抓 HTML
     savePageState();
     saveAllDrafts();
     const url = new URL(location.href);
@@ -552,13 +550,11 @@ function showVersionModal(serverVersion){
     location.replace(url.toString());
   };
   document.getElementById('vmExitBtn').onclick = () => {
-    // 嘗試關閉分頁；若失敗，就跳去 about:blank
     try { window.close(); } catch(e) {}
     setTimeout(() => { location.href = 'about:blank'; }, 200);
   };
 }
 
-/* 頁面狀態記錄（在哪個介面） */
 function savePageState(){
   let state = 'chat';
   if (pageRoot.children.length > 0) {
@@ -580,7 +576,6 @@ function savePageState(){
   sessionStorage.setItem('chat_page_state', state);
 }
 
-/* 把畫面上所有 input / textarea / select 的值存到 sessionStorage */
 function saveAllDrafts(){
   const drafts = {};
   document.querySelectorAll('input[type=text],input[type=password],textarea,select').forEach((el, i) => {
@@ -593,7 +588,6 @@ function saveAllDrafts(){
   try { sessionStorage.setItem('chat_drafts', JSON.stringify(drafts)); } catch(e) {}
 }
 
-/* 還原所有 input / textarea / select 的值 */
 function restoreAllDrafts(){
   let drafts = {};
   try { drafts = JSON.parse(sessionStorage.getItem('chat_drafts') || '{}'); } catch(e) {}
@@ -613,13 +607,11 @@ function restoreAllDrafts(){
   }, 300);
 }
 
-/* 判斷是否為第一次載入（用於還原頁面狀態） */
 function isReloadAfterVersion(){
   const url = new URL(location.href);
   return url.searchParams.has('_v');
 }
 
-/* 還原頁面狀態（在登入後呼叫） */
 async function restorePageState(){
   const state = sessionStorage.getItem('chat_page_state');
   if (!state) return;
@@ -631,31 +623,61 @@ async function restorePageState(){
   if (state === 'version') { openVersionPage(); return; }
   if (state === 'myNotices') { openMyNotices(); return; }
   if (state === 'noticeCreate') { openNoticeCreate(); return; }
-  // 其他頁面類別：暫不還原，回到聊天室
 }
 
-/* 從 Firebase 讀版本號 */
 async function initVersionCheck(){
   await checkVersion();
 }
 
-/* 全域點擊攔截：任何按鈕被點都檢查版本 */
 document.addEventListener('click', (e) => {
   const t = e.target;
   if (!t) return;
-  // 排除版本彈窗本身的按鈕
   if (t.closest('#versionModal')) return;
-  // 任何點擊都檢查（非阻塞）
   checkVersion();
-}, true); // 用 capture 確保先於其他 handler
+}, true);
 
-/* 頁面載入時也檢查 */
 window.addEventListener('load', () => {
   setTimeout(checkVersion, 500);
 });
 
 /* =========================================================
-   以下為原本 v1.6 的程式（不變）
+   v1.7.1 新增 / 修正
+   - 修正 AI setColor 改自己顏色後畫面不會立即更新
+   - 修正 AI 不知道 setTheme 指令
+   - 修正 AI 執行完操作後 me 沒重新讀取
+   ========================================================= */
+
+/* 重新讀取當前使用者資料，並更新 sessionStorage + 畫面 */
+async function reloadMe(){
+  if (!me) return null;
+  try {
+    const snap = await get(child(ref(db), 'users/' + me.username));
+    if (!snap.exists()) return null;
+    const data = snap.val();
+    me = {
+      username: data.username,
+      displayName: data.displayName || data.username,
+      seat: data.seat,
+      color: data.color || '#3b82f6',
+      role: data.role || 'member',
+      avatar: data.avatar || null,
+      banned: data.banned || null
+    };
+    sessionStorage.setItem('chat_me', JSON.stringify(me));
+    // 更新 UI 相關
+    if (me.role === 'superadmin' || me.role === 'admin') adminBtn.classList.remove('hidden');
+    else adminBtn.classList.add('hidden');
+    render();
+    renderClassStatus();
+    return me;
+  } catch (e) {
+    console.warn('reloadMe failed', e);
+    return null;
+  }
+}
+
+/* =========================================================
+   以下為原本的程式
    ========================================================= */
 
 const $ = id => document.getElementById(id);
@@ -671,9 +693,9 @@ const plusPanel = $('plusPanel'), plusBtn = $('plusBtn');
 const encToggle = $('encToggle'), encCheckbox = $('encCheckbox');
 
 const I18N = {
-  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',aiRole:'AI',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.7 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往',aiBio:'自我介紹（管理員可編輯）',aiLanguage:'AI 語言',aiLangZh:'書面繁體中文',aiLangYue:'允許廣東話口語',aiConfirmTitle:'AI 想執行以下操作：',aiAllow:'允許',aiDeny:'拒絕',aiThinking:'想法',aiNoPermission:'你沒有權限執行這個操作喔～',aiProcessing:'小喆AI 正在思考...',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出對話',pwdLabel:'密碼'},
-  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索...',msgPh:'输入...',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载中...',noNotice:'暂无公告',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'暂无消息',noMatch:'无匹配',bannedSevere:'已封禁',reason:'原因',noReason:'（无）',sendFail:'失败',bannedLight:'被限制',profileTitle:'我的主页',profileOther:'的主页',cantView:'别人的主页',editName:'改名称',saveName:'保存',editAvatar:'改头像',uploadAvatar:'上传',editPwd:'改密码',oldPwd:'当前',newPwd:'新密码',confirmPwd:'确认',savePwd:'修改',myLogs:'我的日志',myNotices:'公告申请',nameEmpty:'不能为空',nameTooLong:'最多 20',pwdTooShort:'至少 6',pwdMismatch:'不一致',pwdWrong:'密码错',pwdUpdated:'已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'日志',superAdmin:'超管',adminRole:'管理',memberRole:'成员',aiRole:'AI',noRequests:'暂无',noLogs:'暂无',noPending:'暂无',noApply:'暂无',deleteRequest:'删请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'封禁',banTypeLight:'普通',banTypeSevere:'严重',banLightSub:'可登录不能发言',banSevereSub:'无法登录',banSection:'封禁',banThis:'封禁',banSelect:'选 → 填 → 确定',banReasonPh:'原因',banReasonEmpty:'必填',banned:'已封禁',unban:'解封',grantAdmin:'授权',revokeAdmin:'撤销',viewLogs:'日志',online:'在线',msgDeleted:'（已删除）',requestDelete:'请求删',adminDelete:'管理员删',restore:'恢复',purge:'彻底删',deleteReasonPh:'原因：',reportReasonPh:'原因：',requestSent:'已发',reportSent:'已发',userDetail:'资料',noPermission:'无权限',changeName:'管理员改',deletedLog:'删消息',restoredLog:'恢复',purgedLog:'彻底删',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名',changedPwdLog:'改密',loggedIn:'登录',loggedOut:'退出',sentMsg:'发送',approvedReq:'批准',notifBanned:'已封禁',notifUnbanned:'已解',notifGranted:'已授',notifRevoked:'已撤',notifAvatarUpdated:'更新',notifActionFail:'失败',notifSaved:'已保存',notifCancel:'取消',notifSent:'已发',notifNoticePublished:'已发',notifNoticeSent:'已发',notifNoticeApproved:'批准',notifNoticeRejected:'拒绝',notifNoticeEdited:'编辑',notifNoticePinned:'置顶',notifNoticeUnpinned:'取消顶',notifNoticeLocked:'锁定',notifNoticeUnlocked:'解锁',notifNoticeDeleted:'删除',noticeTitle:'公告',noticeApplyTitle:'申请',noticePublishTitle:'发布',noticeContent:'内容',noticeContentPh:'内容',noticeImgs:'图片',noticeChooseImgs:'选择',noticeImgUrlPh:'URL',noticeWhen:'时间',noticeWhenNow:'立即',noticeWhen3d:'3天',noticeSubmit:'提交',noticeUseHtml:'HTML',noticeUseHtmlLabel:'使用 HTML',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消',noticeLock:'锁',noticeUnlock:'解锁',noticeDelete:'删',noticeOver5000:'超5000',noticeNeedContent:'必填',noticeRejectReasonPh:'原因',noticePinTag:'置顶',noticeLatest:'最新：',noticeNoOther:'无',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'被拒绝',about:'关于',author:'作者',thanks:'感谢',versions:'版本',thanksAdd:'新增',thanksNamePh:'名称',thanksSubmit:'提交',thanksEmpty:'空',thanksBy:'by',thanksNameEmpty:'必填',thanksAdded:'已加',authorName:'梁喆',currentVersion:'v1.7',latestBadge:'最新',encTag:'加密',encNext:'下一',encPrev:'上一',loadingTo:'前往',aiBio:'简介',aiLanguage:'语言',aiLangZh:'中文',aiLangYue:'粤语',aiConfirmTitle:'AI 想执行：',aiAllow:'允许',aiDeny:'拒绝',aiThinking:'想法',aiNoPermission:'无权限',aiProcessing:'思考中...',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出对话',pwdLabel:'密码'},
-  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Sign in',usernamePh:'Username',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search...',msgPh:'Type...',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading...',noNotice:'No announcements',wrongPwd:'Wrong',noUser:'Not found',emptyMsg:'No messages',noMatch:'No match',bannedSevere:'Banned',reason:'Reason',noReason:'(none)',sendFail:'Failed',bannedLight:'Muted',profileTitle:'Profile',profileOther:"'s",cantView:'View only',editName:'Name',saveName:'Save',editAvatar:'Avatar',uploadAvatar:'Upload',editPwd:'Password',oldPwd:'Current',newPwd:'New',confirmPwd:'Confirm',savePwd:'Change',myLogs:'Logs',myNotices:'Notices',nameEmpty:'Required',nameTooLong:'Max 20',pwdTooShort:'Min 6',pwdMismatch:'Mismatch',pwdWrong:'Wrong',pwdUpdated:'Updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'Logs',superAdmin:'Super',adminRole:'Admin',memberRole:'Member',aiRole:'AI',noRequests:'None',noLogs:'None',noPending:'None',noApply:'None',deleteRequest:'Del',report:'Report',approve:'OK',reject:'No',confirmBan:'Ban',banTypeLight:'Light',banTypeSevere:'Severe',banLightSub:'Sign in only',banSevereSub:'No sign in',banSection:'Ban',banThis:'Ban',banSelect:'Pick → Reason → OK',banReasonPh:'Reason',banReasonEmpty:'Required',banned:'Banned',unban:'Unban',grantAdmin:'Grant',revokeAdmin:'Revoke',viewLogs:'Logs',online:'Online',msgDeleted:'(deleted)',requestDelete:'Request',adminDelete:'Admin',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason:',reportReasonPh:'Reason:',requestSent:'Sent',reportSent:'Sent',userDetail:' info',noPermission:'No perm',changeName:'Admin',deletedLog:'Deleted',restoredLog:'Restored',purgedLog:'Purged',bannedLog:'Banned',unbannedLog:'Unban',grantedLog:'Grant',revokedLog:'Revoke',changedNameLog:'Renamed',changedPwdLog:'Pwd',loggedIn:'In',loggedOut:'Out',sentMsg:'Sent',approvedReq:'OK',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted',notifRevoked:'Revoked',notifAvatarUpdated:'Updated',notifActionFail:'Fail',notifSaved:'Saved',notifCancel:'Cancel',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Sent',notifNoticeApproved:'OK',notifNoticeRejected:'No',notifNoticeEdited:'Edit',notifNoticePinned:'Pin',notifNoticeUnpinned:'Unpin',notifNoticeLocked:'Lock',notifNoticeUnlocked:'Unlock',notifNoticeDeleted:'Del',noticeTitle:'Notice',noticeApplyTitle:'Apply',noticePublishTitle:'Publish',noticeContent:'Content',noticeContentPh:'Content',noticeImgs:'Images',noticeChooseImgs:'Choose',noticeImgUrlPh:'URL',noticeWhen:'Time',noticeWhenNow:'Now',noticeWhen3d:'3 days',noticeSubmit:'Submit',noticeUseHtml:'HTML',noticeUseHtmlLabel:'Use HTML',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000',noticeNeedContent:'Required',noticeRejectReasonPh:'Reason:',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'None',noticeApplyBy:'By: ',noticeEditedBy:'Originally: ',noticeAdminEdited:' · edited',noticeRejected:'Rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Versions',thanksAdd:'Add',thanksNamePh:'Name',thanksSubmit:'Submit',thanksEmpty:'Empty',thanksBy:'by',thanksNameEmpty:'Required',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'v1.7',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',loadingTo:'Going to',aiBio:'Bio',aiLanguage:'Language',aiLangZh:'Chinese',aiLangYue:'Cantonese',aiConfirmTitle:'AI wants to:',aiAllow:'Allow',aiDeny:'Deny',aiThinking:'Thought',aiNoPermission:'No permission',aiProcessing:'Thinking...',aiThinkingNow:'XiaoZhe AI is thinking',aiExited:'XiaoZhe AI has exited the conversation',pwdLabel:'Password'}
+  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',aiRole:'AI',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.7.1 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往',aiBio:'自我介紹（管理員可編輯）',aiLanguage:'AI 語言',aiLangZh:'書面繁體中文',aiLangYue:'允許廣東話口語',aiConfirmTitle:'AI 想執行以下操作：',aiAllow:'允許',aiDeny:'拒絕',aiThinking:'想法',aiNoPermission:'你沒有權限執行這個操作喔～',aiProcessing:'小喆AI 正在思考...',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出對話',pwdLabel:'密碼'},
+  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索...',msgPh:'输入...',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载中...',noNotice:'暂无公告',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'暂无消息',noMatch:'无匹配',bannedSevere:'已封禁',reason:'原因',noReason:'（无）',sendFail:'失败',bannedLight:'被限制',profileTitle:'我的主页',profileOther:'的主页',cantView:'别人的主页',editName:'改名称',saveName:'保存',editAvatar:'改头像',uploadAvatar:'上传',editPwd:'改密码',oldPwd:'当前',newPwd:'新密码',confirmPwd:'确认',savePwd:'修改',myLogs:'我的日志',myNotices:'公告申请',nameEmpty:'不能为空',nameTooLong:'最多 20',pwdTooShort:'至少 6',pwdMismatch:'不一致',pwdWrong:'密码错',pwdUpdated:'已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'日志',superAdmin:'超管',adminRole:'管理',memberRole:'成员',aiRole:'AI',noRequests:'暂无',noLogs:'暂无',noPending:'暂无',noApply:'暂无',deleteRequest:'删请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'封禁',banTypeLight:'普通',banTypeSevere:'严重',banLightSub:'可登录不能发言',banSevereSub:'无法登录',banSection:'封禁',banThis:'封禁',banSelect:'选 → 填 → 确定',banReasonPh:'原因',banReasonEmpty:'必填',banned:'已封禁',unban:'解封',grantAdmin:'授权',revokeAdmin:'撤销',viewLogs:'日志',online:'在线',msgDeleted:'（已删除）',requestDelete:'请求删',adminDelete:'管理员删',restore:'恢复',purge:'彻底删',deleteReasonPh:'原因：',reportReasonPh:'原因：',requestSent:'已发',reportSent:'已发',userDetail:'资料',noPermission:'无权限',changeName:'管理员改',deletedLog:'删消息',restoredLog:'恢复',purgedLog:'彻底删',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名',changedPwdLog:'改密',loggedIn:'登录',loggedOut:'退出',sentMsg:'发送',approvedReq:'批准',notifBanned:'已封禁',notifUnbanned:'已解',notifGranted:'已授',notifRevoked:'已撤',notifAvatarUpdated:'更新',notifActionFail:'失败',notifSaved:'已保存',notifCancel:'取消',notifSent:'已发',notifNoticePublished:'已发',notifNoticeSent:'已发',notifNoticeApproved:'批准',notifNoticeRejected:'拒绝',notifNoticeEdited:'编辑',notifNoticePinned:'置顶',notifNoticeUnpinned:'取消顶',notifNoticeLocked:'锁定',notifNoticeUnlocked:'解锁',notifNoticeDeleted:'删除',noticeTitle:'公告',noticeApplyTitle:'申请',noticePublishTitle:'发布',noticeContent:'内容',noticeContentPh:'内容',noticeImgs:'图片',noticeChooseImgs:'选择',noticeImgUrlPh:'URL',noticeWhen:'时间',noticeWhenNow:'立即',noticeWhen3d:'3天',noticeSubmit:'提交',noticeUseHtml:'HTML',noticeUseHtmlLabel:'使用 HTML',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消',noticeLock:'锁',noticeUnlock:'解锁',noticeDelete:'删',noticeOver5000:'超5000',noticeNeedContent:'必填',noticeRejectReasonPh:'原因',noticePinTag:'置顶',noticeLatest:'最新：',noticeNoOther:'无',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'被拒绝',about:'关于',author:'作者',thanks:'感谢',versions:'版本',thanksAdd:'新增',thanksNamePh:'名称',thanksSubmit:'提交',thanksEmpty:'空',thanksBy:'by',thanksNameEmpty:'必填',thanksAdded:'已加',authorName:'梁喆',currentVersion:'v1.7.1',latestBadge:'最新',encTag:'加密',encNext:'下一',encPrev:'上一',loadingTo:'前往',aiBio:'简介',aiLanguage:'语言',aiLangZh:'中文',aiLangYue:'粤语',aiConfirmTitle:'AI 想执行：',aiAllow:'允许',aiDeny:'拒绝',aiThinking:'想法',aiNoPermission:'无权限',aiProcessing:'思考中...',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出对话',pwdLabel:'密码'},
+  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Sign in',usernamePh:'Username',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search...',msgPh:'Type...',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading...',noNotice:'No announcements',wrongPwd:'Wrong',noUser:'Not found',emptyMsg:'No messages',noMatch:'No match',bannedSevere:'Banned',reason:'Reason',noReason:'(none)',sendFail:'Failed',bannedLight:'Muted',profileTitle:'Profile',profileOther:"'s",cantView:'View only',editName:'Name',saveName:'Save',editAvatar:'Avatar',uploadAvatar:'Upload',editPwd:'Password',oldPwd:'Current',newPwd:'New',confirmPwd:'Confirm',savePwd:'Change',myLogs:'Logs',myNotices:'Notices',nameEmpty:'Required',nameTooLong:'Max 20',pwdTooShort:'Min 6',pwdMismatch:'Mismatch',pwdWrong:'Wrong',pwdUpdated:'Updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'Logs',superAdmin:'Super',adminRole:'Admin',memberRole:'Member',aiRole:'AI',noRequests:'None',noLogs:'None',noPending:'None',noApply:'None',deleteRequest:'Del',report:'Report',approve:'OK',reject:'No',confirmBan:'Ban',banTypeLight:'Light',banTypeSevere:'Severe',banLightSub:'Sign in only',banSevereSub:'No sign in',banSection:'Ban',banThis:'Ban',banSelect:'Pick → Reason → OK',banReasonPh:'Reason',banReasonEmpty:'Required',banned:'Banned',unban:'Unban',grantAdmin:'Grant',revokeAdmin:'Revoke',viewLogs:'Logs',online:'Online',msgDeleted:'(deleted)',requestDelete:'Request',adminDelete:'Admin',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason:',reportReasonPh:'Reason:',requestSent:'Sent',reportSent:'Sent',userDetail:' info',noPermission:'No perm',changeName:'Admin',deletedLog:'Deleted',restoredLog:'Restored',purgedLog:'Purged',bannedLog:'Banned',unbannedLog:'Unban',grantedLog:'Grant',revokedLog:'Revoke',changedNameLog:'Renamed',changedPwdLog:'Pwd',loggedIn:'In',loggedOut:'Out',sentMsg:'Sent',approvedReq:'OK',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted',notifRevoked:'Revoked',notifAvatarUpdated:'Updated',notifActionFail:'Fail',notifSaved:'Saved',notifCancel:'Cancel',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Sent',notifNoticeApproved:'OK',notifNoticeRejected:'No',notifNoticeEdited:'Edit',notifNoticePinned:'Pin',notifNoticeUnpinned:'Unpin',notifNoticeLocked:'Lock',notifNoticeUnlocked:'Unlock',notifNoticeDeleted:'Del',noticeTitle:'Notice',noticeApplyTitle:'Apply',noticePublishTitle:'Publish',noticeContent:'Content',noticeContentPh:'Content',noticeImgs:'Images',noticeChooseImgs:'Choose',noticeImgUrlPh:'URL',noticeWhen:'Time',noticeWhenNow:'Now',noticeWhen3d:'3 days',noticeSubmit:'Submit',noticeUseHtml:'HTML',noticeUseHtmlLabel:'Use HTML',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000',noticeNeedContent:'Required',noticeRejectReasonPh:'Reason:',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'None',noticeApplyBy:'By: ',noticeEditedBy:'Originally: ',noticeAdminEdited:' · edited',noticeRejected:'Rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Versions',thanksAdd:'Add',thanksNamePh:'Name',thanksSubmit:'Submit',thanksEmpty:'Empty',thanksBy:'by',thanksNameEmpty:'Required',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'v1.7.1',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',loadingTo:'Going to',aiBio:'Bio',aiLanguage:'Language',aiLangZh:'Chinese',aiLangYue:'Cantonese',aiConfirmTitle:'AI wants to:',aiAllow:'Allow',aiDeny:'Deny',aiThinking:'Thought',aiNoPermission:'No permission',aiProcessing:'Thinking...',aiThinkingNow:'XiaoZhe AI is thinking',aiExited:'XiaoZhe AI has exited the conversation',pwdLabel:'Password'}
 };
 let lang = localStorage.getItem('chat_lang') || 'zh-Hant';
 function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N['zh-Hant'][k] || k; }
@@ -705,6 +727,7 @@ async function ensureAIUser(){
 }
 
 const VERSION_HISTORY = [
+  { ver:'v1.7.1', date:'2026-09-12', changes:['AI 新增 setTheme 指令（切換主題）','AI 改自己顏色立即生效','AI 執行完操作後自動重讀 me','提示詞更新：明確 setTheme 用法與示範'] },
   { ver:'v1.7', date:'2026-09-12', changes:['版本檢查機制','任何按鈕都檢查','版本不符彈窗無法取消','帶 session + 暫存 + 頁面狀態跳轉','全站漸層過渡'] },
   { ver:'v1.6', date:'2026-09-12', changes:['BB8 完整動畫','AI 提示詞加時間','AI 看得到所有管理員資料','AI 操作所有管理員功能','用戶詳情顯示密碼','加密訊息全員遮罩'] },
   { ver:'v1.5', date:'2026-09-12', changes:['AI 對話模式','思考中訊息即時替換','退出對話置中訊息','小紅書 Dots API'] },
@@ -747,7 +770,6 @@ document.addEventListener('click', async (e) => {
   if (!target) return;
   const action = target.dataset.action;
   const arg = target.dataset.arg, arg2 = target.dataset.arg2;
-  // 點按鈕前先保存草稿
   try { saveAllDrafts(); } catch(err) {}
   try {
     const map = {
@@ -809,12 +831,10 @@ async function handleLogin(){
     await setPresence();
     await ensureAIUser();
     enterChat();
-    // 還原頁面狀態和草稿
     if (isReloadAfterVersion()) {
       setTimeout(async () => {
         await restorePageState();
         restoreAllDrafts();
-        // 清掉 URL 的 _v
         const url = new URL(location.href);
         url.searchParams.delete('_v');
         history.replaceState(null, '', url.toString());
@@ -1067,7 +1087,11 @@ ${verList}
 [ACTION]{"cmd":"指令類型","target":"對象","value":"值","reason":"原因"}[/ACTION]
 
 指令類型（cmd）：
-- setColor：改顏色。target=username，value=#rrggbb
+- setTheme：切換整個網站主題（暗色 / 亮色）。value=dark 或 light。不需要 target。當用戶說「切換黑暗模式」「切換主題」「換成亮色」「變黑」「變白」時，一律用 setTheme，不要用 setColor。
+  範例：用戶說「小喆，幫我切換到暗色模式」 → [ACTION]{"cmd":"setTheme","value":"dark"}[/ACTION]
+  範例：用戶說「小喆，換成亮色」 → [ACTION]{"cmd":"setTheme","value":"light"}[/ACTION]
+- setColor：改「某個人」的顏色（例如頭像、訊息泡泡顏色）。target=username，value=#rrggbb。
+  ★ 注意：改自己的顏色用 setColor target=自己；改整個網站主題用 setTheme。
 - setName：改顯示名稱。target=username，value=新名稱
 - setAvatar：改頭像。target=username，value=emoji 或空字串（清空）
 - setPassword：改密碼。target=username，value=新密碼
@@ -1263,6 +1287,14 @@ async function aiAllow(){
       await sendAIMessage('失敗：' + result.error + '\n指令：' + cmdStr + '\n抱歉，我沒辦法完成這個操作。', '', false, false, 'ai-fail');
       await writeLog('ai', 'AI 操作失敗：' + JSON.stringify(cmd) + ' | ' + result.error);
     }
+    // v1.7.1：執行完操作後，重新讀取 me 並更新畫面
+    await reloadMe();
+    // 若目前在用戶詳情頁，順便重繪
+    const fp = pageRoot.querySelector('.fullPage .fp-title');
+    if (fp && (fp.textContent.includes(t('userDetail')) || fp.textContent.includes('資料') || fp.textContent.includes(' info'))) {
+      // 嘗試找出目前檢視的 username，若在 URL 無法得知，就重繪全部用戶列表較安全
+      // 這裡不強制重繪，避免蓋掉其他頁面
+    }
   } catch (e) { await sendAIMessage('失敗：' + e.message, '', false, false, 'ai-fail'); }
 }
 async function aiDeny(){
@@ -1281,7 +1313,25 @@ function formatCmd(cmd){
 async function executeAIAction(cmd){
   try {
     switch (cmd.cmd) {
-      case 'setColor': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { color: cmd.value }); return { ok:true, desc: `修改 ${cmd.target} 顏色為 ${cmd.value}` }; }
+      case 'setTheme': {
+        const v = String(cmd.value || '').toLowerCase();
+        if (v !== 'dark' && v !== 'light') return { ok:false, error: 'value 必須是 dark 或 light' };
+        setTheme(v);
+        return { ok:true, desc: `切換網站主題為 ${v === 'dark' ? '暗色' : '亮色'}` };
+      }
+      case 'setColor': {
+        const s = await get(child(ref(db),'users/' + cmd.target));
+        if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' };
+        await update(ref(db,'users/' + cmd.target), { color: cmd.value });
+        // v1.7.1：若 target 是自己，立即更新 me.color + sessionStorage + 重繪
+        if (me && cmd.target === me.username) {
+          me.color = cmd.value;
+          sessionStorage.setItem('chat_me', JSON.stringify(me));
+          render();
+          renderClassStatus();
+        }
+        return { ok:true, desc: `修改 ${cmd.target} 顏色為 ${cmd.value}` };
+      }
       case 'setName': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { displayName: cmd.value }); return { ok:true, desc: `修改 ${cmd.target} 名稱為 ${cmd.value}` }; }
       case 'setAvatar': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { avatar: cmd.value || null }); return { ok:true, desc: `修改 ${cmd.target} 頭像為 ${cmd.value||'（清空）'}` }; }
       case 'setPassword': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { password: cmd.value }); return { ok:true, desc: `修改 ${cmd.target} 密碼` }; }
@@ -1701,7 +1751,6 @@ function showNotif(text){ const el = document.createElement('div'); el.id = 'not
 applyTheme(); applyLang(); applyI18n();
 
 (async function boot(){
-  // 初始化版本檢查（讀 meta/version，沒有就跳過）
   await initVersionCheck();
 
   const saved = sessionStorage.getItem('chat_me');
@@ -1716,7 +1765,6 @@ applyTheme(); applyLang(); applyI18n();
     await setPresence();
     await ensureAIUser();
     enterChat();
-    // 還原頁面狀態與草稿
     if (isReloadAfterVersion()) {
       setTimeout(async () => {
         await restorePageState();
