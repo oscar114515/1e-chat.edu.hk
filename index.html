@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>班級聊天室</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb}
+  body.theme-light{--bg-app:#f0f2f5;--bg-header:linear-gradient(90deg,#ffffff,#f8fafc);--bg-card:#ffffff;--bg-input:#f0f2f5;--text-main:#1c1e21;--text-sub:#65676b;--text-muted:#8a8d91;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15)}
+  body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;background:var(--bg-app);color:var(--text-main);overflow:hidden;height:100vh;height:100dvh;transition:background .3s,color .3s}
+  .hidden{display:none!important}
+  #loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg-app);padding:20px;overflow-y:auto;height:100vh;height:100dvh}
+  #loginCard{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fadeUp .5s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  #loginCard h1{font-size:22px;text-align:center;margin-bottom:6px}
+  #loginCard .sub{font-size:13px;text-align:center;color:var(--text-sub);margin-bottom:20px}
+  .top-controls{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
+  .lang-select{padding:6px 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+  .field{margin-bottom:14px}
+  .field input{width:100%;padding:13px 15px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:15px;outline:none;font-family:inherit}
+  .field input:focus{border-color:var(--primary)}
+  #loginBtn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+  #loginBtn:disabled{opacity:.6}
+  #loginError{color:#f87171;font-size:13px;text-align:center;min-height:18px;margin-bottom:8px;white-space:pre-wrap}
+  #loginVersion{text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px}
+  #chatScreen{display:flex;flex-direction:column;height:100vh;height:100dvh}
+  header{background:var(--bg-header);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border);flex-shrink:0;min-height:52px}
+  header .title{font-size:15px;font-weight:600;white-space:nowrap;flex-shrink:0}
+  header .right{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-sub);flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+  .ver{background:rgba(56,189,248,.15);color:#38bdf8;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:600}
+  .hbtn{background:rgba(148,163,184,.15);color:var(--text-main);border:none;padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;position:relative}
+  .hbtn:hover{background:rgba(148,163,184,.3)}
+  .hbtn.admin{background:rgba(139,92,246,.25);color:#a78bfa}
+  .hbtn .dot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:8px;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
+  @media(max-width:520px){header{padding:8px 10px;min-height:auto;flex-direction:column;align-items:stretch;gap:6px}header .title{font-size:14px}header .right{width:100%;justify-content:space-between}.hbtn{font-size:11.5px;padding:5px 9px;flex:1;text-align:center}.ver{font-size:10px}}
+  #noticeBar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(251,191,36,.12);border-bottom:1px solid rgba(251,191,36,.25);flex-shrink:0;font-size:13px;cursor:pointer;position:relative}
+  body.theme-light #noticeBar{background:rgba(251,191,36,.15)}
+  #noticeBar:hover{background:rgba(251,191,36,.2)}
+  #noticeBar .notice-icon{color:#fbbf24;font-size:16px;flex-shrink:0;font-weight:700}
+  #noticeBar .notice-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #noticeBar .notice-text .label{color:#fbbf24;font-weight:600;margin-right:6px}
+  #noticeBar .notice-add{background:#fbbf24;color:#1c1917;border:none;width:32px;height:32px;border-radius:8px;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  #noticeBar .notice-add:hover{transform:scale(1.05);background:#fcd34d}
+  #noticeBar .notice-pin-count{background:rgba(251,191,36,.3);color:#fbbf24;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;flex-shrink:0}
+  #classStatus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 12px;background:rgba(30,41,59,.5);border-bottom:1px solid var(--border);font-size:11.5px;color:var(--text-sub);flex-shrink:0}
+  body.theme-light #classStatus{background:rgba(255,255,255,.7)}
+  #classStatus .online{color:#4ade80;font-weight:600}
+  #classStatus .ban-item{background:rgba(220,38,38,.15);color:#fca5a5;padding:2px 8px;border-radius:6px;font-size:11px}
+  #classStatus .ban-item.light{background:rgba(234,88,12,.15);color:#fdba74}
+  #searchBar{display:flex;gap:8px;padding:8px 12px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0;align-items:center}
+  #searchInput{flex:1;padding:8px 12px;border-radius:18px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:inherit}
+  #searchCount{font-size:11.5px;color:var(--text-sub)}
+  #chatBox{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg-app);-webkit-overflow-scrolling:touch}
+  #chatBox::-webkit-scrollbar{width:6px}
+  #chatBox::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:3px}
+  .msg{max-width:75%;display:flex;gap:10px;align-items:flex-start;animation:msgIn .25s ease;position:relative}
+  @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .msg.me{align-self:flex-end;flex-direction:row-reverse}
+  .avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;user-select:none;overflow:hidden;cursor:pointer;transition:.15s}
+  .avatar:hover{transform:scale(1.08)}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .bubble-wrap{display:flex;flex-direction:column;gap:3px;position:relative;min-width:0}
+  .msg.me .bubble-wrap{align-items:flex-end}
+  .meta{font-size:11px;color:var(--text-muted);padding:0 4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .meta .msgid{color:var(--text-muted);font-size:10px;font-family:monospace}
+  .bubble{padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;color:#fff;max-width:100%}
+  .msg.me .bubble{border-bottom-right-radius:4px}
+  .msg:not(.me) .bubble{border-bottom-left-radius:4px}
+  .bubble .mention{background:rgba(255,255,255,.25);padding:1px 5px;border-radius:4px;font-weight:600}
+  .bubble img.msg-img{max-width:220px;max-height:220px;border-radius:8px;display:block;cursor:pointer;margin-top:4px}
+  .bubble .file-msg{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer}
+  .bubble .file-msg .fi{font-size:20px;font-weight:700}
+  .bubble .file-msg .fn{font-size:13px;word-break:break-all;flex:1}
+  .bubble .file-msg .fs{font-size:11px;opacity:.8}
+  .bubble .voice-msg{display:flex;align-items:center;gap:10px;padding:4px 0;cursor:pointer;min-width:120px}
+  .bubble .voice-msg .vi{font-size:16px;font-weight:700}
+  .bubble .voice-msg .vt{font-size:13px}
+  .bubble .voice-msg .vp{flex:1;height:4px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden}
+  .bubble .voice-msg .vp>div{height:100%;width:0;background:#fff;transition:width .1s}
+  .bubble .voice-msg .vd{width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0}
+  .bubble .voice-msg.played .vd{display:none}
+  .bubble .loc-msg{cursor:pointer;max-width:240px}
+  .bubble .loc-msg .lm-map{width:220px;height:150px;border-radius:8px;overflow:hidden;background:#222;margin-bottom:6px}
+  .bubble .loc-msg .lm-map img{width:100%;height:100%;object-fit:cover}
+  .bubble .loc-msg .lm-label{font-size:12px;display:flex;align-items:center;gap:4px}
+  .msg-tools{display:flex;gap:4px;margin-top:2px;opacity:0;transition:.15s;flex-wrap:wrap}
+  .msg:hover .msg-tools{opacity:1}
+  .msg-tools button{background:rgba(148,163,184,.15);color:var(--text-sub);border:none;padding:2px 7px;border-radius:6px;font-size:10.5px;cursor:pointer;font-family:inherit}
+  .msg-tools button:hover{background:rgba(148,163,184,.3);color:var(--text-main)}
+  .msg-tools button.danger:hover{background:rgba(220,38,38,.3);color:#fca5a5}
+  #inputBar{padding:10px 12px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));position:relative}
+  #micBtn{width:42px;height:42px;border-radius:50%;border:none;background:rgba(148,163,184,.15);color:var(--text-main);font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  #micBtn.recording{background:#dc2626;color:#fff;animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  #msgInput{flex:1;padding:11px 14px;border-radius:22px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit;min-width:0}
+  #plusBtn{width:42px;height:42px;border-radius:50%;border:none;background:rgba(148,163,184,.15);color:var(--text-main);font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  #plusBtn:hover{background:rgba(148,163,184,.3);transform:rotate(90deg)}
+  #sendBtn{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  #plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50}
+  #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:12px}
+  #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
+  #plusPanel .pi .pic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8}
+  #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
+  #recordingOverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+  #recordingOverlay .rec-timer{font-size:42px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+  #recordingOverlay .rec-hint{font-size:14px;color:#cbd5e1}
+  #recordingOverlay .rec-cancel{color:#f87171;font-size:16px;font-weight:600;display:none}
+  #mentionPopup{position:absolute;bottom:100%;left:12px;right:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);margin-bottom:6px}
+  #mentionPopup .mention-item{padding:10px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px}
+  #mentionPopup .mention-item:hover{background:rgba(56,189,248,.15)}
+  #mentionPopup .mention-item .mi-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden}
+  #mentionPopup .mention-item .mi-av img{width:100%;height:100%;object-fit:cover}
+  .empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px}
+  .fullPage{position:fixed;inset:0;background:var(--bg-app);z-index:100;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;animation:pageIn .25s ease}
+  @keyframes pageIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  .fullPage .fp-header{padding:12px 16px;display:flex;align-items:center;gap:12px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0}
+  .fullPage .fp-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+  .fullPage .fp-title{font-size:17px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fullPage .fp-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .fullPage .fp-body::-webkit-scrollbar{width:6px}
+  .fullPage .fp-body::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:3px}
+  .profile-hero{padding:32px 20px 24px;text-align:center;position:relative}
+  .profile-hero .hero-avatar{width:96px;height:96px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:#fff;overflow:hidden;border:4px solid rgba(255,255,255,.25)}
+  .profile-hero .hero-avatar img{width:100%;height:100%;object-fit:cover}
+  .profile-hero .hero-name{font-size:24px;font-weight:700;margin-bottom:4px}
+  .profile-hero .hero-sub{font-size:14px;opacity:.9}
+  .profile-hero .hero-badge{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)}
+  .profile-content{padding:20px 20px 40px}
+  .section-title{font-size:13px;color:var(--text-sub);margin:18px 0 10px;font-weight:600}
+  .form-row{margin-bottom:14px}
+  .form-row input[type=text],.form-row input[type=password],.form-row textarea,.form-row select{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit}
+  .form-row textarea{resize:vertical;min-height:120px;line-height:1.5}
+  .form-row input:focus,.form-row textarea:focus{border-color:var(--primary)}
+  .char-count{text-align:right;font-size:11px;color:#4ade80;margin-top:4px}
+  .char-count.over{color:#f87171}
+  .btn-primary,.btn-danger,.btn-warn,.btn-ok,.btn-ghost{width:100%;padding:12px;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
+  .btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+  .btn-danger{background:linear-gradient(135deg,#dc2626,#b91c1c)}
+  .btn-warn{background:linear-gradient(135deg,#ea580c,#c2410c)}
+  .btn-ok{background:linear-gradient(135deg,#16a34a,#15803d)}
+  .btn-ghost{background:rgba(148,163,184,.15);color:var(--text-main)}
+  .btn-ghost:hover{background:rgba(148,163,184,.25)}
+  .btn-primary:disabled{opacity:.5}
+  .avatar-options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .av-opt{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:2px solid transparent;background:var(--bg-input)}
+  .av-opt:hover{border-color:var(--primary)}
+  .err{color:#f87171;font-size:12px;margin-top:6px;min-height:14px}
+  .ok-msg{color:#4ade80;font-size:12px;margin-top:6px;min-height:14px}
+  input[type=file]{display:none}
+  .upload-btn{display:inline-block;padding:10px 16px;border-radius:10px;background:rgba(148,163,184,.2);color:var(--text-main);font-size:13px;cursor:pointer;font-family:inherit;border:1px dashed var(--border-strong);text-align:center;width:100%}
+  .tabs{display:flex;padding:0 16px;border-bottom:1px solid var(--border);background:var(--bg-card);overflow-x:auto;flex-shrink:0}
+  .tab{padding:12px 16px;text-align:center;font-size:13px;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;background:none;border-left:none;border-right:none;border-top:none;white-space:nowrap}
+  .tab.active{color:#a78bfa;border-bottom-color:#8b5cf6;font-weight:600}
+  .admin-body{padding:16px 18px 40px}
+  .user-list{display:flex;flex-direction:column;gap:8px}
+  .user-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);cursor:pointer}
+  .user-card:hover{border-color:rgba(56,189,248,.4)}
+  .user-card .uc-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+  .user-card .uc-avatar img{width:100%;height:100%;object-fit:cover}
+  .user-card .uc-info{flex:1;min-width:0}
+  .user-card .uc-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-card .uc-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
+  .user-card .uc-badge{font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600;flex-shrink:0}
+  .badge-ban-severe{background:rgba(220,38,38,.25);color:#fca5a5}
+  .badge-ban-light{background:rgba(234,88,12,.25);color:#fdba74}
+  .badge-admin{background:rgba(139,92,246,.25);color:#c4b5fd}
+  .badge-super{background:rgba(239,68,68,.3);color:#fca5a5}
+  .log-item{padding:10px 12px;border-radius:10px;background:var(--bg-input);border-left:3px solid #38bdf8;font-size:12.5px;margin-bottom:8px}
+  .log-item.action-login{border-left-color:#4ade80}
+  .log-item.action-logout{border-left-color:#94a3b8}
+  .log-item.action-changepwd{border-left-color:#facc15}
+  .log-item.action-changename{border-left-color:#a78bfa}
+  .log-item.action-ban{border-left-color:#f87171}
+  .log-item.action-delete{border-left-color:#fb7185}
+  .log-item.action-notice{border-left-color:#fbbf24}
+  .log-item .lt{color:var(--text-sub);font-size:11px}
+  .log-item .lm{margin-top:3px;word-break:break-word}
+  .ban-status{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:13px}
+  .ban-status.severe{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.4);color:#fca5a5}
+  .ban-status.light{background:rgba(234,88,12,.15);border:1px solid rgba(234,88,12,.4);color:#fdba74}
+  .ban-block{background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+  .ban-block .ban-label{font-size:14px;font-weight:600}
+  .ban-block .ban-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
+  .ban-type-buttons{display:flex;gap:8px;margin-top:12px}
+  .ban-type-btn{flex:1;padding:10px 8px;border-radius:10px;background:var(--bg-input);color:var(--text-sub);border:2px solid var(--border);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.3}
+  .ban-type-btn.selected.light{background:rgba(234,88,12,.25);color:#fdba74;border-color:#ea580c}
+  .ban-type-btn.selected.severe{background:rgba(220,38,38,.25);color:#fca5a5;border-color:#dc2626}
+  #carouselOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;flex-direction:column;padding:20px;overflow:hidden}
+  #carouselOverlay .car-top{display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:14px;flex-shrink:0}
+  #carouselOverlay .car-title{font-size:16px;font-weight:600}
+  #carouselOverlay .car-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
+  #carouselOverlay .car-stage{flex:1;min-height:0;display:flex;align-items:center;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:0 12vw;scrollbar-width:none}
+  #carouselOverlay .car-stage::-webkit-scrollbar{display:none}
+  .car-card{flex:0 0 70vw;max-width:520px;background:#fff;color:#1c1e21;border-radius:16px;padding:20px;scroll-snap-align:center;transition:transform .3s,opacity .3s;opacity:.5;transform:scale(.85);overflow-y:auto;max-height:70vh;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+  .car-card.active{opacity:1;transform:scale(1)}
+  .car-card h3{font-size:16px;margin-bottom:10px}
+  .car-card .car-meta{font-size:11px;color:#666;margin-bottom:10px}
+  .car-card .car-content{font-size:14px;line-height:1.6;word-break:break-word}
+  .car-card .car-content img{max-width:100%;border-radius:8px;margin-top:8px}
+  .car-card.reject{background:#fee;border:2px solid #f87171}
+  #carouselOverlay .car-progress{text-align:center;color:#fff;font-size:13px;margin-top:14px;flex-shrink:0;opacity:.8}
+  #noticeFullscreen{position:fixed;inset:0;background:var(--bg-app);z-index:200;display:flex;flex-direction:column;height:100vh;height:100dvh}
+  #noticeFullscreen .fp-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  #noticeFullscreen .car-stage{flex:1;min-height:0;display:flex;align-items:center;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:20px 12vw;scrollbar-width:none}
+  #noticeFullscreen .car-stage::-webkit-scrollbar{display:none}
+  #noticeFullscreen .car-card{flex:0 0 70vw;max-width:520px;background:var(--bg-card);color:var(--text-main);border-radius:16px;padding:20px;scroll-snap-align:center;transition:transform .3s,opacity .3s;opacity:.5;transform:scale(.85);overflow-y:auto;max-height:75vh;border:1px solid var(--border)}
+  #noticeFullscreen .car-card.active{opacity:1;transform:scale(1)}
+  #noticeFullscreen .car-actions{padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-card);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+  #noticeFullscreen .car-actions button{flex:1;min-width:100px;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  #noticeFullscreen .car-progress{text-align:center;font-size:12px;color:var(--text-sub);padding:8px 0}
+  .pending-item{padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px;cursor:pointer}
+  .pending-item:hover{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.08)}
+  .pending-item .pi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .pending-item .pi-from{font-size:13px;font-weight:600}
+  .pending-item .pi-time{font-size:11px;color:var(--text-sub)}
+  .pending-item .pi-preview{font-size:12.5px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bb8-toggle{--toggle-size:8px;--toggle-width:10.625em;--toggle-height:5.625em;--toggle-offset:calc((var(--toggle-height) - var(--bb8-diameter))/2);--toggle-bg:linear-gradient(#2c4770,#070e2b 35%,#628cac 50% 70%,#a6c5d4) no-repeat;--bb8-diameter:4.375em;--radius:99em;--transition:.4s;--accent:#de7d2f;--bb8-bg:#fff;display:inline-block;cursor:pointer;font-size:var(--toggle-size)}
+  .bb8-toggle *{box-sizing:border-box}
+  .bb8-toggle__checkbox{appearance:none;display:none}
+  .bb8-toggle__container{width:var(--toggle-width);height:var(--toggle-height);background:var(--toggle-bg);background-size:100% 11.25em;background-position-y:-5.625em;border-radius:var(--radius);position:relative;transition:var(--transition)}
+  .bb8{display:flex;flex-direction:column;align-items:center;position:absolute;top:calc(var(--toggle-offset) - 1.688em + .188em);left:var(--toggle-offset);transition:var(--transition);z-index:2}
+  .bb8__head-container{position:relative;transition:var(--transition);z-index:2;transform-origin:1.25em 3.75em}
+  .bb8__head{overflow:hidden;margin-bottom:-.188em;width:2.5em;height:1.688em;background:linear-gradient(transparent .063em,dimgray .063em .313em,transparent .313em .375em,var(--accent) .375em .5em,transparent .5em 1.313em,silver 1.313em 1.438em,transparent 1.438em),linear-gradient(45deg,transparent .188em,var(--bb8-bg) .188em 1.25em,transparent 1.25em),linear-gradient(-45deg,transparent .188em,var(--bb8-bg) .188em 1.25em,transparent 1.25em),linear-gradient(var(--bb8-bg) 1.25em,transparent 1.25em);border-radius:var(--radius) var(--radius) 0 0;position:relative;z-index:1;filter:drop-shadow(0 .063em .125em gray)}
+  .bb8__head::before{content:"";position:absolute;width:.563em;height:.563em;background:radial-gradient(.125em circle at .25em .375em,red,transparent),radial-gradient(.063em circle at .375em .188em,var(--bb8-bg) 50%,transparent 100%),linear-gradient(45deg,#000 .188em,dimgray .313em .375em,#000 .5em);border-radius:var(--radius);top:.413em;left:50%;transform:translate(-50%);box-shadow:0 0 0 .089em lightgray,.563em .281em 0 -.148em,.563em .281em 0 -.1em var(--bb8-bg),.563em .281em 0 -.063em;z-index:1;transition:var(--transition)}
+  .bb8__head::after{content:"";position:absolute;bottom:.375em;left:0;width:100%;height:.188em;background:linear-gradient(to right,var(--accent) .125em,transparent .125em .188em,var(--accent) .188em .313em,transparent .313em .375em,var(--accent) .375em .938em,transparent .938em 1em,var(--accent) 1em 1.125em,transparent 1.125em 1.875em,var(--accent) 1.875em 2em,transparent 2em 2.063em,var(--accent) 2.063em 2.25em,transparent 2.25em 2.313em,var(--accent) 2.313em 2.375em,transparent 2.375em 2.438em,var(--accent) 2.438em);transition:var(--transition)}
+  .bb8__antenna{position:absolute;transform:translateY(-90%);width:.059em;border-radius:var(--radius) var(--radius) 0 0;transition:var(--transition)}
+  .bb8__antenna:nth-child(1){height:.938em;right:.938em;background:linear-gradient(#000 .188em,silver .188em)}
+  .bb8__antenna:nth-child(2){height:.375em;left:50%;transform:translate(-50%,-90%);background:silver}
+  .bb8__body{width:4.375em;height:4.375em;border-radius:var(--radius);position:relative;overflow:hidden;transition:var(--transition);z-index:1;transform:rotate(45deg);background-color:var(--bb8-bg);background:linear-gradient(-90deg,var(--bb8-bg) 4%,var(--accent) 4% 10%,transparent 10% 90%,var(--accent) 90% 96%,var(--bb8-bg) 96%),linear-gradient(var(--bb8-bg) 4%,var(--accent) 4% 10%,transparent 10% 90%,var(--accent) 90% 96%,var(--bb8-bg) 96%),linear-gradient(to right,transparent 2.156em,silver 2.156em 2.219em,transparent 2.188em),linear-gradient(transparent 2.156em,silver 2.156em 2.219em,transparent 2.188em)}
+  .bb8__body::after{content:"";bottom:1.5em;left:.563em;position:absolute;width:.188em;height:.188em;background:rgb(236,236,236);border-radius:50%;box-shadow:.875em .938em,0 -1.25em,.875em -2.125em,2.125em -2.125em,3.063em -1.25em,3.063em 0,2.125em .938em}
+  .bb8__body::before{content:"";width:2.625em;height:2.625em;position:absolute;border-radius:50%;overflow:hidden;top:50%;left:50%;transform:translate(-50%,-50%);border:.313em solid var(--accent);background:radial-gradient(1em circle at center,rgb(236,236,236) 50%,transparent 51%),radial-gradient(1.25em circle at center,var(--bb8-bg) 50%,transparent 51%),linear-gradient(-90deg,transparent 42%,var(--accent) 42% 58%,transparent 58%),linear-gradient(var(--bb8-bg) 42%,var(--accent) 42% 58%,var(--bb8-bg) 58%)}
+  .bb8__shadow{content:"";width:var(--bb8-diameter);height:20%;border-radius:50%;background:#3a271c;box-shadow:.313em 0 3.125em #3a271c;opacity:.25;position:absolute;bottom:0;left:calc(var(--toggle-offset) - .938em);transition:var(--transition);transform:skew(-70deg);z-index:1}
+  .bb8-toggle__scenery{width:100%;height:100%;pointer-events:none;overflow:hidden;position:relative;border-radius:inherit}
+  .bb8-toggle__scenery::before{content:"";position:absolute;width:100%;height:30%;bottom:0;background:#b18d71;z-index:1}
+  .bb8-toggle__cloud{z-index:1;position:absolute;border-radius:50%}
+  .bb8-toggle__cloud:nth-last-child(1){width:.875em;height:.625em;filter:blur(.125em) drop-shadow(.313em .313em #ffffffae) drop-shadow(-.625em 0 #fff) drop-shadow(-.938em -.125em #fff);right:1.875em;top:2.813em;background:linear-gradient(to top right,#ffffffae,#ffffffae);transition:var(--transition)}
+  .bb8-toggle__cloud:nth-last-child(2){top:.625em;right:4.375em;width:.875em;height:.375em;background:#dfdedeae;filter:blur(.125em) drop-shadow(-.313em -.188em #e0dfdfae) drop-shadow(-.625em -.188em #bbbbbbae) drop-shadow(-1em .063em #cfcfcfae);transition:.6s}
+  .bb8-toggle__cloud:nth-last-child(3){top:1.25em;right:.938em;width:.875em;height:.375em;background:#ffffffae;filter:blur(.125em) drop-shadow(.438em .188em #ffffffae) drop-shadow(-.625em .313em #ffffffae);transition:.8s}
+  .gomrassen,.hermes,.chenini{position:absolute;border-radius:var(--radius);background:linear-gradient(#fff,#6e8ea2);top:100%}
+  .gomrassen{left:.938em;width:1.875em;height:1.875em;box-shadow:0 0 .188em #ffffff52,0 0 .188em #6e8ea24b;transition:var(--transition)}
+  .gomrassen::before,.gomrassen::after{content:"";position:absolute;border-radius:inherit;box-shadow:inset 0 0 .063em rgb(140,162,169);background:rgb(184,196,200)}
+  .gomrassen::before{left:.313em;top:.313em;width:.438em;height:.438em}
+  .gomrassen::after{width:.25em;height:.25em;left:1.25em;top:.75em}
+  .hermes{left:3.438em;width:.625em;height:.625em;box-shadow:0 0 .125em #ffffff52,0 0 .125em #6e8ea24b;transition:.6s}
+  .chenini{left:4.375em;width:.5em;height:.5em;box-shadow:0 0 .125em #ffffff52,0 0 .125em #6e8ea24b;transition:.8s}
+  .tatto-1,.tatto-2{position:absolute;width:1.25em;height:1.25em;border-radius:var(--radius)}
+  .tatto-1{background:#fefefe;right:3.125em;top:.625em;box-shadow:0 0 .438em #fdf4e1;transition:var(--transition)}
+  .tatto-2{background:linear-gradient(#e6ac5c,#d75449);right:1.25em;top:2.188em;box-shadow:0 0 .438em #e6ad5c3d,0 0 .438em #d755494f;transition:.7s}
+  .bb8-toggle__star{position:absolute;width:.063em;height:.063em;background:#fff;border-radius:var(--radius);filter:drop-shadow(0 0 .063em #fff);color:#fff;top:100%}
+  .bb8-toggle__star:nth-child(1){left:3.75em;box-shadow:1.25em .938em,-1.25em 2.5em,0 1.25em,1.875em .625em,-3.125em 1.875em,1.25em 2.813em;transition:.2s}
+  .bb8-toggle__star:nth-child(2){left:4.688em;box-shadow:.625em 0,0 .625em,-.625em -.625em,.625em .938em,-3.125em 1.25em,1.25em -1.563em;transition:.3s}
+  .bb8-toggle__star:nth-child(3){left:5.313em;box-shadow:-.625em -.625em,-2.188em 1.25em,-2.188em 0,-3.75em -.625em,-3.125em -.625em,-2.5em -.313em,.75em -.625em;transition:var(--transition)}
+  .bb8-toggle__star:nth-child(4){left:1.875em;width:.125em;height:.125em;transition:.5s}
+  .bb8-toggle__star:nth-child(5){left:5em;width:.125em;height:.125em;transition:.6s}
+  .bb8-toggle__star:nth-child(6){left:2.5em;width:.125em;height:.125em;transition:.7s}
+  .bb8-toggle__star:nth-child(7){left:3.438em;width:.125em;height:.125em;transition:.8s}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(1){top:.625em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(2){top:1.875em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(3){top:1.25em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(4){top:3.438em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(5){top:3.438em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(6){top:.313em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(7){top:1.875em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__cloud{right:-100%}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .gomrassen{top:.938em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .hermes{top:2.5em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .chenini{top:2.75em}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container{background-position-y:0}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .tatto-1,.bb8-toggle__checkbox:checked + .bb8-toggle__container .tatto-2{top:100%}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8{left:calc(100% - var(--bb8-diameter) - var(--toggle-offset))}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8__shadow{left:calc(100% - var(--bb8-diameter) - var(--toggle-offset) + .938em);transform:skew(70deg)}
+  .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8__body{transform:rotate(225deg)}
+  #notifBanner{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(59,130,246,.95);color:#fff;padding:10px 18px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:500;max-width:90%}
+  #linkWarnOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+  #linkWarnOverlay .lw-card{background:var(--bg-card);border-radius:16px;padding:24px;max-width:400px;width:100%;text-align:center}
+  #linkWarnOverlay .lw-card h3{font-size:17px;margin-bottom:10px;color:#fbbf24}
+  #linkWarnOverlay .lw-card p{font-size:13.5px;line-height:1.6;color:var(--text-sub);margin-bottom:16px}
+  #linkWarnOverlay .lw-card .lw-url{background:var(--bg-input);padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px;word-break:break-all;font-family:monospace}
+  #linkWarnOverlay .lw-actions{display:flex;gap:8px}
+  #linkWarnOverlay .lw-actions button{flex:1;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .about-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:.15s}
+  .about-item:hover{border-color:rgba(56,189,248,.4);background:rgba(56,189,248,.08)}
+  .about-item.disabled{cursor:default;opacity:.85}
+  .about-item.disabled:hover{border-color:var(--border);background:var(--bg-input)}
+  .about-item .ai-left{display:flex;align-items:center;gap:12px}
+  .about-item .ai-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8;flex-shrink:0}
+  .about-item .ai-title{font-size:14px;font-weight:600;color:var(--text-main)}
+  .about-item .ai-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
+  .about-item .ai-arrow{color:var(--text-muted);font-size:14px}
+  .thanks-item{padding:10px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center}
+  .thanks-item .ti-name{font-weight:600}
+  .thanks-item .ti-by{font-size:11px;color:var(--text-sub)}
+  .thanks-empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px}
+  .version-item{padding:14px 16px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px}
+  .version-item.latest{border-color:#4ade80;background:rgba(74,222,128,.08)}
+  .version-item .vi-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .version-item .vi-ver{font-size:15px;font-weight:700;color:#38bdf8}
+  .version-item.latest .vi-ver{color:#4ade80}
+  .version-item .vi-badge{background:rgba(74,222,128,.25);color:#4ade80;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700}
+  .version-item .vi-date{font-size:11px;color:var(--text-muted);margin-left:auto}
+  .version-item .vi-changes{font-size:12.5px;color:var(--text-sub);line-height:1.6;margin-top:4px}
+  .version-item .vi-changes ul{margin-left:16px}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div id="loginCard">
+    <div class="top-controls">
+      <label class="bb8-toggle" style="--toggle-size:7px">
+        <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleLogin">
+        <div class="bb8-toggle__container">
+          <div class="bb8-toggle__scenery">
+            <div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div>
+            <div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div>
+            <div class="tatto-1"></div><div class="tatto-2"></div>
+            <div class="gomrassen"></div><div class="hermes"></div><div class="chenini"></div>
+            <div class="bb8-toggle__cloud"></div><div class="bb8-toggle__cloud"></div><div class="bb8-toggle__cloud"></div>
+          </div>
+          <div class="bb8">
+            <div class="bb8__head-container">
+              <div class="bb8__antenna"></div><div class="bb8__antenna"></div><div class="bb8__head"></div>
+            </div>
+            <div class="bb8__body"></div>
+          </div>
+          <div class="artificial__hidden"><div class="bb8__shadow"></div></div>
+        </div>
+      </label>
+      <select class="lang-select" id="langSelectLogin">
+        <option value="zh-Hant">繁體中文</option>
+        <option value="zh-Hans">简体中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    <h1 data-i18n="appTitle">班級聊天室</h1>
+    <div class="sub" data-i18n="loginSub">請輸入帳號與密碼</div>
+    <div id="loginError"></div>
+    <div class="field"><input id="loginUsername" data-i18n-ph="usernamePh" placeholder="帳號"></div>
+    <div class="field"><input id="loginPassword" type="password" data-i18n-ph="passwordPh" placeholder="密碼"></div>
+    <button id="loginBtn" data-action="login" data-i18n="loginBtn">登入</button>
+    <div id="loginVersion">v1.0 正式版</div>
+  </div>
+</div>
+
+<div id="chatScreen" class="hidden">
+  <header>
+    <div class="title" data-i18n="appTitleShort">班級聊天室</div>
+    <div class="right">
+      <span class="ver">v1.0</span>
+      <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
+        <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
+        <div class="bb8-toggle__container">
+          <div class="bb8-toggle__scenery">
+            <div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div>
+            <div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div><div class="bb8-toggle__star"></div>
+            <div class="tatto-1"></div><div class="tatto-2"></div>
+            <div class="gomrassen"></div><div class="hermes"></div><div class="chenini"></div>
+            <div class="bb8-toggle__cloud"></div><div class="bb8-toggle__cloud"></div><div class="bb8-toggle__cloud"></div>
+          </div>
+          <div class="bb8">
+            <div class="bb8__head-container">
+              <div class="bb8__antenna"></div><div class="bb8__antenna"></div><div class="bb8__head"></div>
+            </div>
+            <div class="bb8__body"></div>
+          </div>
+          <div class="artificial__hidden"><div class="bb8__shadow"></div></div>
+        </div>
+      </label>
+      <select class="lang-select" id="langSelectChat" style="font-size:10px;padding:4px 6px">
+        <option value="zh-Hant">繁</option>
+        <option value="zh-Hans">简</option>
+        <option value="en">EN</option>
+      </select>
+      <button class="hbtn admin hidden" id="adminBtn" data-action="openAdmin">
+        <span data-i18n="adminPanel">管理員後台</span><span class="dot hidden" id="adminNotifDot">0</span>
+      </button>
+      <button class="hbtn" data-action="openMyProfile" data-i18n="myProfile">個人主頁</button>
+      <button class="hbtn" data-action="logout" data-i18n="logout">登出</button>
+    </div>
+  </header>
+
+  <div id="noticeBar">
+    <span class="notice-icon">[公]</span>
+    <div class="notice-text" id="noticeText">
+      <span data-i18n="noNotice">這裏還沒有公告，你可以申請公告，使用右邊的按鈕</span>
+    </div>
+    <button class="notice-add" data-action="openNoticeCreate">+</button>
+  </div>
+
+  <div id="classStatus"></div>
+
+  <div id="searchBar">
+    <input id="searchInput" data-i18n-ph="searchPh" placeholder="搜尋訊息...">
+    <span id="searchCount"></span>
+  </div>
+
+  <div id="chatBox"><div class="empty" data-i18n="loading">載入訊息中...</div></div>
+
+  <div id="inputBar">
+    <button id="micBtn" data-action="micStart" data-i18n="micBtn">語音</button>
+    <input id="msgInput" data-i18n-ph="msgPh" placeholder="輸入訊息..." maxlength="5000">
+    <button id="plusBtn" data-action="togglePlus">+</button>
+    <button id="sendBtn" data-action="send" data-i18n="sendBtn">送出</button>
+    <div id="mentionPopup" class="hidden"></div>
+    <div id="plusPanel" class="hidden">
+      <div class="pi" data-action="pickImage"><div class="pic" data-i18n="pImage">圖片</div><div class="pit" data-i18n="pImage">圖片</div></div>
+      <div class="pi" data-action="pickFile"><div class="pic" data-i18n="pFile">檔案</div><div class="pit" data-i18n="pFile">檔案</div></div>
+      <div class="pi" data-action="pickLocation"><div class="pic" data-i18n="pLoc">位置</div><div class="pit" data-i18n="pLoc">位置</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="pageRoot"></div>
+<input type="file" id="globalFileInput" style="display:none">
+<input type="file" id="globalImgInput" accept="image/*" style="display:none">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, update, remove } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",
+  authDomain: "e-fb-a5b1d.firebaseapp.com",
+  databaseURL: "https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "e-fb-a5b1d",
+  storageBucket: "e-fb-a5b1d.firebasestorage.app",
+  messagingSenderId: "88151080220",
+  appId: "1:88151080220:web:f524696c3cac1618d68ed9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const $ = id => document.getElementById(id);
+const loginScreen = $('loginScreen'), chatScreen = $('chatScreen');
+const loginUsername = $('loginUsername'), loginPassword = $('loginPassword');
+const loginBtn = $('loginBtn'), loginError = $('loginError');
+const chatBox = $('chatBox'), msgInput = $('msgInput'), sendBtn = $('sendBtn');
+const adminBtn = $('adminBtn'), classStatus = $('classStatus');
+const searchInput = $('searchInput'), searchCount = $('searchCount');
+const mentionPopup = $('mentionPopup'), adminNotifDot = $('adminNotifDot');
+const pageRoot = $('pageRoot'), noticeBar = $('noticeBar');
+const plusPanel = $('plusPanel'), plusBtn = $('plusBtn');
+
+/* ============ i18n ============ */
+const I18N = {
+  'zh-Hant': {
+    appTitle:'班級聊天室', appTitleShort:'班級聊天室', loginSub:'請輸入帳號與密碼',
+    usernamePh:'帳號（stu01 ~ stu24）', passwordPh:'密碼', loginBtn:'登入', loginBtnLoading:'登入中...',
+    adminPanel:'管理員後台', myProfile:'個人主頁', logout:'登出',
+    searchPh:'搜尋訊息...', msgPh:'輸入訊息...（@ 標記某人）', sendBtn:'送出', micBtn:'語音',
+    pImage:'圖片', pFile:'檔案', pLoc:'位置',
+    loading:'載入訊息中...', noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',
+    wrongPwd:'密碼錯誤', noUser:'帳號不存在',
+    emptyMsg:'還沒有訊息，說點什麼吧！', noMatch:'沒有符合的訊息',
+    bannedSevere:'你已被封禁，無法登入。', reason:'原因', noReason:'（無原因）',
+    sendFail:'送出失敗', bannedLight:'你目前被限制發言',
+    profileTitle:'我的主頁', profileOther:'的主頁', cantView:'這是別人的主頁，只能查看',
+    editName:'修改顯示名稱', saveName:'儲存顯示名稱', editAvatar:'修改頭像', uploadAvatar:'上傳 / 拍照',
+    editPwd:'修改密碼', oldPwd:'目前密碼', newPwd:'新密碼（至少 6 個字元）', confirmPwd:'再次輸入新密碼', savePwd:'修改密碼',
+    myLogs:'我的日誌', myNotices:'我的公告申請',
+    nameEmpty:'顯示名稱不能為空', nameTooLong:'最多 20 個字元',
+    pwdTooShort:'新密碼至少 6 個字元', pwdMismatch:'兩次新密碼不一致', pwdWrong:'目前密碼錯誤', pwdUpdated:'密碼已更新',
+    saved:'已儲存', updated:'已更新', close:'關閉',
+    usersTab:'用戶', noticesTab:'審核', requestsTab:'請求', logsTab:'全體日誌',
+    superAdmin:'超級管理員', adminRole:'管理員', memberRole:'普通用戶',
+    noRequests:'暫無待處理請求', noLogs:'暫無紀錄', noPending:'暫無待審核公告', noApply:'還沒有申請',
+    deleteRequest:'刪除請求', report:'舉報', approve:'批准', reject:'拒絕',
+    confirmBan:'確定封禁', banTypeLight:'普通封禁', banTypeSevere:'嚴重封禁',
+    banLightSub:'可登入，不能發言', banSevereSub:'無法登入',
+    banSection:'封禁管理', banThis:'封禁此用戶', banSelect:'選類型 → 填原因 → 確定',
+    banReasonPh:'封禁原因', banReasonEmpty:'請填寫封禁原因',
+    banned:'已封禁', unban:'解除封禁', grantAdmin:'授予管理員', revokeAdmin:'撤銷管理員',
+    viewLogs:'查看該生紀錄', online:'線上',
+    msgDeleted:'（已刪除 · 待恢復）', requestDelete:'請求刪除', adminDelete:'管理員刪除',
+    restore:'恢復', purge:'徹底刪除',
+    deleteReasonPh:'請填寫刪除原因：', reportReasonPh:'請填寫舉報原因：',
+    requestSent:'已送出', reportSent:'已送出舉報',
+    userDetail:'的資料', noPermission:'你沒有權限編輯此用戶',
+    changeName:'管理員修改', deletedLog:'刪除訊息', restoredLog:'恢復訊息', purgedLog:'徹底刪除訊息',
+    bannedLog:'封禁', unbannedLog:'解除', grantedLog:'授予', revokedLog:'撤銷',
+    changedNameLog:'改名為', changedPwdLog:'修改密碼', loggedIn:'登入系統', loggedOut:'登出系統',
+    sentMsg:'發送訊息', approvedReq:'批准請求刪除',
+    notifBanned:'已封禁', notifUnbanned:'已解除封禁', notifGranted:'已授予管理員', notifRevoked:'已撤銷管理員',
+    notifAvatarUpdated:'頭像已更新', notifActionFail:'操作失敗', notifSaved:'已儲存', notifCancel:'已取消', notifSent:'已送出',
+    notifNoticePublished:'已發布', notifNoticeSent:'已送出申請', notifNoticeApproved:'已批准並發布',
+    notifNoticeRejected:'已拒絕', notifNoticeEdited:'已編輯', notifNoticePinned:'已置頂', notifNoticeUnpinned:'已取消置頂',
+    notifNoticeLocked:'已加鎖', notifNoticeUnlocked:'已解鎖', notifNoticeDeleted:'已刪除（2 小時內可恢復）',
+    noticeTitle:'公告', noticeApplyTitle:'申請公告', noticePublishTitle:'發布公告',
+    noticeContent:'內容', noticeContentPh:'輸入公告內容...', noticeImgs:'圖片（最多 5 張）',
+    noticeChooseImgs:'選擇圖片', noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',
+    noticeWhen:'發布時間', noticeWhenNow:'立即（管理員） / 等待審核（學生）', noticeWhen3d:'3 天後自動發布（學生申請）',
+    noticeSubmit:'送出', noticeUseHtml:'HTML 模式（管理員）', noticeUseHtmlLabel:'使用 HTML 編輯',
+    noticeEdit:'編輯', noticePin:'置頂', noticeUnpin:'取消置頂', noticeLock:'加鎖', noticeUnlock:'解鎖', noticeDelete:'刪除',
+    noticeOver5000:'超過 5000 字', noticeNeedContent:'請輸入內容或加圖片',
+    noticeRejectReasonPh:'拒絕原因（可留空）：',
+    noticePinTag:'置頂公告', noticeLatest:'最新：', noticeNoOther:'沒有其他公告',
+    noticeApplyBy:'申請者：', noticeEditedBy:'原申請者：', noticeAdminEdited:' · 管理員修改',
+    noticeRejected:'公告申請被拒絕',
+    about:'關於', author:'作者', thanks:'感謝清單', versions:'版本資訊',
+    thanksAdd:'新增感謝名稱（管理員）', thanksNamePh:'輸入名稱', thanksSubmit:'提交',
+    thanksEmpty:'尚未有名稱', thanksBy:'by',
+    thanksNameEmpty:'請輸入名稱', thanksAdded:'已新增',
+    authorName:'梁喆',
+    currentVersion:'目前 v1.0 正式版',
+    latestBadge:'最新'
+  },
+  'zh-Hans': {
+    appTitle:'班级聊天室', appTitleShort:'班级聊天室', loginSub:'请输入账号与密码',
+    usernamePh:'账号（stu01 ~ stu24）', passwordPh:'密码', loginBtn:'登录', loginBtnLoading:'登录中...',
+    adminPanel:'管理员后台', myProfile:'个人主页', logout:'退出',
+    searchPh:'搜索消息...', msgPh:'输入消息...（@ 标记某人）', sendBtn:'发送', micBtn:'语音',
+    pImage:'图片', pFile:'文件', pLoc:'位置',
+    loading:'加载消息中...', noNotice:'这里还没有公告，你可以申请公告，使用右边的按钮',
+    wrongPwd:'密码错误', noUser:'账号不存在',
+    emptyMsg:'还没有消息，说点什么吧！', noMatch:'没有符合条件的消息',
+    bannedSevere:'你已被封禁，无法登录。', reason:'原因', noReason:'（无原因）',
+    sendFail:'发送失败', bannedLight:'你目前被限制发言',
+    profileTitle:'我的主页', profileOther:'的主页', cantView:'这是别人的主页，只能查看',
+    editName:'修改显示名称', saveName:'保存显示名称', editAvatar:'修改头像', uploadAvatar:'上传 / 拍照',
+    editPwd:'修改密码', oldPwd:'当前密码', newPwd:'新密码（至少 6 个字符）', confirmPwd:'再次输入新密码', savePwd:'修改密码',
+    myLogs:'我的日志', myNotices:'我的公告申请',
+    nameEmpty:'显示名称不能为空', nameTooLong:'最多 20 个字符',
+    pwdTooShort:'新密码至少 6 个字符', pwdMismatch:'两次新密码不一致', pwdWrong:'当前密码错误', pwdUpdated:'密码已更新',
+    saved:'已保存', updated:'已更新', close:'关闭',
+    usersTab:'用户', noticesTab:'审核', requestsTab:'请求', logsTab:'全体日志',
+    superAdmin:'超级管理员', adminRole:'管理员', memberRole:'普通用户',
+    noRequests:'暂无待处理请求', noLogs:'暂无记录', noPending:'暂无待审核公告', noApply:'还没有申请',
+    deleteRequest:'删除请求', report:'举报', approve:'批准', reject:'拒绝',
+    confirmBan:'确定封禁', banTypeLight:'普通封禁', banTypeSevere:'严重封禁',
+    banLightSub:'可登录，不能发言', banSevereSub:'无法登录',
+    banSection:'封禁管理', banThis:'封禁此用户', banSelect:'选类型 → 填原因 → 确定',
+    banReasonPh:'封禁原因', banReasonEmpty:'请填写封禁原因',
+    banned:'已封禁', unban:'解除封禁', grantAdmin:'授予管理员', revokeAdmin:'撤销管理员',
+    viewLogs:'查看该生记录', online:'在线',
+    msgDeleted:'（已删除 · 待恢复）', requestDelete:'请求删除', adminDelete:'管理员删除',
+    restore:'恢复', purge:'彻底删除',
+    deleteReasonPh:'请填写删除原因：', reportReasonPh:'请填写举报原因：',
+    requestSent:'已发送', reportSent:'已发送举报',
+    userDetail:'的资料', noPermission:'你没有权限编辑此用户',
+    changeName:'管理员修改', deletedLog:'删除消息', restoredLog:'恢复消息', purgedLog:'彻底删除消息',
+    bannedLog:'封禁', unbannedLog:'解除', grantedLog:'授予', revokedLog:'撤销',
+    changedNameLog:'改名为', changedPwdLog:'修改密码', loggedIn:'登录系统', loggedOut:'退出系统',
+    sentMsg:'发送消息', approvedReq:'批准请求删除',
+    notifBanned:'已封禁', notifUnbanned:'已解除封禁', notifGranted:'已授予管理员', notifRevoked:'已撤销管理员',
+    notifAvatarUpdated:'头像已更新', notifActionFail:'操作失败', notifSaved:'已保存', notifCancel:'已取消', notifSent:'已发送',
+    notifNoticePublished:'已发布', notifNoticeSent:'已发送申请', notifNoticeApproved:'已批准并发布',
+    notifNoticeRejected:'已拒绝', notifNoticeEdited:'已编辑', notifNoticePinned:'已置顶', notifNoticeUnpinned:'已取消置顶',
+    notifNoticeLocked:'已加锁', notifNoticeUnlocked:'已解锁', notifNoticeDeleted:'已删除（2 小时内可恢复）',
+    noticeTitle:'公告', noticeApplyTitle:'申请公告', noticePublishTitle:'发布公告',
+    noticeContent:'内容', noticeContentPh:'输入公告内容...', noticeImgs:'图片（最多 5 张）',
+    noticeChooseImgs:'选择图片', noticeImgUrlPh:'或贴图片网址（按 Enter 加入）',
+    noticeWhen:'发布时间', noticeWhenNow:'立即（管理员） / 等待审核（学生）', noticeWhen3d:'3 天后自动发布（学生申请）',
+    noticeSubmit:'发送', noticeUseHtml:'HTML 模式（管理员）', noticeUseHtmlLabel:'使用 HTML 编辑',
+    noticeEdit:'编辑', noticePin:'置顶', noticeUnpin:'取消置顶', noticeLock:'加锁', noticeUnlock:'解锁', noticeDelete:'删除',
+    noticeOver5000:'超过 5000 字', noticeNeedContent:'请输入内容或加图片',
+    noticeRejectReasonPh:'拒绝原因（可留空）：',
+    noticePinTag:'置顶公告', noticeLatest:'最新：', noticeNoOther:'没有其他公告',
+    noticeApplyBy:'申请者：', noticeEditedBy:'原申请者：', noticeAdminEdited:' · 管理员修改',
+    noticeRejected:'公告申请被拒绝',
+    about:'关于', author:'作者', thanks:'感谢清单', versions:'版本信息',
+    thanksAdd:'新增感谢名称（管理员）', thanksNamePh:'输入名称', thanksSubmit:'提交',
+    thanksEmpty:'尚未有名称', thanksBy:'by',
+    thanksNameEmpty:'请输入名称', thanksAdded:'已新增',
+    authorName:'梁喆',
+    currentVersion:'目前 v1.0 正式版',
+    latestBadge:'最新'
+  },
+  'en': {
+    appTitle:'Class Chat', appTitleShort:'Class Chat', loginSub:'Enter your username and password',
+    usernamePh:'Username (stu01 ~ stu24)', passwordPh:'Password', loginBtn:'Sign in', loginBtnLoading:'Signing in...',
+    adminPanel:'Admin', myProfile:'Profile', logout:'Sign out',
+    searchPh:'Search messages...', msgPh:'Type a message... (@ to mention)', sendBtn:'Send', micBtn:'Voice',
+    pImage:'Image', pFile:'File', pLoc:'Location',
+    loading:'Loading messages...', noNotice:'No announcements yet. You can apply using the button on the right.',
+    wrongPwd:'Wrong password', noUser:'Account not found',
+    emptyMsg:'No messages yet. Say something!', noMatch:'No matching messages',
+    bannedSevere:'You are banned and cannot sign in.', reason:'Reason', noReason:'(no reason)',
+    sendFail:'Send failed', bannedLight:'You are muted',
+    profileTitle:'My Profile', profileOther:"'s Profile", cantView:"This is someone else's profile. View only.",
+    editName:'Change display name', saveName:'Save name', editAvatar:'Change avatar', uploadAvatar:'Upload / Camera',
+    editPwd:'Change password', oldPwd:'Current password', newPwd:'New password (min 6 chars)', confirmPwd:'Confirm new password', savePwd:'Change password',
+    myLogs:'My logs', myNotices:'My notice applications',
+    nameEmpty:'Display name cannot be empty', nameTooLong:'Max 20 characters',
+    pwdTooShort:'Password must be at least 6 characters', pwdMismatch:'Passwords do not match', pwdWrong:'Current password is wrong', pwdUpdated:'Password updated',
+    saved:'Saved', updated:'Updated', close:'Close',
+    usersTab:'Users', noticesTab:'Review', requestsTab:'Requests', logsTab:'All Logs',
+    superAdmin:'Super Admin', adminRole:'Admin', memberRole:'Member',
+    noRequests:'No pending requests', noLogs:'No logs', noPending:'No pending notices', noApply:'No applications yet',
+    deleteRequest:'Delete request', report:'Report', approve:'Approve', reject:'Reject',
+    confirmBan:'Confirm Ban', banTypeLight:'Light Ban', banTypeSevere:'Severe Ban',
+    banLightSub:'Can sign in, cannot post', banSevereSub:'Cannot sign in',
+    banSection:'Ban management', banThis:'Ban this user', banSelect:'Pick type → Reason → Confirm',
+    banReasonPh:'Ban reason', banReasonEmpty:'Please enter a ban reason',
+    banned:'Banned', unban:'Unban', grantAdmin:'Grant admin', revokeAdmin:'Revoke admin',
+    viewLogs:'View logs', online:'Online',
+    msgDeleted:'(deleted · recoverable)', requestDelete:'Request delete', adminDelete:'Admin delete',
+    restore:'Restore', purge:'Purge',
+    deleteReasonPh:'Reason for deletion:', reportReasonPh:'Reason for report:',
+    requestSent:'Sent', reportSent:'Report sent',
+    userDetail:"'s info", noPermission:"You don't have permission to edit this user",
+    changeName:'Admin changed', deletedLog:'Deleted message', restoredLog:'Restored message', purgedLog:'Purged message',
+    bannedLog:'Banned', unbannedLog:'Unbanned', grantedLog:'Granted admin to', revokedLog:'Revoked admin from',
+    changedNameLog:'Changed name to', changedPwdLog:'Changed password', loggedIn:'Signed in', loggedOut:'Signed out',
+    sentMsg:'Sent message', approvedReq:'Approved delete request',
+    notifBanned:'Banned', notifUnbanned:'Unbanned', notifGranted:'Granted admin', notifRevoked:'Revoked admin',
+    notifAvatarUpdated:'Avatar updated', notifActionFail:'Action failed', notifSaved:'Saved', notifCancel:'Cancelled', notifSent:'Sent',
+    notifNoticePublished:'Published', notifNoticeSent:'Application sent', notifNoticeApproved:'Approved & published',
+    notifNoticeRejected:'Rejected', notifNoticeEdited:'Edited', notifNoticePinned:'Pinned', notifNoticeUnpinned:'Unpinned',
+    notifNoticeLocked:'Locked', notifNoticeUnlocked:'Unlocked', notifNoticeDeleted:'Deleted (recoverable in 2h)',
+    noticeTitle:'Announcement', noticeApplyTitle:'Apply for Announcement', noticePublishTitle:'Publish Announcement',
+    noticeContent:'Content', noticeContentPh:'Enter content...', noticeImgs:'Images (max 5)',
+    noticeChooseImgs:'Choose images', noticeImgUrlPh:'Or paste image URL (press Enter)',
+    noticeWhen:'Publish time', noticeWhenNow:'Now (admin) / Pending review (student)', noticeWhen3d:'Auto publish after 3 days (student)',
+    noticeSubmit:'Submit', noticeUseHtml:'HTML mode (admin)', noticeUseHtmlLabel:'Use HTML editor',
+    noticeEdit:'Edit', noticePin:'Pin', noticeUnpin:'Unpin', noticeLock:'Lock', noticeUnlock:'Unlock', noticeDelete:'Delete',
+    noticeOver5000:'Over 5000 chars', noticeNeedContent:'Please enter content or add images',
+    noticeRejectReasonPh:'Reject reason (optional):',
+    noticePinTag:'Pinned', noticeLatest:'Latest: ', noticeNoOther:'No other announcements',
+    noticeApplyBy:'Applied by: ', noticeEditedBy:'Originally by: ', noticeAdminEdited:' · edited by admin',
+    noticeRejected:'Announcement application rejected',
+    about:'About', author:'Author', thanks:'Thanks', versions:'Version Info',
+    thanksAdd:'Add thanks name (admin)', thanksNamePh:'Enter name', thanksSubmit:'Submit',
+    thanksEmpty:'No names yet', thanksBy:'by',
+    thanksNameEmpty:'Please enter a name', thanksAdded:'Added',
+    authorName:'Liang Zhe',
+    currentVersion:'Current v1.0',
+    latestBadge:'Latest'
+  }
+};
+let lang = localStorage.getItem('chat_lang') || 'zh-Hant';
+function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N['zh-Hant'][k] || k; }
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+}
+
+let theme = localStorage.getItem('chat_theme') || 'dark';
+function applyTheme(){
+  document.body.classList.toggle('theme-light', theme === 'light');
+  ['themeToggleLogin','themeToggleChat'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = (theme === 'light'); });
+}
+function applyLang(){
+  ['langSelectLogin','langSelectChat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = lang; });
+}
+$('themeToggleLogin').addEventListener('change', e => { theme = e.target.checked ? 'light' : 'dark'; localStorage.setItem('chat_theme', theme); applyTheme(); });
+$('themeToggleChat').addEventListener('change', e => { theme = e.target.checked ? 'light' : 'dark'; localStorage.setItem('chat_theme', theme); applyTheme(); });
+$('langSelectLogin').addEventListener('change', e => { lang = e.target.value; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); render(); renderNoticeBar(); });
+$('langSelectChat').addEventListener('change', e => { lang = e.target.value; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); render(); renderNoticeBar(); });
+
+/* ============ 版本歷史 ============ */
+const VERSION_HISTORY = [
+  { ver:'v1.0', date:'2026-09-12', changes:['正式版','完整翻譯系統（繁 / 簡 / EN）','全站去除 emoji（除頭像）','檔案大小精簡'] },
+  { ver:'v0.9.1', date:'2026-09-12', changes:['個人主頁底部新增「作者」「感謝清單」「版本資訊」','作者：梁喆（不可點入）','感謝清單：管理員可提交名稱','版本資訊：列出所有版本，最新在最上'] },
+  { ver:'v0.9', date:'2026-09-12', changes:['公告系統：申請 / 審核 / 發布 / 置頂 / 加鎖 / 刪除 / 編輯','未讀公告彈出輪播卡片','連結警告','圖片 / 檔案 / 語音 / 位置','@ 提及','搜尋訊息','訊息刪除 / 舉報 / 審核流程','完整日誌'] },
+  { ver:'v0.8', date:'2026-09-12', changes:['黑白主題切換（BB8 開關）','語言切換'] },
+  { ver:'v0.7.1', date:'2026-09-12', changes:['修復 openUserDetail 括號錯誤','封禁改成開關樣式','所有按鈕改用事件委派'] },
+  { ver:'v0.7', date:'2026-09-12', changes:['封禁流程改用頁面按鈕','封禁類型用兩顆按鈕','個人主頁 / 管理員後台 / 用戶詳情全螢幕'] },
+  { ver:'v0.6', date:'2026-09-12', changes:['全螢幕頁面取代彈窗','左上角 ← 退出','封禁改成開關'] },
+  { ver:'v0.5', date:'2026-09-12', changes:['完整日誌系統','訊息刪除 / 舉報 / 審核','兩小時恢復','搜尋','@ 某人','班級狀態','管理員通知紅點'] },
+  { ver:'v0.4', date:'2026-09-12', changes:['管理員後台（用戶清單、封禁、授權、簡易日誌）'] },
+  { ver:'v0.3.1', date:'2026-09-12', changes:['修手機 / iPad 高度問題'] },
+  { ver:'v0.3', date:'2026-09-12', changes:['Header 響應式適配所有裝置'] },
+  { ver:'v0.2', date:'2026-09-12', changes:['個人主頁','改顯示名稱','改頭像','改密碼','顏色顯示'] },
+  { ver:'v0.1', date:'2026-09-12', changes:['登入畫面','嚴重封禁擋登入','普通封禁警告','聊天室（文字、即時同步）','訊息編號 msg_0001','頭像顏色圓圈','管理員標示'] }
+];
+
+/* ============ 全域 ============ */
+let me = null;
+let messages = [], unsubMsg = null;
+let allUsers = {}, unsubUsers = null;
+let requests = {}, unsubRequests = null;
+let presence = {}, unsubPresence = null;
+let notices = [], unsubNotices = null;
+let myNoticeReads = {}, unsubMyReads = null;
+let pendingNotices = [], unsubPendingNotices = null;
+let myRejections = [], unsubMyRejections = null;
+let unsubMentions = null;
+let thanksList = [], unsubThanks = null;
+let searchKeyword = '';
+let banDraft = {};
+let noticeCarouselShown = false;
+
+/* ============ 事件委派 ============ */
+document.addEventListener('click', async (e) => {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action = target.dataset.action;
+  const arg = target.dataset.arg, arg2 = target.dataset.arg2;
+  try {
+    const map = {
+      login:()=>handleLogin(), logout:()=>handleLogout(),
+      openMyProfile:()=>openProfilePage(me.username,true), openUserProfile:()=>openProfilePage(arg,arg===(me&&me.username)),
+      openAdmin:()=>openAdminPage('users'), closePage:()=>closePage(),
+      switchAdminTab:()=>renderAdminTab(arg), openUserDetail:()=>openUserDetail(arg),
+      send:()=>sendMessage(), saveDisplayName:()=>saveDisplayName(), pickEmoji:()=>pickEmoji(arg),
+      savePassword:()=>savePassword(), openMyLogs:()=>openMyLogs(),
+      adminSaveProfile:()=>adminSaveProfile(arg), adminPickEmoji:()=>adminPickEmoji(arg,arg2),
+      adminGrant:()=>adminGrant(arg), adminRevoke:()=>adminRevoke(arg),
+      setBanType:()=>setBanType(arg,arg2), confirmBan:()=>confirmBan(arg), unban:()=>unban(arg),
+      openUserLogs:()=>openUserLogs(arg), requestDeleteMsg:()=>requestDeleteMsg(arg),
+      reportMsg:()=>reportMsg(arg), adminDeleteMsg:()=>adminDeleteMsg(arg),
+      restoreMsg:()=>restoreMsg(arg), purgeMsg:()=>purgeMsg(arg),
+      pickMention:()=>pickMention(arg), handleRequest:()=>handleRequest(arg,arg2),
+      openNoticeCreate:()=>openNoticeCreate(), openNoticeDetail:()=>openNoticeFullscreen(arg),
+      openPinnedList:()=>openPinnedList(), openMyNotices:()=>openMyNotices(),
+      submitNotice:()=>submitNotice(arg), togglePlus:()=>togglePlus(),
+      pickImage:()=>pickImage(), pickFile:()=>pickFile(), pickLocation:()=>pickLocation(),
+      closeCarousel:()=>closeCarousel(), noticeApprove:()=>noticeApprove(arg),
+      noticeReject:()=>noticeReject(arg), noticeEdit:()=>noticeEdit(arg),
+      noticeDelete:()=>noticeDelete(arg), noticePin:()=>noticePin(arg), noticeLock:()=>noticeLock(arg),
+      cancelMyNotice:()=>cancelMyNotice(arg), linkContinue:()=>linkContinue(), linkCancel:()=>linkCancel(),
+      viewImage:()=>viewImage(arg), openLocation:()=>openLocationFullscreen(arg), closeLocationFull:()=>closeLocationFull(),
+      openThanks:()=>openThanksPage(), openVersion:()=>openVersionPage(), submitThanks:()=>submitThanks(),
+      micStart:()=>{}
+    };
+    if (map[action]) await map[action]();
+  } catch (err) { console.error('Action error:',action,err); showNotif(t('notifActionFail')+': '+(err.message||err)); }
+});
+
+searchInput.addEventListener('input', () => { searchKeyword = searchInput.value.trim(); searchCount.textContent = searchKeyword ? '[S]' : ''; render(); });
+document.addEventListener('click', (e) => {
+  if (!plusPanel.classList.contains('hidden')) {
+    if (!plusPanel.contains(e.target) && e.target !== plusBtn && !plusBtn.contains(e.target)) plusPanel.classList.add('hidden');
+  }
+});
+
+/* ============ 登入 ============ */
+async function handleLogin(){
+  const u = loginUsername.value.trim().toLowerCase();
+  const p = loginPassword.value;
+  loginError.textContent = '';
+  if (!u || !p) { loginError.textContent = t('loginSub'); return; }
+  loginBtn.disabled = true; loginBtn.textContent = t('loginBtnLoading');
+  try {
+    const snap = await get(child(ref(db),'users/'+u));
+    if (!snap.exists()) { loginError.textContent = t('noUser'); return; }
+    const data = snap.val();
+    if (data.banned && data.banned.type === 'severe') { loginError.textContent = t('bannedSevere')+'\n'+t('reason')+'：'+(data.banned.reason||t('noReason')); return; }
+    if (data.password !== p) { loginError.textContent = t('wrongPwd'); return; }
+    me = { username:data.username, displayName:data.displayName||data.username, seat:data.seat, color:data.color||'#3b82f6', role:data.role||'member', avatar:data.avatar||null, banned:data.banned||null };
+    sessionStorage.setItem('chat_me', JSON.stringify(me));
+    await writeLog('login', t('loggedIn'));
+    await setPresence();
+    enterChat();
+  } catch (e) { console.error(e); loginError.textContent = t('notifActionFail')+': '+(e.code||e.message); }
+  finally { loginBtn.disabled = false; loginBtn.textContent = t('loginBtn'); }
+}
+
+async function handleLogout(){
+  try{ await clearPresence(); }catch(e){}
+  try{ await writeLog('logout', t('loggedOut')); }catch(e){}
+  me = null; sessionStorage.removeItem('chat_me');
+  [unsubMsg,unsubUsers,unsubRequests,unsubPresence,unsubNotices,unsubMyReads,unsubPendingNotices,unsubMyRejections,unsubMentions,unsubThanks].forEach(fn=>fn&&fn());
+  unsubMsg = unsubUsers = unsubRequests = unsubPresence = unsubNotices = unsubMyReads = unsubPendingNotices = unsubMyRejections = unsubMentions = unsubThanks = null;
+  closePage();
+  chatScreen.classList.add('hidden'); loginScreen.classList.remove('hidden');
+  loginUsername.value = ''; loginPassword.value = '';
+}
+
+function enterChat(){
+  loginScreen.classList.add('hidden'); chatScreen.classList.remove('hidden');
+  if (me.role === 'superadmin' || me.role === 'admin') adminBtn.classList.remove('hidden'); else adminBtn.classList.add('hidden');
+  subscribeMessages(); subscribeUsers(); subscribeRequests(); subscribePresence();
+  subscribeNotices(); subscribeMyReads(); subscribePendingNotices(); subscribeMyRejections(); subscribeMentions(); subscribeThanks();
+}
+
+/* ============ 日誌 / 在線 ============ */
+async function writeLog(action, detail){
+  if (!me) return;
+  const id = 'log_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  await set(ref(db,'logs/'+id), { action, detail, username:me.username, displayName:me.displayName, seat:me.seat, role:me.role, createdAt:Date.now() });
+}
+async function setPresence(){ if(me) await set(ref(db,'presence/'+me.username), { lastSeen: Date.now() }); }
+async function clearPresence(){ if(me) await remove(ref(db,'presence/'+me.username)); }
+setInterval(() => { if (me) setPresence(); }, 30000);
+window.addEventListener('beforeunload', () => { if (me) clearPresence(); });
+
+/* ============ 發訊息 ============ */
+async function sendMessage(){
+  const text = msgInput.value.trim();
+  if (!text || !me) return;
+  if (me.banned && me.banned.type === 'light') { showNotif(t('bannedLight')+'：'+(me.banned.reason||t('noReason'))); return; }
+  sendBtn.disabled = true;
+  try {
+    const c = await get(child(ref(db),'meta/msgCounter'));
+    const next = (c.exists()?c.val():0) + 1;
+    await set(ref(db,'meta/msgCounter'), next);
+    const msgId = 'msg_'+String(next).padStart(4,'0');
+    await set(ref(db,'messages/'+msgId), {
+      id:msgId, username:me.username, displayName:me.displayName, seat:me.seat, color:me.color, avatar:me.avatar, role:me.role,
+      text, type:'text', createdAt:Date.now(), deleted:false
+    });
+    const mentions = extractMentions(text);
+    for (const uname of mentions) {
+      if (uname === me.username) continue;
+      await push(ref(db,'mentions/'+uname), { from:me.username, fromName:me.displayName, text, msgId, createdAt:Date.now(), read:false });
+    }
+    await writeLog('send', t('sentMsg')+'：'+text.slice(0,50));
+    msgInput.value = ''; mentionPopup.classList.add('hidden');
+  } catch(e) { console.error(e); showNotif(t('sendFail')+': '+(e.code||e.message)); }
+  finally { sendBtn.disabled = false; msgInput.focus(); }
+}
+
+async function sendMedia(type, payload){
+  if (!me) return;
+  if (me.banned && me.banned.type === 'light') { showNotif(t('bannedLight')); return; }
+  try {
+    const c = await get(child(ref(db),'meta/msgCounter'));
+    const next = (c.exists()?c.val():0) + 1;
+    await set(ref(db,'meta/msgCounter'), next);
+    const msgId = 'msg_'+String(next).padStart(4,'0');
+    await set(ref(db,'messages/'+msgId), { id:msgId, username:me.username, displayName:me.displayName, seat:me.seat, color:me.color, avatar:me.avatar, role:me.role, ...payload, type, createdAt:Date.now(), deleted:false });
+    await writeLog('send', t('sentMsg'));
+  } catch(e) { console.error(e); showNotif(t('sendFail')); }
+}
+
+function extractMentions(text){
+  const re = /@([a-zA-Z0-9_]+)/g; const out=[]; let m;
+  while ((m = re.exec(text)) !== null) { const u = m[1].toLowerCase(); if (allUsers[u]) out.push(u); }
+  return out;
+}
+
+msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && mentionPopup.classList.contains('hidden')) { e.preventDefault(); sendMessage(); } });
+msgInput.addEventListener('input', () => {
+  const val = msgInput.value, cursor = msgInput.selectionStart;
+  const at = val.slice(0,cursor).match(/@([a-zA-Z0-9_]*)$/);
+  if (!at) { mentionPopup.classList.add('hidden'); return; }
+  showMentionPopup(at[1].toLowerCase());
+});
+
+function showMentionPopup(kw){
+  const list = Object.values(allUsers).filter(u => u.username !== (me&&me.username))
+    .filter(u => !kw || u.username.toLowerCase().includes(kw) || (u.displayName||'').toLowerCase().includes(kw)).slice(0,8);
+  if (list.length === 0) { mentionPopup.classList.add('hidden'); return; }
+  mentionPopup.classList.remove('hidden');
+  mentionPopup.innerHTML = list.map(u => {
+    const isAdmin = u.role === 'superadmin' || u.role === 'admin';
+    const color = isAdmin ? '#8b5cf6' : (u.color || '#3b82f6');
+    const av = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username).charAt(0).toUpperCase());
+    return `<div class="mention-item" data-action="pickMention" data-arg="${u.username}"><div class="mi-av" style="background:${color}">${av}</div><div>${escapeHtml(u.displayName||u.username)} (#${u.seat})</div></div>`;
+  }).join('');
+}
+
+function pickMention(username){
+  const v = msgInput.value, cur = msgInput.selectionStart;
+  msgInput.value = v.slice(0,cur).replace(/@([a-zA-Z0-9_]*)$/, '@'+username+' ') + v.slice(cur);
+  mentionPopup.classList.add('hidden'); msgInput.focus();
+}
+
+/* ============ 監聽 ============ */
+function subscribeMessages(){
+  if (unsubMsg) unsubMsg();
+  unsubMsg = onValue(query(ref(db,'messages'), limitToLast(300)), snap => {
+    const val = snap.val() || {}; const now = Date.now();
+    messages = Object.keys(val).map(k => ({ _key:k, ...val[k] }))
+      .filter(m => { if (!m.deleted) return true; if (me.role === 'superadmin' || me.role === 'admin') return (now-(m.deletedAt||0))<2*3600*1000; return false; })
+      .sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
+    render();
+  });
+}
+function subscribeUsers(){
+  if (unsubUsers) unsubUsers();
+  unsubUsers = onValue(ref(db,'users'), snap => { allUsers = snap.val()||{}; renderClassStatus(); checkPendingNoticeNotif(); });
+}
+function subscribeRequests(){
+  if (unsubRequests) unsubRequests();
+  unsubRequests = onValue(ref(db,'requests'), snap => { requests = snap.val()||{}; for(const k in requests) if (typeof requests[k]==='object') requests[k]._key = k; updateAdminDot(); });
+}
+function subscribePresence(){
+  if (unsubPresence) unsubPresence();
+  unsubPresence = onValue(ref(db,'presence'), snap => { presence = snap.val()||{}; renderClassStatus(); });
+}
+function subscribeNotices(){
+  if (unsubNotices) unsubNotices();
+  unsubNotices = onValue(ref(db,'notices'), snap => {
+    const val = snap.val()||{};
+    notices = Object.keys(val).map(k => ({ _key:k, ...val[k] }))
+      .filter(n => !n.deleted || (me && (me.role === 'superadmin' || me.role === 'admin')))
+      .sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
+    renderNoticeBar(); checkUnreadNotices();
+  });
+}
+function subscribeMyReads(){
+  if (unsubMyReads) unsubMyReads();
+  if (!me) return;
+  unsubMyReads = onValue(ref(db,'noticeReads/'+me.username), snap => { myNoticeReads = snap.val()||{}; renderNoticeBar(); checkUnreadNotices(); });
+}
+function subscribePendingNotices(){
+  if (unsubPendingNotices) unsubPendingNotices();
+  if (!me || (me.role !== 'superadmin' && me.role !== 'admin')) return;
+  unsubPendingNotices = onValue(ref(db,'noticePending'), snap => {
+    const val = snap.val()||{};
+    pendingNotices = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(p => p.status === 'pending').sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+    updateAdminDot();
+  });
+}
+function subscribeMyRejections(){
+  if (unsubMyRejections) unsubMyRejections();
+  if (!me) return;
+  unsubMyRejections = onValue(ref(db,'notifications/'+me.username), snap => {
+    const val = snap.val()||{};
+    myRejections = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(n => !n.read).sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
+    if (myRejections.length > 0 && !noticeCarouselShown) showRejectionCarousel();
+  });
+}
+function subscribeMentions(){
+  if (unsubMentions) unsubMentions();
+  if (!me) return;
+  unsubMentions = onValue(ref(db,'mentions/'+me.username), snap => {
+    const val = snap.val()||{};
+    // 只保留未讀，用於提示
+  });
+}
+function subscribeThanks(){
+  if (unsubThanks) unsubThanks();
+  unsubThanks = onValue(ref(db,'thanks'), snap => {
+    const val = snap.val()||{};
+    thanksList = Object.keys(val).map(k => ({ _key:k, ...val[k] })).sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
+  });
+}
+
+/* ============ 公告輪播 ============ */
+function checkUnreadNotices(){
+  if (!me || noticeCarouselShown) return;
+  const unread = notices.filter(n => !n.deleted && !myNoticeReads[n._key]);
+  if (unread.length > 0) showNoticeCarousel(unread);
+}
+function showNoticeCarousel(list){
+  noticeCarouselShown = true;
+  const cards = list.map(n => {
+    const time = new Date(n.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+    const content = renderNoticeContent(n);
+    return `<div class="car-card" data-key="${n._key}">
+      <div class="car-meta">${time}${n.pinned?' ['+t('noticePinTag')+']':''}${n.locked?' [Lock]':''}</div>
+      <div class="car-content">${content}</div>
+    </div>`;
+  }).join('');
+  const div = document.createElement('div');
+  div.innerHTML = `<div id="carouselOverlay">
+    <div class="car-top"><div class="car-title">${t('noticeTitle')} (${list.length})</div><button class="car-close" data-action="closeCarousel">X</button></div>
+    <div class="car-stage" id="carStage">${cards}</div>
+    <div class="car-progress" id="carProgress">1 / ${list.length}</div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+  document.getElementById('carouselOverlay').addEventListener('click', e => { if (e.target.id === 'carouselOverlay') closeCarousel(); });
+  const stage = document.getElementById('carStage'); const cs = stage.querySelectorAll('.car-card');
+  const update = () => {
+    const center = stage.scrollLeft + stage.clientWidth/2;
+    let closest = 0, minDist = Infinity;
+    cs.forEach((c,i) => { const cc = c.offsetLeft + c.offsetWidth/2; const d = Math.abs(cc-center); if (d<minDist){minDist=d;closest=i;} c.classList.toggle('active', d<c.offsetWidth/2); });
+    document.getElementById('carProgress').textContent = `${closest+1} / ${cs.length}`;
+    markRead(cs[closest].dataset.key);
+  };
+  stage.addEventListener('scroll', () => { clearTimeout(stage._t); stage._t = setTimeout(update, 120); });
+  setTimeout(update, 200);
+  cs.forEach(c => c.addEventListener('click', ev => {
+    if (ev.target.tagName === 'A' || ev.target.tagName === 'IMG') return;
+    closeCarousel(); openNoticeFullscreen(c.dataset.key);
+  }));
+}
+function showRejectionCarousel(){
+  const list = myRejections;
+  if (list.length === 0) return;
+  noticeCarouselShown = true;
+  const cards = list.map(n => {
+    const time = new Date(n.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+    return `<div class="car-card reject" data-key="${n._key}">
+      <h3>${t('noticeRejected')}</h3>
+      <div class="car-meta">${time}</div>
+      <div class="car-content">${escapeHtml(n.text||'')}<br><br><b>${t('reason')}：</b>${escapeHtml(n.reason||t('noReason'))}</div>
+    </div>`;
+  }).join('');
+  const div = document.createElement('div');
+  div.innerHTML = `<div id="carouselOverlay">
+    <div class="car-top"><div class="car-title">(${list.length})</div><button class="car-close" data-action="closeCarousel">X</button></div>
+    <div class="car-stage" id="carStage">${cards}</div>
+    <div class="car-progress" id="carProgress">1 / ${list.length}</div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+  document.getElementById('carouselOverlay').addEventListener('click', e => { if (e.target.id === 'carouselOverlay') closeCarousel(); });
+  const stage = document.getElementById('carStage'); const cs = stage.querySelectorAll('.car-card');
+  const update = () => {
+    const center = stage.scrollLeft + stage.clientWidth/2;
+    let closest = 0, minDist = Infinity;
+    cs.forEach((c,i) => { const cc = c.offsetLeft + c.offsetWidth/2; const d = Math.abs(cc-center); if (d<minDist){minDist=d;closest=i;} c.classList.toggle('active', d<c.offsetWidth/2); });
+    document.getElementById('carProgress').textContent = `${closest+1} / ${cs.length}`;
+    markNotificationRead(cs[closest].dataset.key);
+  };
+  stage.addEventListener('scroll', () => { clearTimeout(stage._t); stage._t = setTimeout(update, 120); });
+  setTimeout(update, 200);
+}
+async function markRead(key){ if (!me || !key || myNoticeReads[key]) return; try { await set(ref(db,'noticeReads/'+me.username+'/'+key), Date.now()); } catch(e){} }
+async function markNotificationRead(key){ if (!me || !key) return; try { await update(ref(db,'notifications/'+me.username+'/'+key), { read:true, readAt:Date.now() }); } catch(e){} }
+function closeCarousel(){ const el = document.getElementById('carouselOverlay'); if (el) el.remove(); noticeCarouselShown = true; }
+
+function renderNoticeContent(n){
+  let content = n.html ? n.html : escapeHtml(n.text||'').replace(/\n/g,'<br>');
+  content = content.replace(/(https?:\/\/[^\s<>"']+)/g, url => `<a href="#" data-action="linkCheck" data-arg="${escapeHtml(url)}" style="color:#3b82f6">${escapeHtml(url)}</a>`);
+  if (n.images && n.images.length > 0) {
+    n.images.forEach(img => { if (/^https?:/.test(img)) content += `<img src="${escapeHtml(img)}">`; else content += `<img src="${img}">`; });
+  }
+  return content;
+}
+
+/* ============ 頂部公告欄 ============ */
+function renderNoticeBar(){
+  const active = notices.filter(n => !n.deleted);
+  if (active.length === 0) {
+    noticeBar.innerHTML = `<span class="notice-icon">[公]</span><div class="notice-text" style="color:var(--text-sub)">${t('noNotice')}</div><button class="notice-add" data-action="openNoticeCreate">+</button>`;
+    return;
+  }
+  const pinned = active.filter(n => n.pinned);
+  const latest = active.filter(n => !n.pinned).sort((a,b) => b.createdAt-a.createdAt)[0];
+  let html = '<span class="notice-icon">[公]</span>';
+  if (pinned.length === 1) {
+    const p = pinned[0];
+    const preview = (p.text || '').replace(/<[^>]*>/g,'').slice(0,40);
+    html += `<span class="notice-pin-count" data-action="openPinnedList" style="cursor:pointer">${t('noticePinTag')}: ${escapeHtml(preview)}${preview.length>=40?'...':''}</span>`;
+  } else if (pinned.length > 1) {
+    html += `<span class="notice-pin-count" data-action="openPinnedList" style="cursor:pointer">${t('noticePinTag')} x${pinned.length}</span>`;
+  }
+  if (latest) {
+    const preview = (latest.text || latest.html || '').replace(/<[^>]*>/g,'').slice(0,50);
+    html += `<div class="notice-text" data-action="openNoticeDetail" data-arg="${latest._key}" style="cursor:pointer"><span class="label">${t('noticeLatest')}</span>${escapeHtml(preview)}${preview.length>=50?'...':''}</div>`;
+  } else if (pinned.length > 0) {
+    html += `<div class="notice-text" style="color:var(--text-sub)">${t('noticeNoOther')}</div>`;
+  }
+  html += `<button class="notice-add" data-action="openNoticeCreate">+</button>`;
+  noticeBar.innerHTML = html;
+}
+async function openPinnedList(){
+  const pinned = notices.filter(n => n.pinned && !n.deleted);
+  if (pinned.length === 0) return;
+  openNoticeFullscreen(pinned[0]._key, pinned);
+}
+
+/* ============ 公告全螢幕 ============ */
+async function openNoticeFullscreen(key, customList){
+  const list = customList || notices.filter(n => !n.deleted);
+  if (list.length === 0) return;
+  if (!myNoticeReads[key]) markRead(key);
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  const cards = list.map(n => {
+    const time = new Date(n.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+    const content = renderNoticeContent(n);
+    let apply = '';
+    if (n.fromUser && n.editedBy) apply = `<div style="font-size:11px;color:#fbbf24;margin-bottom:8px">${t('noticeEditedBy')}${escapeHtml(n.fromName||n.fromUser)}${t('noticeAdminEdited')}</div>`;
+    else if (n.fromUser) apply = `<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">${t('noticeApplyBy')}${escapeHtml(n.fromName||n.fromUser)}</div>`;
+    return `<div class="car-card ${n._key===key?'active':''}" data-key="${n._key}"><h3>${n.pinned?'['+t('noticePinTag')+'] ':''}${n.locked?'[Lock] ':''}${t('noticeTitle')}</h3><div class="car-meta">${time}</div>${apply}<div class="car-content">${content}</div></div>`;
+  }).join('');
+  const current = list.find(n => n._key === key);
+  const actions = isAdmin ? `
+    <button class="btn-primary" data-action="noticeEdit" data-arg="${key}" style="margin:0">${t('noticeEdit')}</button>
+    <button class="btn-warn" data-action="noticePin" data-arg="${key}" style="margin:0">${current.pinned?t('noticeUnpin'):t('noticePin')}</button>
+    <button class="btn-ghost" data-action="noticeLock" data-arg="${key}" style="margin:0">${current.locked?t('noticeUnlock'):t('noticeLock')}</button>
+    <button class="btn-danger" data-action="noticeDelete" data-arg="${key}" style="margin:0">${t('noticeDelete')}</button>
+  ` : `<button class="btn-ghost" data-action="closePage" style="margin:0">${t('close')}</button>`;
+  pageRoot.innerHTML = `
+    <div class="fullPage" id="noticeFullscreen">
+      <div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('noticeTitle')}</div></div>
+      <div class="fp-body"><div class="car-stage" id="nfStage">${cards}</div><div class="car-progress" id="nfProgress">1 / ${list.length}</div></div>
+      <div class="car-actions">${actions}</div>
+    </div>`;
+  setTimeout(() => {
+    const stage = document.getElementById('nfStage');
+    const target = stage.querySelector(`[data-key="${key}"]`);
+    if (target) stage.scrollLeft = target.offsetLeft - (stage.clientWidth - target.offsetWidth)/2;
+    const upd = () => {
+      const center = stage.scrollLeft + stage.clientWidth/2;
+      let closest = 0, minDist = Infinity;
+      stage.querySelectorAll('.car-card').forEach((c,i) => { const cc = c.offsetLeft + c.offsetWidth/2; const d = Math.abs(cc-center); if (d<minDist){minDist=d;closest=i;} c.classList.toggle('active', d<c.offsetWidth/2); });
+      document.getElementById('nfProgress').textContent = `${closest+1} / ${stage.querySelectorAll('.car-card').length}`;
+      markRead(stage.querySelectorAll('.car-card')[closest].dataset.key);
+    };
+    stage.addEventListener('scroll', () => { clearTimeout(stage._t); stage._t = setTimeout(upd, 120); });
+    setTimeout(upd, 100);
+  }, 100);
+}
+
+/* ============ 公告申請 ============ */
+async function openNoticeCreate(){
+  if (!me) return;
+  if (me.banned && me.banned.type === 'light') { showNotif(t('bannedLight')); return; }
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  window._noticeImages = [];
+  pageRoot.innerHTML = `
+    <div class="fullPage">
+      <div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${isAdmin?t('noticePublishTitle'):t('noticeApplyTitle')}</div></div>
+      <div class="fp-body"><div class="profile-content">
+        ${isAdmin?`<div class="section-title">${t('noticeUseHtml')}</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> ${t('noticeUseHtmlLabel')}</label></div>`:''}
+        <div class="section-title">${t('noticeContent')}</div>
+        <div class="form-row"><textarea id="noticeText" placeholder="${t('noticeContentPh')}" maxlength="5000"></textarea><div class="char-count" id="charCount">0 / 5000</div></div>
+        <div class="section-title">${t('noticeImgs')}</div>
+        <div class="avatar-options" id="imgList"></div>
+        <input type="file" id="noticeImgFile" accept="image/*" multiple>
+        <label class="upload-btn" for="noticeImgFile">${t('noticeChooseImgs')}</label>
+        <div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="${t('noticeImgUrlPh')}"></div>
+        <div class="section-title">${t('noticeWhen')}</div>
+        <div class="form-row"><select id="noticeWhen"><option value="now">${t('noticeWhenNow')}</option><option value="3days">${t('noticeWhen3d')}</option></select></div>
+        <button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">${t('noticeSubmit')}</button>
+        <div class="err" id="noticeErr"></div>
+      </div></div>
+    </div>`;
+  const ta = document.getElementById('noticeText'), cc = document.getElementById('charCount');
+  ta.addEventListener('input', () => { const len = ta.value.length; cc.textContent = `${len} / 5000`; cc.classList.toggle('over', len>5000); });
+  const renderImgs = () => {
+    const box = document.getElementById('imgList');
+    box.innerHTML = window._noticeImages.map((src,i) => `<div class="av-opt" style="position:relative;overflow:hidden"><img src="${/^https?:/.test(src)?escapeHtml(src):src}" style="width:100%;height:100%;object-fit:cover"><button style="position:absolute;top:0;right:0;background:#dc2626;color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;cursor:pointer" data-imgidx="${i}">x</button></div>`).join('');
+    box.querySelectorAll('button[data-imgidx]').forEach(b => { b.onclick = e => { e.stopPropagation(); window._noticeImages.splice(+b.dataset.imgidx,1); renderImgs(); }; });
+  };
+  document.getElementById('noticeImgFile').addEventListener('change', async e => {
+    const files = Array.from(e.target.files).slice(0, 5 - window._noticeImages.length);
+    for (const f of files) {
+      if (f.size > 5*1024*1024) { showNotif('5MB'); continue; }
+      try { const dataUrl = await compressImage(f, 800, 800, 0.75); window._noticeImages.push(dataUrl); } catch(err){}
+    }
+    renderImgs(); e.target.value = '';
+  });
+  document.getElementById('noticeImgUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); const url = e.target.value.trim(); if (!url) return; if (window._noticeImages.length >= 5) return; window._noticeImages.push(url); e.target.value = ''; renderImgs(); }
+  });
+}
+
+async function submitNotice(role){
+  const errEl = document.getElementById('noticeErr'); if (errEl) errEl.textContent = '';
+  const textEl = document.getElementById('noticeText'), useHtmlEl = document.getElementById('useHtml');
+  const useHtml = useHtmlEl && useHtmlEl.checked;
+  const text = textEl.value;
+  const when = document.getElementById('noticeWhen').value;
+  if (text.length > 5000) { if (errEl) errEl.textContent = t('noticeOver5000'); return; }
+  if (!text.trim() && window._noticeImages.length === 0) { if (errEl) errEl.textContent = t('noticeNeedContent'); return; }
+  try {
+    const c = await get(child(ref(db),'meta/noticeCounter'));
+    const next = (c.exists()?c.val():0) + 1;
+    await set(ref(db,'meta/noticeCounter'), next);
+    const noticeId = '公告_'+String(next).padStart(4,'0');
+    const payload = {
+      id:noticeId, text:useHtml?'':text, html:useHtml?text:'', images:window._noticeImages.slice(),
+      fromUser:me.username, fromName:me.displayName, fromSeat:me.seat, createdAt:Date.now(),
+      publishedAt: role==='admin' && when==='now' ? Date.now() : (when==='3days' ? Date.now()+3*86400000 : Date.now()),
+      pinned:false, locked:false, deleted:false
+    };
+    if (role === 'admin') { await set(ref(db,'notices/'+noticeId), payload); await writeLog('notice','發布公告 '+noticeId); showNotif(t('notifNoticePublished')); }
+    else { await set(ref(db,'noticePending/'+noticeId), { ...payload, status:'pending', applyAt:Date.now() }); await writeLog('notice','申請公告 '+noticeId); showNotif(t('notifNoticeSent')); }
+    window._noticeImages = []; closePage();
+  } catch(e) { if (errEl) errEl.textContent = e.message; }
+}
+
+/* ============ 我的申請 ============ */
+async function openMyNotices(){
+  const snap = await get(ref(db,'noticePending'));
+  const val = snap.val()||{};
+  const mine = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(p => p.fromUser === me.username).sort((a,b) => b.createdAt-a.createdAt);
+  const body = mine.length === 0 ? `<div class="empty">${t('noApply')}</div>` :
+    mine.map(p => {
+      const status = p.status === 'pending' ? t('noticesTab') : p.status === 'approved' ? t('approve') : p.status === 'rejected' ? t('reject') : t('notifCancel');
+      const time = new Date(p.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+      return `<div class="log-item"><div class="lt">${p.id} · ${time} · ${status}</div><div class="lm">${escapeHtml((p.text||'').slice(0,80))}</div>
+        ${p.status==='pending'?`<button class="btn-ghost" style="margin-top:8px;padding:6px;font-size:12px" data-action="cancelMyNotice" data-arg="${p._key}">${t('notifCancel')}</button>`:''}
+        ${p.status==='rejected'?`<div style="font-size:11.5px;color:#f87171;margin-top:6px">${t('reason')}：${escapeHtml(p.rejectReason||t('noReason'))}</div>`:''}
+      </div>`;
+    }).join('');
+  openPage({ title:t('myNotices'), bodyHTML:body });
+}
+async function cancelMyNotice(key){ try { await update(ref(db,'noticePending/'+key), { status:'cancelled' }); showNotif(t('notifCancel')); openMyNotices(); } catch(e){ showNotif(t('notifActionFail')); } }
+
+/* ============ 審核 ============ */
+function renderPendingNotices(){
+  if (pendingNotices.length === 0) return `<div class="empty">${t('noPending')}</div>`;
+  return pendingNotices.map(p => {
+    const time = new Date(p.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+    return `<div class="pending-item">
+      <div class="pi-head"><div class="pi-from">${escapeHtml(p.fromName||p.fromUser)} (#${p.fromSeat})</div><div class="pi-time">${time}</div></div>
+      <div class="pi-preview">${escapeHtml((p.text||'').slice(0,80))}</div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn-ok" style="margin:0;padding:8px;flex:1;min-width:80px" data-action="noticeApprove" data-arg="${p._key}">${t('approve')}</button>
+        <button class="btn-danger" style="margin:0;padding:8px;flex:1;min-width:80px" data-action="noticeReject" data-arg="${p._key}">${t('reject')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function noticeApprove(key){
+  try {
+    const snap = await get(ref(db,'noticePending/'+key));
+    if (!snap.exists()) return;
+    const p = snap.val();
+    await set(ref(db,'notices/'+p.id), { ...p, status:'published', publishedAt:Date.now(), approvedBy:me.username, approvedAt:Date.now() });
+    await update(ref(db,'noticePending/'+key), { status:'approved' });
+    showNotif(t('notifNoticeApproved'));
+    renderAdminTab('notices');
+  } catch(e) { showNotif(t('notifActionFail')); }
+}
+async function noticeReject(key){
+  const reason = prompt(t('noticeRejectReasonPh')) || '';
+  try {
+    const snap = await get(ref(db,'noticePending/'+key));
+    if (!snap.exists()) return;
+    const p = snap.val();
+    await update(ref(db,'noticePending/'+key), { status:'rejected', rejectReason:reason, rejectedAt:Date.now(), rejectedBy:me.username });
+    await push(ref(db,'notifications/'+p.fromUser), { type:'notice_rejected', noticeId:p.id, text:p.text||'(image)', reason, createdAt:Date.now(), read:false });
+    showNotif(t('notifNoticeRejected'));
+    renderAdminTab('notices');
+  } catch(e) { showNotif(t('notifActionFail')); }
+}
+async function noticeEdit(key){
+  const snap = await get(ref(db,'notices/'+key));
+  if (!snap.exists()) return;
+  const n = snap.val();
+  const newText = prompt(t('noticeEdit'), n.text || n.html || '');
+  if (newText === null) return;
+  await update(ref(db,'notices/'+key), { text:newText, html:'', editedAt:Date.now(), editedBy:me.username });
+  showNotif(t('notifNoticeEdited')); openNoticeFullscreen(key);
+}
+async function noticePin(key){
+  const snap = await get(ref(db,'notices/'+key));
+  const n = snap.val();
+  await update(ref(db,'notices/'+key), { pinned: !n.pinned });
+  showNotif(n.pinned ? t('notifNoticeUnpinned') : t('notifNoticePinned')); openNoticeFullscreen(key);
+}
+async function noticeLock(key){
+  const snap = await get(ref(db,'notices/'+key));
+  const n = snap.val();
+  await update(ref(db,'notices/'+key), { locked: !n.locked });
+  showNotif(n.locked ? t('notifNoticeUnlocked') : t('notifNoticeLocked')); openNoticeFullscreen(key);
+}
+async function noticeDelete(key){
+  await update(ref(db,'notices/'+key), { deleted:true, deletedAt:Date.now(), deletedBy:me.username });
+  showNotif(t('notifNoticeDeleted')); closePage();
+}
+
+/* ============ 連結警告 ============ */
+document.addEventListener('click', e => {
+  const link = e.target.closest('a[data-action="linkCheck"]');
+  if (!link) return;
+  e.preventDefault();
+  const url = link.dataset.arg;
+  if (url.startsWith('https://oscar114515.github.io/')) window.open(url,'_blank','noopener');
+  else showLinkWarning(url);
+});
+let pendingLink = '';
+function showLinkWarning(url){
+  pendingLink = url;
+  const div = document.createElement('div');
+  div.id = 'linkWarnOverlay';
+  div.innerHTML = `<div class="lw-card"><h3>Link Warning</h3><p>此連結不屬於梁喆同學工作室，請自行承擔後果</p><div class="lw-url">${escapeHtml(url)}</div><div class="lw-actions"><button class="btn-ghost" data-action="linkCancel">${t('notifCancel')}</button><button class="btn-primary" data-action="linkContinue">Continue</button></div></div>`;
+  document.body.appendChild(div);
+}
+function linkContinue(){ if (pendingLink) window.open(pendingLink,'_blank','noopener'); linkCancel(); }
+function linkCancel(){ const el = document.getElementById('linkWarnOverlay'); if (el) el.remove(); pendingLink = ''; }
+
+/* ============ 渲染聊天 ============ */
+function render(){
+  if (messages.length === 0) { chatBox.innerHTML = `<div class="empty">${t('emptyMsg')}</div>`; return; }
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  let list = messages;
+  if (searchKeyword) list = messages.filter(m => ((m.text||'')+(m.fileName||'')).toLowerCase().includes(searchKeyword.toLowerCase()) || (m.id||'').toLowerCase().includes(searchKeyword.toLowerCase()));
+  if (list.length === 0) { chatBox.innerHTML = `<div class="empty">${t('noMatch')}</div>`; return; }
+  const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 120;
+  chatBox.innerHTML = list.map(m => {
+    const isMe = me && m.username === me.username;
+    const time = new Date(m.createdAt).toLocaleTimeString(lang==='en'?'en-US':'zh-TW', { hour:'2-digit', minute:'2-digit' });
+    const msgIsAdmin = m.role === 'superadmin' || m.role === 'admin';
+    const roleTag = msgIsAdmin ? ' ['+t('adminRole')+']' : '';
+    const shownColor = msgIsAdmin ? '#8b5cf6' : (m.color || '#3b82f6');
+    let body = '';
+    if (m.type === 'image') body = `<img class="msg-img" src="${m.imageUrl}" data-action="viewImage" data-arg="${m.imageUrl}">`;
+    else if (m.type === 'file') body = `<div class="file-msg"><span class="fi">[F]</span><div style="flex:1;min-width:0"><div class="fn">${escapeHtml(m.fileName||'file')}</div><div class="fs">${formatSize(m.fileSize||0)}</div></div></div>`;
+    else if (m.type === 'voice') {
+      const played = myNoticeReads['voice_'+m.id] ? 'played' : '';
+      body = `<div class="voice-msg ${played}" data-action="playVoice" data-arg="${m.id}"><span class="vi">[V]</span><span class="vt">0:${String(Math.round(m.duration||0)).padStart(2,'0')}</span><div class="vp"><div></div></div><span class="vd"></span></div>`;
+    } else if (m.type === 'location') {
+      body = `<div class="loc-msg" data-action="openLocation" data-arg="${m.lat},${m.lng}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lng}&zoom=15&size=220x150&maptype=mapnik&markers=${m.lat},${m.lng},red-pushpin"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`;
+    } else {
+      let textHTML = escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
+      textHTML = textHTML.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="#" data-action="linkCheck" data-arg="$1" style="color:inherit;text-decoration:underline">$1</a>');
+      body = textHTML;
+    }
+    const deletedTag = m.deleted ? ` <span style="color:#f87171;font-size:10.5px">${t('msgDeleted')}</span>` : '';
+    const msgIdTag = isAdmin ? ` <span class="msgid">${m.id}</span>` : '';
+    let tools = '';
+    if (!m.deleted) {
+      if (isMe) tools += `<button data-action="requestDeleteMsg" data-arg="${m.id}">${t('requestDelete')}</button>`;
+      if (!isMe) tools += `<button class="danger" data-action="reportMsg" data-arg="${m.id}">${t('report')}</button>`;
+      if (isAdmin) tools += `<button class="danger" data-action="adminDeleteMsg" data-arg="${m.id}">${t('adminDelete')}</button>`;
+    } else if (isAdmin) {
+      tools += `<button data-action="restoreMsg" data-arg="${m.id}">${t('restore')}</button>`;
+      tools += `<button class="danger" data-action="purgeMsg" data-arg="${m.id}">${t('purge')}</button>`;
+    }
+    return `<div class="msg ${isMe?'me':''}">
+      <div class="avatar" style="background:${shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div>
+      <div class="bubble-wrap">
+        <div class="meta">${escapeHtml(m.displayName||m.username)} (#${m.seat})${roleTag} · ${time}${msgIdTag}${deletedTag}</div>
+        <div class="bubble" style="background:${shownColor};${m.deleted?'opacity:.5':''}">${body}</div>
+        <div class="msg-tools">${tools}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if (atBottom && !searchKeyword) chatBox.scrollTop = chatBox.scrollHeight;
+}
+function avatarInner(m){
+  if (m.avatar) { if (String(m.avatar).startsWith('data:')) return `<img src="${m.avatar}">`; return m.avatar; }
+  const name = m.displayName || m.username || '?';
+  return escapeHtml(name.charAt(0).toUpperCase());
+}
+function escapeHtml(str){
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatSize(b){ if (b<1024) return b+' B'; if (b<1024*1024) return (b/1024).toFixed(1)+' KB'; return (b/1024/1024).toFixed(2)+' MB'; }
+
+/* ============ 媒體 ============ */
+function togglePlus(){ plusPanel.classList.toggle('hidden'); }
+function pickImage(){
+  plusPanel.classList.add('hidden');
+  const inp = document.getElementById('globalImgInput');
+  inp.onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const d = await compressImage(f, 1200, 1200, 0.75); await sendMedia('image', { imageUrl:d, text:'' }); } catch(err){}
+    e.target.value = '';
+  };
+  inp.click();
+}
+function pickFile(){
+  plusPanel.classList.add('hidden');
+  const inp = document.getElementById('globalFileInput');
+  inp.onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 5*1024*1024) { showNotif('5MB'); return; }
+    try { const d = await fileToBase64(f); await sendMedia('file', { fileUrl:d, fileName:f.name, fileSize:f.size }); } catch(err){}
+    e.target.value = '';
+  };
+  inp.click();
+}
+function pickLocation(){
+  plusPanel.classList.add('hidden');
+  if (!navigator.geolocation) return;
+  showNotif('...');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    let placeName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`); const j = await r.json(); if (j.display_name) placeName = j.display_name; } catch(e){}
+    await sendMedia('location', { lat, lng, placeName });
+  }, err => showNotif('Error'));
+}
+function fileToBase64(file){ return new Promise((res,rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('fail')); r.readAsDataURL(file); }); }
+function compressImage(file, maxW, maxH, quality){
+  return new Promise((resolve,reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        const ratio = Math.min(maxW/w, maxH/h, 1);
+        w = Math.round(w*ratio); h = Math.round(h*ratio);
+        const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('load fail'));
+      img.src = ev.target.result;
+    };
+    reader.onerror = () => reject(new Error('read fail'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* 語音 */
+let mediaRecorder = null, audioChunks = [], recStartTime = 0, recTimer = null, recCancel = false;
+$('micBtn').addEventListener('mousedown', startRec);
+$('micBtn').addEventListener('touchstart', e => { e.preventDefault(); startRec(); });
+document.addEventListener('mouseup', stopRec);
+document.addEventListener('touchend', stopRec);
+document.addEventListener('mousemove', moveRec);
+document.addEventListener('touchmove', e => moveRec(e.touches[0]));
+function startRec(){
+  if (!me || (me.banned && me.banned.type === 'light')) return;
+  if (!navigator.mediaDevices) return;
+  navigator.mediaDevices.getUserMedia({ audio:true }).then(stream => {
+    audioChunks = []; recCancel = false;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.start(); recStartTime = Date.now();
+    $('micBtn').classList.add('recording');
+    const ov = document.createElement('div'); ov.id = 'recordingOverlay';
+    ov.innerHTML = `<div class="rec-timer" id="recTimer">0:00</div><div class="rec-hint">Release to send / Slide up to cancel</div><div class="rec-cancel" id="recCancel">X</div>`;
+    document.body.appendChild(ov);
+    recTimer = setInterval(() => {
+      const s = Math.floor((Date.now()-recStartTime)/1000);
+      const el = document.getElementById('recTimer'); if (el) el.textContent = `0:${String(s).padStart(2,'0')}`;
+      if (s >= 60) stopRec();
+    }, 100);
+  }).catch(()=>{});
+}
+function moveRec(e){
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+  const y = e.clientY || (e.touches && e.touches[0].clientY);
+  if (y && (window.innerHeight - y) > 100) { recCancel = true; const el = document.getElementById('recCancel'); if (el) el.style.display = 'block'; }
+  else { recCancel = false; const el = document.getElementById('recCancel'); if (el) el.style.display = 'none'; }
+}
+function stopRec(){
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+  const dur = (Date.now()-recStartTime)/1000;
+  mediaRecorder.onstop = async () => {
+    clearInterval(recTimer); $('micBtn').classList.remove('recording');
+    const ov = document.getElementById('recordingOverlay'); if (ov) ov.remove();
+    if (recCancel || dur < 1) return;
+    const blob = new Blob(audioChunks, { type:'audio/webm' });
+    const reader = new FileReader();
+    reader.onload = async () => { try { await sendMedia('voice', { audioUrl:reader.result, duration:dur }); } catch(e){} };
+    reader.readAsDataURL(blob);
+  };
+  mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(t => t.stop()); mediaRecorder = null;
+}
+
+let currentAudio = null;
+document.addEventListener('click', async e => {
+  const v = e.target.closest('[data-action="playVoice"]'); if (!v) return;
+  const m = messages.find(x => x.id === v.dataset.arg); if (!m || !m.audioUrl) return;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  currentAudio = new Audio(m.audioUrl); currentAudio.play();
+  const bar = v.querySelector('.vp > div');
+  currentAudio.ontimeupdate = () => { if (bar && currentAudio.duration) bar.style.width = ((currentAudio.currentTime/currentAudio.duration)*100)+'%'; };
+  currentAudio.onended = () => { if (bar) bar.style.width = '0%'; if (me) set(ref(db,'noticeReads/'+me.username+'/voice_'+m.id), Date.now()).catch(()=>{}); v.classList.add('played'); };
+});
+
+function viewImage(url){
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.innerHTML = `<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+  div.onclick = () => div.remove();
+  document.body.appendChild(div);
+}
+function openLocationFullscreen(arg){
+  const [lat,lng] = arg.split(',');
+  const div = document.createElement('div'); div.id = 'locationFull';
+  div.style.cssText = 'position:fixed;inset:0;background:#000;z-index:999;display:flex;flex-direction:column';
+  div.innerHTML = `<div style="padding:12px;background:#1e293b;color:#fff;display:flex;align-items:center;gap:10px"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer">←</button><div style="flex:1;font-size:14px">${lat}, ${lng}</div></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0"></iframe>`;
+  document.body.appendChild(div);
+}
+function closeLocationFull(){ const el = document.getElementById('locationFull'); if (el) el.remove(); }
+
+/* ============ 訊息刪除 / 舉報 ============ */
+function requestDeleteMsg(msgId){
+  const reason = prompt(t('deleteReasonPh')); if (!reason || !reason.trim()) return;
+  push(ref(db,'requests'), { type:'delete', msgId, reason:reason.trim(), from:me.username, fromName:me.displayName, createdAt:Date.now(), status:'pending' }).then(() => showNotif(t('requestSent')));
+}
+function reportMsg(msgId){
+  const reason = prompt(t('reportReasonPh')); if (!reason || !reason.trim()) return;
+  push(ref(db,'requests'), { type:'report', msgId, reason:reason.trim(), from:me.username, fromName:me.displayName, createdAt:Date.now(), status:'pending' }).then(() => showNotif(t('reportSent')));
+}
+async function adminDeleteMsg(msgId){
+  if (me.role !== 'superadmin' && me.role !== 'admin') return;
+  const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+  const val = snap.val()||{};
+  const key = Object.keys(val).find(k => val[k].id === msgId); if (!key) return;
+  await update(ref(db,'messages/'+key), { deleted:true, deletedAt:Date.now(), deletedBy:me.username });
+}
+async function restoreMsg(msgId){
+  if (me.role !== 'superadmin' && me.role !== 'admin') return;
+  const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+  const val = snap.val()||{};
+  const key = Object.keys(val).find(k => val[k].id === msgId); if (!key) return;
+  await update(ref(db,'messages/'+key), { deleted:false, deletedAt:null, deletedBy:null });
+}
+async function purgeMsg(msgId){
+  if (me.role !== 'superadmin' && me.role !== 'admin') return;
+  const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+  const val = snap.val()||{};
+  const key = Object.keys(val).find(k => val[k].id === msgId); if (!key) return;
+  await remove(ref(db,'messages/'+key));
+}
+
+/* ============ 頁面 ============ */
+function closePage(){ pageRoot.innerHTML = ''; banDraft = {}; }
+function openPage({ title, bodyHTML, heroHTML }){
+  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`;
+}
+
+/* ============ 個人主頁 ============ */
+async function openProfilePage(username, isSelf){
+  const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) { showNotif(t('noUser')); return; }
+  const u = snap.val();
+  const isAdmin = u.role === 'superadmin' || u.role === 'admin';
+  const bgColor = isAdmin ? '#8b5cf6' : (u.color || '#3b82f6');
+  const textColor = pickTextColor(bgColor);
+  const roleLabel = isAdmin ? t('adminRole') : t('memberRole');
+  const avatarHTML = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
+  const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
+  let bodyHTML = '';
+  if (isSelf) {
+    bodyHTML = `
+      <div class="section-title">${t('editName')}</div>
+      <div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div>
+      <button class="btn-primary" data-action="saveDisplayName">${t('saveName')}</button>
+      <div class="err" id="nameErr"></div><div class="ok-msg" id="nameOk"></div>
+      <div class="section-title">${t('editAvatar')}</div>
+      <div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div>
+      <input type="file" id="avatarFile" accept="image/*" capture="environment">
+      <label class="upload-btn" for="avatarFile">${t('uploadAvatar')}</label>
+      <div class="err" id="avatarErr"></div><div class="ok-msg" id="avatarOk"></div>
+      <div class="section-title">${t('editPwd')}</div>
+      <div class="form-row"><input type="password" id="oldPwd" placeholder="${t('oldPwd')}"></div>
+      <div class="form-row"><input type="password" id="newPwd1" placeholder="${t('newPwd')}"></div>
+      <div class="form-row"><input type="password" id="newPwd2" placeholder="${t('confirmPwd')}"></div>
+      <button class="btn-primary" data-action="savePassword">${t('savePwd')}</button>
+      <div class="err" id="pwdErr"></div><div class="ok-msg" id="pwdOk"></div>
+      <button class="btn-ghost" data-action="openMyLogs">${t('myLogs')}</button>
+      <button class="btn-ghost" data-action="openMyNotices">${t('myNotices')}</button>
+      <div class="section-title" style="margin-top:28px">${t('about')}</div>
+      <div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">${t('author')}</div><div class="ai-sub">${t('authorName')}</div></div></div></div>
+      <div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">${t('thanks')}</div><div class="ai-sub">${thanksList.length > 0 ? thanksList.length : t('thanksEmpty')}</div></div></div><div class="ai-arrow">›</div></div>
+      <div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">${t('versions')}</div><div class="ai-sub">${t('currentVersion')}</div></div></div><div class="ai-arrow">›</div></div>
+    `;
+  } else { bodyHTML = `<div style="color:var(--text-sub);font-size:13px;text-align:center;padding:20px 0">${t('cantView')}</div>`; }
+  openPage({ title: isSelf ? t('profileTitle') : (u.displayName + t('profileOther')), heroHTML, bodyHTML });
+  if (isSelf) { setTimeout(() => { const f = document.getElementById('avatarFile'); if (f) f.onchange = onAvatarFileChange; }, 0); }
+}
+function pickTextColor(hex){ const h = String(hex).replace('#',''); if (h.length !== 6) return '#fff'; const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); const lum = (0.299*r + 0.587*g + 0.114*b)/255; return lum > 0.6 ? '#111' : '#fff'; }
+async function saveDisplayName(){
+  const name = document.getElementById('editDisplayName').value.trim();
+  const errEl = document.getElementById('nameErr'), okEl = document.getElementById('nameOk');
+  if (!name) { errEl.textContent = t('nameEmpty'); return; }
+  if (name.length > 20) { errEl.textContent = t('nameTooLong'); return; }
+  await update(ref(db,'users/'+me.username), { displayName:name });
+  me.displayName = name; sessionStorage.setItem('chat_me', JSON.stringify(me));
+  okEl.textContent = '✓ '+t('updated'); setTimeout(() => location.reload(), 600);
+}
+async function pickEmoji(emoji){
+  const val = emoji || null;
+  await update(ref(db,'users/'+me.username), { avatar:val });
+  me.avatar = val; sessionStorage.setItem('chat_me', JSON.stringify(me));
+  setTimeout(() => location.reload(), 600);
+}
+async function onAvatarFileChange(e){
+  const file = e.target.files[0]; if (!file) return;
+  try { const d = await compressImage(file, 200, 200, 0.75); await update(ref(db,'users/'+me.username), { avatar:d }); me.avatar = d; sessionStorage.setItem('chat_me', JSON.stringify(me)); setTimeout(() => location.reload(), 600); } catch(err){}
+}
+async function savePassword(){
+  const oldPwd = document.getElementById('oldPwd').value;
+  const p1 = document.getElementById('newPwd1').value, p2 = document.getElementById('newPwd2').value;
+  const errEl = document.getElementById('pwdErr'), okEl = document.getElementById('pwdOk');
+  if (!oldPwd) { errEl.textContent = t('oldPwd'); return; }
+  if (p1.length < 6) { errEl.textContent = t('pwdTooShort'); return; }
+  if (p1 !== p2) { errEl.textContent = t('pwdMismatch'); return; }
+  const snap = await get(child(ref(db),'users/'+me.username));
+  if (snap.val().password !== oldPwd) { errEl.textContent = t('pwdWrong'); return; }
+  await update(ref(db,'users/'+me.username), { password:p1 });
+  await writeLog('changepwd', t('changedPwdLog'));
+  okEl.textContent = '✓ '+t('pwdUpdated');
+}
+
+/* ============ 感謝清單 ============ */
+async function openThanksPage(){
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  const items = thanksList.length === 0 ? `<div class="thanks-empty">${t('thanksEmpty')}</div>` :
+    thanksList.map(x => `<div class="thanks-item"><div class="ti-name">${escapeHtml(x.name)}</div><div class="ti-by">${t('thanksBy')} ${escapeHtml(x.byName||x.by)}</div></div>`).join('');
+  const adminForm = isAdmin ? `<div class="section-title">${t('thanksAdd')}</div><div class="form-row"><input type="text" id="thanksName" placeholder="${t('thanksNamePh')}" maxlength="30"></div><button class="btn-primary" data-action="submitThanks">${t('thanksSubmit')}</button><div class="err" id="thanksErr"></div>` : '';
+  openPage({ title: t('thanks'), bodyHTML: items + adminForm });
+}
+async function submitThanks(){
+  if (me.role !== 'superadmin' && me.role !== 'admin') return;
+  const name = document.getElementById('thanksName').value.trim();
+  const errEl = document.getElementById('thanksErr');
+  if (!name) { if (errEl) errEl.textContent = t('thanksNameEmpty'); return; }
+  await push(ref(db,'thanks'), { name, by:me.username, byName:me.displayName, createdAt:Date.now() });
+  showNotif(t('thanksAdded')); openThanksPage();
+}
+
+/* ============ 版本資訊 ============ */
+async function openVersionPage(){
+  const body = VERSION_HISTORY.map((v,i) => `<div class="version-item ${i===0?'latest':''}"><div class="vi-head"><span class="vi-ver">${v.ver}</span>${i===0?'<span class="vi-badge">'+t('latestBadge')+'</span>':''}<span class="vi-date">${v.date}</span></div><div class="vi-changes"><ul>${v.changes.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
+  openPage({ title: t('versions'), bodyHTML: body });
+}
+
+/* ============ 日誌 ============ */
+async function openMyLogs(){
+  const snap = await get(query(ref(db,'logs'), limitToLast(500)));
+  const val = snap.val()||{};
+  const list = Object.values(val).filter(l => l.username === me.username).sort((a,b) => b.createdAt-a.createdAt);
+  openLogsPage(t('myLogs'), list);
+}
+async function openUserLogs(username){
+  const snap = await get(query(ref(db,'logs'), limitToLast(500)));
+  const val = snap.val()||{};
+  const list = Object.values(val).filter(l => l.username === username).sort((a,b) => b.createdAt-a.createdAt);
+  openLogsPage(username + ' - ' + t('myLogs'), list);
+}
+function openLogsPage(title, logs){
+  const body = logs.length === 0 ? `<div class="empty">${t('noLogs')}</div>` :
+    logs.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join('');
+  openPage({ title, bodyHTML: `<div class="section-title">${logs.length}</div>` + body });
+}
+
+/* ============ 管理員後台 ============ */
+function openAdminPage(tab){
+  if (me.role !== 'superadmin' && me.role !== 'admin') return;
+  const isSuper = me.role === 'superadmin';
+  const pendingCount = pendingNotices.length;
+  const reqCount = Object.values(requests).filter(r => r.status === 'pending').length;
+  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('adminPanel')}</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?t('superAdmin'):t('adminRole')}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">${t('usersTab')}</button><button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">${t('noticesTab')}${pendingCount?' ('+pendingCount+')':''}</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">${t('requestsTab')}${reqCount?' ('+reqCount+')':''}</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">${t('logsTab')}</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  renderAdminTab(tab);
+}
+async function renderAdminTab(tab){
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.arg === tab));
+  const body = document.getElementById('adminBody'); if (!body) return;
+  if (tab === 'users') body.innerHTML = renderUserList();
+  else if (tab === 'notices') body.innerHTML = renderPendingNotices();
+  else if (tab === 'requests') body.innerHTML = renderRequestsList();
+  else body.innerHTML = await renderAllLogs();
+}
+function renderUserList(){
+  const list = Object.values(allUsers).sort((a,b) => (a.seat||0)-(b.seat||0));
+  if (list.length === 0) return `<div class="empty">${t('loading')}</div>`;
+  return `<div class="user-list">${list.map(u => {
+    const isAdmin = u.role === 'superadmin' || u.role === 'admin';
+    const isSuper = u.role === 'superadmin';
+    const color = isAdmin ? '#8b5cf6' : (u.color||'#3b82f6');
+    const av = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
+    const badges = [];
+    if (isSuper) badges.push(`<span class="uc-badge badge-super">${t('superAdmin')}</span>`);
+    else if (isAdmin) badges.push(`<span class="uc-badge badge-admin">${t('adminRole')}</span>`);
+    if (u.banned && u.banned.type === 'severe') badges.push(`<span class="uc-badge badge-ban-severe">${t('banTypeSevere')}</span>`);
+    else if (u.banned && u.banned.type === 'light') badges.push(`<span class="uc-badge badge-ban-light">${t('banTypeLight')}</span>`);
+    return `<div class="user-card" data-action="openUserDetail" data-arg="${u.username}"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">#${u.seat} · ${u.username}</div></div>${badges.join('')}</div>`;
+  }).join('')}</div>`;
+}
+function renderRequestsList(){
+  const list = Object.values(requests).filter(r => r.status === 'pending').sort((a,b) => b.createdAt-a.createdAt);
+  if (list.length === 0) return `<div class="empty">${t('noRequests')}</div>`;
+  return list.map(r => {
+    const typeLabel = r.type === 'delete' ? t('deleteRequest') : t('report');
+    const time = new Date(r.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+    return `<div class="log-item action-delete" style="border-left-color:#ef4444"><div class="lt">${time} · ${escapeHtml(r.fromName||r.from)} (${typeLabel})</div><div class="lm">${escapeHtml(r.msgId)}<br>${escapeHtml(r.reason)}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="btn-danger" style="margin:0;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="approve">${t('approve')}</button><button class="btn-ghost" style="margin:0;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="reject">${t('reject')}</button></div></div>`;
+  }).join('');
+}
+async function handleRequest(key, action){
+  const req = requests[key]; if (!req) return;
+  if (action === 'approve') {
+    const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+    const val = snap.val()||{};
+    const mkey = Object.keys(val).find(k => val[k].id === req.msgId);
+    if (mkey) await update(ref(db,'messages/'+mkey), { deleted:true, deletedAt:Date.now(), deletedBy:me.username });
+    await update(ref(db,'requests/'+key), { status:'approved', handledAt:Date.now(), handledBy:me.username });
+  } else {
+    await update(ref(db,'requests/'+key), { status:'rejected', handledAt:Date.now(), handledBy:me.username });
+  }
+  renderAdminTab('requests');
+}
+async function renderAllLogs(){
+  const snap = await get(query(ref(db,'logs'), limitToLast(300)));
+  const val = snap.val()||{};
+  const list = Object.values(val).sort((a,b) => b.createdAt-a.createdAt);
+  if (list.length === 0) return `<div class="empty">${t('noLogs')}</div>`;
+  return list.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join('');
+}
+
+/* ============ 用戶詳情 ============ */
+async function openUserDetail(username){
+  const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) return;
+  renderUserDetailPage(snap.val());
+}
+function renderUserDetailPage(u){
+  const isSuper = me.role === 'superadmin';
+  const isTargetSuper = u.role === 'superadmin', isTargetAdmin = u.role === 'admin';
+  const canEdit = isSuper || (me.role === 'admin' && !isTargetSuper && !isTargetAdmin);
+  const canBan = isSuper && u.username !== me.username;
+  const canGrant = isSuper && u.username !== me.username;
+  const isAdmin = isTargetSuper || isTargetAdmin;
+  const bgColor = isAdmin ? '#8b5cf6' : (u.color||'#3b82f6');
+  const textColor = pickTextColor(bgColor);
+  const avatarHTML = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
+  const roleLabel = isTargetSuper ? t('superAdmin') : (isTargetAdmin ? t('adminRole') : t('memberRole'));
+  const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
+  let bodyHTML = '';
+  if (u.banned) bodyHTML += `<div class="ban-status ${u.banned.type}"><b>${u.banned.type === 'severe' ? t('banTypeSevere') : t('banTypeLight')}</b><br>${t('reason')}：${escapeHtml(u.banned.reason||t('noReason'))}</div>`;
+  if (canBan) {
+    const isBanned = !!u.banned;
+    if (isBanned) bodyHTML += `<div class="section-title">${t('banSection')}</div><div class="ban-block"><div class="ban-label">${t('banned')}</div><div class="ban-sub">${t('unban')}</div><button class="btn-ok" data-action="unban" data-arg="${u.username}">${t('unban')}</button></div>`;
+    else {
+      const dt = (banDraft[u.username] && banDraft[u.username].type) || 'light';
+      const dr = (banDraft[u.username] && banDraft[u.username].reason) || '';
+      bodyHTML += `<div class="section-title">${t('banSection')}</div><div class="ban-block"><div class="ban-label">${t('banThis')}</div><div class="ban-sub">${t('banSelect')}</div><div class="ban-type-buttons"><button class="ban-type-btn light ${dt==='light'?'selected':''}" data-action="setBanType" data-arg="${u.username}" data-arg2="light">${t('banTypeLight')}<br><span style="font-size:10.5px;opacity:.85">${t('banLightSub')}</span></button><button class="ban-type-btn severe ${dt==='severe'?'selected':''}" data-action="setBanType" data-arg="${u.username}" data-arg2="severe">${t('banTypeSevere')}<br><span style="font-size:10.5px;opacity:.85">${t('banSevereSub')}</span></button></div><div class="form-row" style="margin-top:12px"><input type="text" id="au_banReason" placeholder="${t('banReasonPh')}" maxlength="100" value="${escapeHtml(dr)}"></div><div class="err" id="banErr"></div><button class="btn-danger" data-action="confirmBan" data-arg="${u.username}">${t('confirmBan')}</button></div>`;
+    }
+  }
+  if (canEdit) bodyHTML += `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="au_displayName" value="${escapeHtml(u.displayName||u.username)}" maxlength="20"></div><div class="section-title">Color (hex)</div><div class="form-row"><input type="text" id="au_color" value="${u.color||'#3b82f6'}"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="">x</div></div><button class="btn-primary" data-action="adminSaveProfile" data-arg="${u.username}">${t('saved')}</button><div class="err" id="auErr"></div><div class="ok-msg" id="auOk"></div>`;
+  if (canGrant) { bodyHTML += `<div class="section-title">${t('adminRole')}</div>`; if (isTargetAdmin && !isTargetSuper) bodyHTML += `<button class="btn-ghost" data-action="adminRevoke" data-arg="${u.username}">${t('revokeAdmin')}</button>`; else if (!isTargetAdmin) bodyHTML += `<button class="btn-primary" data-action="adminGrant" data-arg="${u.username}">${t('grantAdmin')}</button>`; }
+  bodyHTML += `<button class="btn-ghost" data-action="openUserLogs" data-arg="${u.username}">${t('viewLogs')}</button>`;
+  openPage({ title: u.displayName + t('userDetail'), heroHTML, bodyHTML });
+}
+function setBanType(username, type){
+  if (!banDraft[username]) banDraft[username] = { type:'light', reason:'' };
+  const r = document.getElementById('au_banReason'); if (r) banDraft[username].reason = r.value;
+  banDraft[username].type = type; openUserDetail(username);
+}
+async function confirmBan(username){
+  if (me.role !== 'superadmin') return;
+  const type = (banDraft[username] && banDraft[username].type) || 'light';
+  const r = document.getElementById('au_banReason');
+  const reason = r ? r.value.trim() : ((banDraft[username] && banDraft[username].reason) || '').trim();
+  const errEl = document.getElementById('banErr');
+  if (!reason) { if (errEl) errEl.textContent = t('banReasonEmpty'); return; }
+  await update(ref(db,'users/'+username), { banned: { type, reason, bannedAt:Date.now(), bannedBy:me.username } });
+  delete banDraft[username]; showNotif(t('notifBanned') + ' ' + username); openUserDetail(username);
+}
+async function unban(username){ if (me.role !== 'superadmin') return; await update(ref(db,'users/'+username), { banned:null }); showNotif(t('notifUnbanned')); openUserDetail(username); }
+async function adminSaveProfile(username){
+  const displayName = document.getElementById('au_displayName').value.trim();
+  const color = document.getElementById('au_color').value.trim();
+  const errEl = document.getElementById('auErr'), okEl = document.getElementById('auOk');
+  if (!displayName) { errEl.textContent = t('nameEmpty'); return; }
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) { errEl.textContent = 'Color'; return; }
+  await update(ref(db,'users/'+username), { displayName, color }); okEl.textContent = '✓ '+t('saved');
+}
+async function adminPickEmoji(username, emoji){ await update(ref(db,'users/'+username), { avatar:emoji||null }); openUserDetail(username); }
+async function adminGrant(username){ await update(ref(db,'users/'+username), { role:'admin' }); showNotif(t('notifGranted')); openUserDetail(username); }
+async function adminRevoke(username){ await update(ref(db,'users/'+username), { role:'member' }); showNotif(t('notifRevoked')); openUserDetail(username); }
+
+/* ============ 通知 ============ */
+function updateAdminDot(){
+  if (!me || (me.role !== 'superadmin' && me.role !== 'admin')) return;
+  const n = Object.values(requests).filter(r => r.status === 'pending').length + pendingNotices.length;
+  if (n > 0) { adminNotifDot.textContent = n; adminNotifDot.classList.remove('hidden'); } else adminNotifDot.classList.add('hidden');
+}
+function checkPendingNoticeNotif(){
+  if (!me || (me.role !== 'superadmin' && me.role !== 'admin')) return;
+  const now = Date.now();
+  pendingNotices.forEach(async p => {
+    if (p.status === 'pending' && p.publishedAt && p.publishedAt <= now) {
+      await set(ref(db,'notices/'+p.id), { ...p, status:'published', autoPublishedAt:now });
+      await update(ref(db,'noticePending/'+p._key), { status:'approved', autoApproved:true });
+    }
+  });
+}
+function showNotif(text){
+  const el = document.createElement('div'); el.id = 'notifBanner'; el.textContent = text;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
+}
+
+/* ============ 啟動 ============ */
+applyTheme(); applyLang(); applyI18n();
+
+(async function boot(){
+  const saved = sessionStorage.getItem('chat_me');
+  if (!saved) return;
+  try {
+    const u = JSON.parse(saved);
+    const snap = await get(child(ref(db),'users/'+u.username));
+    if (!snap.exists()) { sessionStorage.removeItem('chat_me'); return; }
+    const data = snap.val();
+    if (data.banned && data.banned.type === 'severe') { sessionStorage.removeItem('chat_me'); return; }
+    me = { username:data.username, displayName:data.displayName||data.username, seat:data.seat, color:data.color||'#3b82f6', role:data.role||'member', avatar:data.avatar||null, banned:data.banned||null };
+    await setPresence(); enterChat();
+  } catch(e) { sessionStorage.removeItem('chat_me'); }
+})();
+</script>
+</body>
+</html>
