@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb}
+  :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
   body.theme-light{--bg-app:#f0f2f5;--bg-header:linear-gradient(90deg,#ffffff,#f8fafc);--bg-card:#ffffff;--bg-input:#f0f2f5;--text-main:#1c1e21;--text-sub:#65676b;--text-muted:#8a8d91;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15)}
   body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;background:var(--bg-app);color:var(--text-main);overflow:hidden;height:100vh;height:100dvh;transition:background .3s,color .3s}
   .hidden{display:none!important}
@@ -35,14 +35,13 @@
   .hbtn.admin{background:rgba(139,92,246,.25);color:#a78bfa}
   .hbtn .dot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:8px;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
   @media(max-width:520px){header{padding:8px 10px;min-height:auto;flex-direction:column;align-items:stretch;gap:6px}header .title{font-size:14px}header .right{width:100%;justify-content:space-between}.hbtn{font-size:11.5px;padding:5px 9px;flex:1;text-align:center}.ver{font-size:10px}}
-  #noticeBar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(251,191,36,.12);border-bottom:1px solid rgba(251,191,36,.25);flex-shrink:0;font-size:13px;cursor:pointer;position:relative;transition:background-color .25s ease}
+  #noticeBar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(251,191,36,.12);border-bottom:1px solid rgba(251,191,36,.25);flex-shrink:0;font-size:13px;cursor:pointer;transition:background-color .25s ease}
   body.theme-light #noticeBar{background:rgba(251,191,36,.15)}
   #noticeBar:hover{background:rgba(251,191,36,.2)}
   #noticeBar .notice-icon{color:#fbbf24;font-size:14px;flex-shrink:0;font-weight:700}
   #noticeBar .notice-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #noticeBar .notice-text .label{color:#fbbf24;font-weight:600;margin-right:6px}
   #noticeBar .notice-add{background:#fbbf24;color:#1c1917;border:none;width:32px;height:32px;border-radius:8px;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  #noticeBar .notice-add:hover{transform:scale(1.05);background:#fcd34d}
   #noticeBar .notice-pin-count{background:rgba(251,191,36,.3);color:#fbbf24;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;flex-shrink:0}
   #classStatus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 12px;background:rgba(30,41,59,.5);border-bottom:1px solid var(--border);font-size:11.5px;color:var(--text-sub);flex-shrink:0}
   body.theme-light #classStatus{background:rgba(255,255,255,.7)}
@@ -64,6 +63,7 @@
   .meta{font-size:11px;color:var(--text-muted);padding:0 4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .meta .msgid{color:var(--text-muted);font-size:10px;font-family:monospace}
   .meta .enc-tag{background:rgba(220,38,38,.2);color:#fca5a5;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600}
+  .meta .ai-tag{background:rgba(102,204,255,.25);color:#66ccff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700}
   .bubble{padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;color:#fff;max-width:100%}
   .msg.me .bubble{border-bottom-right-radius:4px}
   .msg:not(.me) .bubble{border-bottom-left-radius:4px}
@@ -101,72 +101,59 @@
   #encToggle input{display:none}
   #encToggle .dot-check{width:10px;height:10px;border-radius:50%;border:2px solid var(--border-strong);transition:.2s}
   #encToggle.active .dot-check{background:#dc2626;border-color:#dc2626}
-  #plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;transform-origin:bottom left;animation:panelIn .28s cubic-bezier(.34,1.56,.64,1)}
-  #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:12px;transition:transform .2s cubic-bezier(.34,1.56,.64,1),background-color .2s}
-  #plusPanel .pi:hover{transform:scale(1.08) translateY(-2px);background:rgba(56,189,248,.15)}
+  #plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;transform-origin:bottom left}
+  #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:12px}
+  #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
   #plusPanel .pi .pic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8}
   #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
-  @keyframes panelIn{0%{opacity:0;transform:translateY(10px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
-  #recordingOverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-  #recordingOverlay .rec-timer{font-size:42px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
-  #recordingOverlay .rec-hint{font-size:14px;color:#cbd5e1}
-  #recordingOverlay .rec-cancel{color:#f87171;font-size:16px;font-weight:600;display:none}
-  #mentionPopup{position:absolute;bottom:100%;left:12px;right:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);margin-bottom:6px;animation:mentionIn .2s ease}
-  #mentionPopup .mention-item{padding:10px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px;transition:background-color .15s,padding-left .2s}
-  #mentionPopup .mention-item:hover{background:rgba(56,189,248,.15);padding-left:20px}
+  #mentionPopup{position:absolute;bottom:100%;left:12px;right:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);margin-bottom:6px}
+  #mentionPopup .mention-item{padding:10px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px}
+  #mentionPopup .mention-item:hover{background:rgba(56,189,248,.15)}
   #mentionPopup .mention-item .mi-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden}
   #mentionPopup .mention-item .mi-av img{width:100%;height:100%;object-fit:cover}
-  @keyframes mentionIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
-  .empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px;animation:pulse 2s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
-  .fullPage{position:fixed;inset:0;background:var(--bg-app);z-index:100;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;animation:pageInV2 .35s cubic-bezier(.22,1,.36,1)}
-  @keyframes pageInV2{0%{opacity:0;transform:translateX(30px) scale(.98)}100%{opacity:1;transform:translateX(0) scale(1)}}
+  .empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px}
+  .fullPage{position:fixed;inset:0;background:var(--bg-app);z-index:100;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
   .fullPage .fp-header{padding:12px 16px;display:flex;align-items:center;gap:12px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0}
-  .fullPage .fp-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background-color .2s}
-  .fullPage .fp-back:hover{transform:translateX(-4px) scale(1.05);background:rgba(148,163,184,.3)}
+  .fullPage .fp-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
   .fullPage .fp-title{font-size:17px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .fullPage .fp-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .fullPage .fp-body::-webkit-scrollbar{width:6px}
   .fullPage .fp-body::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:3px}
   .profile-hero{padding:32px 20px 24px;text-align:center;position:relative}
-  .profile-hero .hero-avatar{width:96px;height:96px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:#fff;overflow:hidden;border:4px solid rgba(255,255,255,.25);position:relative;transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease}
+  .profile-hero .hero-avatar{width:96px;height:96px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:#fff;overflow:hidden;border:4px solid rgba(255,255,255,.25)}
   .profile-hero .hero-avatar img{width:100%;height:100%;object-fit:cover}
-  .profile-hero .hero-avatar:hover{transform:scale(1.06) rotate(-4deg);box-shadow:0 0 0 6px rgba(255,255,255,.25)}
   .profile-hero .hero-name{font-size:24px;font-weight:700;margin-bottom:4px}
   .profile-hero .hero-sub{font-size:14px;opacity:.9}
   .profile-hero .hero-badge{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.25)}
   .profile-content{padding:20px 20px 40px}
   .section-title{font-size:13px;color:var(--text-sub);margin:18px 0 10px;font-weight:600}
   .form-row{margin-bottom:14px}
-  .form-row input[type=text],.form-row input[type=password],.form-row textarea,.form-row select{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit;transition:border-color .25s ease,box-shadow .3s ease,transform .2s ease,background-color .25s ease}
+  .form-row input[type=text],.form-row input[type=password],.form-row textarea,.form-row select{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit}
   .form-row textarea{resize:vertical;min-height:120px;line-height:1.5}
-  .form-row input:focus,.form-row textarea:focus{transform:scale(1.015);box-shadow:0 0 0 4px rgba(56,189,248,.18),0 0 20px rgba(56,189,248,.25)}
-  .char-count{text-align:right;font-size:11px;color:#4ade80;margin-top:4px;transition:color .2s ease,transform .2s ease}
-  .char-count.over{color:#f87171;transform:scale(1.08)}
-  .btn-primary,.btn-danger,.btn-warn,.btn-ok,.btn-ghost{width:100%;padding:12px;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background-color .2s ease,opacity .2s ease}
+  .char-count{text-align:right;font-size:11px;color:#4ade80;margin-top:4px}
+  .char-count.over{color:#f87171}
+  .btn-primary,.btn-danger,.btn-warn,.btn-ok,.btn-ghost{width:100%;padding:12px;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
   .btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb)}
   .btn-danger{background:linear-gradient(135deg,#dc2626,#b91c1c)}
   .btn-warn{background:linear-gradient(135deg,#ea580c,#c2410c)}
   .btn-ok{background:linear-gradient(135deg,#16a34a,#15803d)}
   .btn-ghost{background:rgba(148,163,184,.15);color:var(--text-main)}
-  .btn-primary:hover,.btn-danger:hover,.btn-warn:hover,.btn-ok:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 24px rgba(0,0,0,.3)}
-  .btn-primary:active,.btn-danger:active,.btn-warn:active,.btn-ok:active{transform:translateY(0) scale(.97);transition:transform .08s ease}
-  .btn-ghost:hover{transform:translateY(-1px);background:rgba(148,163,184,.28)}
+  .btn-primary:disabled{opacity:.5}
   .avatar-options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-  .av-opt{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:2px solid transparent;background:var(--bg-input);transition:transform .25s cubic-bezier(.34,1.56,.64,1),border-color .2s,background-color .2s}
-  .av-opt:hover{transform:scale(1.18) rotate(-8deg)}
+  .av-opt{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:2px solid transparent;background:var(--bg-input)}
+  .av-opt:hover{border-color:var(--primary)}
   .err{color:#f87171;font-size:12px;margin-top:6px;min-height:14px}
   .ok-msg{color:#4ade80;font-size:12px;margin-top:6px;min-height:14px}
   input[type=file]{display:none}
   .upload-btn{display:inline-block;padding:10px 16px;border-radius:10px;background:rgba(148,163,184,.2);color:var(--text-main);font-size:13px;cursor:pointer;font-family:inherit;border:1px dashed var(--border-strong);text-align:center;width:100%}
   .tabs{display:flex;padding:0 16px;border-bottom:1px solid var(--border);background:var(--bg-card);overflow-x:auto;flex-shrink:0}
-  .tab{padding:12px 16px;text-align:center;font-size:13px;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;background:none;border-left:none;border-right:none;border-top:none;white-space:nowrap;position:relative;transition:color .25s ease,padding .25s ease}
+  .tab{padding:12px 16px;text-align:center;font-size:13px;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;background:none;border-left:none;border-right:none;border-top:none;white-space:nowrap}
   .tab.active{color:#a78bfa;border-bottom-color:#8b5cf6;font-weight:600}
   .admin-body{padding:16px 18px 40px}
   .user-list{display:flex;flex-direction:column;gap:8px}
-  .user-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);cursor:pointer;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background-color .25s,border-color .25s}
-  .user-card:hover{transform:translateX(4px);border-color:rgba(56,189,248,.4)}
-  .user-card .uc-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+  .user-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);cursor:pointer}
+  .user-card:hover{border-color:rgba(56,189,248,.4)}
+  .user-card .uc-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
   .user-card .uc-avatar img{width:100%;height:100%;object-fit:cover}
   .user-card .uc-info{flex:1;min-width:0}
   .user-card .uc-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -176,8 +163,8 @@
   .badge-ban-light{background:rgba(234,88,12,.25);color:#fdba74}
   .badge-admin{background:rgba(139,92,246,.25);color:#c4b5fd}
   .badge-super{background:rgba(239,68,68,.3);color:#fca5a5}
-  .log-item{padding:10px 12px;border-radius:10px;background:var(--bg-input);border-left:3px solid #38bdf8;font-size:12.5px;margin-bottom:8px;transition:transform .2s ease,background-color .2s ease}
-  .log-item:hover{transform:translateX(3px);background:rgba(56,189,248,.08)}
+  .badge-ai{background:rgba(102,204,255,.25);color:#66ccff}
+  .log-item{padding:10px 12px;border-radius:10px;background:var(--bg-input);border-left:3px solid #38bdf8;font-size:12.5px;margin-bottom:8px}
   .log-item.action-login{border-left-color:#4ade80}
   .log-item.action-logout{border-left-color:#94a3b8}
   .log-item.action-changepwd{border-left-color:#facc15}
@@ -185,6 +172,7 @@
   .log-item.action-ban{border-left-color:#f87171}
   .log-item.action-delete{border-left-color:#fb7185}
   .log-item.action-notice{border-left-color:#fbbf24}
+  .log-item.action-ai{border-left-color:#66ccff}
   .log-item .lt{color:var(--text-sub);font-size:11px}
   .log-item .lm{margin-top:3px;word-break:break-word}
   .ban-status{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:13px}
@@ -194,19 +182,16 @@
   .ban-block .ban-label{font-size:14px;font-weight:600}
   .ban-block .ban-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
   .ban-type-buttons{display:flex;gap:8px;margin-top:12px}
-  .ban-type-btn{flex:1;padding:10px 8px;border-radius:10px;background:var(--bg-input);color:var(--text-sub);border:2px solid var(--border);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.3;transition:transform .2s cubic-bezier(.34,1.56,.64,1),background-color .2s,border-color .2s,color .2s}
-  .ban-type-btn:hover{transform:translateY(-2px)}
+  .ban-type-btn{flex:1;padding:10px 8px;border-radius:10px;background:var(--bg-input);color:var(--text-sub);border:2px solid var(--border);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.3}
   .ban-type-btn.selected.light{background:rgba(234,88,12,.25);color:#fdba74;border-color:#ea580c}
   .ban-type-btn.selected.severe{background:rgba(220,38,38,.25);color:#fca5a5;border-color:#dc2626}
-  #carouselOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;flex-direction:column;padding:20px;overflow:hidden;animation:fadeIn .3s ease}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  #carouselOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;flex-direction:column;padding:20px;overflow:hidden}
   #carouselOverlay .car-top{display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:14px;flex-shrink:0}
   #carouselOverlay .car-title{font-size:16px;font-weight:600}
-  #carouselOverlay .car-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;transition:transform .2s ease,background-color .2s ease}
-  #carouselOverlay .car-close:hover{transform:rotate(90deg) scale(1.1);background:rgba(255,255,255,.3)}
+  #carouselOverlay .car-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
   #carouselOverlay .car-stage{flex:1;min-height:0;display:flex;align-items:center;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:0 12vw;scrollbar-width:none}
   #carouselOverlay .car-stage::-webkit-scrollbar{display:none}
-  .car-card{flex:0 0 70vw;max-width:520px;background:#fff;color:#1c1e21;border-radius:16px;padding:20px;scroll-snap-align:center;overflow-y:auto;max-height:70vh;box-shadow:0 20px 40px rgba(0,0,0,.4);transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .35s ease,box-shadow .35s ease}
+  .car-card{flex:0 0 70vw;max-width:520px;background:#fff;color:#1c1e21;border-radius:16px;padding:20px;scroll-snap-align:center;overflow-y:auto;max-height:70vh;box-shadow:0 20px 40px rgba(0,0,0,.4)}
   .car-card.active{box-shadow:0 30px 60px rgba(0,0,0,.5)}
   .car-card h3{font-size:16px;margin-bottom:10px}
   .car-card .car-meta{font-size:11px;color:#666;margin-bottom:10px}
@@ -214,7 +199,7 @@
   .car-card .car-content img{max-width:100%;border-radius:8px;margin-top:8px}
   .car-card.reject{background:#fee;border:2px solid #f87171}
   #carouselOverlay .car-progress{text-align:center;color:#fff;font-size:13px;margin-top:14px;flex-shrink:0;opacity:.8}
-  #noticeFullscreen{position:fixed;inset:0;background:var(--bg-app);z-index:200;display:flex;flex-direction:column;height:100vh;height:100dvh;animation:fadeIn .3s ease}
+  #noticeFullscreen{position:fixed;inset:0;background:var(--bg-app);z-index:200;display:flex;flex-direction:column;height:100vh;height:100dvh}
   #noticeFullscreen .fp-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   #noticeFullscreen .car-stage{flex:1;min-height:0;display:flex;align-items:center;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:20px 12vw;scrollbar-width:none}
   #noticeFullscreen .car-stage::-webkit-scrollbar{display:none}
@@ -230,42 +215,42 @@
   .bb8-toggle{--toggle-size:8px;--toggle-width:10.625em;--toggle-height:5.625em;--toggle-offset:calc((var(--toggle-height) - var(--bb8-diameter))/2);--toggle-bg:linear-gradient(#2c4770,#070e2b 35%,#628cac 50% 70%,#a6c5d4) no-repeat;--bb8-diameter:4.375em;--radius:99em;--transition:.4s;--accent:#de7d2f;--bb8-bg:#fff;display:inline-block;cursor:pointer;font-size:var(--toggle-size)}
   .bb8-toggle *{box-sizing:border-box}
   .bb8-toggle__checkbox{appearance:none;display:none}
-  .bb8-toggle__container{width:var(--toggle-width);height:var(--toggle-height);background:var(--toggle-bg);background-size:100% 11.25em;background-position-y:-5.625em;border-radius:var(--radius);position:relative;transition:all .5s cubic-bezier(.34,1.56,.64,1)}
-  .bb8{display:flex;flex-direction:column;align-items:center;position:absolute;top:calc(var(--toggle-offset) - 1.688em + .188em);left:var(--toggle-offset);transition:var(--transition);z-index:2}
-  .bb8__head-container{position:relative;transition:var(--transition);z-index:2;transform-origin:1.25em 3.75em}
+  .bb8-toggle__container{width:var(--toggle-width);height:var(--toggle-height);background:var(--toggle-bg);background-size:100% 11.25em;background-position-y:-5.625em;border-radius:var(--radius);position:relative}
+  .bb8{display:flex;flex-direction:column;align-items:center;position:absolute;top:calc(var(--toggle-offset) - 1.688em + .188em);left:var(--toggle-offset);z-index:2}
+  .bb8__head-container{position:relative;z-index:2;transform-origin:1.25em 3.75em}
   .bb8__head{overflow:hidden;margin-bottom:-.188em;width:2.5em;height:1.688em;background:linear-gradient(transparent .063em,dimgray .063em .313em,transparent .313em .375em,var(--accent) .375em .5em,transparent .5em 1.313em,silver 1.313em 1.438em,transparent 1.438em),linear-gradient(45deg,transparent .188em,var(--bb8-bg) .188em 1.25em,transparent 1.25em),linear-gradient(-45deg,transparent .188em,var(--bb8-bg) .188em 1.25em,transparent 1.25em),linear-gradient(var(--bb8-bg) 1.25em,transparent 1.25em);border-radius:var(--radius) var(--radius) 0 0;position:relative;z-index:1;filter:drop-shadow(0 .063em .125em gray)}
   .bb8__head::before{content:"";position:absolute;width:.563em;height:.563em;background:radial-gradient(.125em circle at .25em .375em,red,transparent),radial-gradient(.063em circle at .375em .188em,var(--bb8-bg) 50%,transparent 100%),linear-gradient(45deg,#000 .188em,dimgray .313em .375em,#000 .5em);border-radius:var(--radius);top:.413em;left:50%;transform:translate(-50%);box-shadow:0 0 0 .089em lightgray,.563em .281em 0 -.148em,.563em .281em 0 -.1em var(--bb8-bg),.563em .281em 0 -.063em;z-index:1}
-  .bb8__antenna{position:absolute;transform:translateY(-90%);width:.059em;border-radius:var(--radius) var(--radius) 0 0;transition:var(--transition)}
+  .bb8__antenna{position:absolute;transform:translateY(-90%);width:.059em;border-radius:var(--radius) var(--radius) 0 0}
   .bb8__antenna:nth-child(1){height:.938em;right:.938em;background:linear-gradient(#000 .188em,silver .188em)}
   .bb8__antenna:nth-child(2){height:.375em;left:50%;transform:translate(-50%,-90%);background:silver}
-  .bb8__body{width:4.375em;height:4.375em;border-radius:var(--radius);position:relative;overflow:hidden;transition:var(--transition);z-index:1;transform:rotate(45deg);background-color:var(--bb8-bg);background:linear-gradient(-90deg,var(--bb8-bg) 4%,var(--accent) 4% 10%,transparent 10% 90%,var(--accent) 90% 96%,var(--bb8-bg) 96%),linear-gradient(var(--bb8-bg) 4%,var(--accent) 4% 10%,transparent 10% 90%,var(--accent) 90% 96%,var(--bb8-bg) 96%),linear-gradient(to right,transparent 2.156em,silver 2.156em 2.219em,transparent 2.188em),linear-gradient(transparent 2.156em,silver 2.156em 2.219em,transparent 2.188em)}
+  .bb8__body{width:4.375em;height:4.375em;border-radius:var(--radius);position:relative;overflow:hidden;z-index:1;transform:rotate(45deg);background-color:var(--bb8-bg);background:linear-gradient(-90deg,var(--bb8-bg) 4%,var(--accent) 4% 10%,transparent 10% 90%,var(--accent) 90% 96%,var(--bb8-bg) 96%),linear-gradient(var(--bb8-bg) 4%,var(--accent) 4% 10%,transparent 10% 90%,var(--accent) 90% 96%,var(--bb8-bg) 96%),linear-gradient(to right,transparent 2.156em,silver 2.156em 2.219em,transparent 2.188em),linear-gradient(transparent 2.156em,silver 2.156em 2.219em,transparent 2.188em)}
   .bb8__body::after{content:"";bottom:1.5em;left:.563em;position:absolute;width:.188em;height:.188em;background:rgb(236,236,236);border-radius:50%;box-shadow:.875em .938em,0 -1.25em,.875em -2.125em,2.125em -2.125em,3.063em -1.25em,3.063em 0,2.125em .938em}
   .bb8__body::before{content:"";width:2.625em;height:2.625em;position:absolute;border-radius:50%;overflow:hidden;top:50%;left:50%;transform:translate(-50%,-50%);border:.313em solid var(--accent);background:radial-gradient(1em circle at center,rgb(236,236,236) 50%,transparent 51%),radial-gradient(1.25em circle at center,var(--bb8-bg) 50%,transparent 51%),linear-gradient(-90deg,transparent 42%,var(--accent) 42% 58%,transparent 58%),linear-gradient(var(--bb8-bg) 42%,var(--accent) 42% 58%,var(--bb8-bg) 58%)}
-  .bb8__shadow{content:"";width:var(--bb8-diameter);height:20%;border-radius:50%;background:#3a271c;box-shadow:.313em 0 3.125em #3a271c;opacity:.25;position:absolute;bottom:0;left:calc(var(--toggle-offset) - .938em);transition:var(--transition);transform:skew(-70deg);z-index:1}
+  .bb8__shadow{content:"";width:var(--bb8-diameter);height:20%;border-radius:50%;background:#3a271c;box-shadow:.313em 0 3.125em #3a271c;opacity:.25;position:absolute;bottom:0;left:calc(var(--toggle-offset) - .938em);transform:skew(-70deg);z-index:1}
   .bb8-toggle__scenery{width:100%;height:100%;pointer-events:none;overflow:hidden;position:relative;border-radius:inherit}
   .bb8-toggle__scenery::before{content:"";position:absolute;width:100%;height:30%;bottom:0;background:#b18d71;z-index:1}
   .bb8-toggle__cloud{z-index:1;position:absolute;border-radius:50%}
-  .bb8-toggle__cloud:nth-last-child(1){width:.875em;height:.625em;filter:blur(.125em) drop-shadow(.313em .313em #ffffffae) drop-shadow(-.625em 0 #fff) drop-shadow(-.938em -.125em #fff);right:1.875em;top:2.813em;background:linear-gradient(to top right,#ffffffae,#ffffffae);transition:var(--transition)}
-  .bb8-toggle__cloud:nth-last-child(2){top:.625em;right:4.375em;width:.875em;height:.375em;background:#dfdedeae;filter:blur(.125em) drop-shadow(-.313em -.188em #e0dfdfae) drop-shadow(-.625em -.188em #bbbbbbae) drop-shadow(-1em .063em #cfcfcfae);transition:.6s}
-  .bb8-toggle__cloud:nth-last-child(3){top:1.25em;right:.938em;width:.875em;height:.375em;background:#ffffffae;filter:blur(.125em) drop-shadow(.438em .188em #ffffffae) drop-shadow(-.625em .313em #ffffffae);transition:.8s}
+  .bb8-toggle__cloud:nth-last-child(1){width:.875em;height:.625em;filter:blur(.125em) drop-shadow(.313em .313em #ffffffae) drop-shadow(-.625em 0 #fff) drop-shadow(-.938em -.125em #fff);right:1.875em;top:2.813em;background:linear-gradient(to top right,#ffffffae,#ffffffae)}
+  .bb8-toggle__cloud:nth-last-child(2){top:.625em;right:4.375em;width:.875em;height:.375em;background:#dfdedeae;filter:blur(.125em) drop-shadow(-.313em -.188em #e0dfdfae) drop-shadow(-.625em -.188em #bbbbbbae) drop-shadow(-1em .063em #cfcfcfae)}
+  .bb8-toggle__cloud:nth-last-child(3){top:1.25em;right:.938em;width:.875em;height:.375em;background:#ffffffae;filter:blur(.125em) drop-shadow(.438em .188em #ffffffae) drop-shadow(-.625em .313em #ffffffae)}
   .gomrassen,.hermes,.chenini{position:absolute;border-radius:var(--radius);background:linear-gradient(#fff,#6e8ea2);top:100%}
-  .gomrassen{left:.938em;width:1.875em;height:1.875em;box-shadow:0 0 .188em #ffffff52,0 0 .188em #6e8ea24b;transition:var(--transition)}
+  .gomrassen{left:.938em;width:1.875em;height:1.875em;box-shadow:0 0 .188em #ffffff52,0 0 .188em #6e8ea24b}
   .gomrassen::before,.gomrassen::after{content:"";position:absolute;border-radius:inherit;box-shadow:inset 0 0 .063em rgb(140,162,169);background:rgb(184,196,200)}
   .gomrassen::before{left:.313em;top:.313em;width:.438em;height:.438em}
   .gomrassen::after{width:.25em;height:.25em;left:1.25em;top:.75em}
-  .hermes{left:3.438em;width:.625em;height:.625em;box-shadow:0 0 .125em #ffffff52,0 0 .125em #6e8ea24b;transition:.6s}
-  .chenini{left:4.375em;width:.5em;height:.5em;box-shadow:0 0 .125em #ffffff52,0 0 .125em #6e8ea24b;transition:.8s}
+  .hermes{left:3.438em;width:.625em;height:.625em;box-shadow:0 0 .125em #ffffff52,0 0 .125em #6e8ea24b}
+  .chenini{left:4.375em;width:.5em;height:.5em;box-shadow:0 0 .125em #ffffff52,0 0 .125em #6e8ea24b}
   .tatto-1,.tatto-2{position:absolute;width:1.25em;height:1.25em;border-radius:var(--radius)}
-  .tatto-1{background:#fefefe;right:3.125em;top:.625em;box-shadow:0 0 .438em #fdf4e1;transition:var(--transition)}
-  .tatto-2{background:linear-gradient(#e6ac5c,#d75449);right:1.25em;top:2.188em;box-shadow:0 0 .438em #e6ad5c3d,0 0 .438em #d755494f;transition:.7s}
+  .tatto-1{background:#fefefe;right:3.125em;top:.625em;box-shadow:0 0 .438em #fdf4e1}
+  .tatto-2{background:linear-gradient(#e6ac5c,#d75449);right:1.25em;top:2.188em;box-shadow:0 0 .438em #e6ad5c3d,0 0 .438em #d755494f}
   .bb8-toggle__star{position:absolute;width:.063em;height:.063em;background:#fff;border-radius:var(--radius);filter:drop-shadow(0 0 .063em #fff);color:#fff;top:100%}
-  .bb8-toggle__star:nth-child(1){left:3.75em;box-shadow:1.25em .938em,-1.25em 2.5em,0 1.25em,1.875em .625em,-3.125em 1.875em,1.25em 2.813em;transition:.2s}
-  .bb8-toggle__star:nth-child(2){left:4.688em;box-shadow:.625em 0,0 .625em,-.625em -.625em,.625em .938em,-3.125em 1.25em,1.25em -1.563em;transition:.3s}
-  .bb8-toggle__star:nth-child(3){left:5.313em;box-shadow:-.625em -.625em,-2.188em 1.25em,-2.188em 0,-3.75em -.625em,-3.125em -.625em,-2.5em -.313em,.75em -.625em;transition:var(--transition)}
-  .bb8-toggle__star:nth-child(4){left:1.875em;width:.125em;height:.125em;transition:.5s}
-  .bb8-toggle__star:nth-child(5){left:5em;width:.125em;height:.125em;transition:.6s}
-  .bb8-toggle__star:nth-child(6){left:2.5em;width:.125em;height:.125em;transition:.7s}
-  .bb8-toggle__star:nth-child(7){left:3.438em;width:.125em;height:.125em;transition:.8s}
+  .bb8-toggle__star:nth-child(1){left:3.75em;box-shadow:1.25em .938em,-1.25em 2.5em,0 1.25em,1.875em .625em,-3.125em 1.875em,1.25em 2.813em}
+  .bb8-toggle__star:nth-child(2){left:4.688em;box-shadow:.625em 0,0 .625em,-.625em -.625em,.625em .938em,-3.125em 1.25em,1.25em -1.563em}
+  .bb8-toggle__star:nth-child(3){left:5.313em;box-shadow:-.625em -.625em,-2.188em 1.25em,-2.188em 0,-3.75em -.625em,-3.125em -.625em,-2.5em -.313em,.75em -.625em}
+  .bb8-toggle__star:nth-child(4){left:1.875em;width:.125em;height:.125em}
+  .bb8-toggle__star:nth-child(5){left:5em;width:.125em;height:.125em}
+  .bb8-toggle__star:nth-child(6){left:2.5em;width:.125em;height:.125em}
+  .bb8-toggle__star:nth-child(7){left:3.438em;width:.125em;height:.125em}
   .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(1){top:.625em}
   .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(2){top:1.875em}
   .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8-toggle__star:nth-child(3){top:1.25em}
@@ -282,33 +267,27 @@
   .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8{left:calc(100% - var(--bb8-diameter) - var(--toggle-offset))}
   .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8__shadow{left:calc(100% - var(--bb8-diameter) - var(--toggle-offset) + .938em);transform:skew(70deg)}
   .bb8-toggle__checkbox:checked + .bb8-toggle__container .bb8__body{transform:rotate(225deg)}
-  #notifBanner{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(59,130,246,.95);color:#fff;padding:10px 18px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:500;max-width:90%;animation:notifIn .4s cubic-bezier(.34,1.56,.64,1)}
-  @keyframes notifIn{0%{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.9)}60%{opacity:1;transform:translateX(-50%) translateY(4px) scale(1.02)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
-  #linkWarnOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
+  #notifBanner{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(59,130,246,.95);color:#fff;padding:10px 18px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:500;max-width:90%}
+  #linkWarnOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
   #linkWarnOverlay .lw-card{background:var(--bg-card);border-radius:16px;padding:24px;max-width:400px;width:100%;text-align:center}
   #linkWarnOverlay .lw-card h3{font-size:17px;margin-bottom:10px;color:#fbbf24}
   #linkWarnOverlay .lw-card p{font-size:13.5px;line-height:1.6;color:var(--text-sub);margin-bottom:16px}
   #linkWarnOverlay .lw-card .lw-url{background:var(--bg-input);padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px;word-break:break-all;font-family:monospace}
   #linkWarnOverlay .lw-actions{display:flex;gap:8px}
   #linkWarnOverlay .lw-actions button{flex:1;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-  .about-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:transform .2s,background-color .2s,border-color .2s}
-  .about-item:not(.disabled):hover{border-color:rgba(56,189,248,.4);background:rgba(56,189,248,.08)}
+  .about-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer}
   .about-item.disabled{cursor:default;opacity:.85}
   .about-item .ai-left{display:flex;align-items:center;gap:12px}
   .about-item .ai-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8;flex-shrink:0}
   .about-item .ai-title{font-size:14px;font-weight:600;color:var(--text-main)}
   .about-item .ai-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
-  .about-item .ai-arrow{color:var(--text-muted);font-size:14px;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
-  .about-item:hover .ai-arrow{transform:translateX(4px)}
-  .thanks-item{padding:10px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;transition:transform .2s,background-color .2s}
-  .thanks-item:hover{transform:translateX(3px);background:rgba(56,189,248,.08)}
+  .about-item .ai-arrow{color:var(--text-muted);font-size:14px}
+  .thanks-item{padding:10px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center}
   .thanks-item .ti-name{font-weight:600}
   .thanks-item .ti-by{font-size:11px;color:var(--text-sub)}
   .thanks-empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px}
-  .version-item{padding:14px 16px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background-color .25s}
-  .version-item:hover{transform:translateX(4px)}
+  .version-item{padding:14px 16px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px}
   .version-item.latest{border-color:#4ade80;background:rgba(74,222,128,.08)}
-  .version-item.latest:hover{background:rgba(74,222,128,.14)}
   .version-item .vi-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
   .version-item .vi-ver{font-size:15px;font-weight:700;color:#38bdf8}
   .version-item.latest .vi-ver{color:#4ade80}
@@ -316,28 +295,21 @@
   .version-item .vi-date{font-size:11px;color:var(--text-muted);margin-left:auto}
   .version-item .vi-changes{font-size:12.5px;color:var(--text-sub);line-height:1.6;margin-top:4px}
   .version-item .vi-changes ul{margin-left:16px}
-
-  /* 加密訊息（逐字揭示） */
   .enc-msg{display:flex;flex-direction:column;gap:8px;user-select:none}
   .enc-display{font-family:Consolas,monospace;font-size:18px;letter-spacing:6px;padding:6px 0;white-space:pre-wrap;word-break:break-all;min-height:30px}
   .enc-controls{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:11.5px;opacity:.9}
-  .enc-controls button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:.15s}
-  .enc-controls button:hover{background:rgba(255,255,255,.35)}
+  .enc-controls button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit}
   .enc-controls button:disabled{opacity:.35;cursor:default}
   .enc-progress{font-family:Consolas,monospace;font-size:11px}
-
-  /* 頁面切換過場（blob 卡片） */
-  #loadingOverlay{position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .25s ease;backdrop-filter:blur(6px)}
+  #loadingOverlay{position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
   .loadCard{position:relative;width:200px;height:250px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:20px 20px 60px rgba(0,0,0,.4),-20px -20px 60px rgba(255,255,255,.05)}
   .loadCard .bg{position:absolute;top:5px;left:5px;width:190px;height:240px;z-index:2;background:rgba(255,255,255,.95);backdrop-filter:blur(24px);border-radius:10px;overflow:hidden;outline:2px solid white}
   .loadCard .blob{position:absolute;z-index:1;top:50%;left:50%;width:150px;height:150px;border-radius:50%;opacity:1;filter:blur(12px);animation:blob-bounce 5s infinite ease}
   @keyframes blob-bounce{0%{transform:translate(-100%,-100%) translate3d(0,0,0)}25%{transform:translate(-100%,-100%) translate3d(100%,0,0)}50%{transform:translate(-100%,-100%) translate3d(100%,100%,0)}75%{transform:translate(-100%,-100%) translate3d(0,100%,0)}100%{transform:translate(-100%,-100%) translate3d(0,0,0)}}
   .loadCard .loadText{position:relative;z-index:3;color:#1c1e21;font-size:14px;font-weight:700;text-align:center;padding:0 20px;line-height:1.5}
-
-  /* 3D 卡片（別人主頁） */
   .profile3dWrap{perspective:1000px;display:flex;justify-content:center;padding:24px 20px 0}
   .profile3dCard{width:290px;height:300px;border-radius:50px;transition:all .5s ease-in-out;transform-style:preserve-3d;box-shadow:rgba(0,0,0,0) 40px 50px 25px -40px,rgba(0,0,0,.2) 0 25px 25px -5px;position:relative}
-  .profile3dCard .glass{transform-style:preserve-3d;position:absolute;inset:8px;border-radius:55px;border-top-right-radius:100%;background:linear-gradient(0deg,rgba(255,255,255,.349) 0%,rgba(255,255,255,.815) 100%);transform:translate3d(0,0,25px);border-left:1px solid white;border-bottom:1px solid white;transition:all .5s ease-in-out}
+  .profile3dCard .glass{transform-style:preserve-3d;position:absolute;inset:8px;border-radius:55px;border-top-right-radius:100%;background:linear-gradient(0deg,rgba(255,255,255,.349) 0%,rgba(255,255,255,.815) 100%);transform:translate3d(0,0,25px);border-left:1px solid white;border-bottom:1px solid white}
   .profile3dCard .p3content{padding:100px 60px 0 30px;transform:translate3d(0,0,26px);position:relative;z-index:5}
   .profile3dCard .p3content .p3title{display:block;font-weight:900;font-size:20px}
   .profile3dCard .p3content .p3text{display:block;font-size:14px;margin-top:12px}
@@ -353,6 +325,21 @@
   .profile3dWrap:hover .profile3dCard .p3logo .c3{transform:translate3d(0,0,80px)}
   .profile3dWrap:hover .profile3dCard .p3logo .c4{transform:translate3d(0,0,100px)}
   .profile3dWrap:hover .profile3dCard .p3logo .c5{transform:translate3d(0,0,120px)}
+  /* 思考卡片 */
+  .think-card{background:rgba(0,0,0,.25);border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px;line-height:1.5;max-height:56px;overflow-y:auto;color:rgba(255,255,255,.8);font-style:italic;border-left:3px solid rgba(255,255,255,.3)}
+  .think-card::-webkit-scrollbar{width:4px}
+  .think-card::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:2px}
+  .think-card .think-label{font-weight:700;color:rgba(255,255,255,.95);font-style:normal;margin-right:4px}
+  /* 警告訊息 */
+  .bubble.warn{background:linear-gradient(135deg,#f59e0b,#dc2626)!important;animation:warnFlash 1s infinite}
+  @keyframes warnFlash{0%,100%{opacity:1}50%{opacity:.6}}
+  /* AI 確認橫幅 */
+  #aiConfirmBar{position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#f59e0b,#dc2626);color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:250;display:flex;align-items:center;gap:12px;flex-wrap:wrap;animation:slideUp .3s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  #aiConfirmBar .acb-text{flex:1;min-width:200px;font-size:13.5px;line-height:1.5;font-weight:600}
+  #aiConfirmBar .acb-text .acb-cmd{font-family:Consolas,monospace;background:rgba(0,0,0,.2);padding:2px 6px;border-radius:4px;font-size:12px;display:inline-block;margin-top:4px}
+  #aiConfirmBar button{background:rgba(255,255,255,.25);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  #aiConfirmBar button:hover{background:rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
@@ -391,7 +378,7 @@
     <div class="field"><input id="loginUsername" data-i18n-ph="usernamePh" placeholder="帳號"></div>
     <div class="field"><input id="loginPassword" type="password" data-i18n-ph="passwordPh" placeholder="密碼"></div>
     <button id="loginBtn" data-action="login" data-i18n="loginBtn">登入</button>
-    <div id="loginVersion">v1.2.1 正式版</div>
+    <div id="loginVersion">v1.3 正式版</div>
   </div>
 </div>
 
@@ -399,7 +386,7 @@
   <header>
     <div class="title" data-i18n="appTitleShort">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.2.1</span>
+      <span class="ver">v1.3</span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
         <div class="bb8-toggle__container">
@@ -489,6 +476,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+const AI_KEY = 'sk-AXG1qWQXXncQs0vUiZDpdTjdcJDrsW3iPfo2AxQS239VoNsy';
+const AI_API = 'https://apihub.agnes-ai.com/v1/chat/completions';
+const AI_MODEL = 'agnes-2.0-flash';
+
 const $ = id => document.getElementById(id);
 const loginScreen = $('loginScreen'), chatScreen = $('chatScreen');
 const loginUsername = $('loginUsername'), loginPassword = $('loginPassword');
@@ -502,9 +493,9 @@ const plusPanel = $('plusPanel'), plusBtn = $('plusBtn');
 const encToggle = $('encToggle'), encCheckbox = $('encCheckbox');
 
 const I18N = {
-  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號（stu01 ~ stu24）',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...（@ 標記某人）',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.2.1 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往'},
-  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号（stu01 ~ stu24）',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索消息...',msgPh:'输入消息...（@ 标记某人）',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载消息中...',noNotice:'这里还没有公告，你可以申请公告，使用右边的按钮',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'还没有消息，说点什么吧！',noMatch:'没有符合条件的消息',bannedSevere:'你已被封禁，无法登录。',reason:'原因',noReason:'（无原因）',sendFail:'发送失败',bannedLight:'你目前被限制发言',profileTitle:'我的主页',profileOther:'的主页',cantView:'这是别人的主页',editName:'修改显示名称',saveName:'保存显示名称',editAvatar:'修改头像',uploadAvatar:'上传 / 拍照',editPwd:'修改密码',oldPwd:'当前密码',newPwd:'新密码（至少 6 个字符）',confirmPwd:'再次输入新密码',savePwd:'修改密码',myLogs:'我的日志',myNotices:'我的公告申请',nameEmpty:'显示名称不能为空',nameTooLong:'最多 20 个字符',pwdTooShort:'新密码至少 6 个字符',pwdMismatch:'两次新密码不一致',pwdWrong:'当前密码错误',pwdUpdated:'密码已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'全体日志',superAdmin:'超级管理员',adminRole:'管理员',memberRole:'普通用户',noRequests:'暂无待处理请求',noLogs:'暂无记录',noPending:'暂无待审核公告',noApply:'还没有申请',deleteRequest:'删除请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'确定封禁',banTypeLight:'普通封禁',banTypeSevere:'严重封禁',banLightSub:'可登录，不能发言',banSevereSub:'无法登录',banSection:'封禁管理',banThis:'封禁此用户',banSelect:'选类型 → 填原因 → 确定',banReasonPh:'封禁原因',banReasonEmpty:'请填写封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理员',revokeAdmin:'撤销管理员',viewLogs:'查看该生记录',online:'在线',msgDeleted:'（已删除 · 待恢复）',requestDelete:'请求删除',adminDelete:'管理员删除',restore:'恢复',purge:'彻底删除',deleteReasonPh:'请填写删除原因：',reportReasonPh:'请填写举报原因：',requestSent:'已发送',reportSent:'已发送举报',userDetail:'的资料',noPermission:'你没有权限编辑此用户',changeName:'管理员修改',deletedLog:'删除消息',restoredLog:'恢复消息',purgedLog:'彻底删除消息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名为',changedPwdLog:'修改密码',loggedIn:'登录系统',loggedOut:'退出系统',sentMsg:'发送消息',approvedReq:'批准请求删除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理员',notifRevoked:'已撤销管理员',notifAvatarUpdated:'头像已更新',notifActionFail:'操作失败',notifSaved:'已保存',notifCancel:'已取消',notifSent:'已发送',notifNoticePublished:'已发布',notifNoticeSent:'已发送申请',notifNoticeApproved:'已批准并发布',notifNoticeRejected:'已拒绝',notifNoticeEdited:'已编辑',notifNoticePinned:'已置顶',notifNoticeUnpinned:'已取消置顶',notifNoticeLocked:'已加锁',notifNoticeUnlocked:'已解锁',notifNoticeDeleted:'已删除（2 小时内可恢复）',noticeTitle:'公告',noticeApplyTitle:'申请公告',noticePublishTitle:'发布公告',noticeContent:'内容',noticeContentPh:'输入公告内容...',noticeImgs:'图片（最多 5 张）',noticeChooseImgs:'选择图片',noticeImgUrlPh:'或贴图片网址（按 Enter 加入）',noticeWhen:'发布时间',noticeWhenNow:'立即（管理员） / 等待审核（学生）',noticeWhen3d:'3 天后自动发布（学生申请）',noticeSubmit:'发送',noticeUseHtml:'HTML 模式（管理员）',noticeUseHtmlLabel:'使用 HTML 编辑',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消置顶',noticeLock:'加锁',noticeUnlock:'解锁',noticeDelete:'删除',noticeOver5000:'超过 5000 字',noticeNeedContent:'请输入内容或加图片',noticeRejectReasonPh:'拒绝原因（可留空）：',noticePinTag:'置顶公告',noticeLatest:'最新：',noticeNoOther:'没有其他公告',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'公告申请被拒绝',about:'关于',author:'作者',thanks:'感谢清单',versions:'版本信息',thanksAdd:'新增感谢名称（管理员）',thanksNamePh:'输入名称',thanksSubmit:'提交',thanksEmpty:'尚未有名称',thanksBy:'by',thanksNameEmpty:'请输入名称',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.2.1 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往'},
-  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Enter your username and password',usernamePh:'Username (stu01 ~ stu24)',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search messages...',msgPh:'Type a message... (@ to mention)',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading messages...',noNotice:'No announcements yet. You can apply using the button on the right.',wrongPwd:'Wrong password',noUser:'Account not found',emptyMsg:'No messages yet. Say something!',noMatch:'No matching messages',bannedSevere:'You are banned and cannot sign in.',reason:'Reason',noReason:'(no reason)',sendFail:'Send failed',bannedLight:'You are muted',profileTitle:'My Profile',profileOther:"'s Profile",cantView:"This is someone else's profile",editName:'Change display name',saveName:'Save name',editAvatar:'Change avatar',uploadAvatar:'Upload / Camera',editPwd:'Change password',oldPwd:'Current password',newPwd:'New password (min 6 chars)',confirmPwd:'Confirm new password',savePwd:'Change password',myLogs:'My logs',myNotices:'My notice applications',nameEmpty:'Display name cannot be empty',nameTooLong:'Max 20 characters',pwdTooShort:'Password must be at least 6 characters',pwdMismatch:'Passwords do not match',pwdWrong:'Current password is wrong',pwdUpdated:'Password updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'All Logs',superAdmin:'Super Admin',adminRole:'Admin',memberRole:'Member',noRequests:'No pending requests',noLogs:'No logs',noPending:'No pending notices',noApply:'No applications yet',deleteRequest:'Delete request',report:'Report',approve:'Approve',reject:'Reject',confirmBan:'Confirm Ban',banTypeLight:'Light Ban',banTypeSevere:'Severe Ban',banLightSub:'Can sign in, cannot post',banSevereSub:'Cannot sign in',banSection:'Ban management',banThis:'Ban this user',banSelect:'Pick type → Reason → Confirm',banReasonPh:'Ban reason',banReasonEmpty:'Please enter a ban reason',banned:'Banned',unban:'Unban',grantAdmin:'Grant admin',revokeAdmin:'Revoke admin',viewLogs:'View logs',online:'Online',msgDeleted:'(deleted · recoverable)',requestDelete:'Request delete',adminDelete:'Admin delete',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason for deletion:',reportReasonPh:'Reason for report:',requestSent:'Sent',reportSent:'Report sent',userDetail:"'s info",noPermission:"You don't have permission to edit this user",changeName:'Admin changed',deletedLog:'Deleted message',restoredLog:'Restored message',purgedLog:'Purged message',bannedLog:'Banned',unbannedLog:'Unbanned',grantedLog:'Granted admin to',revokedLog:'Revoked admin from',changedNameLog:'Changed name to',changedPwdLog:'Changed password',loggedIn:'Signed in',loggedOut:'Signed out',sentMsg:'Sent message',approvedReq:'Approved delete request',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted admin',notifRevoked:'Revoked admin',notifAvatarUpdated:'Avatar updated',notifActionFail:'Action failed',notifSaved:'Saved',notifCancel:'Cancelled',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Application sent',notifNoticeApproved:'Approved & published',notifNoticeRejected:'Rejected',notifNoticeEdited:'Edited',notifNoticePinned:'Pinned',notifNoticeUnpinned:'Unpinned',notifNoticeLocked:'Locked',notifNoticeUnlocked:'Unlocked',notifNoticeDeleted:'Deleted (recoverable in 2h)',noticeTitle:'Announcement',noticeApplyTitle:'Apply for Announcement',noticePublishTitle:'Publish Announcement',noticeContent:'Content',noticeContentPh:'Enter content...',noticeImgs:'Images (max 5)',noticeChooseImgs:'Choose images',noticeImgUrlPh:'Or paste image URL (press Enter)',noticeWhen:'Publish time',noticeWhenNow:'Now (admin) / Pending review (student)',noticeWhen3d:'Auto publish after 3 days (student)',noticeSubmit:'Submit',noticeUseHtml:'HTML mode (admin)',noticeUseHtmlLabel:'Use HTML editor',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000 chars',noticeNeedContent:'Please enter content or add images',noticeRejectReasonPh:'Reject reason (optional):',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'No other announcements',noticeApplyBy:'Applied by: ',noticeEditedBy:'Originally by: ',noticeAdminEdited:' · edited by admin',noticeRejected:'Announcement application rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Version Info',thanksAdd:'Add thanks name (admin)',thanksNamePh:'Enter name',thanksSubmit:'Submit',thanksEmpty:'No names yet',thanksBy:'by',thanksNameEmpty:'Please enter a name',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'Current v1.2.1',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',loadingTo:'Going to'}
+  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號（stu01 ~ stu24）',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...（@ 標記某人）',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',aiRole:'AI',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.3 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往',aiBio:'自我介紹（管理員可編輯）',aiLanguage:'AI 語言',aiLangZh:'書面繁體中文',aiLangYue:'允許廣東話口語',aiConfirmTitle:'AI 想執行以下操作：',aiAllow:'允許',aiDeny:'拒絕',aiThinking:'想法',aiNoPermission:'你沒有權限執行這個操作喔～',aiProcessing:'小喆AI 正在思考...'},
+  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索消息...',msgPh:'输入消息...',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载中...',noNotice:'还没有公告',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'还没有消息',noMatch:'没有符合的消息',bannedSevere:'你已被封禁',reason:'原因',noReason:'（无原因）',sendFail:'发送失败',bannedLight:'你被限制发言',profileTitle:'我的主页',profileOther:'的主页',cantView:'别人的主页',editName:'修改显示名称',saveName:'保存',editAvatar:'修改头像',uploadAvatar:'上传 / 拍照',editPwd:'修改密码',oldPwd:'当前密码',newPwd:'新密码（至少 6 字符）',confirmPwd:'确认新密码',savePwd:'修改密码',myLogs:'我的日志',myNotices:'我的公告申请',nameEmpty:'不能为空',nameTooLong:'最多 20 字符',pwdTooShort:'至少 6 字符',pwdMismatch:'不一致',pwdWrong:'密码错误',pwdUpdated:'密码已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'全体日志',superAdmin:'超级管理员',adminRole:'管理员',memberRole:'普通用户',aiRole:'AI',noRequests:'暂无请求',noLogs:'暂无记录',noPending:'暂无待审核',noApply:'还没有申请',deleteRequest:'删除请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'确定封禁',banTypeLight:'普通封禁',banTypeSevere:'严重封禁',banLightSub:'可登录不能发言',banSevereSub:'无法登录',banSection:'封禁管理',banThis:'封禁此用户',banSelect:'选类型 → 填原因 → 确定',banReasonPh:'封禁原因',banReasonEmpty:'请填写原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理员',revokeAdmin:'撤销管理员',viewLogs:'查看记录',online:'在线',msgDeleted:'（已删除）',requestDelete:'请求删除',adminDelete:'管理员删除',restore:'恢复',purge:'彻底删除',deleteReasonPh:'删除原因：',reportReasonPh:'举报原因：',requestSent:'已发送',reportSent:'已发送',userDetail:'的资料',noPermission:'没有权限',changeName:'管理员修改',deletedLog:'删除消息',restoredLog:'恢复消息',purgedLog:'彻底删除',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名为',changedPwdLog:'修改密码',loggedIn:'登录',loggedOut:'退出',sentMsg:'发送',approvedReq:'批准删除',notifBanned:'已封禁',notifUnbanned:'已解除',notifGranted:'已授予',notifRevoked:'已撤销',notifAvatarUpdated:'头像更新',notifActionFail:'失败',notifSaved:'已保存',notifCancel:'已取消',notifSent:'已发送',notifNoticePublished:'已发布',notifNoticeSent:'已发送',notifNoticeApproved:'已批准',notifNoticeRejected:'已拒绝',notifNoticeEdited:'已编辑',notifNoticePinned:'已置顶',notifNoticeUnpinned:'取消置顶',notifNoticeLocked:'已加锁',notifNoticeUnlocked:'已解锁',notifNoticeDeleted:'已删除',noticeTitle:'公告',noticeApplyTitle:'申请公告',noticePublishTitle:'发布公告',noticeContent:'内容',noticeContentPh:'输入内容',noticeImgs:'图片（最多 5）',noticeChooseImgs:'选择图片',noticeImgUrlPh:'贴图片网址',noticeWhen:'发布时间',noticeWhenNow:'立即',noticeWhen3d:'3 天后',noticeSubmit:'发送',noticeUseHtml:'HTML',noticeUseHtmlLabel:'使用 HTML',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消置顶',noticeLock:'加锁',noticeUnlock:'解锁',noticeDelete:'删除',noticeOver5000:'超 5000 字',noticeNeedContent:'请输入内容',noticeRejectReasonPh:'拒绝原因：',noticePinTag:'置顶',noticeLatest:'最新：',noticeNoOther:'无其他',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'被拒绝',about:'关于',author:'作者',thanks:'感谢清单',versions:'版本信息',thanksAdd:'新增感谢',thanksNamePh:'名称',thanksSubmit:'提交',thanksEmpty:'暂未有名',thanksBy:'by',thanksNameEmpty:'请输入',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.3',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往',aiBio:'自我介绍',aiLanguage:'AI 语言',aiLangZh:'书面中文',aiLangYue:'允许粤语',aiConfirmTitle:'AI 想执行：',aiAllow:'允许',aiDeny:'拒绝',aiThinking:'想法',aiNoPermission:'你没有权限喔～',aiProcessing:'小喆AI 正在思考...'},
+  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Sign in',usernamePh:'Username',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search...',msgPh:'Type...',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading...',noNotice:'No announcements',wrongPwd:'Wrong password',noUser:'Not found',emptyMsg:'No messages',noMatch:'No match',bannedSevere:'Banned',reason:'Reason',noReason:'(none)',sendFail:'Failed',bannedLight:'Muted',profileTitle:'My Profile',profileOther:"'s Profile",cantView:'View only',editName:'Display name',saveName:'Save',editAvatar:'Avatar',uploadAvatar:'Upload',editPwd:'Password',oldPwd:'Current',newPwd:'New (min 6)',confirmPwd:'Confirm',savePwd:'Change',myLogs:'My logs',myNotices:'My notices',nameEmpty:'Required',nameTooLong:'Max 20',pwdTooShort:'Min 6',pwdMismatch:'Mismatch',pwdWrong:'Wrong',pwdUpdated:'Updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'Logs',superAdmin:'Super Admin',adminRole:'Admin',memberRole:'Member',aiRole:'AI',noRequests:'None',noLogs:'None',noPending:'None',noApply:'None',deleteRequest:'Delete',report:'Report',approve:'Approve',reject:'Reject',confirmBan:'Ban',banTypeLight:'Light',banTypeSevere:'Severe',banLightSub:'Sign in only',banSevereSub:'No sign in',banSection:'Ban',banThis:'Ban user',banSelect:'Pick → Reason → Confirm',banReasonPh:'Reason',banReasonEmpty:'Required',banned:'Banned',unban:'Unban',grantAdmin:'Grant admin',revokeAdmin:'Revoke',viewLogs:'Logs',online:'Online',msgDeleted:'(deleted)',requestDelete:'Request',adminDelete:'Admin delete',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason:',reportReasonPh:'Reason:',requestSent:'Sent',reportSent:'Sent',userDetail:' info',noPermission:'No permission',changeName:'Admin changed',deletedLog:'Deleted',restoredLog:'Restored',purgedLog:'Purged',bannedLog:'Banned',unbannedLog:'Unbanned',grantedLog:'Granted',revokedLog:'Revoked',changedNameLog:'Renamed',changedPwdLog:'Pwd changed',loggedIn:'Sign in',loggedOut:'Sign out',sentMsg:'Sent',approvedReq:'Approved',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted',notifRevoked:'Revoked',notifAvatarUpdated:'Avatar updated',notifActionFail:'Failed',notifSaved:'Saved',notifCancel:'Cancelled',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Sent',notifNoticeApproved:'Approved',notifNoticeRejected:'Rejected',notifNoticeEdited:'Edited',notifNoticePinned:'Pinned',notifNoticeUnpinned:'Unpinned',notifNoticeLocked:'Locked',notifNoticeUnlocked:'Unlocked',notifNoticeDeleted:'Deleted',noticeTitle:'Notice',noticeApplyTitle:'Apply',noticePublishTitle:'Publish',noticeContent:'Content',noticeContentPh:'Content',noticeImgs:'Images (max 5)',noticeChooseImgs:'Choose',noticeImgUrlPh:'Image URL',noticeWhen:'Publish time',noticeWhenNow:'Now',noticeWhen3d:'3 days',noticeSubmit:'Submit',noticeUseHtml:'HTML',noticeUseHtmlLabel:'Use HTML',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000',noticeNeedContent:'Required',noticeRejectReasonPh:'Reason:',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'No others',noticeApplyBy:'By: ',noticeEditedBy:'Originally: ',noticeAdminEdited:' · edited',noticeRejected:'Rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Versions',thanksAdd:'Add name',thanksNamePh:'Name',thanksSubmit:'Submit',thanksEmpty:'Empty',thanksBy:'by',thanksNameEmpty:'Required',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'Current v1.3',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',loadingTo:'Going to',aiBio:'Bio',aiLanguage:'AI Language',aiLangZh:'Formal Chinese',aiLangYue:'Allow Cantonese',aiConfirmTitle:'AI wants to:',aiAllow:'Allow',aiDeny:'Deny',aiThinking:'Thought',aiNoPermission:'No permission~',aiProcessing:'XiaoZhe AI is thinking...'}
 };
 let lang = localStorage.getItem('chat_lang') || 'zh-Hant';
 function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N['zh-Hant'][k] || k; }
@@ -520,35 +511,45 @@ $('langSelectChat').addEventListener('change', e => { lang = e.target.value; loc
 
 encCheckbox.addEventListener('change', () => { encToggle.classList.toggle('active', encCheckbox.checked); });
 
-/* 頁面切換過場 */
-function withTransition(text, userColor, fn){
-  const overlay = document.createElement('div');
-  overlay.id = 'loadingOverlay';
-  overlay.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${userColor||'#3b82f6'}"></div><div class="bg"></div><div class="loadText">${escapeHtml(text)}</div></div>`;
-  document.body.appendChild(overlay);
-  setTimeout(() => {
-    overlay.remove();
-    try { fn(); } catch(e){ console.error(e); }
-  }, 1500);
+const AI_NAME = '小喆AI';
+const AI_COLOR = '#66ccff';
+const AI_BIO_DEFAULT = '我是小喆AI，班級聊天室的專屬助手。我可以讀取群組裡的對話，回答大家的問題。如果聊天室裡有人吵架、有人講了什麼好笑的話、或你想知道剛剛大家在聊什麼，都可以問我。';
+
+async function ensureAIUser(){
+  const snap = await get(ref(db), 'users/' + AI_NAME);
+  if (!snap.exists()) {
+    await set(ref(db,'users/' + AI_NAME), {
+      username: AI_NAME,
+      displayName: AI_NAME,
+      seat: 0,
+      color: AI_COLOR,
+      role: 'ai',
+      avatar: 'AI',
+      bio: AI_BIO_DEFAULT,
+      allowCantonese: false,
+      createdAt: Date.now()
+    });
+  }
 }
 
 const VERSION_HISTORY = [
-  { ver:'v1.2.1', date:'2026-09-12', changes:['修正加密訊息顯示','修正 3D 卡片沒出現','修正過場動畫沒觸發'] },
-  { ver:'v1.2', date:'2026-09-12', changes:['別人的個人主頁改用 3D 卡片（顏色 = 該用戶 hex）','頁面切換加 blob 過場動畫（1.5 秒）','新增加密訊息功能'] },
+  { ver:'v1.3', date:'2026-09-12', changes:['新增 AI 用戶「小喆AI」','AI 記憶系統（最多 100 則）','AI 可操作網站（需管理員確認）','思考卡片','警告訊息（橙紅閃爍）','AI 個人簡介'] },
+  { ver:'v1.2.1', date:'2026-09-12', changes:['修正加密訊息','修正 3D 卡片','修正過場動畫'] },
+  { ver:'v1.2', date:'2026-09-12', changes:['3D 卡片','過場動畫','加密訊息'] },
   { ver:'v1.1', date:'2026-09-12', changes:['大量動畫'] },
-  { ver:'v1.0', date:'2026-09-12', changes:['正式版','完整翻譯系統','全站去除 emoji','檔案精簡'] },
-  { ver:'v0.9.1', date:'2026-09-12', changes:['作者 / 感謝清單 / 版本資訊'] },
-  { ver:'v0.9', date:'2026-09-12', changes:['公告系統','輪播卡片','連結警告','圖片 / 檔案 / 語音 / 位置','@ 提及','搜尋','訊息刪除 / 舉報','完整日誌'] },
+  { ver:'v1.0', date:'2026-09-12', changes:['正式版','完整翻譯','去除 emoji'] },
+  { ver:'v0.9.1', date:'2026-09-12', changes:['作者 / 感謝 / 版本'] },
+  { ver:'v0.9', date:'2026-09-12', changes:['公告系統','媒體','@ 提及','搜尋','刪訊息 / 舉報','日誌'] },
   { ver:'v0.8', date:'2026-09-12', changes:['黑白主題','語言切換'] },
-  { ver:'v0.7.1', date:'2026-09-12', changes:['修復 bug','封禁開關樣式'] },
-  { ver:'v0.7', date:'2026-09-12', changes:['封禁流程','類型按鈕','全螢幕'] },
-  { ver:'v0.6', date:'2026-09-12', changes:['全螢幕取代彈窗'] },
-  { ver:'v0.5', date:'2026-09-12', changes:['完整日誌','訊息刪除 / 舉報','兩小時恢復','搜尋','@ 某人','班級狀態'] },
+  { ver:'v0.7.1', date:'2026-09-12', changes:['修復 bug'] },
+  { ver:'v0.7', date:'2026-09-12', changes:['封禁流程'] },
+  { ver:'v0.6', date:'2026-09-12', changes:['全螢幕'] },
+  { ver:'v0.5', date:'2026-09-12', changes:['日誌','舉報','搜尋','@'] },
   { ver:'v0.4', date:'2026-09-12', changes:['管理員後台'] },
-  { ver:'v0.3.1', date:'2026-09-12', changes:['修手機高度'] },
+  { ver:'v0.3.1', date:'2026-09-12', changes:['修高度'] },
   { ver:'v0.3', date:'2026-09-12', changes:['Header 響應式'] },
-  { ver:'v0.2', date:'', changes:['個人主頁','改顯示名稱','改頭像','改密碼','顏色顯示'] },
-  { ver:'v0.1', date:'', changes:['登入畫面','封禁','聊天室','訊息編號','頭像顏色'] }
+  { ver:'v0.2', date:'', changes:['個人主頁','改名稱','改頭像','改密碼','顏色'] },
+  { ver:'v0.1', date:'', changes:['登入','聊天室','編號','顏色'] }
 ];
 
 let me = null;
@@ -565,7 +566,10 @@ let thanksList = [], unsubThanks = null;
 let searchKeyword = '';
 let banDraft = {};
 let noticeCarouselShown = false;
+let pendingAIConfirm = null;
+let aiBusy = false;
 
+/* ============ 事件委派 ============ */
 document.addEventListener('click', async (e) => {
   const target = e.target.closest('[data-action]');
   if (!target) return;
@@ -596,7 +600,9 @@ document.addEventListener('click', async (e) => {
       cancelMyNotice:()=>cancelMyNotice(arg), linkContinue:()=>linkContinue(), linkCancel:()=>linkCancel(),
       viewImage:()=>viewImage(arg), openLocation:()=>openLocationFullscreen(arg), closeLocationFull:()=>closeLocationFull(),
       openThanks:()=>openThanksPage(), openVersion:()=>openVersionPage(), submitThanks:()=>submitThanks(),
-      encPrev:()=>encPrev(arg), encNext:()=>encNext(arg)
+      encPrev:()=>encPrev(arg), encNext:()=>encNext(arg),
+      aiAllow:()=>aiAllow(), aiDeny:()=>aiDeny(),
+      aiSaveSettings:()=>aiSaveSettings()
     };
     if (map[action]) await map[action]();
   } catch (err) { console.error('Action error:',action,err); showNotif(t('notifActionFail')+': '+(err.message||err)); }
@@ -609,6 +615,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
+/* ============ 登入 ============ */
 async function handleLogin(){
   const u = loginUsername.value.trim().toLowerCase();
   const p = loginPassword.value;
@@ -625,6 +632,7 @@ async function handleLogin(){
     sessionStorage.setItem('chat_me', JSON.stringify(me));
     await writeLog('login', t('loggedIn'));
     await setPresence();
+    await ensureAIUser();
     enterChat();
   } catch (e) { console.error(e); loginError.textContent = t('notifActionFail')+': '+(e.code||e.message); }
   finally { loginBtn.disabled = false; loginBtn.textContent = t('loginBtn'); }
@@ -648,6 +656,7 @@ function enterChat(){
   subscribeNotices(); subscribeMyReads(); subscribePendingNotices(); subscribeMyRejections(); subscribeMentions(); subscribeThanks();
 }
 
+/* ============ 日誌 / 在線 ============ */
 async function writeLog(action, detail){
   if (!me) return;
   const id = 'log_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
@@ -658,6 +667,7 @@ async function clearPresence(){ if(me) await remove(ref(db,'presence/'+me.userna
 setInterval(() => { if (me) setPresence(); }, 30000);
 window.addEventListener('beforeunload', () => { if (me) clearPresence(); });
 
+/* ============ 發訊息 ============ */
 async function sendMessage(){
   const text = msgInput.value.trim();
   if (!text || !me) return;
@@ -680,6 +690,10 @@ async function sendMessage(){
     encCheckbox.checked = false;
     encToggle.classList.remove('active');
     mentionPopup.classList.add('hidden');
+    // 判斷是否觸發 AI
+    if (text.includes('小喆')) {
+      handleAITrigger(text).catch(e => console.error('AI trigger error', e));
+    }
   } catch(e) { console.error(e); showNotif(t('sendFail')+': '+(e.code||e.message)); }
   finally { sendBtn.disabled = false; msgInput.focus(); }
 }
@@ -718,7 +732,8 @@ function showMentionPopup(kw){
   mentionPopup.classList.remove('hidden');
   mentionPopup.innerHTML = list.map(u => {
     const isAdmin = u.role === 'superadmin' || u.role === 'admin';
-    const color = isAdmin ? '#8b5cf6' : (u.color || '#3b82f6');
+    const isAI = u.role === 'ai';
+    const color = isAI ? AI_COLOR : (isAdmin ? '#8b5cf6' : (u.color || '#3b82f6'));
     const av = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username).charAt(0).toUpperCase());
     return `<div class="mention-item" data-action="pickMention" data-arg="${u.username}"><div class="mi-av" style="background:${color}">${av}</div><div>${escapeHtml(u.displayName||u.username)} (#${u.seat})</div></div>`;
   }).join('');
@@ -730,12 +745,373 @@ function pickMention(username){
   mentionPopup.classList.add('hidden'); msgInput.focus();
 }
 
+/* ============ AI 觸發與回覆 ============ */
+async function handleAITrigger(text){
+  if (aiBusy) return;
+  aiBusy = true;
+  try {
+    // 1. 判斷是不是在叫 AI
+    const isCalling = await aiIsCalling(text);
+    if (!isCalling) { aiBusy = false; return; }
+
+    // 2. 取得 AI 設定
+    const aiSnap = await get(child(ref(db),'users/' + AI_NAME));
+    const aiData = aiSnap.exists() ? aiSnap.val() : {};
+    const allowYue = aiData.allowCantonese || false;
+
+    // 3. 取得最近對話（最多 50 則）
+    const recent = messages.slice(-50).map(m => `${m.displayName||m.username}: ${m.text||''}`).join('\n');
+
+    // 4. 取得 AI 記憶（最多 100 則）
+    const memSnap = await get(ref(db,'aiMemory/messages'));
+    const memVal = memSnap.exists() ? memSnap.val() : {};
+    const memList = Object.values(memVal).sort((a,b) => a.time - b.time).slice(-100);
+    const memText = memList.map(x => `${x.from}: ${x.text}`).join('\n');
+
+    // 5. 取得管理員發問者的身分
+    const asker = me;
+    const isAdminAsker = asker.role === 'superadmin' || asker.role === 'admin';
+
+    // 6. 組提示詞
+    const systemPrompt = `你是「小喆AI」，是梁喆同學工作室為班級聊天室打造的專屬 AI 助手。
+
+【身份】
+- 名稱：小喆AI
+- 形象：開朗、活潑、溫柔，像虛擬歌手那樣
+- 對象：香港中一學生
+- 顏色：天藍色 #66ccff
+
+【說話風格】
+- ${allowYue ? '可用書面繁體中文，也可以用廣東話口語回答' : '只可用書面繁體中文回答'}
+- 溫柔、活潑、有玩樂性質
+- 可以用 emoji
+- 不要太嚴肅
+
+【能力】
+1. 讀取聊天室對話
+2. 記得所有歷史對話
+3. 回答任何問題
+4. 若管理員要求，可操作網站（改顏色、封禁、刪訊息等）
+
+【重要規則】
+1. 遇到不適合的問題（色情、暴力、攻擊、隱私），回覆開頭加 [WARN]，例如 "[WARN] 這個問題我不太方便回答喔～"
+2. 操作網站前要確認對方是管理員
+3. 若訊息提到你但不是問你，保持沉默
+4. 回答不要超過 500 字
+5. 不要說你是用什麼 AI 模型
+6. 如果你認為對方在要求你操作網站（改顏色、封禁、刪訊息等），你的回覆最後要加上一個特殊標記：
+   [ACTION]{"cmd":"指令類型","target":"對象","value":"值"}[/ACTION]
+   指令類型支援：setColor, setName, setAvatar, setPassword, ban, unban, grantAdmin, revokeAdmin, deleteMsg, restoreMsg, purgeMsg, deleteNotice, pinNotice, lockNotice, approveNotice, rejectNotice, logout, clearChat
+   如果只是一般問答，不要加 [ACTION] 標記
+
+【當前使用者】
+- 名稱：${asker.displayName}
+- 帳號：${asker.username}
+- 是否管理員：${isAdminAsker ? '是' : '否'}
+
+【最近聊天室對話（最多 50 則）】
+${recent}
+
+【你記得的歷史對話（最多 100 則）】
+${memText || '（暫無）'}
+
+【現在有人說】
+${asker.displayName}: ${text}`;
+
+    // 7. 呼叫 API
+    showNotif(t('aiProcessing'));
+    const aiRes = await callAI([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: text }
+    ]);
+    if (!aiRes) { aiBusy = false; return; }
+
+    const { content, reasoning } = aiRes;
+
+    // 8. 檢查有沒有 [ACTION] 標記
+    const actionMatch = content.match(/\[ACTION\]([\s\S]*?)\[\/ACTION\]/);
+    let actionCmd = null;
+    let cleanContent = content;
+    if (actionMatch) {
+      try {
+        actionCmd = JSON.parse(actionMatch[1]);
+        cleanContent = content.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/, '').trim();
+      } catch (e) { console.error('Action parse error', e); }
+    }
+
+    // 9. 檢查是否 [WARN]
+    const isWarn = cleanContent.startsWith('[WARN]');
+    const finalText = isWarn ? cleanContent.replace(/^\[WARN\]\s*/, '') : cleanContent;
+
+    // 10. 如果有操作指令
+    if (actionCmd) {
+      if (!isAdminAsker) {
+        // 非管理員 → 拒絕
+        await sendAIMessage(t('aiNoPermission'), reasoning, false, false);
+      } else {
+        // 是管理員 → 顯示確認橫幅
+        showAIConfirm(actionCmd, asker);
+      }
+    } else {
+      // 純回答
+      await sendAIMessage(finalText, reasoning, false, isWarn);
+    }
+
+    // 11. 寫入記憶
+    await push(ref(db,'aiMemory/messages'), {
+      from: asker.username,
+      fromName: asker.displayName,
+      text: text,
+      aiReply: finalText,
+      time: Date.now()
+    });
+    // 限制記憶 100 則
+    await trimAIMemory();
+
+  } catch (e) {
+    console.error('AI error', e);
+    showNotif('AI 錯誤：' + e.message);
+  } finally {
+    aiBusy = false;
+  }
+}
+
+async function aiIsCalling(text){
+  // 用 AI 判斷這句話是不是在叫 AI
+  try {
+    const res = await callAI([
+      { role: 'system', content: '你是判斷助手。使用者會給你一句話，你要判斷這句話是不是在叫「小喆AI」回答問題（不是單純提到、不是自言自語）。如果是在叫它回答，回「YES」，否則回「NO」。只回 YES 或 NO。' },
+      { role: 'user', content: text }
+    ]);
+    if (!res) return false;
+    const c = (res.content || '').trim().toUpperCase();
+    return c.startsWith('YES');
+  } catch (e) { return false; }
+}
+
+async function callAI(messages){
+  const res = await fetch(AI_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_KEY },
+    body: JSON.stringify({ model: AI_MODEL, messages })
+  });
+  if (!res.ok) throw new Error('API 錯誤 ' + res.status);
+  const data = await res.json();
+  const choice = data.choices && data.choices[0];
+  if (!choice) return null;
+  return {
+    content: (choice.message && choice.message.content) || '',
+    reasoning: (choice.message && choice.message.reasoning_content) || ''
+  };
+}
+
+async function sendAIMessage(text, reasoning, isSystem, isWarn){
+  const c = await get(child(ref(db),'meta/msgCounter'));
+  const next = (c.exists()?c.val():0) + 1;
+  await set(ref(db,'meta/msgCounter'), next);
+  const msgId = 'msg_'+String(next).padStart(4,'0');
+  const aiSnap = await get(child(ref(db),'users/' + AI_NAME));
+  const aiData = aiSnap.exists() ? aiSnap.val() : {};
+  await set(ref(db,'messages/'+msgId), {
+    id: msgId,
+    username: AI_NAME,
+    displayName: aiData.displayName || AI_NAME,
+    seat: 0,
+    color: aiData.color || AI_COLOR,
+    avatar: aiData.avatar || 'AI',
+    role: 'ai',
+    text: text,
+    reasoning: reasoning || '',
+    type: 'text',
+    isSystem: isSystem || false,
+    warn: isWarn || false,
+    createdAt: Date.now(),
+    deleted: false
+  });
+}
+
+async function trimAIMemory(){
+  const snap = await get(ref(db,'aiMemory/messages'));
+  if (!snap.exists()) return;
+  const val = snap.val();
+  const keys = Object.keys(val);
+  if (keys.length <= 100) return;
+  const sorted = keys.map(k => ({ k, time: val[k].time || 0 })).sort((a,b) => a.time - b.time);
+  const toDelete = sorted.slice(0, sorted.length - 100);
+  for (const x of toDelete) await remove(ref(db,'aiMemory/messages/' + x.k));
+}
+
+/* ============ AI 確認橫幅 ============ */
+function showAIConfirm(cmd, asker){
+  pendingAIConfirm = { cmd, asker };
+  const old = document.getElementById('aiConfirmBar');
+  if (old) old.remove();
+  const bar = document.createElement('div');
+  bar.id = 'aiConfirmBar';
+  bar.innerHTML = `
+    <div class="acb-text">
+      ${t('aiConfirmTitle')}
+      <div class="acb-cmd">${escapeHtml(JSON.stringify(cmd))}</div>
+    </div>
+    <button data-action="aiAllow">${t('aiAllow')}</button>
+    <button data-action="aiDeny">${t('aiDeny')}</button>
+  `;
+  document.body.appendChild(bar);
+}
+
+async function aiAllow(){
+  if (!pendingAIConfirm) return;
+  const { cmd, asker } = pendingAIConfirm;
+  pendingAIConfirm = null;
+  const bar = document.getElementById('aiConfirmBar');
+  if (bar) bar.remove();
+  try {
+    const result = await executeAIAction(cmd);
+    if (result.ok) {
+      // 成功：只發給學生看的訊息
+      await sendAIMessage('✅ 已完成：' + result.desc, '', false, false);
+      await writeLog('ai', 'AI 操作成功：' + JSON.stringify(cmd));
+    } else {
+      // 失敗：發兩則，一則所有人可見（錯誤原因），一則正常訊息
+      await sendAIMessage('❌ 失敗：' + result.error, '', false, false);
+      await sendAIMessage('抱歉，我沒辦法完成這個操作。', '', false, false);
+      await writeLog('ai', 'AI 操作失敗：' + JSON.stringify(cmd) + ' | ' + result.error);
+    }
+  } catch (e) {
+    await sendAIMessage('❌ 失敗：' + e.message, '', false, false);
+  }
+}
+
+async function aiDeny(){
+  pendingAIConfirm = null;
+  const bar = document.getElementById('aiConfirmBar');
+  if (bar) bar.remove();
+  await sendAIMessage('好的，已取消操作。', '', false, false);
+}
+
+async function executeAIAction(cmd){
+  try {
+    switch (cmd.cmd) {
+      case 'setColor': {
+        const uSnap = await get(child(ref(db),'users/' + cmd.target));
+        if (!uSnap.exists()) return { ok:false, error: cmd.target + ' 不存在' };
+        await update(ref(db,'users/' + cmd.target), { color: cmd.value });
+        return { ok:true, desc: `修改 ${cmd.target} 顏色為 ${cmd.value}` };
+      }
+      case 'setName': {
+        await update(ref(db,'users/' + cmd.target), { displayName: cmd.value });
+        return { ok:true, desc: `修改 ${cmd.target} 名稱為 ${cmd.value}` };
+      }
+      case 'setAvatar': {
+        await update(ref(db,'users/' + cmd.target), { avatar: cmd.value || null });
+        return { ok:true, desc: `修改 ${cmd.target} 頭像` };
+      }
+      case 'setPassword': {
+        await update(ref(db,'users/' + cmd.target), { password: cmd.value });
+        return { ok:true, desc: `修改 ${cmd.target} 密碼` };
+      }
+      case 'ban': {
+        await update(ref(db,'users/' + cmd.target), { banned: { type: cmd.value || 'light', reason: cmd.reason || 'AI 操作', bannedAt: Date.now(), bannedBy: me.username } });
+        return { ok:true, desc: `封禁 ${cmd.target}` };
+      }
+      case 'unban': {
+        await update(ref(db,'users/' + cmd.target), { banned: null });
+        return { ok:true, desc: `解除封禁 ${cmd.target}` };
+      }
+      case 'grantAdmin': {
+        await update(ref(db,'users/' + cmd.target), { role: 'admin' });
+        return { ok:true, desc: `授予 ${cmd.target} 管理員` };
+      }
+      case 'revokeAdmin': {
+        await update(ref(db,'users/' + cmd.target), { role: 'member' });
+        return { ok:true, desc: `撤銷 ${cmd.target} 管理員` };
+      }
+      case 'deleteMsg': {
+        const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+        const val = snap.val()||{};
+        const key = Object.keys(val).find(k => val[k].id === cmd.target);
+        if (!key) return { ok:false, error: '找不到訊息 ' + cmd.target };
+        await update(ref(db,'messages/' + key), { deleted:true, deletedAt:Date.now(), deletedBy:me.username });
+        return { ok:true, desc: `刪除訊息 ${cmd.target}` };
+      }
+      case 'restoreMsg': {
+        const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+        const val = snap.val()||{};
+        const key = Object.keys(val).find(k => val[k].id === cmd.target);
+        if (!key) return { ok:false, error: '找不到訊息' };
+        await update(ref(db,'messages/' + key), { deleted:false, deletedAt:null, deletedBy:null });
+        return { ok:true, desc: `恢復訊息 ${cmd.target}` };
+      }
+      case 'purgeMsg': {
+        const snap = await get(query(ref(db,'messages'), limitToLast(300)));
+        const val = snap.val()||{};
+        const key = Object.keys(val).find(k => val[k].id === cmd.target);
+        if (!key) return { ok:false, error: '找不到訊息' };
+        await remove(ref(db,'messages/' + key));
+        return { ok:true, desc: `徹底刪除訊息 ${cmd.target}` };
+      }
+      case 'deleteNotice': {
+        await update(ref(db,'notices/' + cmd.target), { deleted:true, deletedAt:Date.now(), deletedBy:me.username });
+        return { ok:true, desc: `刪除公告 ${cmd.target}` };
+      }
+      case 'pinNotice': {
+        const snap = await get(child(ref(db),'notices/' + cmd.target));
+        if (!snap.exists()) return { ok:false, error: '公告不存在' };
+        const n = snap.val();
+        await update(ref(db,'notices/' + cmd.target), { pinned: !n.pinned });
+        return { ok:true, desc: (n.pinned?'取消置頂':'置頂') + '公告 ' + cmd.target };
+      }
+      case 'lockNotice': {
+        const snap = await get(child(ref(db),'notices/' + cmd.target));
+        if (!snap.exists()) return { ok:false, error: '公告不存在' };
+        const n = snap.val();
+        await update(ref(db,'notices/' + cmd.target), { locked: !n.locked });
+        return { ok:true, desc: (n.locked?'解鎖':'加鎖') + '公告 ' + cmd.target };
+      }
+      case 'approveNotice': {
+        const snap = await get(child(ref(db),'noticePending/' + cmd.target));
+        if (!snap.exists()) return { ok:false, error: '申請不存在' };
+        const p = snap.val();
+        await set(ref(db,'notices/' + p.id), { ...p, status:'published', publishedAt:Date.now(), approvedBy:me.username, approvedAt:Date.now() });
+        await update(ref(db,'noticePending/' + cmd.target), { status:'approved' });
+        return { ok:true, desc: `批准公告 ${p.id}` };
+      }
+      case 'rejectNotice': {
+        const snap = await get(child(ref(db),'noticePending/' + cmd.target));
+        if (!snap.exists()) return { ok:false, error: '申請不存在' };
+        const p = snap.val();
+        await update(ref(db,'noticePending/' + cmd.target), { status:'rejected', rejectReason: cmd.reason||'AI 拒絕', rejectedAt:Date.now(), rejectedBy:me.username });
+        return { ok:true, desc: `拒絕公告 ${p.id}` };
+      }
+      case 'logout': {
+        await remove(ref(db,'presence/' + cmd.target));
+        return { ok:true, desc: `強制登出 ${cmd.target}` };
+      }
+      case 'clearChat': {
+        await remove(ref(db,'messages'));
+        await set(ref(db,'meta/msgCounter'), 0);
+        return { ok:true, desc: '清空聊天室' };
+      }
+      default:
+        return { ok:false, error: '未知指令 ' + cmd.cmd };
+    }
+  } catch (e) {
+    return { ok:false, error: e.message };
+  }
+}
+
+/* ============ 監聽 ============ */
 function subscribeMessages(){
   if (unsubMsg) unsubMsg();
   unsubMsg = onValue(query(ref(db,'messages'), limitToLast(300)), snap => {
     const val = snap.val() || {}; const now = Date.now();
     messages = Object.keys(val).map(k => ({ _key:k, ...val[k] }))
-      .filter(m => { if (!m.deleted) return true; if (me.role === 'superadmin' || me.role === 'admin') return (now-(m.deletedAt||0))<2*3600*1000; return false; })
+      .filter(m => {
+        if (m.isSystem) return false;
+        if (!m.deleted) return true;
+        if (me.role === 'superadmin' || me.role === 'admin') return (now-(m.deletedAt||0))<2*3600*1000;
+        return false;
+      })
       .sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
     render();
   });
@@ -798,6 +1174,7 @@ function subscribeThanks(){
   });
 }
 
+/* ============ 公告輪播 ============ */
 function checkUnreadNotices(){
   if (!me || noticeCarouselShown) return;
   const unread = notices.filter(n => !n.deleted && !myNoticeReads[n._key]);
@@ -938,26 +1315,24 @@ async function openNoticeCreate(){
   if (me.banned && me.banned.type === 'light') { showNotif(t('bannedLight')); return; }
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
   window._noticeImages = [];
-  withTransition(t('noticeApplyTitle'), me.color, () => {
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${isAdmin?t('noticePublishTitle'):t('noticeApplyTitle')}</div></div><div class="fp-body"><div class="profile-content">${isAdmin?`<div class="section-title">${t('noticeUseHtml')}</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> ${t('noticeUseHtmlLabel')}</label></div>`:''}<div class="section-title">${t('noticeContent')}</div><div class="form-row"><textarea id="noticeText" placeholder="${t('noticeContentPh')}" maxlength="5000"></textarea><div class="char-count" id="charCount">0 / 5000</div></div><div class="section-title">${t('noticeImgs')}</div><div class="avatar-options" id="imgList"></div><input type="file" id="noticeImgFile" accept="image/*" multiple><label class="upload-btn" for="noticeImgFile">${t('noticeChooseImgs')}</label><div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="${t('noticeImgUrlPh')}"></div><div class="section-title">${t('noticeWhen')}</div><div class="form-row"><select id="noticeWhen"><option value="now">${t('noticeWhenNow')}</option><option value="3days">${t('noticeWhen3d')}</option></select></div><button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">${t('noticeSubmit')}</button><div class="err" id="noticeErr"></div></div></div></div>`;
-    const ta = document.getElementById('noticeText'), cc = document.getElementById('charCount');
-    ta.addEventListener('input', () => { const len = ta.value.length; cc.textContent = `${len} / 5000`; cc.classList.toggle('over', len>5000); });
-    const renderImgs = () => {
-      const box = document.getElementById('imgList');
-      box.innerHTML = window._noticeImages.map((src,i) => `<div class="av-opt" style="position:relative;overflow:hidden"><img src="${/^https?:/.test(src)?escapeHtml(src):src}" style="width:100%;height:100%;object-fit:cover"><button style="position:absolute;top:0;right:0;background:#dc2626;color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;cursor:pointer" data-imgidx="${i}">x</button></div>`).join('');
-      box.querySelectorAll('button[data-imgidx]').forEach(b => { b.onclick = e => { e.stopPropagation(); window._noticeImages.splice(+b.dataset.imgidx,1); renderImgs(); }; });
-    };
-    document.getElementById('noticeImgFile').addEventListener('change', async e => {
-      const files = Array.from(e.target.files).slice(0, 5 - window._noticeImages.length);
-      for (const f of files) {
-        if (f.size > 5*1024*1024) { showNotif('5MB'); continue; }
-        try { const dataUrl = await compressImage(f, 800, 800, 0.75); window._noticeImages.push(dataUrl); } catch(err){}
-      }
-      renderImgs(); e.target.value = '';
-    });
-    document.getElementById('noticeImgUrl').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); const url = e.target.value.trim(); if (!url) return; if (window._noticeImages.length >= 5) return; window._noticeImages.push(url); e.target.value = ''; renderImgs(); }
-    });
+  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${isAdmin?t('noticePublishTitle'):t('noticeApplyTitle')}</div></div><div class="fp-body"><div class="profile-content">${isAdmin?`<div class="section-title">${t('noticeUseHtml')}</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> ${t('noticeUseHtmlLabel')}</label></div>`:''}<div class="section-title">${t('noticeContent')}</div><div class="form-row"><textarea id="noticeText" placeholder="${t('noticeContentPh')}" maxlength="5000"></textarea><div class="char-count" id="charCount">0 / 5000</div></div><div class="section-title">${t('noticeImgs')}</div><div class="avatar-options" id="imgList"></div><input type="file" id="noticeImgFile" accept="image/*" multiple><label class="upload-btn" for="noticeImgFile">${t('noticeChooseImgs')}</label><div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="${t('noticeImgUrlPh')}"></div><div class="section-title">${t('noticeWhen')}</div><div class="form-row"><select id="noticeWhen"><option value="now">${t('noticeWhenNow')}</option><option value="3days">${t('noticeWhen3d')}</option></select></div><button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">${t('noticeSubmit')}</button><div class="err" id="noticeErr"></div></div></div></div>`;
+  const ta = document.getElementById('noticeText'), cc = document.getElementById('charCount');
+  ta.addEventListener('input', () => { const len = ta.value.length; cc.textContent = `${len} / 5000`; cc.classList.toggle('over', len>5000); });
+  const renderImgs = () => {
+    const box = document.getElementById('imgList');
+    box.innerHTML = window._noticeImages.map((src,i) => `<div class="av-opt" style="position:relative;overflow:hidden"><img src="${/^https?:/.test(src)?escapeHtml(src):src}" style="width:100%;height:100%;object-fit:cover"><button style="position:absolute;top:0;right:0;background:#dc2626;color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;cursor:pointer" data-imgidx="${i}">x</button></div>`).join('');
+    box.querySelectorAll('button[data-imgidx]').forEach(b => { b.onclick = e => { e.stopPropagation(); window._noticeImages.splice(+b.dataset.imgidx,1); renderImgs(); }; });
+  };
+  document.getElementById('noticeImgFile').addEventListener('change', async e => {
+    const files = Array.from(e.target.files).slice(0, 5 - window._noticeImages.length);
+    for (const f of files) {
+      if (f.size > 5*1024*1024) { showNotif('5MB'); continue; }
+      try { const dataUrl = await compressImage(f, 800, 800, 0.75); window._noticeImages.push(dataUrl); } catch(err){}
+    }
+    renderImgs(); e.target.value = '';
+  });
+  document.getElementById('noticeImgUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); const url = e.target.value.trim(); if (!url) return; if (window._noticeImages.length >= 5) return; window._noticeImages.push(url); e.target.value = ''; renderImgs(); }
   });
 }
 
@@ -982,18 +1357,16 @@ async function submitNotice(role){
 }
 
 async function openMyNotices(){
-  withTransition(t('myNotices'), me.color, async () => {
-    const snap = await get(ref(db,'noticePending'));
-    const val = snap.val()||{};
-    const mine = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(p => p.fromUser === me.username).sort((a,b) => b.createdAt-a.createdAt);
-    const body = mine.length === 0 ? `<div class="empty">${t('noApply')}</div>` :
-      mine.map(p => {
-        const status = p.status === 'pending' ? t('noticesTab') : p.status === 'approved' ? t('approve') : p.status === 'rejected' ? t('reject') : t('notifCancel');
-        const time = new Date(p.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
-        return `<div class="log-item"><div class="lt">${p.id} · ${time} · ${status}</div><div class="lm">${escapeHtml((p.text||'').slice(0,80))}</div>${p.status==='pending'?`<button class="btn-ghost" style="margin-top:8px;padding:6px;font-size:12px" data-action="cancelMyNotice" data-arg="${p._key}">${t('notifCancel')}</button>`:''}${p.status==='rejected'?`<div style="font-size:11.5px;color:#f87171;margin-top:6px">${t('reason')}：${escapeHtml(p.rejectReason||t('noReason'))}</div>`:''}</div>`;
-      }).join('');
-    openPage({ title:t('myNotices'), bodyHTML:body });
-  });
+  const snap = await get(ref(db,'noticePending'));
+  const val = snap.val()||{};
+  const mine = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(p => p.fromUser === me.username).sort((a,b) => b.createdAt-a.createdAt);
+  const body = mine.length === 0 ? `<div class="empty">${t('noApply')}</div>` :
+    mine.map(p => {
+      const status = p.status === 'pending' ? t('noticesTab') : p.status === 'approved' ? t('approve') : p.status === 'rejected' ? t('reject') : t('notifCancel');
+      const time = new Date(p.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+      return `<div class="log-item"><div class="lt">${p.id} · ${time} · ${status}</div><div class="lm">${escapeHtml((p.text||'').slice(0,80))}</div>${p.status==='pending'?`<button class="btn-ghost" style="margin-top:8px;padding:6px;font-size:12px" data-action="cancelMyNotice" data-arg="${p._key}">${t('notifCancel')}</button>`:''}${p.status==='rejected'?`<div style="font-size:11.5px;color:#f87171;margin-top:6px">${t('reason')}：${escapeHtml(p.rejectReason||t('noReason'))}</div>`:''}</div>`;
+    }).join('');
+  openPage({ title:t('myNotices'), bodyHTML:body });
 }
 async function cancelMyNotice(key){ try { await update(ref(db,'noticePending/'+key), { status:'cancelled' }); showNotif(t('notifCancel')); openMyNotices(); } catch(e){ showNotif(t('notifActionFail')); } }
 
@@ -1053,6 +1426,7 @@ async function noticeDelete(key){
   showNotif(t('notifNoticeDeleted')); closePage();
 }
 
+/* ============ 連結警告 ============ */
 document.addEventListener('click', e => {
   const link = e.target.closest('a[data-action="linkCheck"]');
   if (!link) return;
@@ -1072,9 +1446,10 @@ function showLinkWarning(url){
 function linkContinue(){ if (pendingLink) window.open(pendingLink,'_blank','noopener'); linkCancel(); }
 function linkCancel(){ const el = document.getElementById('linkWarnOverlay'); if (el) el.remove(); pendingLink = ''; }
 
-/* 加密訊息狀態 */
+/* ============ 加密狀態 ============ */
 let encState = {};
 
+/* ============ 渲染聊天 ============ */
 function render(){
   if (messages.length === 0) { chatBox.innerHTML = `<div class="empty">${t('emptyMsg')}</div>`; return; }
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
@@ -1084,10 +1459,11 @@ function render(){
   const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 120;
   chatBox.innerHTML = list.map(m => {
     const isMe = me && m.username === me.username;
+    const isAI = m.role === 'ai';
     const time = new Date(m.createdAt).toLocaleTimeString(lang==='en'?'en-US':'zh-TW', { hour:'2-digit', minute:'2-digit' });
     const msgIsAdmin = m.role === 'superadmin' || m.role === 'admin';
-    const roleTag = msgIsAdmin ? ' ['+t('adminRole')+']' : '';
-    const shownColor = msgIsAdmin ? '#8b5cf6' : (m.color || '#3b82f6');
+    const roleTag = msgIsAdmin ? ' ['+t('adminRole')+']' : (isAI ? ' ['+t('aiRole')+']' : '');
+    const shownColor = isAI ? AI_COLOR : (msgIsAdmin ? '#8b5cf6' : (m.color || '#3b82f6'));
     let body = '';
     if (m.type === 'image') body = `<img class="msg-img" src="${m.imageUrl}" data-action="viewImage" data-arg="${m.imageUrl}">`;
     else if (m.type === 'file') body = `<div class="file-msg"><span class="fi">[F]</span><div style="flex:1;min-width:0"><div class="fn">${escapeHtml(m.fileName||'file')}</div><div class="fs">${formatSize(m.fileSize||0)}</div></div></div>`;
@@ -1096,9 +1472,9 @@ function render(){
       body = `<div class="voice-msg ${played}" data-action="playVoice" data-arg="${m.id}"><span class="vi">[V]</span><span class="vt">0:${String(Math.round(m.duration||0)).padStart(2,'0')}</span><div class="vp"><div></div></div><span class="vd"></span></div>`;
     } else if (m.type === 'location') {
       body = `<div class="loc-msg" data-action="openLocation" data-arg="${m.lat},${m.lng}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lng}&zoom=15&size=220x150&maptype=mapnik&markers=${m.lat},${m.lng},red-pushpin"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`;
-    } else if (m.encrypted) {
+    } else if (m.encrypted && !isAI) {
       if (isMe) {
-        let textHTML = escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
+        let textHTML = escapeHtml(m.text||'');
         body = `<div class="enc-msg"><span style="font-size:10.5px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;align-self:flex-start">${t('encTag')}</span>${textHTML}</div>`;
       } else {
         body = renderEncryptedBody(m);
@@ -1106,21 +1482,28 @@ function render(){
     } else {
       let textHTML = escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
       textHTML = textHTML.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="#" data-action="linkCheck" data-arg="$1" style="color:inherit;text-decoration:underline">$1</a>');
-      body = textHTML;
+      // 思考卡片
+      if (isAI && m.reasoning) {
+        body = `<div class="think-card"><span class="think-label">${t('aiThinking')}：</span>${escapeHtml(m.reasoning)}</div>` + textHTML;
+      } else {
+        body = textHTML;
+      }
     }
     const deletedTag = m.deleted ? ` <span style="color:#f87171;font-size:10.5px">${t('msgDeleted')}</span>` : '';
     const msgIdTag = isAdmin ? ` <span class="msgid">${m.id}</span>` : '';
     const encTag = m.encrypted ? `<span class="enc-tag">${t('encTag')}</span>` : '';
+    const aiTag = isAI ? `<span class="ai-tag">AI</span>` : '';
+    const warnClass = m.warn ? 'warn' : '';
     let tools = '';
-    if (!m.deleted) {
+    if (!m.deleted && !isAI) {
       if (isMe) tools += `<button data-action="requestDeleteMsg" data-arg="${m.id}">${t('requestDelete')}</button>`;
       if (!isMe) tools += `<button class="danger" data-action="reportMsg" data-arg="${m.id}">${t('report')}</button>`;
       if (isAdmin) tools += `<button class="danger" data-action="adminDeleteMsg" data-arg="${m.id}">${t('adminDelete')}</button>`;
-    } else if (isAdmin) {
+    } else if (m.deleted && isAdmin) {
       tools += `<button data-action="restoreMsg" data-arg="${m.id}">${t('restore')}</button>`;
       tools += `<button class="danger" data-action="purgeMsg" data-arg="${m.id}">${t('purge')}</button>`;
     }
-    return `<div class="msg ${isMe?'me':''}"><div class="avatar" style="background:${shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} (#${m.seat})${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}</div><div class="bubble" style="background:${shownColor};${m.deleted?'opacity:.5':''}">${body}</div><div class="msg-tools">${tools}</div></div></div>`;
+    return `<div class="msg ${isMe?'me':''}"><div class="avatar" style="background:${shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}${aiTag}</div><div class="bubble ${warnClass}" style="background:${shownColor};${m.deleted?'opacity:.5':''}">${body}</div><div class="msg-tools">${tools}</div></div></div>`;
   }).join('');
   if (atBottom && !searchKeyword) chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -1139,18 +1522,8 @@ function renderEncryptedBody(m){
     </div>
   </div>`;
 }
-
-function encPrev(msgId){
-  if (!encState[msgId]) encState[msgId] = 0;
-  if (encState[msgId] > 0) { encState[msgId]--; render(); }
-}
-function encNext(msgId){
-  const m = messages.find(x => x.id === msgId);
-  if (!m) return;
-  const total = Array.from(m.text || '').length;
-  if (!encState[msgId]) encState[msgId] = 0;
-  if (encState[msgId] < total-1) { encState[msgId]++; render(); }
-}
+function encPrev(msgId){ if (!encState[msgId]) encState[msgId] = 0; if (encState[msgId] > 0) { encState[msgId]--; render(); } }
+function encNext(msgId){ const m = messages.find(x => x.id === msgId); if (!m) return; const total = Array.from(m.text || '').length; if (!encState[msgId]) encState[msgId] = 0; if (encState[msgId] < total-1) { encState[msgId]++; render(); } }
 
 function avatarInner(m){
   if (m.avatar) { if (String(m.avatar).startsWith('data:')) return `<img src="${m.avatar}">`; return m.avatar; }
@@ -1163,7 +1536,7 @@ function formatSize(b){ if (b<1024) return b+' B'; if (b<1024*1024) return (b/10
 function togglePlus(){ plusPanel.classList.toggle('hidden'); }
 function pickImage(){ plusPanel.classList.add('hidden'); const inp = document.getElementById('globalImgInput'); inp.onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const d = await compressImage(f, 1200, 1200, 0.75); await sendMedia('image', { imageUrl:d, text:'' }); } catch(err){} e.target.value = ''; }; inp.click(); }
 function pickFile(){ plusPanel.classList.add('hidden'); const inp = document.getElementById('globalFileInput'); inp.onchange = async e => { const f = e.target.files[0]; if (!f) return; if (f.size > 5*1024*1024) { showNotif('5MB'); return; } try { const d = await fileToBase64(f); await sendMedia('file', { fileUrl:d, fileName:f.name, fileSize:f.size }); } catch(err){} e.target.value = ''; }; inp.click(); }
-function pickLocation(){ plusPanel.classList.add('hidden'); if (!navigator.geolocation) return; showNotif('...'); navigator.geolocation.getCurrentPosition(async pos => { const lat = pos.coords.latitude, lng = pos.coords.longitude; let placeName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`); const j = await r.json(); if (j.display_name) placeName = j.display_name; } catch(e){} await sendMedia('location', { lat, lng, placeName }); }, err => showNotif('Error')); }
+function pickLocation(){ plusPanel.classList.add('hidden'); if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(async pos => { const lat = pos.coords.latitude, lng = pos.coords.longitude; let placeName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`); const j = await r.json(); if (j.display_name) placeName = j.display_name; } catch(e){} await sendMedia('location', { lat, lng, placeName }); }, err => showNotif('Error')); }
 function fileToBase64(file){ return new Promise((res,rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('fail')); r.readAsDataURL(file); }); }
 function compressImage(file, maxW, maxH, quality){ return new Promise((resolve,reject) => { const reader = new FileReader(); reader.onload = ev => { const img = new Image(); img.onload = () => { let w = img.width, h = img.height; const ratio = Math.min(maxW/w, maxH/h, 1); w = Math.round(w*ratio); h = Math.round(h*ratio); const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h); resolve(canvas.toDataURL('image/jpeg', quality)); }; img.onerror = () => reject(new Error('load fail')); img.src = ev.target.result; }; reader.onerror = () => reject(new Error('read fail')); reader.readAsDataURL(file); }); }
 
@@ -1189,7 +1562,7 @@ document.addEventListener('click', async e => {
   currentAudio.onended = () => { if (bar) bar.style.width = '0%'; if (me) set(ref(db,'noticeReads/'+me.username+'/voice_'+m.id), Date.now()).catch(()=>{}); v.classList.add('played'); };
 });
 
-function viewImage(url){ const div = document.createElement('div'); div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px'; div.style.animation = 'fadeIn .3s ease'; div.innerHTML = `<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`; div.onclick = () => div.remove(); document.body.appendChild(div); }
+function viewImage(url){ const div = document.createElement('div'); div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px'; div.innerHTML = `<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`; div.onclick = () => div.remove(); document.body.appendChild(div); }
 function openLocationFullscreen(arg){ const [lat,lng] = arg.split(','); const div = document.createElement('div'); div.id = 'locationFull'; div.style.cssText = 'position:fixed;inset:0;background:#000;z-index:999;display:flex;flex-direction:column'; div.innerHTML = `<div style="padding:12px;background:#1e293b;color:#fff;display:flex;align-items:center;gap:10px"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer">←</button><div style="flex:1;font-size:14px">${lat}, ${lng}</div></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0"></iframe>`; document.body.appendChild(div); }
 function closeLocationFull(){ const el = document.getElementById('locationFull'); if (el) el.remove(); }
 
@@ -1200,27 +1573,39 @@ async function restoreMsg(msgId){ if (me.role !== 'superadmin' && me.role !== 'a
 async function purgeMsg(msgId){ if (me.role !== 'superadmin' && me.role !== 'admin') return; const snap = await get(query(ref(db,'messages'), limitToLast(300))); const val = snap.val()||{}; const key = Object.keys(val).find(k => val[k].id === msgId); if (!key) return; await remove(ref(db,'messages/'+key)); }
 
 function closePage(){ pageRoot.innerHTML = ''; banDraft = {}; }
-function openPage({ title, bodyHTML, heroHTML }){
-  const overlay = document.createElement('div');
-  overlay.id = 'loadingOverlay';
-  overlay.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${(me&&me.color)||'#3b82f6'}"></div><div class="bg"></div><div class="loadText">${t('loadingTo')} ${escapeHtml(title)}</div></div>`;
-  document.body.appendChild(overlay);
-  setTimeout(() => {
-    overlay.remove();
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`;
-  }, 1500);
-}
+function openPage({ title, bodyHTML, heroHTML }){ pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`; }
 
+/* ============ 個人主頁 ============ */
 async function openProfilePage(username, isSelf){
   const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) { showNotif(t('noUser')); return; }
   const u = snap.val();
   const isAdmin = u.role === 'superadmin' || u.role === 'admin';
-  const bgColor = isAdmin ? '#8b5cf6' : (u.color || '#3b82f6');
-  const roleLabel = isAdmin ? t('adminRole') : t('memberRole');
+  const isAI = u.role === 'ai';
+  const bgColor = isAI ? (u.color || AI_COLOR) : (isAdmin ? '#8b5cf6' : (u.color || '#3b82f6'));
+  const textColor = pickTextColor(bgColor);
+  const roleLabel = isAI ? t('aiRole') : (isAdmin ? t('adminRole') : t('memberRole'));
   const avatarHTML = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
 
-  if (isSelf) {
-    const textColor = pickTextColor(bgColor);
+  if (isAI) {
+    // AI 個人主頁
+    const canEdit = me.role === 'superadmin' || me.role === 'admin';
+    const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||AI_NAME)}</div><div class="hero-badge">${roleLabel}</div></div>`;
+    let bodyHTML = `<div class="section-title">${t('aiBio')}</div><div style="font-size:14px;line-height:1.7;color:var(--text-main);padding:12px;background:var(--bg-input);border-radius:10px;margin-bottom:14px;white-space:pre-wrap">${escapeHtml(u.bio || AI_BIO_DEFAULT)}</div>`;
+    if (canEdit) {
+      bodyHTML += `<div class="section-title">編輯（管理員）</div>
+        <div class="form-row"><label>名稱</label><input type="text" id="ai_displayName" value="${escapeHtml(u.displayName||AI_NAME)}" maxlength="20"></div>
+        <div class="form-row"><label>顏色（hex）</label><input type="text" id="ai_color" value="${u.color || AI_COLOR}"></div>
+        <div class="form-row"><label>頭像</label><div class="avatar-options"><div class="av-opt" style="background:${bgColor};color:#fff" data-action="aiSetAvatarText">AI</div>${['😀','😎','🤖','🐱','🐶','🦊','🐼','🐯','🔥','⭐','⚡'].map(e => `<div class="av-opt" data-action="aiSetAvatarEmoji" data-arg="${e}">${e}</div>`).join('')}</div></div>
+        <div class="form-row"><label>自我介紹</label><textarea id="ai_bio" style="min-height:120px">${escapeHtml(u.bio || AI_BIO_DEFAULT)}</textarea></div>
+        <div class="form-row"><label>語言</label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-main);margin-top:6px"><input type="radio" name="ai_lang" value="zh" ${!u.allowCantonese?'checked':''}> ${t('aiLangZh')}</label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-main);margin-top:6px"><input type="radio" name="ai_lang" value="yue" ${u.allowCantonese?'checked':''}> ${t('aiLangYue')}</label>
+        </div>
+        <button class="btn-primary" data-action="aiSaveSettings">${t('saved')}</button>
+        <div class="err" id="aiErr"></div><div class="ok-msg" id="aiOk"></div>`;
+    }
+    openPage({ title: u.displayName || AI_NAME, heroHTML, bodyHTML });
+  } else if (isSelf) {
     const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
     let bodyHTML = `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">${t('saveName')}</button><div class="err" id="nameErr"></div><div class="ok-msg" id="nameOk"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*" capture="environment"><label class="upload-btn" for="avatarFile">${t('uploadAvatar')}</label><div class="err" id="avatarErr"></div><div class="ok-msg" id="avatarOk"></div><div class="section-title">${t('editPwd')}</div><div class="form-row"><input type="password" id="oldPwd" placeholder="${t('oldPwd')}"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="${t('newPwd')}"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="${t('confirmPwd')}"></div><button class="btn-primary" data-action="savePassword">${t('savePwd')}</button><div class="err" id="pwdErr"></div><div class="ok-msg" id="pwdOk"></div><button class="btn-ghost" data-action="openMyLogs">${t('myLogs')}</button><button class="btn-ghost" data-action="openMyNotices">${t('myNotices')}</button><div class="section-title" style="margin-top:28px">${t('about')}</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">${t('author')}</div><div class="ai-sub">${t('authorName')}</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">${t('thanks')}</div><div class="ai-sub">${thanksList.length > 0 ? thanksList.length : t('thanksEmpty')}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">${t('versions')}</div><div class="ai-sub">${t('currentVersion')}</div></div></div><div class="ai-arrow">›</div></div>`;
     openPage({ title: t('profileTitle'), heroHTML, bodyHTML });
@@ -1228,37 +1613,29 @@ async function openProfilePage(username, isSelf){
   } else {
     const light = lightenColor(bgColor, 40);
     const dark = darkenColor(bgColor, 20);
-    const textColor = pickTextColor(dark);
-    const overlay = document.createElement('div');
-    overlay.id = 'loadingOverlay';
-    overlay.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${bgColor}"></div><div class="bg"></div><div class="loadText">${t('loadingTo')} ${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div>`;
-    document.body.appendChild(overlay);
-    setTimeout(() => {
-      overlay.remove();
-      pageRoot.innerHTML = `
-        <div class="fullPage">
-          <div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div>
-          <div class="fp-body">
-            <div class="profile3dWrap">
-              <div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)">
-                <div class="glass"></div>
-                <div class="p3content">
-                  <span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span>
-                  <span class="p3text" style="color:${textColor};opacity:.85">#${u.seat} · ${roleLabel}</span>
-                </div>
-                <div class="p3logo">
-                  <span class="circle c1" style="background:${hexA(bgColor,.2)}"></span>
-                  <span class="circle c2" style="background:${hexA(bgColor,.2)}"></span>
-                  <span class="circle c3" style="background:${hexA(bgColor,.2)}"></span>
-                  <span class="circle c4" style="background:${hexA(bgColor,.2)}"></span>
-                  <span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avatarHTML}</span>
-                </div>
+    pageRoot.innerHTML = `
+      <div class="fullPage">
+        <div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div>
+        <div class="fp-body">
+          <div class="profile3dWrap">
+            <div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)">
+              <div class="glass"></div>
+              <div class="p3content">
+                <span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span>
+                <span class="p3text" style="color:${textColor};opacity:.85">#${u.seat} · ${roleLabel}</span>
+              </div>
+              <div class="p3logo">
+                <span class="circle c1" style="background:${hexA(bgColor,.2)}"></span>
+                <span class="circle c2" style="background:${hexA(bgColor,.2)}"></span>
+                <span class="circle c3" style="background:${hexA(bgColor,.2)}"></span>
+                <span class="circle c4" style="background:${hexA(bgColor,.2)}"></span>
+                <span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avatarHTML}</span>
               </div>
             </div>
-            <div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">${t('cantView')}</div>
           </div>
-        </div>`;
-    }, 1500);
+          <div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">${t('cantView')}</div>
+        </div>
+      </div>`;
   }
 }
 
@@ -1267,6 +1644,21 @@ function hexA(hex, a){ const h = String(hex).replace('#',''); if (h.length !== 6
 function lightenColor(hex, amt){ const h = String(hex).replace('#',''); if (h.length !== 6) return hex; let r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); r = Math.min(255, r+amt); g = Math.min(255, g+amt); b = Math.min(255, b+amt); return '#'+[r,g,b].map(x => x.toString(16).padStart(2,'0')).join(''); }
 function darkenColor(hex, amt){ const h = String(hex).replace('#',''); if (h.length !== 6) return hex; let r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); r = Math.max(0, r-amt); g = Math.max(0, g-amt); b = Math.max(0, b-amt); return '#'+[r,g,b].map(x => x.toString(16).padStart(2,'0')).join(''); }
 
+async function aiSaveSettings(){
+  const displayName = document.getElementById('ai_displayName').value.trim();
+  const color = document.getElementById('ai_color').value.trim();
+  const bio = document.getElementById('ai_bio').value.trim();
+  const yue = document.querySelector('input[name="ai_lang"]:checked').value === 'yue';
+  const errEl = document.getElementById('aiErr'), okEl = document.getElementById('aiOk');
+  if (!displayName) { errEl.textContent = '名稱不能為空'; return; }
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) { errEl.textContent = '顏色格式錯誤'; return; }
+  await update(ref(db,'users/' + AI_NAME), { displayName, color, bio, allowCantonese: yue });
+  okEl.textContent = '✓ 已儲存';
+  setTimeout(() => location.reload(), 600);
+}
+window.aiSetAvatarText = async function(){ await update(ref(db,'users/' + AI_NAME), { avatar: 'AI' }); showNotif('已更新'); };
+window.aiSetAvatarEmoji = async function(emoji){ await update(ref(db,'users/' + AI_NAME), { avatar: emoji }); showNotif('已更新'); };
+
 async function saveDisplayName(){ const name = document.getElementById('editDisplayName').value.trim(); const errEl = document.getElementById('nameErr'), okEl = document.getElementById('nameOk'); if (!name) { errEl.textContent = t('nameEmpty'); return; } if (name.length > 20) { errEl.textContent = t('nameTooLong'); return; } await update(ref(db,'users/'+me.username), { displayName:name }); me.displayName = name; sessionStorage.setItem('chat_me', JSON.stringify(me)); okEl.textContent = '✓ '+t('updated'); setTimeout(() => location.reload(), 600); }
 async function pickEmoji(emoji){ const val = emoji || null; await update(ref(db,'users/'+me.username), { avatar:val }); me.avatar = val; sessionStorage.setItem('chat_me', JSON.stringify(me)); setTimeout(() => location.reload(), 600); }
 async function onAvatarFileChange(e){ const file = e.target.files[0]; if (!file) return; try { const d = await compressImage(file, 200, 200, 0.75); await update(ref(db,'users/'+me.username), { avatar:d }); me.avatar = d; sessionStorage.setItem('chat_me', JSON.stringify(me)); setTimeout(() => location.reload(), 600); } catch(err){} }
@@ -1274,49 +1666,29 @@ async function savePassword(){ const oldPwd = document.getElementById('oldPwd').
 
 async function openThanksPage(){
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
-  withTransition(t('thanks'), me.color, () => {
-    const items = thanksList.length === 0 ? `<div class="thanks-empty">${t('thanksEmpty')}</div>` : thanksList.map(x => `<div class="thanks-item"><div class="ti-name">${escapeHtml(x.name)}</div><div class="ti-by">${t('thanksBy')} ${escapeHtml(x.byName||x.by)}</div></div>`).join('');
-    const adminForm = isAdmin ? `<div class="section-title">${t('thanksAdd')}</div><div class="form-row"><input type="text" id="thanksName" placeholder="${t('thanksNamePh')}" maxlength="30"></div><button class="btn-primary" data-action="submitThanks">${t('thanksSubmit')}</button><div class="err" id="thanksErr"></div>` : '';
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('thanks')}</div></div><div class="fp-body"><div class="profile-content">${items + adminForm}</div></div></div>`;
-  });
+  const items = thanksList.length === 0 ? `<div class="thanks-empty">${t('thanksEmpty')}</div>` : thanksList.map(x => `<div class="thanks-item"><div class="ti-name">${escapeHtml(x.name)}</div><div class="ti-by">${t('thanksBy')} ${escapeHtml(x.byName||x.by)}</div></div>`).join('');
+  const adminForm = isAdmin ? `<div class="section-title">${t('thanksAdd')}</div><div class="form-row"><input type="text" id="thanksName" placeholder="${t('thanksNamePh')}" maxlength="30"></div><button class="btn-primary" data-action="submitThanks">${t('thanksSubmit')}</button><div class="err" id="thanksErr"></div>` : '';
+  openPage({ title: t('thanks'), bodyHTML: items + adminForm });
 }
 async function submitThanks(){ if (me.role !== 'superadmin' && me.role !== 'admin') return; const name = document.getElementById('thanksName').value.trim(); const errEl = document.getElementById('thanksErr'); if (!name) { if (errEl) errEl.textContent = t('thanksNameEmpty'); return; } await push(ref(db,'thanks'), { name, by:me.username, byName:me.displayName, createdAt:Date.now() }); showNotif(t('thanksAdded')); openThanksPage(); }
 
 async function openVersionPage(){
-  withTransition(t('versions'), me.color, () => {
-    const body = VERSION_HISTORY.map((v,i) => `<div class="version-item ${i===0?'latest':''}"><div class="vi-head"><span class="vi-ver">${v.ver}</span>${i===0?'<span class="vi-badge">'+t('latestBadge')+'</span>':''}${v.date?'<span class="vi-date">'+v.date+'</span>':''}</div><div class="vi-changes"><ul>${v.changes.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('versions')}</div></div><div class="fp-body"><div class="profile-content">${body}</div></div></div>`;
-  });
+  const body = VERSION_HISTORY.map((v,i) => `<div class="version-item ${i===0?'latest':''}"><div class="vi-head"><span class="vi-ver">${v.ver}</span>${i===0?'<span class="vi-badge">'+t('latestBadge')+'</span>':''}${v.date?'<span class="vi-date">'+v.date+'</span>':''}</div><div class="vi-changes"><ul>${v.changes.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
+  openPage({ title: t('versions'), bodyHTML: body });
 }
 
-async function openMyLogs(){
-  withTransition(t('myLogs'), me.color, async () => {
-    const snap = await get(query(ref(db,'logs'), limitToLast(500)));
-    const val = snap.val()||{};
-    const list = Object.values(val).filter(l => l.username === me.username).sort((a,b) => b.createdAt-a.createdAt);
-    const body = list.length === 0 ? `<div class="empty">${t('noLogs')}</div>` : list.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join('');
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('myLogs')}</div></div><div class="fp-body"><div class="profile-content">${body}</div></div></div>`;
-  });
-}
-async function openUserLogs(username){
-  withTransition(t('myLogs'), me.color, async () => {
-    const snap = await get(query(ref(db,'logs'), limitToLast(500)));
-    const val = snap.val()||{};
-    const list = Object.values(val).filter(l => l.username === username).sort((a,b) => b.createdAt-a.createdAt);
-    const body = list.length === 0 ? `<div class="empty">${t('noLogs')}</div>` : list.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join('');
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${username}</div></div><div class="fp-body"><div class="profile-content">${body}</div></div></div>`;
-  });
-}
+async function openMyLogs(){ const snap = await get(query(ref(db,'logs'), limitToLast(500))); const val = snap.val()||{}; const list = Object.values(val).filter(l => l.username === me.username).sort((a,b) => b.createdAt-a.createdAt); openLogsPage(t('myLogs'), list); }
+async function openUserLogs(username){ const snap = await get(query(ref(db,'logs'), limitToLast(500))); const val = snap.val()||{}; const list = Object.values(val).filter(l => l.username === username).sort((a,b) => b.createdAt-a.createdAt); openLogsPage(username + ' - ' + t('myLogs'), list); }
+function openLogsPage(title, logs){ const body = logs.length === 0 ? `<div class="empty">${t('noLogs')}</div>` : logs.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join(''); openPage({ title, bodyHTML: `<div class="section-title">${logs.length}</div>` + body }); }
 
+/* ============ 管理員後台 ============ */
 function openAdminPage(tab){
   if (me.role !== 'superadmin' && me.role !== 'admin') return;
-  withTransition(t('adminPanel'), me.color, () => {
-    const isSuper = me.role === 'superadmin';
-    const pendingCount = pendingNotices.length;
-    const reqCount = Object.values(requests).filter(r => r.status === 'pending').length;
-    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('adminPanel')}</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?t('superAdmin'):t('adminRole')}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">${t('usersTab')}</button><button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">${t('noticesTab')}${pendingCount?' ('+pendingCount+')':''}</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">${t('requestsTab')}${reqCount?' ('+reqCount+')':''}</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">${t('logsTab')}</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
-    renderAdminTab(tab);
-  });
+  const isSuper = me.role === 'superadmin';
+  const pendingCount = pendingNotices.length;
+  const reqCount = Object.values(requests).filter(r => r.status === 'pending').length;
+  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('adminPanel')}</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?t('superAdmin'):t('adminRole')}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">${t('usersTab')}</button><button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">${t('noticesTab')}${pendingCount?' ('+pendingCount+')':''}</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">${t('requestsTab')}${reqCount?' ('+reqCount+')':''}</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">${t('logsTab')}</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  renderAdminTab(tab);
 }
 async function renderAdminTab(tab){
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.arg === tab));
@@ -1332,14 +1704,16 @@ function renderUserList(){
   return `<div class="user-list">${list.map(u => {
     const isAdmin = u.role === 'superadmin' || u.role === 'admin';
     const isSuper = u.role === 'superadmin';
-    const color = isAdmin ? '#8b5cf6' : (u.color||'#3b82f6');
+    const isAI = u.role === 'ai';
+    const color = isAI ? (u.color || AI_COLOR) : (isAdmin ? '#8b5cf6' : (u.color||'#3b82f6'));
     const av = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
     const badges = [];
-    if (isSuper) badges.push(`<span class="uc-badge badge-super">${t('superAdmin')}</span>`);
+    if (isAI) badges.push(`<span class="uc-badge badge-ai">${t('aiRole')}</span>`);
+    else if (isSuper) badges.push(`<span class="uc-badge badge-super">${t('superAdmin')}</span>`);
     else if (isAdmin) badges.push(`<span class="uc-badge badge-admin">${t('adminRole')}</span>`);
     if (u.banned && u.banned.type === 'severe') badges.push(`<span class="uc-badge badge-ban-severe">${t('banTypeSevere')}</span>`);
     else if (u.banned && u.banned.type === 'light') badges.push(`<span class="uc-badge badge-ban-light">${t('banTypeLight')}</span>`);
-    return `<div class="user-card" data-action="openUserDetail" data-arg="${u.username}"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">#${u.seat} · ${u.username}</div></div>${badges.join('')}</div>`;
+    return `<div class="user-card" data-action="openUserDetail" data-arg="${u.username}"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">${isAI ? '' : '#'+u.seat+' · '}${u.username}</div></div>${badges.join('')}</div>`;
   }).join('')}</div>`;
 }
 function renderRequestsList(){
@@ -1374,22 +1748,20 @@ async function renderAllLogs(){
 
 async function openUserDetail(username){
   const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) return;
-  withTransition(username + t('userDetail'), (snap.val().color)||'#3b82f6', () => {
-    renderUserDetailPage(snap.val());
-  });
+  renderUserDetailPage(snap.val());
 }
 function renderUserDetailPage(u){
   const isSuper = me.role === 'superadmin';
-  const isTargetSuper = u.role === 'superadmin', isTargetAdmin = u.role === 'admin';
-  const canEdit = isSuper || (me.role === 'admin' && !isTargetSuper && !isTargetAdmin);
-  const canBan = isSuper && u.username !== me.username;
-  const canGrant = isSuper && u.username !== me.username;
+  const isTargetSuper = u.role === 'superadmin', isTargetAdmin = u.role === 'admin', isTargetAI = u.role === 'ai';
+  const canEdit = (isSuper || me.role === 'admin') && !isTargetAI ? (isSuper || (me.role === 'admin' && !isTargetSuper && !isTargetAdmin)) : (isSuper || me.role === 'admin');
+  const canBan = isSuper && u.username !== me.username && !isTargetAI;
+  const canGrant = isSuper && u.username !== me.username && !isTargetAI;
   const isAdmin = isTargetSuper || isTargetAdmin;
-  const bgColor = isAdmin ? '#8b5cf6' : (u.color||'#3b82f6');
+  const bgColor = isTargetAI ? (u.color || AI_COLOR) : (isAdmin ? '#8b5cf6' : (u.color||'#3b82f6'));
   const textColor = pickTextColor(bgColor);
   const avatarHTML = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
-  const roleLabel = isTargetSuper ? t('superAdmin') : (isTargetAdmin ? t('adminRole') : t('memberRole'));
-  const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
+  const roleLabel = isTargetAI ? t('aiRole') : (isTargetSuper ? t('superAdmin') : (isTargetAdmin ? t('adminRole') : t('memberRole')));
+  const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div>${!isTargetAI?`<div class="hero-sub">#${u.seat} · ${u.username}</div>`:`<div class="hero-sub">${u.username}</div>`}<div class="hero-badge">${roleLabel}</div></div>`;
   let bodyHTML = '';
   if (u.banned) bodyHTML += `<div class="ban-status ${u.banned.type}"><b>${u.banned.type === 'severe' ? t('banTypeSevere') : t('banTypeLight')}</b><br>${t('reason')}：${escapeHtml(u.banned.reason||t('noReason'))}</div>`;
   if (canBan) {
@@ -1404,7 +1776,7 @@ function renderUserDetailPage(u){
   if (canEdit) bodyHTML += `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="au_displayName" value="${escapeHtml(u.displayName||u.username)}" maxlength="20"></div><div class="section-title">Color (hex)</div><div class="form-row"><input type="text" id="au_color" value="${u.color||'#3b82f6'}"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="">x</div></div><button class="btn-primary" data-action="adminSaveProfile" data-arg="${u.username}">${t('saved')}</button><div class="err" id="auErr"></div><div class="ok-msg" id="auOk"></div>`;
   if (canGrant) { bodyHTML += `<div class="section-title">${t('adminRole')}</div>`; if (isTargetAdmin && !isTargetSuper) bodyHTML += `<button class="btn-ghost" data-action="adminRevoke" data-arg="${u.username}">${t('revokeAdmin')}</button>`; else if (!isTargetAdmin) bodyHTML += `<button class="btn-primary" data-action="adminGrant" data-arg="${u.username}">${t('grantAdmin')}</button>`; }
   bodyHTML += `<button class="btn-ghost" data-action="openUserLogs" data-arg="${u.username}">${t('viewLogs')}</button>`;
-  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('userDetail')}</div></div><div class="fp-body">${heroHTML}<div class="profile-content">${bodyHTML}</div></div></div>`;
+  openPage({ title: u.displayName + t('userDetail'), heroHTML, bodyHTML });
 }
 function setBanType(username, type){ if (!banDraft[username]) banDraft[username] = { type:'light', reason:'' }; const r = document.getElementById('au_banReason'); if (r) banDraft[username].reason = r.value; banDraft[username].type = type; openUserDetail(username); }
 async function confirmBan(username){ if (me.role !== 'superadmin') return; const type = (banDraft[username] && banDraft[username].type) || 'light'; const r = document.getElementById('au_banReason'); const reason = r ? r.value.trim() : ((banDraft[username] && banDraft[username].reason) || '').trim(); const errEl = document.getElementById('banErr'); if (!reason) { if (errEl) errEl.textContent = t('banReasonEmpty'); return; } await update(ref(db,'users/'+username), { banned: { type, reason, bannedAt:Date.now(), bannedBy:me.username } }); delete banDraft[username]; showNotif(t('notifBanned') + ' ' + username); openUserDetail(username); }
@@ -1422,7 +1794,7 @@ applyTheme(); applyLang(); applyI18n();
 
 (async function boot(){
   const saved = sessionStorage.getItem('chat_me');
-  if (!saved) return;
+  if (!saved) { await ensureAIUser().catch(()=>{}); return; }
   try {
     const u = JSON.parse(saved);
     const snap = await get(child(ref(db),'users/'+u.username));
@@ -1430,7 +1802,9 @@ applyTheme(); applyLang(); applyI18n();
     const data = snap.val();
     if (data.banned && data.banned.type === 'severe') { sessionStorage.removeItem('chat_me'); return; }
     me = { username:data.username, displayName:data.displayName||data.username, seat:data.seat, color:data.color||'#3b82f6', role:data.role||'member', avatar:data.avatar||null, banned:data.banned||null };
-    await setPresence(); enterChat();
+    await setPresence();
+    await ensureAIUser();
+    enterChat();
   } catch(e) { sessionStorage.removeItem('chat_me'); }
 })();
 </script>
