@@ -64,6 +64,7 @@
   .meta .msgid{color:var(--text-muted);font-size:10px;font-family:monospace}
   .meta .enc-tag{background:rgba(220,38,38,.2);color:#fca5a5;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600}
   .meta .ai-tag{background:rgba(102,204,255,.25);color:#66ccff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700}
+  .meta .poll-tag{background:rgba(56,189,248,.25);color:#38bdf8;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700}
   .bubble{padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;color:#fff;max-width:100%}
   .msg.me .bubble{border-bottom-right-radius:4px}
   .msg:not(.me) .bubble{border-bottom-left-radius:4px}
@@ -106,6 +107,8 @@
   #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
   #plusPanel .pi .pic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8}
   #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
+  #plusPanel .pi.ai-on .pic{background:#66ccff;color:#0f172a}
+  #plusPanel .pi.ai-on .pit{color:#66ccff;font-weight:700}
   #mentionPopup{position:absolute;bottom:100%;left:12px;right:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);margin-bottom:6px}
   #mentionPopup .mention-item{padding:10px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px}
   #mentionPopup .mention-item:hover{background:rgba(56,189,248,.15)}
@@ -126,7 +129,7 @@
   .profile-content{padding:20px 20px 40px}
   .section-title{font-size:13px;color:var(--text-sub);margin:18px 0 10px;font-weight:600}
   .form-row{margin-bottom:14px}
-  .form-row input[type=text],.form-row input[type=password],.form-row textarea,.form-row select{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit}
+  .form-row input[type=text],.form-row input[type=password],.form-row input[type=number],.form-row textarea,.form-row select{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit}
   .form-row textarea{resize:vertical;min-height:120px;line-height:1.5}
   .char-count{text-align:right;font-size:11px;color:#4ade80;margin-top:4px}
   .char-count.over{color:#f87171}
@@ -156,6 +159,9 @@
   .user-card .uc-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .user-card .uc-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
   .user-card .uc-badge{font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600;flex-shrink:0}
+  .user-card .uc-presence{margin-left:auto;flex-shrink:0;width:10px;height:10px;border-radius:50%;background:#475569}
+  .user-card .uc-presence.online{background:#4ade80;box-shadow:0 0 8px #4ade80}
+  .user-card .uc-aion{font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(102,204,255,.2);color:#66ccff;font-weight:700;margin-left:8px;flex-shrink:0}
   .badge-ban-severe{background:rgba(220,38,38,.25);color:#fca5a5}
   .badge-ban-light{background:rgba(234,88,12,.25);color:#fdba74}
   .badge-admin{background:rgba(139,92,246,.25);color:#c4b5fd}
@@ -341,6 +347,22 @@
   .msg.exit-msg .bubble::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:70%;background:#66ccff;border-radius:2px}
   .msg.ai-success .bubble{background:linear-gradient(135deg,#16a34a,#15803d)!important}
   .msg.ai-fail .bubble{background:linear-gradient(135deg,#dc2626,#b91c1c)!important}
+  /* 投票 */
+  .poll-box{min-width:240px;max-width:100%;display:flex;flex-direction:column;gap:10px}
+  .poll-title{font-size:16px;font-weight:700;line-height:1.4;word-break:break-word}
+  .poll-meta-line{font-size:11.5px;opacity:.85}
+  .poll-options{display:flex;flex-direction:column;gap:8px}
+  .poll-opt{position:relative;display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.12);cursor:pointer;overflow:hidden;user-select:none}
+  .poll-opt.disabled{cursor:default}
+  .poll-opt .poll-fill{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.22);width:0;transition:width .3s ease;z-index:0}
+  .poll-opt .poll-circle{position:relative;z-index:1;width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.7);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .poll-opt .poll-square{position:relative;z-index:1;width:18px;height:18px;border-radius:4px;border:2px solid rgba(255,255,255,.7);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .poll-opt.selected .poll-circle,.poll-opt.selected .poll-square{background:#fff;border-color:#fff;color:#1c1e21}
+  .poll-opt .poll-text{position:relative;z-index:1;flex:1;font-size:13.5px;line-height:1.4;word-break:break-word}
+  .poll-opt .poll-pct{position:relative;z-index:1;font-size:12px;font-weight:700;opacity:.95;flex-shrink:0}
+  .poll-footer{font-size:11.5px;opacity:.85;display:flex;flex-direction:column;gap:3px}
+  .poll-end{color:#fca5a5;font-weight:600}
+  .poll-voters{font-size:11px;opacity:.8;margin-top:2px;line-height:1.5;word-break:break-word}
   /* 版本更新彈窗 */
   #versionModal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
   #versionModal .vm-card{background:#1e293b;border:2px solid #f59e0b;border-radius:16px;padding:28px 24px;max-width:400px;width:100%;text-align:center;animation:fadeUp .3s ease}
@@ -388,7 +410,7 @@
     <div class="field"><input id="loginUsername" data-i18n-ph="usernamePh" placeholder="帳號"></div>
     <div class="field"><input id="loginPassword" type="password" data-i18n-ph="passwordPh" placeholder="密碼"></div>
     <button id="loginBtn" data-action="login" data-i18n="loginBtn">登入</button>
-    <div id="loginVersion">v1.7.1 正式版</div>
+    <div id="loginVersion">v1.8 正式版</div>
   </div>
 </div>
 
@@ -396,7 +418,7 @@
   <header>
     <div class="title" data-i18n="appTitleShort">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.7.1</span>
+      <span class="ver">v1.8</span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
         <div class="bb8-toggle__container">
@@ -459,6 +481,9 @@
       <div class="pi" data-action="pickImage"><div class="pic" data-i18n="pImage">圖片</div><div class="pit" data-i18n="pImage">圖片</div></div>
       <div class="pi" data-action="pickFile"><div class="pic" data-i18n="pFile">檔案</div><div class="pit" data-i18n="pFile">檔案</div></div>
       <div class="pi" data-action="pickLocation"><div class="pic" data-i18n="pLoc">位置</div><div class="pit" data-i18n="pLoc">位置</div></div>
+      <div class="pi" data-action="openNoticeCreate"><div class="pic" data-i18n="pNotice">公告</div><div class="pit" data-i18n="pNotice">公告</div></div>
+      <div class="pi" data-action="openPollCreate"><div class="pic" data-i18n="pPoll">投票</div><div class="pit" data-i18n="pPoll">投票</div></div>
+      <div class="pi" id="aiBtn" data-action="toggleAI"><div class="pic">AI</div><div class="pit" data-i18n="pAI">AI</div></div>
     </div>
   </div>
 </div>
@@ -484,110 +509,64 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const CURRENT_VERSION = 'v1.7.1';
+const CURRENT_VERSION = 'v1.8';
 const AI_KEY = 'ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API = 'https://note3-prev-api.askdiandian.com/v1/chat/completions';
 const AI_MODEL = 'dots3-note-prev';
 const AI_SPONSOR = '感謝小紅書熱情贊助本次聊天的 API 費用';
+const AI_NAME = '小喆AI';
+const AI_COLOR = '#66ccff';
+const AI_BIO_DEFAULT = '我是小喆AI，班級聊天室的專屬助手。我可以讀取群組裡的對話，回答大家的問題。如果聊天室裡有人吵架、有人講了什麼好笑的話、或你想知道剛剛大家在聊什麼，都可以問我。';
 
-/* =========================================================
-   版本檢查機制
-   - 頁面載入時檢查一次
-   - 任何按鈕被點時檢查一次
-   - 版本不符 → 彈出無法取消的 Modal
-   - 「前往新版本」→ 帶 session + 暫存 + 目前頁面 → 強制重抓 HTML
-   ========================================================= */
-let versionChecking = false;
-let versionMismatchShown = false;
-
+/* ===== 版本檢查 ===== */
+let versionChecking = false, versionMismatchShown = false;
 async function checkVersion(){
-  if (versionChecking) return;
-  if (versionMismatchShown) return;
+  if (versionChecking || versionMismatchShown) return;
   versionChecking = true;
   try {
     const snap = await get(ref(db, 'meta/version'));
-    if (!snap.exists()) {
-      versionChecking = false;
-      return;
-    }
-    const serverVersion = String(snap.val() || '').trim();
-    if (!serverVersion) { versionChecking = false; return; }
-    if (serverVersion !== CURRENT_VERSION) {
-      showVersionModal(serverVersion);
-    }
-  } catch(e) {
-    console.warn('version check failed', e);
-  } finally {
-    versionChecking = false;
-  }
+    if (!snap.exists()) return;
+    const sv = String(snap.val() || '').trim();
+    if (sv && sv !== CURRENT_VERSION) showVersionModal(sv);
+  } catch(e) { console.warn(e); }
+  finally { versionChecking = false; }
 }
-
 function showVersionModal(serverVersion){
   if (versionMismatchShown) return;
   versionMismatchShown = true;
-  const old = document.getElementById('versionModal');
-  if (old) old.remove();
+  const old = document.getElementById('versionModal'); if (old) old.remove();
   const modal = document.createElement('div');
   modal.id = 'versionModal';
-  modal.innerHTML = `
-    <div class="vm-card">
-      <h3>⚠ 你的網站不是最新版本</h3>
-      <p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p>
-      <p>最新版本：<b style="color:#4ade80">${serverVersion}</b></p>
-      <div class="vm-btns">
-        <button class="vm-go" id="vmGoBtn">前往新版本</button>
-        <button class="vm-exit" id="vmExitBtn">退出網站</button>
-      </div>
-    </div>
-  `;
+  modal.innerHTML = `<div class="vm-card"><h3>⚠ 你的網站不是最新版本</h3><p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p><p>最新版本：<b style="color:#4ade80">${serverVersion}</b></p><div class="vm-btns"><button class="vm-go" id="vmGoBtn">前往新版本</button><button class="vm-exit" id="vmExitBtn">退出網站</button></div></div>`;
   document.body.appendChild(modal);
-
-  document.getElementById('vmGoBtn').onclick = () => {
-    savePageState();
-    saveAllDrafts();
-    const url = new URL(location.href);
-    url.searchParams.set('_v', Date.now().toString());
-    location.replace(url.toString());
-  };
-  document.getElementById('vmExitBtn').onclick = () => {
-    try { window.close(); } catch(e) {}
-    setTimeout(() => { location.href = 'about:blank'; }, 200);
-  };
+  document.getElementById('vmGoBtn').onclick = () => { savePageState(); saveAllDrafts(); const url = new URL(location.href); url.searchParams.set('_v', Date.now().toString()); location.replace(url.toString()); };
+  document.getElementById('vmExitBtn').onclick = () => { try { window.close(); } catch(e) {} setTimeout(() => { location.href = 'about:blank'; }, 200); };
 }
-
 function savePageState(){
   let state = 'chat';
   if (pageRoot.children.length > 0) {
     const fp = pageRoot.querySelector('.fullPage');
     if (fp) {
       const title = fp.querySelector('.fp-title');
-      const t = title ? title.textContent.trim() : '';
+      const t2 = title ? title.textContent.trim() : '';
       const id = fp.id || '';
       if (id === 'noticeFullscreen') state = 'noticeFullscreen';
-      else if (t.includes('公告')) state = 'noticeCreate';
-      else if (t.includes('後台')) state = 'admin:users';
-      else if (t.includes('日誌')) state = 'logs';
-      else if (t.includes('感謝')) state = 'thanks';
-      else if (t.includes('版本')) state = 'version';
-      else if (t.includes('申請')) state = 'myNotices';
-      else state = 'page:' + t;
+      else if (t2.includes('後台')) state = 'admin:users';
+      else if (t2.includes('日誌')) state = 'logs';
+      else if (t2.includes('感謝')) state = 'thanks';
+      else if (t2.includes('版本')) state = 'version';
+      else state = 'page:' + t2;
     }
   }
   sessionStorage.setItem('chat_page_state', state);
 }
-
 function saveAllDrafts(){
   const drafts = {};
   document.querySelectorAll('input[type=text],input[type=password],textarea,select').forEach((el, i) => {
-    if (el.id) {
-      drafts['id:' + el.id] = el.value;
-    } else {
-      drafts['idx:' + i] = el.value;
-    }
+    if (el.id) drafts['id:' + el.id] = el.value; else drafts['idx:' + i] = el.value;
   });
   try { sessionStorage.setItem('chat_drafts', JSON.stringify(drafts)); } catch(e) {}
 }
-
 function restoreAllDrafts(){
   let drafts = {};
   try { drafts = JSON.parse(sessionStorage.getItem('chat_drafts') || '{}'); } catch(e) {}
@@ -595,23 +574,14 @@ function restoreAllDrafts(){
   setTimeout(() => {
     let idx = 0;
     document.querySelectorAll('input[type=text],input[type=password],textarea,select').forEach((el) => {
-      const keyById = el.id ? 'id:' + el.id : null;
-      const keyByIdx = 'idx:' + idx;
-      if (keyById && drafts[keyById] !== undefined) {
-        el.value = drafts[keyById];
-      } else if (drafts[keyByIdx] !== undefined) {
-        el.value = drafts[keyByIdx];
-      }
+      const kId = el.id ? 'id:' + el.id : null, kIdx = 'idx:' + idx;
+      if (kId && drafts[kId] !== undefined) el.value = drafts[kId];
+      else if (drafts[kIdx] !== undefined) el.value = drafts[kIdx];
       idx++;
     });
   }, 300);
 }
-
-function isReloadAfterVersion(){
-  const url = new URL(location.href);
-  return url.searchParams.has('_v');
-}
-
+function isReloadAfterVersion(){ return new URL(location.href).searchParams.has('_v'); }
 async function restorePageState(){
   const state = sessionStorage.getItem('chat_page_state');
   if (!state) return;
@@ -621,65 +591,12 @@ async function restorePageState(){
   if (state === 'logs') { openMyLogs(); return; }
   if (state === 'thanks') { openThanksPage(); return; }
   if (state === 'version') { openVersionPage(); return; }
-  if (state === 'myNotices') { openMyNotices(); return; }
-  if (state === 'noticeCreate') { openNoticeCreate(); return; }
+  if (state === 'noticeFullscreen') return;
 }
+document.addEventListener('click', (e) => { if (!e.target) return; if (e.target.closest('#versionModal')) return; checkVersion(); }, true);
+window.addEventListener('load', () => { setTimeout(checkVersion, 500); });
 
-async function initVersionCheck(){
-  await checkVersion();
-}
-
-document.addEventListener('click', (e) => {
-  const t = e.target;
-  if (!t) return;
-  if (t.closest('#versionModal')) return;
-  checkVersion();
-}, true);
-
-window.addEventListener('load', () => {
-  setTimeout(checkVersion, 500);
-});
-
-/* =========================================================
-   v1.7.1 新增 / 修正
-   - 修正 AI setColor 改自己顏色後畫面不會立即更新
-   - 修正 AI 不知道 setTheme 指令
-   - 修正 AI 執行完操作後 me 沒重新讀取
-   ========================================================= */
-
-/* 重新讀取當前使用者資料，並更新 sessionStorage + 畫面 */
-async function reloadMe(){
-  if (!me) return null;
-  try {
-    const snap = await get(child(ref(db), 'users/' + me.username));
-    if (!snap.exists()) return null;
-    const data = snap.val();
-    me = {
-      username: data.username,
-      displayName: data.displayName || data.username,
-      seat: data.seat,
-      color: data.color || '#3b82f6',
-      role: data.role || 'member',
-      avatar: data.avatar || null,
-      banned: data.banned || null
-    };
-    sessionStorage.setItem('chat_me', JSON.stringify(me));
-    // 更新 UI 相關
-    if (me.role === 'superadmin' || me.role === 'admin') adminBtn.classList.remove('hidden');
-    else adminBtn.classList.add('hidden');
-    render();
-    renderClassStatus();
-    return me;
-  } catch (e) {
-    console.warn('reloadMe failed', e);
-    return null;
-  }
-}
-
-/* =========================================================
-   以下為原本的程式
-   ========================================================= */
-
+/* ===== 基本工具 ===== */
 const $ = id => document.getElementById(id);
 const loginScreen = $('loginScreen'), chatScreen = $('chatScreen');
 const loginUsername = $('loginUsername'), loginPassword = $('loginPassword');
@@ -691,11 +608,12 @@ const mentionPopup = $('mentionPopup'), adminNotifDot = $('adminNotifDot');
 const pageRoot = $('pageRoot'), noticeBar = $('noticeBar');
 const plusPanel = $('plusPanel'), plusBtn = $('plusBtn');
 const encToggle = $('encToggle'), encCheckbox = $('encCheckbox');
+const aiBtn = $('aiBtn');
 
 const I18N = {
-  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',aiRole:'AI',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.7.1 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往',aiBio:'自我介紹（管理員可編輯）',aiLanguage:'AI 語言',aiLangZh:'書面繁體中文',aiLangYue:'允許廣東話口語',aiConfirmTitle:'AI 想執行以下操作：',aiAllow:'允許',aiDeny:'拒絕',aiThinking:'想法',aiNoPermission:'你沒有權限執行這個操作喔～',aiProcessing:'小喆AI 正在思考...',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出對話',pwdLabel:'密碼'},
-  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索...',msgPh:'输入...',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载中...',noNotice:'暂无公告',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'暂无消息',noMatch:'无匹配',bannedSevere:'已封禁',reason:'原因',noReason:'（无）',sendFail:'失败',bannedLight:'被限制',profileTitle:'我的主页',profileOther:'的主页',cantView:'别人的主页',editName:'改名称',saveName:'保存',editAvatar:'改头像',uploadAvatar:'上传',editPwd:'改密码',oldPwd:'当前',newPwd:'新密码',confirmPwd:'确认',savePwd:'修改',myLogs:'我的日志',myNotices:'公告申请',nameEmpty:'不能为空',nameTooLong:'最多 20',pwdTooShort:'至少 6',pwdMismatch:'不一致',pwdWrong:'密码错',pwdUpdated:'已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'日志',superAdmin:'超管',adminRole:'管理',memberRole:'成员',aiRole:'AI',noRequests:'暂无',noLogs:'暂无',noPending:'暂无',noApply:'暂无',deleteRequest:'删请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'封禁',banTypeLight:'普通',banTypeSevere:'严重',banLightSub:'可登录不能发言',banSevereSub:'无法登录',banSection:'封禁',banThis:'封禁',banSelect:'选 → 填 → 确定',banReasonPh:'原因',banReasonEmpty:'必填',banned:'已封禁',unban:'解封',grantAdmin:'授权',revokeAdmin:'撤销',viewLogs:'日志',online:'在线',msgDeleted:'（已删除）',requestDelete:'请求删',adminDelete:'管理员删',restore:'恢复',purge:'彻底删',deleteReasonPh:'原因：',reportReasonPh:'原因：',requestSent:'已发',reportSent:'已发',userDetail:'资料',noPermission:'无权限',changeName:'管理员改',deletedLog:'删消息',restoredLog:'恢复',purgedLog:'彻底删',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名',changedPwdLog:'改密',loggedIn:'登录',loggedOut:'退出',sentMsg:'发送',approvedReq:'批准',notifBanned:'已封禁',notifUnbanned:'已解',notifGranted:'已授',notifRevoked:'已撤',notifAvatarUpdated:'更新',notifActionFail:'失败',notifSaved:'已保存',notifCancel:'取消',notifSent:'已发',notifNoticePublished:'已发',notifNoticeSent:'已发',notifNoticeApproved:'批准',notifNoticeRejected:'拒绝',notifNoticeEdited:'编辑',notifNoticePinned:'置顶',notifNoticeUnpinned:'取消顶',notifNoticeLocked:'锁定',notifNoticeUnlocked:'解锁',notifNoticeDeleted:'删除',noticeTitle:'公告',noticeApplyTitle:'申请',noticePublishTitle:'发布',noticeContent:'内容',noticeContentPh:'内容',noticeImgs:'图片',noticeChooseImgs:'选择',noticeImgUrlPh:'URL',noticeWhen:'时间',noticeWhenNow:'立即',noticeWhen3d:'3天',noticeSubmit:'提交',noticeUseHtml:'HTML',noticeUseHtmlLabel:'使用 HTML',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消',noticeLock:'锁',noticeUnlock:'解锁',noticeDelete:'删',noticeOver5000:'超5000',noticeNeedContent:'必填',noticeRejectReasonPh:'原因',noticePinTag:'置顶',noticeLatest:'最新：',noticeNoOther:'无',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'被拒绝',about:'关于',author:'作者',thanks:'感谢',versions:'版本',thanksAdd:'新增',thanksNamePh:'名称',thanksSubmit:'提交',thanksEmpty:'空',thanksBy:'by',thanksNameEmpty:'必填',thanksAdded:'已加',authorName:'梁喆',currentVersion:'v1.7.1',latestBadge:'最新',encTag:'加密',encNext:'下一',encPrev:'上一',loadingTo:'前往',aiBio:'简介',aiLanguage:'语言',aiLangZh:'中文',aiLangYue:'粤语',aiConfirmTitle:'AI 想执行：',aiAllow:'允许',aiDeny:'拒绝',aiThinking:'想法',aiNoPermission:'无权限',aiProcessing:'思考中...',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出对话',pwdLabel:'密码'},
-  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Sign in',usernamePh:'Username',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search...',msgPh:'Type...',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading...',noNotice:'No announcements',wrongPwd:'Wrong',noUser:'Not found',emptyMsg:'No messages',noMatch:'No match',bannedSevere:'Banned',reason:'Reason',noReason:'(none)',sendFail:'Failed',bannedLight:'Muted',profileTitle:'Profile',profileOther:"'s",cantView:'View only',editName:'Name',saveName:'Save',editAvatar:'Avatar',uploadAvatar:'Upload',editPwd:'Password',oldPwd:'Current',newPwd:'New',confirmPwd:'Confirm',savePwd:'Change',myLogs:'Logs',myNotices:'Notices',nameEmpty:'Required',nameTooLong:'Max 20',pwdTooShort:'Min 6',pwdMismatch:'Mismatch',pwdWrong:'Wrong',pwdUpdated:'Updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'Logs',superAdmin:'Super',adminRole:'Admin',memberRole:'Member',aiRole:'AI',noRequests:'None',noLogs:'None',noPending:'None',noApply:'None',deleteRequest:'Del',report:'Report',approve:'OK',reject:'No',confirmBan:'Ban',banTypeLight:'Light',banTypeSevere:'Severe',banLightSub:'Sign in only',banSevereSub:'No sign in',banSection:'Ban',banThis:'Ban',banSelect:'Pick → Reason → OK',banReasonPh:'Reason',banReasonEmpty:'Required',banned:'Banned',unban:'Unban',grantAdmin:'Grant',revokeAdmin:'Revoke',viewLogs:'Logs',online:'Online',msgDeleted:'(deleted)',requestDelete:'Request',adminDelete:'Admin',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason:',reportReasonPh:'Reason:',requestSent:'Sent',reportSent:'Sent',userDetail:' info',noPermission:'No perm',changeName:'Admin',deletedLog:'Deleted',restoredLog:'Restored',purgedLog:'Purged',bannedLog:'Banned',unbannedLog:'Unban',grantedLog:'Grant',revokedLog:'Revoke',changedNameLog:'Renamed',changedPwdLog:'Pwd',loggedIn:'In',loggedOut:'Out',sentMsg:'Sent',approvedReq:'OK',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted',notifRevoked:'Revoked',notifAvatarUpdated:'Updated',notifActionFail:'Fail',notifSaved:'Saved',notifCancel:'Cancel',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Sent',notifNoticeApproved:'OK',notifNoticeRejected:'No',notifNoticeEdited:'Edit',notifNoticePinned:'Pin',notifNoticeUnpinned:'Unpin',notifNoticeLocked:'Lock',notifNoticeUnlocked:'Unlock',notifNoticeDeleted:'Del',noticeTitle:'Notice',noticeApplyTitle:'Apply',noticePublishTitle:'Publish',noticeContent:'Content',noticeContentPh:'Content',noticeImgs:'Images',noticeChooseImgs:'Choose',noticeImgUrlPh:'URL',noticeWhen:'Time',noticeWhenNow:'Now',noticeWhen3d:'3 days',noticeSubmit:'Submit',noticeUseHtml:'HTML',noticeUseHtmlLabel:'Use HTML',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000',noticeNeedContent:'Required',noticeRejectReasonPh:'Reason:',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'None',noticeApplyBy:'By: ',noticeEditedBy:'Originally: ',noticeAdminEdited:' · edited',noticeRejected:'Rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Versions',thanksAdd:'Add',thanksNamePh:'Name',thanksSubmit:'Submit',thanksEmpty:'Empty',thanksBy:'by',thanksNameEmpty:'Required',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'v1.7.1',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',loadingTo:'Going to',aiBio:'Bio',aiLanguage:'Language',aiLangZh:'Chinese',aiLangYue:'Cantonese',aiConfirmTitle:'AI wants to:',aiAllow:'Allow',aiDeny:'Deny',aiThinking:'Thought',aiNoPermission:'No permission',aiProcessing:'Thinking...',aiThinkingNow:'XiaoZhe AI is thinking',aiExited:'XiaoZhe AI has exited the conversation',pwdLabel:'Password'}
+  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',pNotice:'公告',pPoll:'投票',pAI:'AI',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',aiRole:'AI',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.8 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',aiBio:'自我介紹（管理員可編輯）',aiLanguage:'AI 語言',aiLangZh:'書面繁體中文',aiLangYue:'允許廣東話口語',aiConfirmTitle:'AI 想執行以下操作：',aiAllow:'允許',aiDeny:'拒絕',aiThinking:'想法',aiNoPermission:'你沒有權限執行這個操作喔～',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出對話',pwdLabel:'密碼',pollTitle:'投票',pollCreate:'建立投票',pollNamePh:'投票名稱（必填，最多 50 字）',pollOptions:'選項（每個最多 50 字，至少 2 個）',pollAddOpt:'+ 新增選項',pollMode:'模式',pollSingle:'單選',pollMulti:'多選',pollMax:'多選上限',pollMaxUnlimited:'無限',pollOptMode:'選項輸入方式',pollOptOne:'逐個輸入',pollOptMulti:'多行輸入',pollBulkPh:'每行一個選項',pollWhenResult:'什麼時候能看到結果',pollWhenStart:'投票一開始就能看到',pollWhenEnd:'投票結束後才能看到',pollWhoResult:'誰能看到結果',pollWhoCreator:'只有建立者',pollWhoAll:'所有人',pollOtherSee:'別人投票後能看到什麼',pollOtherNone:'什麼都看不到',pollOtherWho:'只看到誰投了',pollOtherPct:'看到百分比，看不到誰投了什麼',pollDurationH:'截止時間（多少小時後結束）',pollSubmit:'建立投票',pollEnded:'已結束',pollEndsIn:'將於 X 小時後結束',pollVotes:'X 人已投票',pollYouVoted:'你已投票',pollLocked:'已截止，不能再投',pollOptionEmpty:'選項不能為空',pollNeedTwo:'至少需要 2 個選項',pollNameEmpty:'請輸入投票名稱',pollMaxTooMany:'選項數量超過上限',pollSelectAtLeast:'請至少選一個',pollTooManySelected:'選中數量超過上限',pollSubmitted:'已投票',pollDurationPh:'例如 24',pollVoters:'投票者',pollCreatorSee:'建立者可見',pollManage:'管理投票',pollRequestDelete:'請求刪除投票',pollReport:'舉報投票',pollDeleteReasonPh:'請填寫刪除投票原因：',pollDeleteSent:'已送出刪除請求',aiModeOn:'AI 已開啟',aiModeOff:'AI 已關閉',aiModeSwitch:'已切換 AI 模式（舊版關鍵詞）',aiModeSwitchNew:'已切換 AI 模式（新版按鈕）',aiModeLabel:'AI 模式',aiModeOld:'舊版（關鍵詞觸發）',aiModeNew:'新版（按鈕控制）',onlineQuery:'在線查詢',onlineCount:'在線',offlineCount:'離線',onlineNow:'現在在線',offlineNow:'離線',aiOnTag:'AI 開',aiOffTag:'AI 關'},
+  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索...',msgPh:'输入...',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',pNotice:'公告',pPoll:'投票',pAI:'AI',encToggle:'加密',loading:'加载中...',noNotice:'暂无公告',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'暂无消息',noMatch:'无匹配',bannedSevere:'已封禁',reason:'原因',noReason:'（无）',sendFail:'失败',bannedLight:'被限制',profileTitle:'我的主页',profileOther:'的主页',cantView:'别人的主页',editName:'改名称',saveName:'保存',editAvatar:'改头像',uploadAvatar:'上传',editPwd:'改密码',oldPwd:'当前',newPwd:'新密码',confirmPwd:'确认',savePwd:'修改',myLogs:'我的日志',myNotices:'公告申请',nameEmpty:'不能为空',nameTooLong:'最多 20',pwdTooShort:'至少 6',pwdMismatch:'不一致',pwdWrong:'密码错',pwdUpdated:'已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'日志',superAdmin:'超管',adminRole:'管理',memberRole:'成员',aiRole:'AI',noRequests:'暂无',noLogs:'暂无',noPending:'暂无',noApply:'暂无',deleteRequest:'删请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'封禁',banTypeLight:'普通',banTypeSevere:'严重',banLightSub:'可登录不能发言',banSevereSub:'无法登录',banSection:'封禁',banThis:'封禁',banSelect:'选 → 填 → 确定',banReasonPh:'原因',banReasonEmpty:'必填',banned:'已封禁',unban:'解封',grantAdmin:'授权',revokeAdmin:'撤销',viewLogs:'日志',online:'在线',msgDeleted:'（已删除）',requestDelete:'请求删',adminDelete:'管理员删',restore:'恢复',purge:'彻底删',deleteReasonPh:'原因：',reportReasonPh:'原因：',requestSent:'已发',reportSent:'已发',userDetail:'资料',deletedLog:'删消息',restoredLog:'恢复',purgedLog:'彻底删',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名',changedPwdLog:'改密',loggedIn:'登录',loggedOut:'退出',sentMsg:'发送',notifBanned:'已封禁',notifUnbanned:'已解',notifGranted:'已授',notifRevoked:'已撤',notifActionFail:'失败',notifSaved:'已保存',notifCancel:'取消',notifSent:'已发',notifNoticePublished:'已发',notifNoticeSent:'已发',notifNoticeApproved:'批准',notifNoticeRejected:'拒绝',notifNoticeEdited:'编辑',notifNoticePinned:'置顶',notifNoticeUnpinned:'取消顶',notifNoticeLocked:'锁定',notifNoticeUnlocked:'解锁',notifNoticeDeleted:'删除',noticeTitle:'公告',noticeApplyTitle:'申请',noticePublishTitle:'发布',noticeContent:'内容',noticeContentPh:'内容',noticeImgs:'图片',noticeChooseImgs:'选择',noticeImgUrlPh:'URL',noticeWhen:'时间',noticeWhenNow:'立即',noticeWhen3d:'3天',noticeSubmit:'提交',noticeUseHtml:'HTML',noticeUseHtmlLabel:'使用 HTML',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消',noticeLock:'锁',noticeUnlock:'解锁',noticeDelete:'删',noticeOver5000:'超5000',noticeNeedContent:'必填',noticeRejectReasonPh:'原因',noticePinTag:'置顶',noticeLatest:'最新：',noticeNoOther:'无',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'被拒绝',about:'关于',author:'作者',thanks:'感谢',versions:'版本',thanksAdd:'新增',thanksNamePh:'名称',thanksSubmit:'提交',thanksEmpty:'空',thanksBy:'by',thanksNameEmpty:'必填',thanksAdded:'已加',authorName:'梁喆',currentVersion:'v1.8',latestBadge:'最新',encTag:'加密',encNext:'下一',encPrev:'上一',aiBio:'简介',aiLanguage:'语言',aiLangZh:'中文',aiLangYue:'粤语',aiConfirmTitle:'AI 想执行：',aiAllow:'允许',aiDeny:'拒绝',aiThinking:'想法',aiNoPermission:'无权限',aiThinkingNow:'小喆AI 正在思考',aiExited:'小喆AI 已退出对话',pwdLabel:'密码',pollTitle:'投票',pollCreate:'创建投票',pollNamePh:'名称',pollOptions:'选项',pollAddOpt:'+ 新增',pollMode:'模式',pollSingle:'单选',pollMulti:'多选',pollMax:'上限',pollMaxUnlimited:'无限',pollOptMode:'输入方式',pollOptOne:'逐个',pollOptMulti:'多行',pollBulkPh:'每行一个',pollWhenResult:'结果时间',pollWhenStart:'开始就能看',pollWhenEnd:'结束才能看',pollWhoResult:'谁能看结果',pollWhoCreator:'仅创建者',pollWhoAll:'所有人',pollOtherSee:'别人看到',pollOtherNone:'什么都看不到',pollOtherWho:'只看到谁投了',pollOtherPct:'看百分比',pollDurationH:'截止（小时）',pollSubmit:'建立',pollEnded:'已结束',pollEndsIn:'X 小时后结束',pollVotes:'X 人已投票',pollYouVoted:'已投票',pollLocked:'已截止',pollOptionEmpty:'选项不能为空',pollNeedTwo:'至少 2 个选项',pollNameEmpty:'请输入名称',pollMaxTooMany:'超过上限',pollSelectAtLeast:'请至少选一个',pollTooManySelected:'超过上限',pollSubmitted:'已投票',pollDurationPh:'例如 24',pollVoters:'投票者',pollCreatorSee:'建立者可见',pollManage:'管理',pollRequestDelete:'请求删',pollReport:'举报',pollDeleteReasonPh:'原因：',pollDeleteSent:'已发',aiModeOn:'AI 已开',aiModeOff:'AI 已关',aiModeSwitch:'已切旧版',aiModeSwitchNew:'已切新版',aiModeLabel:'AI 模式',aiModeOld:'旧版',aiModeNew:'新版',onlineQuery:'在线查询',onlineCount:'在线',offlineCount:'离线',onlineNow:'在线',offlineNow:'离线',aiOnTag:'AI 开',aiOffTag:'AI 关'},
+  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Sign in',usernamePh:'Username',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search...',msgPh:'Type...',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',pNotice:'Notice',pPoll:'Poll',pAI:'AI',encToggle:'Encrypt',loading:'Loading...',noNotice:'No announcements',wrongPwd:'Wrong',noUser:'Not found',emptyMsg:'No messages',noMatch:'No match',bannedSevere:'Banned',reason:'Reason',noReason:'(none)',sendFail:'Failed',bannedLight:'Muted',profileTitle:'Profile',profileOther:"'s",cantView:'View only',editName:'Name',saveName:'Save',editAvatar:'Avatar',uploadAvatar:'Upload',editPwd:'Password',oldPwd:'Current',newPwd:'New',confirmPwd:'Confirm',savePwd:'Change',myLogs:'Logs',myNotices:'Notices',nameEmpty:'Required',nameTooLong:'Max 20',pwdTooShort:'Min 6',pwdMismatch:'Mismatch',pwdWrong:'Wrong',pwdUpdated:'Updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'Logs',superAdmin:'Super',adminRole:'Admin',memberRole:'Member',aiRole:'AI',noRequests:'None',noLogs:'None',noPending:'None',noApply:'None',deleteRequest:'Del',report:'Report',approve:'OK',reject:'No',confirmBan:'Ban',banTypeLight:'Light',banTypeSevere:'Severe',banLightSub:'Sign in only',banSevereSub:'No sign in',banSection:'Ban',banThis:'Ban',banSelect:'Pick → Reason → OK',banReasonPh:'Reason',banReasonEmpty:'Required',banned:'Banned',unban:'Unban',grantAdmin:'Grant',revokeAdmin:'Revoke',viewLogs:'Logs',online:'Online',msgDeleted:'(deleted)',requestDelete:'Request',adminDelete:'Admin',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason:',reportReasonPh:'Reason:',requestSent:'Sent',reportSent:'Sent',userDetail:' info',deletedLog:'Deleted',restoredLog:'Restored',purgedLog:'Purged',bannedLog:'Banned',unbannedLog:'Unban',grantedLog:'Grant',revokedLog:'Revoke',changedNameLog:'Renamed',changedPwdLog:'Pwd',loggedIn:'In',loggedOut:'Out',sentMsg:'Sent',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted',notifRevoked:'Revoked',notifActionFail:'Fail',notifSaved:'Saved',notifCancel:'Cancel',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Sent',notifNoticeApproved:'OK',notifNoticeRejected:'No',notifNoticeEdited:'Edit',notifNoticePinned:'Pin',notifNoticeUnpinned:'Unpin',notifNoticeLocked:'Lock',notifNoticeUnlocked:'Unlock',notifNoticeDeleted:'Del',noticeTitle:'Notice',noticeApplyTitle:'Apply',noticePublishTitle:'Publish',noticeContent:'Content',noticeContentPh:'Content',noticeImgs:'Images',noticeChooseImgs:'Choose',noticeImgUrlPh:'URL',noticeWhen:'Time',noticeWhenNow:'Now',noticeWhen3d:'3 days',noticeSubmit:'Submit',noticeUseHtml:'HTML',noticeUseHtmlLabel:'Use HTML',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000',noticeNeedContent:'Required',noticeRejectReasonPh:'Reason:',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'None',noticeApplyBy:'By: ',noticeEditedBy:'Originally: ',noticeAdminEdited:' · edited',noticeRejected:'Rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Versions',thanksAdd:'Add',thanksNamePh:'Name',thanksSubmit:'Submit',thanksEmpty:'Empty',thanksBy:'by',thanksNameEmpty:'Required',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'v1.8',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',aiBio:'Bio',aiLanguage:'Language',aiLangZh:'Chinese',aiLangYue:'Cantonese',aiConfirmTitle:'AI wants to:',aiAllow:'Allow',aiDeny:'Deny',aiThinking:'Thought',aiNoPermission:'No permission',aiThinkingNow:'XiaoZhe AI is thinking',aiExited:'XiaoZhe AI has exited',pwdLabel:'Password',pollTitle:'Poll',pollCreate:'Create Poll',pollNamePh:'Poll name (required, max 50)',pollOptions:'Options (max 50 each, at least 2)',pollAddOpt:'+ Add',pollMode:'Mode',pollSingle:'Single',pollMulti:'Multi',pollMax:'Max',pollMaxUnlimited:'Unlimited',pollOptMode:'Input mode',pollOptOne:'One by one',pollOptMulti:'Bulk lines',pollBulkPh:'One per line',pollWhenResult:'When results visible',pollWhenStart:'From start',pollWhenEnd:'After end',pollWhoResult:'Who can see results',pollWhoCreator:'Creator only',pollWhoAll:'Everyone',pollOtherSee:'What others see after voting',pollOtherNone:'Nothing',pollOtherWho:'Only who voted',pollOtherPct:'Percentage only',pollDurationH:'Deadline (hours)',pollSubmit:'Create',pollEnded:'Ended',pollEndsIn:'Ends in X h',pollVotes:'X voted',pollYouVoted:'You voted',pollLocked:'Closed',pollOptionEmpty:'Empty option',pollNeedTwo:'At least 2 options',pollNameEmpty:'Name required',pollMaxTooMany:'Too many',pollSelectAtLeast:'Pick at least one',pollTooManySelected:'Too many selected',pollSubmitted:'Voted',pollDurationPh:'e.g. 24',pollVoters:'Voters',pollCreatorSee:'Creator only',pollManage:'Manage',pollRequestDelete:'Request delete',pollReport:'Report',pollDeleteReasonPh:'Reason:',pollDeleteSent:'Sent',aiModeOn:'AI On',aiModeOff:'AI Off',aiModeSwitch:'Switched to old',aiModeSwitchNew:'Switched to new',aiModeLabel:'AI Mode',aiModeOld:'Old',aiModeNew:'New',onlineQuery:'Online Query',onlineCount:'Online',offlineCount:'Offline',onlineNow:'Online now',offlineNow:'Offline',aiOnTag:'AI On',aiOffTag:'AI Off'}
 };
 let lang = localStorage.getItem('chat_lang') || 'zh-Hant';
 function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N['zh-Hant'][k] || k; }
@@ -704,30 +622,27 @@ function applyI18n(){ document.querySelectorAll('[data-i18n]').forEach(el => { e
 let theme = localStorage.getItem('chat_theme') || 'dark';
 function applyTheme(){ document.body.classList.toggle('theme-light', theme === 'light'); ['themeToggleLogin','themeToggleChat'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = (theme === 'light'); }); }
 function applyLang(){ ['langSelectLogin','langSelectChat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = lang; }); }
-function setTheme(newTheme){ theme = newTheme; localStorage.setItem('chat_theme', newTheme); applyTheme(); }
+function setThemeLocal(newTheme){ theme = newTheme; localStorage.setItem('chat_theme', newTheme); applyTheme(); }
+
+/* 主題、語言：登入後改存 Firebase；未登入時暫存 localStorage */
+async function setTheme(newTheme){
+  theme = newTheme; applyTheme(); localStorage.setItem('chat_theme', newTheme);
+  if (me) { try { await update(ref(db,'users/'+me.username), { theme: newTheme }); } catch(e){} }
+}
+async function setLang(newLang){
+  lang = newLang; applyLang(); applyI18n(); localStorage.setItem('chat_lang', newLang);
+  render(); renderNoticeBar();
+  if (me) { try { await update(ref(db,'users/'+me.username), { lang: newLang }); } catch(e){} }
+}
 document.getElementById('themeToggleLogin').addEventListener('change', e => setTheme(e.target.checked ? 'light' : 'dark'));
 document.getElementById('themeToggleChat').addEventListener('change', e => setTheme(e.target.checked ? 'light' : 'dark'));
-$('langSelectLogin').addEventListener('change', e => { lang = e.target.value; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); render(); renderNoticeBar(); });
-$('langSelectChat').addEventListener('change', e => { lang = e.target.value; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); render(); renderNoticeBar(); });
-
+$('langSelectLogin').addEventListener('change', e => setLang(e.target.value));
+$('langSelectChat').addEventListener('change', e => setLang(e.target.value));
 encCheckbox.addEventListener('change', () => { encToggle.classList.toggle('active', encCheckbox.checked); });
 
-const AI_NAME = '小喆AI';
-const AI_COLOR = '#66ccff';
-const AI_BIO_DEFAULT = '我是小喆AI，班級聊天室的專屬助手。我可以讀取群組裡的對話，回答大家的問題。如果聊天室裡有人吵架、有人講了什麼好笑的話、或你想知道剛剛大家在聊什麼，都可以問我。';
-
-async function ensureAIUser(){
-  const snap = await get(child(ref(db),'users/' + AI_NAME));
-  if (!snap.exists()) {
-    await set(ref(db,'users/' + AI_NAME), {
-      username: AI_NAME, displayName: AI_NAME, seat: 0, color: AI_COLOR,
-      role: 'ai', avatar: 'AI', bio: AI_BIO_DEFAULT, allowCantonese: false, createdAt: Date.now()
-    });
-  }
-}
-
 const VERSION_HISTORY = [
-  { ver:'v1.7.1', date:'2026-09-12', changes:['AI 新增 setTheme 指令（切換主題）','AI 改自己顏色立即生效','AI 執行完操作後自動重讀 me','提示詞更新：明確 setTheme 用法與示範'] },
+  { ver:'v1.8', date:'2026-09-12', changes:['投票系統（WhatsApp 風格）','AI 新模式（按鈕控制，每人獨立）','管理員可切換新舊 AI 模式','主題語言改存 Firebase','心跳在線檢測','個人主頁在線查詢','AI 可查日誌與摘要','AI 認人用 username'] },
+  { ver:'v1.7.1', date:'2026-09-12', changes:['AI 新增 setTheme 指令','AI 改自己顏色立即生效','AI 執行完操作後自動重讀 me'] },
   { ver:'v1.7', date:'2026-09-12', changes:['版本檢查機制','任何按鈕都檢查','版本不符彈窗無法取消','帶 session + 暫存 + 頁面狀態跳轉','全站漸層過渡'] },
   { ver:'v1.6', date:'2026-09-12', changes:['BB8 完整動畫','AI 提示詞加時間','AI 看得到所有管理員資料','AI 操作所有管理員功能','用戶詳情顯示密碼','加密訊息全員遮罩'] },
   { ver:'v1.5', date:'2026-09-12', changes:['AI 對話模式','思考中訊息即時替換','退出對話置中訊息','小紅書 Dots API'] },
@@ -762,9 +677,73 @@ let pendingAIConfirm = null;
 let aiBusy = false;
 let lastAITime = 0;
 const AI_COOLDOWN = 1500;
-let aiChatMode = false;
-let unsubAIMode = null;
+let aiChatMode = false, unsubAIMode = null;
+let metaAIMode = 'button', unsubMeta = null;
+let aiModeMap = {}, unsubAIModeMap = null;
+let myAIOn = false;
 
+/* ===== 心跳 ===== */
+let heartbeatTimer = null;
+const HEARTBEAT_MS = 10000;
+async function heartbeatLoop(){
+  if (!me) return;
+  try {
+    const snap = await get(ref(db,'presence/'+me.username));
+    const wasOnline = snap.exists() && snap.val() === true;
+    await set(ref(db,'presence/'+me.username), true);
+    // 自我檢測：若剛才為離線，會自動觸發上線
+  } catch(e) { /* 讀不到就當離線，繼續嘗試 */ }
+}
+function startHeartbeat(){
+  stopHeartbeat();
+  heartbeatLoop();
+  heartbeatTimer = setInterval(heartbeatLoop, HEARTBEAT_MS);
+}
+function stopHeartbeat(){ if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; } }
+window.addEventListener('beforeunload', () => { if (me) remove(ref(db,'presence/'+me.username)).catch(()=>{}); });
+document.addEventListener('visibilitychange', () => {
+  if (!me) return;
+  if (document.visibilityState === 'visible') { set(ref(db,'presence/'+me.username), true).catch(()=>{}); }
+});
+
+/* ===== AI 開關（新版） ===== */
+async function toggleAI(){
+  if (!me) return;
+  myAIOn = !myAIOn;
+  try { await set(ref(db,'aiMode/'+me.username), myAIOn); } catch(e) {}
+  updateAIBtnUI();
+  showNotif(myAIOn ? t('aiModeOn') : t('aiModeOff'));
+}
+function updateAIBtnUI(){
+  if (!aiBtn) return;
+  aiBtn.classList.toggle('ai-on', myAIOn);
+}
+function subscribeAIModeMap(){
+  if (unsubAIModeMap) unsubAIModeMap();
+  unsubAIModeMap = onValue(ref(db,'aiMode'), snap => {
+    aiModeMap = snap.val() || {};
+    if (me) {
+      myAIOn = aiModeMap[me.username] === true;
+      updateAIBtnUI();
+    }
+  });
+}
+function subscribeMeta(){
+  if (unsubMeta) unsubMeta();
+  unsubMeta = onValue(ref(db,'meta/aiMode'), snap => { metaAIMode = snap.exists() ? snap.val() : 'button'; });
+}
+function isAIModeOld(){ return metaAIMode === 'keyword'; }
+function showOldAIUI(){ if (aiBtn) aiBtn.style.display = isAIModeOld() ? 'none' : ''; }
+
+/* ===== 使用者資料 ===== */
+async function ensureAIUser(){
+  const snap = await get(child(ref(db),'users/' + AI_NAME));
+  if (!snap.exists()) {
+    await set(ref(db,'users/' + AI_NAME), { username: AI_NAME, displayName: AI_NAME, seat: 0, color: AI_COLOR, role: 'ai', avatar: 'AI', bio: AI_BIO_DEFAULT, allowCantonese: false, createdAt: Date.now() });
+  }
+}
+
+/* ===== 動作對應 ===== */
 document.addEventListener('click', async (e) => {
   const target = e.target.closest('[data-action]');
   if (!target) return;
@@ -798,9 +777,15 @@ document.addEventListener('click', async (e) => {
       openThanks:()=>openThanksPage(), openVersion:()=>openVersionPage(), submitThanks:()=>submitThanks(),
       encPrev:()=>encPrev(arg), encNext:()=>encNext(arg),
       aiAllow:()=>aiAllow(), aiDeny:()=>aiDeny(),
-      aiSaveSettings:()=>aiSaveSettings(),
-      aiSetAvatarText:()=>aiSetAvatarText(),
-      aiSetAvatarEmoji:()=>aiSetAvatarEmoji(arg)
+      aiSaveSettings:()=>aiSaveSettings(), aiSetAvatarText:()=>aiSetAvatarText(), aiSetAvatarEmoji:()=>aiSetAvatarEmoji(arg),
+      openPollCreate:()=>openPollCreate(), submitPoll:()=>submitPoll(),
+      pollPickOption:()=>pollPickOption(arg), pollConfirmVote:()=>pollConfirmVote(arg),
+      pollShowVoters:()=>pollShowVoters(arg),
+      requestDeletePoll:()=>requestDeletePoll(arg), reportPoll:()=>reportPoll(arg),
+      toggleAI:()=>toggleAI(), toggleAIOld:()=>setAIMode(!aiChatMode),
+      openOnlineQuery:()=>openOnlineQuery(),
+      toggleAIMeta:()=>toggleAIMetaSetting(arg),
+      aiOptMode:()=>aiOptModeSetting(arg)
     };
     if (map[action]) await map[action]();
   } catch (err) { console.error('Action error:',action,err); showNotif(t('notifActionFail')+': '+(err.message||err)); }
@@ -813,6 +798,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
+/* ===== 登入 ===== */
 async function handleLogin(){
   const u = loginUsername.value.trim().toLowerCase();
   const p = loginPassword.value;
@@ -826,10 +812,14 @@ async function handleLogin(){
     if (data.banned && data.banned.type === 'severe') { loginError.textContent = t('bannedSevere')+'\n'+t('reason')+'：'+(data.banned.reason||t('noReason')); return; }
     if (data.password !== p) { loginError.textContent = t('wrongPwd'); return; }
     me = { username:data.username, displayName:data.displayName||data.username, seat:data.seat, color:data.color||'#3b82f6', role:data.role||'member', avatar:data.avatar||null, banned:data.banned||null };
+    if (data.theme) { theme = data.theme; localStorage.setItem('chat_theme', theme); applyTheme(); }
+    if (data.lang) { lang = data.lang; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); }
     sessionStorage.setItem('chat_me', JSON.stringify(me));
     await writeLog('login', t('loggedIn'));
-    await setPresence();
+    await set(ref(db,'presence/'+me.username), true);
     await ensureAIUser();
+    // 每日摘要：第一個登入的人觸發
+    runDailySummary().catch(()=>{});
     enterChat();
     if (isReloadAfterVersion()) {
       setTimeout(async () => {
@@ -844,13 +834,13 @@ async function handleLogin(){
   finally { loginBtn.disabled = false; loginBtn.textContent = t('loginBtn'); }
 }
 async function handleLogout(){
-  try{ await clearPresence(); }catch(e){}
-  try{ await writeLog('logout', t('loggedOut')); }catch(e){}
+  try { await remove(ref(db,'presence/'+me.username)); } catch(e){}
+  try { await writeLog('logout', t('loggedOut')); } catch(e){}
+  stopHeartbeat();
   me = null; sessionStorage.removeItem('chat_me');
-  sessionStorage.removeItem('chat_page_state');
-  sessionStorage.removeItem('chat_drafts');
-  [unsubMsg,unsubUsers,unsubRequests,unsubPresence,unsubNotices,unsubMyReads,unsubPendingNotices,unsubMyRejections,unsubMentions,unsubThanks,unsubAIMode].forEach(fn=>fn&&fn());
-  unsubMsg = unsubUsers = unsubRequests = unsubPresence = unsubNotices = unsubMyReads = unsubPendingNotices = unsubMyRejections = unsubMentions = unsubThanks = unsubAIMode = null;
+  sessionStorage.removeItem('chat_page_state'); sessionStorage.removeItem('chat_drafts');
+  [unsubMsg,unsubUsers,unsubRequests,unsubPresence,unsubNotices,unsubMyReads,unsubPendingNotices,unsubMyRejections,unsubMentions,unsubThanks,unsubAIMode,unsubMeta,unsubAIModeMap].forEach(fn=>fn&&fn());
+  unsubMsg = unsubUsers = unsubRequests = unsubPresence = unsubNotices = unsubMyReads = unsubPendingNotices = unsubMyRejections = unsubMentions = unsubThanks = unsubAIMode = unsubMeta = unsubAIModeMap = null;
   closePage();
   chatScreen.classList.add('hidden'); loginScreen.classList.remove('hidden');
   loginUsername.value = ''; loginPassword.value = '';
@@ -860,19 +850,18 @@ function enterChat(){
   if (me.role === 'superadmin' || me.role === 'admin') adminBtn.classList.remove('hidden'); else adminBtn.classList.add('hidden');
   subscribeMessages(); subscribeUsers(); subscribeRequests(); subscribePresence();
   subscribeNotices(); subscribeMyReads(); subscribePendingNotices(); subscribeMyRejections(); subscribeMentions(); subscribeThanks();
-  subscribeAIMode();
+  subscribeAIMode(); subscribeMeta(); subscribeAIModeMap();
+  showOldAIUI();
+  startHeartbeat();
 }
 
 async function writeLog(action, detail){
   if (!me) return;
   const id = 'log_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-  await set(ref(db,'logs/'+id), { action, detail, username:me.username, displayName:me.displayName, seat:me.seat, role:me.role, createdAt:Date.now() });
+  try { await set(ref(db,'logs/'+id), { action, detail, username:me.username, displayName:me.displayName, seat:me.seat, role:me.role, createdAt:Date.now() }); } catch(e){}
 }
-async function setPresence(){ if(me) await set(ref(db,'presence/'+me.username), { lastSeen: Date.now() }); }
-async function clearPresence(){ if(me) await remove(ref(db,'presence/'+me.username)); }
-setInterval(() => { if (me) setPresence(); }, 30000);
-window.addEventListener('beforeunload', () => { if (me) clearPresence(); });
 
+/* ===== 送訊息 ===== */
 async function sendMessage(){
   const text = msgInput.value.trim();
   if (!text || !me) return;
@@ -892,11 +881,13 @@ async function sendMessage(){
     }
     await writeLog('send', t('sentMsg')+'：'+text.slice(0,50));
     msgInput.value = '';
-    encCheckbox.checked = false;
-    encToggle.classList.remove('active');
+    encCheckbox.checked = false; encToggle.classList.remove('active');
     mentionPopup.classList.add('hidden');
-    if (text.includes('小喆') || aiChatMode) {
-      handleAITrigger(text, !text.includes('小喆')).catch(e => console.error('AI trigger error', e));
+    // AI 觸發
+    if (isAIModeOld()) {
+      if (text.includes('小喆') || aiChatMode) handleAITrigger(text, true).catch(e => console.error('AI trigger error', e));
+    } else {
+      if (myAIOn) handleAITrigger(text, false).catch(e => console.error('AI trigger error', e));
     }
   } catch(e) { console.error(e); showNotif(t('sendFail')+': '+(e.code||e.message)); }
   finally { sendBtn.disabled = false; msgInput.focus(); }
@@ -942,13 +933,13 @@ function showMentionPopup(kw){
     return `<div class="mention-item" data-action="pickMention" data-arg="${u.username}"><div class="mi-av" style="background:${color}">${av}</div><div>${escapeHtml(u.displayName||u.username)}</div></div>`;
   }).join('');
 }
-
 function pickMention(username){
   const v = msgInput.value, cur = msgInput.selectionStart;
   msgInput.value = v.slice(0,cur).replace(/@([a-zA-Z0-9_]*)$/, '@'+username+' ') + v.slice(cur);
   mentionPopup.classList.add('hidden'); msgInput.focus();
 }
 
+/* ===== 舊版 AI 對話模式（只有舊模式使用） ===== */
 function subscribeAIMode(){
   if (unsubAIMode) unsubAIMode();
   unsubAIMode = onValue(ref(db,'aiChatMode'), snap => {
@@ -956,11 +947,10 @@ function subscribeAIMode(){
     aiChatMode = !!(v && v.active);
   });
 }
-async function setAIMode(active){
-  await set(ref(db,'aiChatMode'), { active, updatedAt: Date.now(), by: me ? me.username : '' });
-}
+async function setAIMode(active){ await set(ref(db,'aiChatMode'), { active, updatedAt: Date.now(), by: me ? me.username : '' }); }
 
-async function handleAITrigger(text, isFollowUp){
+/* ===== AI 觸發 ===== */
+async function handleAITrigger(text, allowSkip){
   if (aiBusy) return;
   const now = Date.now();
   if (now - lastAITime < AI_COOLDOWN) return;
@@ -968,19 +958,22 @@ async function handleAITrigger(text, isFollowUp){
   aiBusy = true;
 
   let thinkingKey = null;
-  try {
-    thinkingKey = await sendThinkingMessage();
-  } catch (e) { console.error('thinking fail', e); }
+  try { thinkingKey = await sendThinkingMessage(); } catch (e) { console.error('thinking fail', e); }
 
   try {
     const aiSnap = await get(child(ref(db),'users/' + AI_NAME));
     const aiData = aiSnap.exists() ? aiSnap.val() : {};
     const allowYue = aiData.allowCantonese || false;
 
-    const recent = messages.slice(-50).map(m => {
+    const recent = messages.slice(-300).map(m => {
       if (m.role === 'ai') return `小喆AI: ${m.text || ''}`;
-      if (m.encrypted) return `${m.displayName||m.username}: [這是一條加密訊息，內容已加密無法讀取]`;
-      return `${m.displayName||m.username}: ${m.text||''}`;
+      if (m.encrypted) return `${m.displayName||m.username}(${m.username}): [加密訊息]`;
+      if (m.type === 'poll') return `${m.displayName||m.username}(${m.username}): [投票] ${m.pollTitle||''}`;
+      if (m.type === 'image') return `${m.displayName||m.username}(${m.username}): [圖片]`;
+      if (m.type === 'voice') return `${m.displayName||m.username}(${m.username}): [語音]`;
+      if (m.type === 'file') return `${m.displayName||m.username}(${m.username}): [檔案]`;
+      if (m.type === 'location') return `${m.displayName||m.username}(${m.username}): [位置]`;
+      return `${m.displayName||m.username}(${m.username}): ${m.text||''}`;
     }).join('\n');
 
     const memSnap = await get(ref(db,'aiMemory/messages'));
@@ -988,7 +981,17 @@ async function handleAITrigger(text, isFollowUp){
     const memList = Object.values(memVal).sort((a,b) => a.time - b.time).slice(-100);
     const memText = memList.map(x => `${x.from}: ${x.text}`).join('\n');
 
+    const sumSnap = await get(ref(db,'aiDailySummary'));
+    const sumVal = sumSnap.exists() ? sumSnap.val() : {};
+    const sumList = Object.values(sumVal).sort((a,b) => (a.ts||0)-(b.ts||0)).slice(-30);
+    const sumText = sumList.map(x => `${x.date}: ${x.summary}`).join('\n');
+
     const userList = Object.values(allUsers).sort((a,b) => (a.seat||0)-(b.seat||0));
+    const presenceSnap = await get(ref(db,'presence'));
+    const pVal = presenceSnap.exists() ? presenceSnap.val() : {};
+    const aiMapSnap = await get(ref(db,'aiMode'));
+    const aiMap = aiMapSnap.exists() ? aiMapSnap.val() : {};
+
     const userSummary = userList.map(u => {
       const parts = [`username=${u.username}`, `displayName=${u.displayName||u.username}`];
       if (u.role === 'ai') parts.push(`role=ai`);
@@ -999,30 +1002,25 @@ async function handleAITrigger(text, isFollowUp){
       parts.push(`color=${u.color||''}`);
       if (u.avatar) parts.push(`avatar=${String(u.avatar).startsWith('data:')?'(custom image)':u.avatar}`);
       if (u.banned) parts.push(`BANNED=${u.banned.type}(${u.banned.reason||''})`);
+      parts.push(`online=${pVal[u.username] === true ? '是' : '否'}`);
+      parts.push(`AI=${aiMap[u.username] === true ? '開啟' : '關閉'}`);
       return parts.join(' ');
     }).join('\n');
 
     const bannedList = userList.filter(u => u.banned).map(u => `${u.username} - ${u.banned.type==='severe'?'嚴重封禁':'普通封禁'} - 原因：${u.banned.reason||'（無）'}`).join('\n') || '（無人被封禁）';
-
     const noticeList = notices.slice(-20).map(n => `公告ID=${n._key} id=${n.id||''} pinned=${n.pinned?'是':'否'} locked=${n.locked?'是':'否'} text="${(n.text||'').slice(0,30)}"`).join('\n') || '（無公告）';
-
     const pendingList = pendingNotices.map(p => `申請ID=${p._key} id=${p.id||''} 申請者=${p.fromName||p.fromUser} text="${(p.text||'').slice(0,30)}"`).join('\n') || '（無待審核公告）';
-
     const reqList = Object.values(requests).filter(r => r.status === 'pending').map(r => `請求ID=${r._key} 類型=${r.type} 訊息ID=${r.msgId} 申請者=${r.fromName||r.from} 原因="${r.reason||''}"`).join('\n') || '（無請求）';
-
     const verList = VERSION_HISTORY.map(v => `${v.ver}${v.date?' ('+v.date+')':''}: ${v.changes.join(' / ')}`).join('\n');
-
     const now2 = Date.now();
-    const onlineCount = Object.keys(presence).filter(u => presence[u] && (now2 - (presence[u].lastSeen||0)) < 60000).length;
-
-    const nowDate = new Date();
+    const onlineCount = Object.keys(pVal).filter(u => pVal[u] === true).length;
+    const nowDate = new Date(now2 + 8*3600*1000);
     const pad2 = n => String(n).padStart(2, '0');
-    const currentTime = `${nowDate.getFullYear()}-${pad2(nowDate.getMonth()+1)}-${pad2(nowDate.getDate())} ${pad2(nowDate.getHours())}:${pad2(nowDate.getMinutes())}:${pad2(nowDate.getSeconds())}`;
-
+    const currentTime = `${nowDate.getUTCFullYear()}-${pad2(nowDate.getUTCMonth()+1)}-${pad2(nowDate.getUTCDate())} ${pad2(nowDate.getUTCHours())}:${pad2(nowDate.getUTCMinutes())}:${pad2(nowDate.getUTCSeconds())}`;
     const currentTheme = theme === 'light' ? '亮色（白色）' : '暗色（黑色）';
-
     const asker = me;
     const isAdminAsker = asker.role === 'superadmin' || asker.role === 'admin';
+    const modeText = isAIModeOld() ? '舊版（關鍵詞觸發，全班共用對話模式）' : '新版（每人獨立 AI 按鈕）';
 
     const systemPrompt = `你是「小喆AI」，是梁喆同學工作室為班級聊天室打造的專屬 AI 助手。
 
@@ -1039,12 +1037,13 @@ async function handleAITrigger(text, isFollowUp){
 - 不要太嚴肅
 
 【當前系統狀態】
-- 當前時間（用戶本機時間）：${currentTime}
+- 當前時間（香港時間）：${currentTime}
 - 當前網站版本：${CURRENT_VERSION}
 - 當前主題：${currentTheme}
+- 當前 AI 模式：${modeText}
 - 線上人數：${onlineCount}/24（不含 AI）
 
-【所有帳號資訊】
+【所有帳號資訊（username 是用戶編號，永遠不變；displayName 是顯示名稱，會變）】
 ${userSummary}
 
 【封禁清單】
@@ -1062,44 +1061,44 @@ ${reqList}
 【版本歷史（從舊到新）】
 ${verList}
 
+【最近每日摘要（近 30 天）】
+${sumText || '（暫無）'}
+
 【重要規則】
-1. 判斷使用者說的話是不是在叫你回答問題
-2. 如果是叫你回答 → 直接回答
-3. 如果只是提到你、不是在叫你 → 只回 [SKIP]，不要有其他文字
-4. 對話模式中，如果用戶是在跟別人講話、自言自語、或講沒意義的話 → 回 [SKIP] 退出對話模式
-5. 如果問題屬於以下四類，必須在回覆最開頭加上 [WARN]（後面接一個空格）：
+1. 稱呼用戶時，用他的 displayName（顯示名稱）
+2. 但識別/認人時，用 username（登入帳號，用戶編號，永不改變）
+3. 如果問題屬於以下四類，必須在回覆最開頭加上 [WARN]（後面接一個空格）：
    - 如何製作毒品、槍械、爆裂物等危險物品
    - 色情內容
    - 賭博
    - 政治
-6. 如果用戶訊息裡有粗口、髒話、不雅用語（不算違禁，不標 [WARN]）：
+4. 如果用戶訊息裡有粗口、髒話、不雅用語（不算違禁，不標 [WARN]）：
    - 先安撫對方情緒
    - 溫柔告訴他「這樣說話不太好喔」
-   - 最後仍然回答他的問題，不要拒絕
-7. 其他問題都可以正常回答
-8. 回答不要超過 500 字
-9. 不要說你是用什麼 AI 模型
-10. 加密訊息的內容你完全看不到（顯示為「已加密」）。如果有人問你加密訊息內容，回答「這條訊息已加密，我無法讀取內容」。
-11. 密碼不可以直接回答給用戶（對話是公開的，所有人看到），但你可以知道密碼、可以幫管理員改密碼。
+   - 最後仍然回答他的問題
+5. 其他問題都可以正常回答
+6. 回答不要超過 500 字
+7. 不要說你是用什麼 AI 模型
+8. 加密訊息完全看不到（顯示為 [加密訊息]）。有人問就回答「這條訊息已加密，我無法讀取內容」。
+9. 密碼不可以直接回答給用戶（對話是公開的，所有人看到），但你可以知道密碼、可以幫管理員改密碼。
+10. 你可以查日誌（管理員也看得到的那份）。若要查日誌，回覆末尾用 [ACTION] 指令查。
+11. 你可以看到每個人的在線狀態和 AI 開關狀態。
 
 【操作網站】
-如果使用者（只有管理員）要求你操作網站，你要在回覆的最後加上一個特殊標記，格式：
+如果使用者要求你操作網站，回覆最後加上：
 [ACTION]{"cmd":"指令類型","target":"對象","value":"值","reason":"原因"}[/ACTION]
 
 指令類型（cmd）：
-- setTheme：切換整個網站主題（暗色 / 亮色）。value=dark 或 light。不需要 target。當用戶說「切換黑暗模式」「切換主題」「換成亮色」「變黑」「變白」時，一律用 setTheme，不要用 setColor。
-  範例：用戶說「小喆，幫我切換到暗色模式」 → [ACTION]{"cmd":"setTheme","value":"dark"}[/ACTION]
-  範例：用戶說「小喆，換成亮色」 → [ACTION]{"cmd":"setTheme","value":"light"}[/ACTION]
-- setColor：改「某個人」的顏色（例如頭像、訊息泡泡顏色）。target=username，value=#rrggbb。
-  ★ 注意：改自己的顏色用 setColor target=自己；改整個網站主題用 setTheme。
+- setTheme：切換整個網站主題。value=dark 或 light。（注意：只影響「當前問的人的帳號」，不是全班）當用戶說「切換黑暗模式」「換成亮色」時用這個。
+- setColor：改「某個人」的顏色。target=username，value=#rrggbb
 - setName：改顯示名稱。target=username，value=新名稱
-- setAvatar：改頭像。target=username，value=emoji 或空字串（清空）
+- setAvatar：改頭像。target=username，value=emoji 或空字串
 - setPassword：改密碼。target=username，value=新密碼
 - ban：封禁。target=username，value=light 或 severe，reason=原因
 - unban：解封。target=username
 - grantAdmin：授予管理員。target=username
 - revokeAdmin：撤銷管理員。target=username
-- deleteMsg：刪除訊息。target=訊息編號（msg_0001）
+- deleteMsg：刪除訊息。target=訊息編號
 - restoreMsg：恢復訊息。target=訊息編號
 - purgeMsg：徹底刪除訊息。target=訊息編號
 - deleteNotice：刪除公告。target=公告key
@@ -1109,16 +1108,26 @@ ${verList}
 - rejectNotice：拒絕公告。target=申請key
 - logout：強制登出。target=username
 - clearChat：清空聊天室。無參數
+- writeNotice：幫用戶寫公告並送審。value=公告內容（可含安全 HTML，禁止 <script>、on* 事件、javascript:）
+- queryLogs：查日誌。value=關鍵字或 username（可空，空=最近 100 筆）
+
+權限規則：
+- 如果當前問你的人不是管理員（role 不是 admin/superadmin），你只能執行：
+  - setTheme（改自己的主題）
+  - writeNotice（幫自己寫公告送審）
+  - queryLogs（查日誌）
+  其他指令一律回「你沒有權限執行這個操作喔～」
+- 如果當前問你的人是管理員，你可以執行任何指令，但網站會彈確認，管理員按允許才會執行。
+- 【非常重要】每次要執行 [ACTION] 時，都要重新檢查「當前這條訊息的發送者（asker）」是不是管理員。不要因為之前有管理員用過 AI 就讓普通用戶越權。
 
 如果只是一般問答，不要加 [ACTION] 標記。
-操作前，網站會彈出確認框讓管理員允許。
 
 【當前使用者】
 - 名稱：${asker.displayName}
 - 帳號：${asker.username}
 - 是否管理員：${isAdminAsker ? '是' : '否'}
 
-【最近聊天室對話（最多 50 則）】
+【最近聊天室對話（今天全部，最多 300 條）】
 ${recent}
 
 【你記得的歷史對話（最多 100 則）】
@@ -1127,22 +1136,15 @@ ${memText || '（暫無）'}
 【現在有人說】
 ${asker.displayName}: ${text}`;
 
-    const aiRes = await callAI([
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: text }
-    ]);
+    const aiRes = await callAI([{ role: 'system', content: systemPrompt }, { role: 'user', content: text }]);
     if (!aiRes) { aiBusy = false; return; }
-
     const { content, reasoning } = aiRes;
     const trimmed = content.trim();
 
-    if (trimmed.startsWith('[SKIP]') || trimmed === '[SKIP]') {
+    // 舊模式才判斷 SKIP
+    if (allowSkip && isAIModeOld() && (trimmed.startsWith('[SKIP]') || trimmed === '[SKIP]')) {
       if (thinkingKey) {
-        await update(ref(db,'messages/'+thinkingKey), {
-          text: t('aiExited'),
-          thinking: false, exited: true,
-          reasoning: '', warn: false, createdAt: Date.now()
-        });
+        await update(ref(db,'messages/'+thinkingKey), { text: t('aiExited'), thinking: false, exited: true, reasoning: '', warn: false, createdAt: Date.now() });
       }
       await setAIMode(false);
       aiBusy = false;
@@ -1150,34 +1152,27 @@ ${asker.displayName}: ${text}`;
     }
 
     const actionMatch = content.match(/\[ACTION\]([\s\S]*?)\[\/ACTION\]/);
-    let actionCmd = null;
-    let cleanContent = content;
+    let actionCmd = null, cleanContent = content;
     if (actionMatch) {
       try { actionCmd = JSON.parse(actionMatch[1]); cleanContent = content.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/, '').trim(); }
       catch (e) { console.error('Action parse error', e); }
     }
-
     const isWarn = cleanContent.startsWith('[WARN]');
     const finalText = isWarn ? cleanContent.replace(/^\[WARN\]\s*/, '') : cleanContent;
 
     if (thinkingKey) {
-      await update(ref(db,'messages/'+thinkingKey), {
-        text: finalText,
-        reasoning: reasoning || '',
-        thinking: false,
-        warn: isWarn,
-        sponsor: true,
-        createdAt: Date.now()
-      });
+      await update(ref(db,'messages/'+thinkingKey), { text: finalText, reasoning: reasoning || '', thinking: false, warn: isWarn, sponsor: true, createdAt: Date.now() });
     } else {
       await sendAIMessage(finalText, reasoning, false, isWarn);
     }
-
-    await setAIMode(true);
+    if (isAIModeOld()) await setAIMode(true);
 
     if (actionCmd) {
-      if (!isAdminAsker) { await sendAIMessage(t('aiNoPermission'), '', false, false); }
-      else { showAIConfirm(actionCmd, asker); }
+      if (!isAdminAsker) {
+        const allowed = ['setTheme','writeNotice','queryLogs'];
+        if (!allowed.includes(actionCmd.cmd)) { await sendAIMessage(t('aiNoPermission'), '', false, false); actionCmd = null; }
+      }
+      if (actionCmd) showAIConfirm(actionCmd, asker);
     }
 
     await push(ref(db,'aiMemory/messages'), { from:asker.username, fromName:asker.displayName, text, aiReply: finalText, time: Date.now() });
@@ -1185,10 +1180,7 @@ ${asker.displayName}: ${text}`;
   } catch (e) {
     console.error('AI error', e);
     if (thinkingKey) {
-      await update(ref(db,'messages/'+thinkingKey), {
-        text: '抱歉，我現在有點忙，等一下再問我好嗎？',
-        thinking: false, warn: false, sponsor: true
-      });
+      await update(ref(db,'messages/'+thinkingKey), { text: '抱歉，我現在有點忙，等一下再問我好嗎？', thinking: false, warn: false, sponsor: true });
     }
   } finally { aiBusy = false; }
 }
@@ -1200,28 +1192,12 @@ async function sendThinkingMessage(){
   const msgId = 'msg_'+String(next).padStart(4,'0');
   const aiSnap = await get(child(ref(db),'users/' + AI_NAME));
   const aiData = aiSnap.exists() ? aiSnap.val() : {};
-  await set(ref(db,'messages/'+msgId), {
-    id: msgId, username: AI_NAME, displayName: aiData.displayName || AI_NAME,
-    seat: 0, color: aiData.color || AI_COLOR, avatar: aiData.avatar || 'AI', role: 'ai',
-    text: '', type: 'text', thinking: true, sponsor: false,
-    reasoning: '', warn: false, createdAt: Date.now(), deleted: false
-  });
+  await set(ref(db,'messages/'+msgId), { id: msgId, username: AI_NAME, displayName: aiData.displayName || AI_NAME, seat: 0, color: aiData.color || AI_COLOR, avatar: aiData.avatar || 'AI', role: 'ai', text: '', type: 'text', thinking: true, sponsor: false, reasoning: '', warn: false, createdAt: Date.now(), deleted: false });
   return msgId;
 }
-
 async function callAI(messages, retry = 0){
   try {
-    const res = await fetch(AI_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'api-key': AI_KEY },
-      body: JSON.stringify({
-        model: AI_MODEL,
-        messages,
-        stream: false,
-        max_tokens: 1024,
-        chat_template_kwargs: { enable_thinking: true }
-      })
-    });
+    const res = await fetch(AI_API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'api-key': AI_KEY }, body: JSON.stringify({ model: AI_MODEL, messages, stream: false, max_tokens: 1024, chat_template_kwargs: { enable_thinking: true } }) });
     if (res.status === 429 && retry < 3) { await new Promise(r => setTimeout(r, 2000)); return callAI(messages, retry + 1); }
     if (!res.ok) throw new Error('API ' + res.status);
     const data = await res.json();
@@ -1233,7 +1209,6 @@ async function callAI(messages, retry = 0){
     throw e;
   }
 }
-
 async function sendAIMessage(text, reasoning, isSystem, isWarn, customClass, cmdInfo){
   const c = await get(child(ref(db),'meta/msgCounter'));
   const next = (c.exists()?c.val():0) + 1;
@@ -1241,30 +1216,64 @@ async function sendAIMessage(text, reasoning, isSystem, isWarn, customClass, cmd
   const msgId = 'msg_'+String(next).padStart(4,'0');
   const aiSnap = await get(child(ref(db),'users/' + AI_NAME));
   const aiData = aiSnap.exists() ? aiSnap.val() : {};
-  await set(ref(db,'messages/'+msgId), {
-    id: msgId, username: AI_NAME, displayName: aiData.displayName || AI_NAME,
-    seat: 0, color: aiData.color || AI_COLOR, avatar: aiData.avatar || 'AI', role: 'ai',
-    text: text, reasoning: reasoning || '', type: 'text',
-    isSystem: isSystem || false, warn: isWarn || false, sponsor: !cmdInfo,
-    customClass: customClass || '', cmdInfo: cmdInfo || '',
-    createdAt: Date.now(), deleted: false
-  });
+  await set(ref(db,'messages/'+msgId), { id: msgId, username: AI_NAME, displayName: aiData.displayName || AI_NAME, seat: 0, color: aiData.color || AI_COLOR, avatar: aiData.avatar || 'AI', role: 'ai', text: text, reasoning: reasoning || '', type: 'text', isSystem: isSystem || false, warn: isWarn || false, sponsor: !cmdInfo, customClass: customClass || '', cmdInfo: cmdInfo || '', createdAt: Date.now(), deleted: false });
 }
-
 async function trimAIMemory(){
   const snap = await get(ref(db,'aiMemory/messages'));
   if (!snap.exists()) return;
-  const val = snap.val();
-  const keys = Object.keys(val);
+  const val = snap.val(); const keys = Object.keys(val);
   if (keys.length <= 100) return;
   const sorted = keys.map(k => ({ k, time: val[k].time || 0 })).sort((a,b) => a.time - b.time);
   for (const x of sorted.slice(0, sorted.length - 100)) await remove(ref(db,'aiMemory/messages/' + x.k));
 }
 
+/* ===== 每日摘要 ===== */
+function hkDateKey(ts){ const d = new Date(ts + 8*3600*1000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`; }
+async function runDailySummary(){
+  if (!me) return;
+  const todayKey = hkDateKey(Date.now());
+  // 找昨天
+  const y = new Date(Date.now() + 8*3600*1000 - 86400000);
+  const yKey = `${y.getUTCFullYear()}-${String(y.getUTCMonth()+1).padStart(2,'0')}-${String(y.getUTCDate()).padStart(2,'0')}`;
+  try {
+    const existed = await get(ref(db,'aiDailySummary/'+yKey));
+    if (existed.exists()) return;
+    // 取昨天的訊息
+    const snap = await get(query(ref(db,'messages'), limitToLast(500)));
+    if (!snap.exists()) return;
+    const val = snap.val() || {};
+    const yStart = new Date(yKey+'T00:00:00+08:00').getTime();
+    const yEnd = yStart + 86400000;
+    const list = Object.keys(val).map(k => val[k]).filter(m => m.createdAt >= yStart && m.createdAt < yEnd && !m.deleted && m.role !== 'ai');
+    if (list.length === 0) { await set(ref(db,'aiDailySummary/'+yKey), { date: yKey, summary: '（昨天沒有訊息）', ts: Date.now() }); return; }
+    const text = list.map(m => `${m.displayName||m.username}(${m.username}): ${m.text||'['+m.type+']'}`).join('\n');
+    const aiRes = await callAI([
+      { role: 'system', content: '你是一個摘要助手。請把以下班級聊天室昨天所有訊息，壓縮成 350 字以內的摘要（繁體中文，用顯示名稱）。' },
+      { role: 'user', content: text }
+    ]);
+    if (!aiRes) return;
+    const summary = (aiRes.content || '').slice(0, 350);
+    await set(ref(db,'aiDailySummary/'+yKey), { date: yKey, summary, ts: Date.now() });
+    // 只保留 30 天
+    const allSnap = await get(ref(db,'aiDailySummary'));
+    if (allSnap.exists()) {
+      const allVal = allSnap.val();
+      const keys = Object.keys(allVal).sort();
+      while (keys.length > 30) { await remove(ref(db,'aiDailySummary/'+keys.shift())); }
+    }
+    // 刪除昨天的 AI 記憶（只刪昨天的逐條）
+    const memSnap = await get(ref(db,'aiMemory/messages'));
+    if (memSnap.exists()) {
+      const memVal = memSnap.val();
+      for (const k in memVal) { if (memVal[k].time >= yStart && memVal[k].time < yEnd) await remove(ref(db,'aiMemory/messages/'+k)); }
+    }
+  } catch(e) { console.warn('daily summary failed', e); }
+}
+
+/* ===== AI 操作確認 ===== */
 function showAIConfirm(cmd, asker){
   pendingAIConfirm = { cmd, asker };
-  const old = document.getElementById('aiConfirmBar');
-  if (old) old.remove();
+  const old = document.getElementById('aiConfirmBar'); if (old) old.remove();
   const bar = document.createElement('div');
   bar.id = 'aiConfirmBar';
   bar.innerHTML = `<div class="acb-text">${t('aiConfirmTitle')}<div class="acb-cmd">${escapeHtml(JSON.stringify(cmd))}</div></div><button data-action="aiAllow">${t('aiAllow')}</button><button data-action="aiDeny">${t('aiDeny')}</button>`;
@@ -1274,8 +1283,7 @@ async function aiAllow(){
   if (!pendingAIConfirm) return;
   const { cmd } = pendingAIConfirm;
   pendingAIConfirm = null;
-  const bar = document.getElementById('aiConfirmBar');
-  if (bar) bar.remove();
+  const bar = document.getElementById('aiConfirmBar'); if (bar) bar.remove();
   try {
     const result = await executeAIAction(cmd);
     if (result.ok) {
@@ -1287,28 +1295,34 @@ async function aiAllow(){
       await sendAIMessage('失敗：' + result.error + '\n指令：' + cmdStr + '\n抱歉，我沒辦法完成這個操作。', '', false, false, 'ai-fail');
       await writeLog('ai', 'AI 操作失敗：' + JSON.stringify(cmd) + ' | ' + result.error);
     }
-    // v1.7.1：執行完操作後，重新讀取 me 並更新畫面
     await reloadMe();
-    // 若目前在用戶詳情頁，順便重繪
-    const fp = pageRoot.querySelector('.fullPage .fp-title');
-    if (fp && (fp.textContent.includes(t('userDetail')) || fp.textContent.includes('資料') || fp.textContent.includes(' info'))) {
-      // 嘗試找出目前檢視的 username，若在 URL 無法得知，就重繪全部用戶列表較安全
-      // 這裡不強制重繪，避免蓋掉其他頁面
-    }
   } catch (e) { await sendAIMessage('失敗：' + e.message, '', false, false, 'ai-fail'); }
 }
 async function aiDeny(){
   pendingAIConfirm = null;
-  const bar = document.getElementById('aiConfirmBar');
-  if (bar) bar.remove();
+  const bar = document.getElementById('aiConfirmBar'); if (bar) bar.remove();
   await sendAIMessage('好的，已取消操作。', '', false, false);
 }
 function formatCmd(cmd){
   const parts = [`${cmd.cmd}`];
   if (cmd.target !== undefined) parts.push(`target=${cmd.target}`);
-  if (cmd.value !== undefined) parts.push(`value=${cmd.value}`);
+  if (cmd.value !== undefined) parts.push(`value=${String(cmd.value).slice(0,80)}`);
   if (cmd.reason !== undefined) parts.push(`reason=${cmd.reason}`);
   return parts.join(' ');
+}
+function sanitizeNoticeHtml(html){
+  if (!html) return '';
+  let s = String(html);
+  s = s.replace(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '');
+  s = s.replace(/<\s*iframe[^>]*>[\s\S]*?<\s*\/\s*iframe\s*>/gi, '');
+  s = s.replace(/<\s*object[^>]*>[\s\S]*?<\s*\/\s*object\s*>/gi, '');
+  s = s.replace(/<\s*embed[^>]*>/gi, '');
+  s = s.replace(/<\s*form[^>]*>[\s\S]*?<\s*\/\s*form\s*>/gi, '');
+  s = s.replace(/\son\w+\s*=\s*"[^"]*"/gi, '');
+  s = s.replace(/\son\w+\s*=\s*'[^']*'/gi, '');
+  s = s.replace(/\son\w+\s*=\s*[^\s>]+/gi, '');
+  s = s.replace(/javascript:/gi, '');
+  return s;
 }
 async function executeAIAction(cmd){
   try {
@@ -1316,55 +1330,69 @@ async function executeAIAction(cmd){
       case 'setTheme': {
         const v = String(cmd.value || '').toLowerCase();
         if (v !== 'dark' && v !== 'light') return { ok:false, error: 'value 必須是 dark 或 light' };
-        setTheme(v);
-        return { ok:true, desc: `切換網站主題為 ${v === 'dark' ? '暗色' : '亮色'}` };
+        await setTheme(v);
+        return { ok:true, desc: `切換你的主題為 ${v === 'dark' ? '暗色' : '亮色'}` };
       }
-      case 'setColor': {
-        const s = await get(child(ref(db),'users/' + cmd.target));
-        if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' };
-        await update(ref(db,'users/' + cmd.target), { color: cmd.value });
-        // v1.7.1：若 target 是自己，立即更新 me.color + sessionStorage + 重繪
-        if (me && cmd.target === me.username) {
-          me.color = cmd.value;
-          sessionStorage.setItem('chat_me', JSON.stringify(me));
-          render();
-          renderClassStatus();
-        }
-        return { ok:true, desc: `修改 ${cmd.target} 顏色為 ${cmd.value}` };
-      }
+      case 'setColor': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { color: cmd.value }); if (me && cmd.target === me.username) { me.color = cmd.value; sessionStorage.setItem('chat_me', JSON.stringify(me)); render(); renderClassStatus(); } return { ok:true, desc: `修改 ${cmd.target} 顏色為 ${cmd.value}` }; }
       case 'setName': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { displayName: cmd.value }); return { ok:true, desc: `修改 ${cmd.target} 名稱為 ${cmd.value}` }; }
-      case 'setAvatar': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { avatar: cmd.value || null }); return { ok:true, desc: `修改 ${cmd.target} 頭像為 ${cmd.value||'（清空）'}` }; }
+      case 'setAvatar': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { avatar: cmd.value || null }); return { ok:true, desc: `修改 ${cmd.target} 頭像` }; }
       case 'setPassword': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { password: cmd.value }); return { ok:true, desc: `修改 ${cmd.target} 密碼` }; }
-      case 'ban': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; const t2 = cmd.value || 'light'; await update(ref(db,'users/' + cmd.target), { banned: { type: t2, reason: cmd.reason || 'AI 操作', bannedAt: Date.now(), bannedBy: me.username } }); return { ok:true, desc: `封禁 ${cmd.target}（${t2==='severe'?'嚴重':'普通'}）原因：${cmd.reason||'（無）'}` }; }
+      case 'ban': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; const t2 = cmd.value || 'light'; await update(ref(db,'users/' + cmd.target), { banned: { type: t2, reason: cmd.reason || 'AI 操作', bannedAt: Date.now(), bannedBy: me.username } }); return { ok:true, desc: `封禁 ${cmd.target}` }; }
       case 'unban': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { banned: null }); return { ok:true, desc: `解除封禁 ${cmd.target}` }; }
-      case 'grantAdmin': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { role: 'admin' }); return { ok:true, desc: `授予 ${cmd.target} 管理員` }; }
-      case 'revokeAdmin': { const s = await get(child(ref(db),'users/' + cmd.target)); if (!s.exists()) return { ok:false, error: cmd.target+' 不存在' }; await update(ref(db,'users/' + cmd.target), { role: 'member' }); return { ok:true, desc: `撤銷 ${cmd.target} 管理員` }; }
+      case 'grantAdmin': { await update(ref(db,'users/' + cmd.target), { role: 'admin' }); return { ok:true, desc: `授予 ${cmd.target} 管理員` }; }
+      case 'revokeAdmin': { await update(ref(db,'users/' + cmd.target), { role: 'member' }); return { ok:true, desc: `撤銷 ${cmd.target} 管理員` }; }
       case 'deleteMsg': { const snap = await get(query(ref(db,'messages'), limitToLast(300))); const val = snap.val()||{}; const key = Object.keys(val).find(k => val[k].id === cmd.target); if (!key) return { ok:false, error: '找不到訊息 ' + cmd.target }; await update(ref(db,'messages/' + key), { deleted:true, deletedAt:Date.now(), deletedBy:me.username }); return { ok:true, desc: `刪除訊息 ${cmd.target}` }; }
       case 'restoreMsg': { const snap = await get(query(ref(db,'messages'), limitToLast(300))); const val = snap.val()||{}; const key = Object.keys(val).find(k => val[k].id === cmd.target); if (!key) return { ok:false, error: '找不到訊息 ' + cmd.target }; await update(ref(db,'messages/' + key), { deleted:false, deletedAt:null, deletedBy:null }); return { ok:true, desc: `恢復訊息 ${cmd.target}` }; }
       case 'purgeMsg': { const snap = await get(query(ref(db,'messages'), limitToLast(300))); const val = snap.val()||{}; const key = Object.keys(val).find(k => val[k].id === cmd.target); if (!key) return { ok:false, error: '找不到訊息 ' + cmd.target }; await remove(ref(db,'messages/' + key)); return { ok:true, desc: `徹底刪除訊息 ${cmd.target}` }; }
-      case 'deleteNotice': { const s = await get(child(ref(db),'notices/' + cmd.target)); if (!s.exists()) return { ok:false, error: '公告不存在 ' + cmd.target }; await update(ref(db,'notices/' + cmd.target), { deleted:true, deletedAt:Date.now(), deletedBy:me.username }); return { ok:true, desc: `刪除公告 ${cmd.target}` }; }
+      case 'deleteNotice': { await update(ref(db,'notices/' + cmd.target), { deleted:true, deletedAt:Date.now(), deletedBy:me.username }); return { ok:true, desc: `刪除公告 ${cmd.target}` }; }
       case 'pinNotice': { const s = await get(child(ref(db),'notices/' + cmd.target)); if (!s.exists()) return { ok:false, error: '公告不存在' }; const n = s.val(); await update(ref(db,'notices/' + cmd.target), { pinned: !n.pinned }); return { ok:true, desc: (n.pinned?'取消置頂':'置頂') + '公告 ' + cmd.target }; }
       case 'lockNotice': { const s = await get(child(ref(db),'notices/' + cmd.target)); if (!s.exists()) return { ok:false, error: '公告不存在' }; const n = s.val(); await update(ref(db,'notices/' + cmd.target), { locked: !n.locked }); return { ok:true, desc: (n.locked?'解鎖':'加鎖') + '公告 ' + cmd.target }; }
       case 'approveNotice': { const s = await get(child(ref(db),'noticePending/' + cmd.target)); if (!s.exists()) return { ok:false, error: '申請不存在' }; const p = s.val(); await set(ref(db,'notices/' + p.id), { ...p, status:'published', publishedAt:Date.now(), approvedBy:me.username, approvedAt:Date.now() }); await update(ref(db,'noticePending/' + cmd.target), { status:'approved' }); return { ok:true, desc: `批准公告 ${p.id}` }; }
       case 'rejectNotice': { const s = await get(child(ref(db),'noticePending/' + cmd.target)); if (!s.exists()) return { ok:false, error: '申請不存在' }; const p = s.val(); await update(ref(db,'noticePending/' + cmd.target), { status:'rejected', rejectReason: cmd.reason||'AI 拒絕', rejectedAt:Date.now(), rejectedBy:me.username }); return { ok:true, desc: `拒絕公告 ${p.id}` }; }
       case 'logout': { await remove(ref(db,'presence/' + cmd.target)); return { ok:true, desc: `強制登出 ${cmd.target}` }; }
       case 'clearChat': { await remove(ref(db,'messages')); await set(ref(db,'meta/msgCounter'), 0); return { ok:true, desc: '清空聊天室' }; }
+      case 'writeNotice': {
+        const html = sanitizeNoticeHtml(cmd.value || '');
+        const c = await get(child(ref(db),'meta/noticeCounter'));
+        const next = (c.exists()?c.val():0) + 1;
+        await set(ref(db,'meta/noticeCounter'), next);
+        const noticeId = '公告_'+String(next).padStart(4,'0');
+        const payload = { id:noticeId, text:'', html, images:[], fromUser:me.username, fromName:me.displayName, fromSeat:me.seat, createdAt:Date.now(), publishedAt: Date.now(), pinned:false, locked:false, deleted:false, aiWritten: true };
+        await set(ref(db,'noticePending/'+noticeId), { ...payload, status:'pending', applyAt:Date.now() });
+        await writeLog('notice','AI 幫用戶申請公告 '+noticeId);
+        return { ok:true, desc: `已幫你申請公告 ${noticeId}，等待管理員審核` };
+      }
+      case 'queryLogs': {
+        const snap = await get(query(ref(db,'logs'), limitToLast(100)));
+        const val = snap.val() || {};
+        const list = Object.values(val).sort((a,b) => b.createdAt - a.createdAt);
+        const kw = String(cmd.value || '').trim().toLowerCase();
+        const filtered = kw ? list.filter(l => (l.username||'').toLowerCase().includes(kw) || (l.displayName||'').toLowerCase().includes(kw) || (l.detail||'').toLowerCase().includes(kw) || (l.action||'').toLowerCase().includes(kw)) : list;
+        const txt = filtered.slice(0,50).map(l => `${new Date(l.createdAt).toLocaleString('zh-TW')} ${l.displayName||l.username}(${l.username}) ${l.action}: ${l.detail||''}`).join('\n');
+        // 把查到的日誌交給 AI 再答一次
+        const follow = await callAI([
+          { role: 'system', content: `你是小喆AI。以下是班級聊天室最近 100 筆日誌（已篩選）。請用繁體中文、口語化回答用戶的查詢。` },
+          { role: 'user', content: `查詢：${cmd.value||'（全部）'}\n\n日誌：\n${txt || '（無資料）'}` }
+        ]);
+        if (follow && follow.content) {
+          await sendAIMessage(follow.content.trim(), follow.reasoning||'', false, false);
+        } else {
+          await sendAIMessage('查無資料。', '', false, false);
+        }
+        return { ok:true, desc: `查詢日誌：${cmd.value||'（全部）'}` };
+      }
       default: return { ok:false, error: '未知指令 ' + cmd.cmd };
     }
   } catch (e) { return { ok:false, error: e.message }; }
 }
 
+/* ===== 訂閱 ===== */
 function subscribeMessages(){
   if (unsubMsg) unsubMsg();
   unsubMsg = onValue(query(ref(db,'messages'), limitToLast(300)), snap => {
     const val = snap.val() || {}; const now = Date.now();
     messages = Object.keys(val).map(k => ({ _key:k, ...val[k] }))
-      .filter(m => {
-        if (m.isSystem) return false;
-        if (!m.deleted) return true;
-        if (me.role === 'superadmin' || me.role === 'admin') return (now-(m.deletedAt||0))<2*3600*1000;
-        return false;
-      })
+      .filter(m => { if (m.isSystem) return false; if (!m.deleted) return true; if (me.role === 'superadmin' || me.role === 'admin') return (now-(m.deletedAt||0))<2*3600*1000; return false; })
       .sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
     render();
   });
@@ -1379,6 +1407,22 @@ function subscribeMyRejections(){ if (unsubMyRejections) unsubMyRejections(); if
 function subscribeMentions(){ if (unsubMentions) unsubMentions(); if (!me) return; unsubMentions = onValue(ref(db,'mentions/'+me.username), snap => {}); }
 function subscribeThanks(){ if (unsubThanks) unsubThanks(); unsubThanks = onValue(ref(db,'thanks'), snap => { const val = snap.val()||{}; thanksList = Object.keys(val).map(k => ({ _key:k, ...val[k] })).sort((a,b) => (a.createdAt||0)-(b.createdAt||0)); }); }
 
+/* ===== 班級狀態列 ===== */
+function renderClassStatus(){
+  if (!me) return;
+  const now = Date.now();
+  const onlineList = Object.keys(presence).filter(u => presence[u] === true);
+  const banList = Object.values(allUsers).filter(u => u.banned);
+  let html = `<span class="online">${t('online')} ${onlineList.length}/24</span>`;
+  banList.slice(0,5).forEach(u => {
+    const cls = u.banned.type === 'severe' ? '' : 'light';
+    const tag = u.banned.type === 'severe' ? t('banTypeSevere') : t('banTypeLight');
+    html += `<span class="ban-item ${cls}">${escapeHtml(u.displayName||u.username)} · ${tag}</span>`;
+  });
+  classStatus.innerHTML = html;
+}
+
+/* ===== 公告輪播 ===== */
 function checkUnreadNotices(){ if (!me || noticeCarouselShown) return; const unread = notices.filter(n => !n.deleted && !myNoticeReads[n._key]); if (unread.length > 0) showNoticeCarousel(unread); }
 function showNoticeCarousel(list){
   noticeCarouselShown = true;
@@ -1394,8 +1438,7 @@ function showNoticeCarousel(list){
   cs.forEach(c => c.addEventListener('click', ev => { if (ev.target.tagName === 'A' || ev.target.tagName === 'IMG') return; closeCarousel(); openNoticeFullscreen(c.dataset.key); }));
 }
 function showRejectionCarousel(){
-  const list = myRejections;
-  if (list.length === 0) return;
+  const list = myRejections; if (list.length === 0) return;
   noticeCarouselShown = true;
   const cards = list.map(n => { const time = new Date(n.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW'); return `<div class="car-card reject" data-key="${n._key}"><h3>${t('noticeRejected')}</h3><div class="car-meta">${time}</div><div class="car-content">${escapeHtml(n.text||'')}<br><br><b>${t('reason')}：</b>${escapeHtml(n.reason||t('noReason'))}</div></div>`; }).join('');
   const div = document.createElement('div');
@@ -1434,8 +1477,7 @@ function renderNoticeBar(){
 async function openPinnedList(){ const pinned = notices.filter(n => n.pinned && !n.deleted); if (pinned.length === 0) return; openNoticeFullscreen(pinned[0]._key, pinned); }
 
 async function openNoticeFullscreen(key, customList){
-  const list = customList || notices.filter(n => !n.deleted);
-  if (list.length === 0) return;
+  const list = customList || notices.filter(n => !n.deleted); if (list.length === 0) return;
   if (!myNoticeReads[key]) markRead(key);
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
   const cards = list.map(n => { const time = new Date(n.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW'); const content = renderNoticeContent(n); let apply = ''; if (n.fromUser && n.editedBy) apply = `<div style="font-size:11px;color:#fbbf24;margin-bottom:8px">${t('noticeEditedBy')}${escapeHtml(n.fromName||n.fromUser)}${t('noticeAdminEdited')}</div>`; else if (n.fromUser) apply = `<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">${t('noticeApplyBy')}${escapeHtml(n.fromName||n.fromUser)}</div>`; return `<div class="car-card ${n._key===key?'active':''}" data-key="${n._key}"><h3>${n.pinned?'['+t('noticePinTag')+'] ':''}${t('noticeTitle')}</h3><div class="car-meta">${time}</div>${apply}<div class="car-content">${content}</div></div>`; }).join('');
@@ -1471,7 +1513,8 @@ async function submitNotice(role){
     const next = (c.exists()?c.val():0) + 1;
     await set(ref(db,'meta/noticeCounter'), next);
     const noticeId = '公告_'+String(next).padStart(4,'0');
-    const payload = { id:noticeId, text:useHtml?'':text, html:useHtml?text:'', images:window._noticeImages.slice(), fromUser:me.username, fromName:me.displayName, fromSeat:me.seat, createdAt:Date.now(), publishedAt: role==='admin' && when==='now' ? Date.now() : (when==='3days' ? Date.now()+3*86400000 : Date.now()), pinned:false, locked:false, deleted:false };
+    const safeHtml = useHtml ? sanitizeNoticeHtml(text) : '';
+    const payload = { id:noticeId, text:useHtml?'':text, html:safeHtml, images:window._noticeImages.slice(), fromUser:me.username, fromName:me.displayName, fromSeat:me.seat, createdAt:Date.now(), publishedAt: role==='admin' && when==='now' ? Date.now() : (when==='3days' ? Date.now()+3*86400000 : Date.now()), pinned:false, locked:false, deleted:false };
     if (role === 'admin') { await set(ref(db,'notices/'+noticeId), payload); await writeLog('notice','發布公告 '+noticeId); showNotif(t('notifNoticePublished')); }
     else { await set(ref(db,'noticePending/'+noticeId), { ...payload, status:'pending', applyAt:Date.now() }); await writeLog('notice','申請公告 '+noticeId); showNotif(t('notifNoticeSent')); }
     window._noticeImages = []; closePage();
@@ -1504,39 +1547,262 @@ function showLinkWarning(url){ pendingLink = url; const div = document.createEle
 function linkContinue(){ if (pendingLink) window.open(pendingLink,'_blank','noopener'); linkCancel(); }
 function linkCancel(){ const el = document.getElementById('linkWarnOverlay'); if (el) el.remove(); pendingLink = ''; }
 
-let encState = {};
+/* ===== 投票 ===== */
+window._pollDraft = { name:'', options:[], mode:'single', max:'', optMode:'one', whenResult:'start', whoResult:'all', otherSee:'pct', duration:'24', selected:{} };
 
+async function openPollCreate(){
+  if (!me) return;
+  if (me.banned && me.banned.type === 'light') { showNotif(t('bannedLight')); return; }
+  window._pollDraft = { name:'', options:['',''], mode:'single', max:'', optMode:'one', whenResult:'start', whoResult:'all', otherSee:'pct', duration:'24', selected:{} };
+  renderPollCreatePage();
+}
+function renderPollCreatePage(){
+  const d = window._pollDraft;
+  const isMulti = d.mode === 'multi';
+  const optRows = d.options.map((o,i) => `<div class="form-row" style="display:flex;gap:8px"><input type="text" id="pollOpt_${i}" maxlength="50" value="${escapeHtml(o)}" placeholder="${t('pollOptions')}"><button style="background:#dc2626;color:#fff;border:none;border-radius:10px;width:40px;cursor:pointer" data-poll-remove="${i}">x</button></div>`).join('');
+  const bulkVal = d.options.join('\n');
+  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('pollCreate')}</div></div><div class="fp-body"><div class="profile-content">
+    <div class="section-title">${t('pollTitle')}</div>
+    <div class="form-row"><input type="text" id="pollName" maxlength="50" value="${escapeHtml(d.name)}" placeholder="${t('pollNamePh')}"></div>
+    <div class="section-title">${t('pollOptMode')}</div>
+    <div class="ban-type-buttons">
+      <button class="ban-type-btn ${d.optMode==='one'?'selected light':''}" data-poll-optmode="one">${t('pollOptOne')}</button>
+      <button class="ban-type-btn ${d.optMode==='multi'?'selected light':''}" data-poll-optmode="multi">${t('pollOptMulti')}</button>
+    </div>
+    <div class="section-title">${t('pollOptions')}</div>
+    ${d.optMode === 'one' ? `<div id="pollOpts">${optRows}</div><button class="btn-ghost" id="pollAddBtn">${t('pollAddOpt')}</button>` : `<div class="form-row"><textarea id="pollBulk" style="min-height:120px" placeholder="${t('pollBulkPh')}">${escapeHtml(bulkVal)}</textarea></div>`}
+    <div class="section-title">${t('pollMode')}</div>
+    <div class="ban-type-buttons">
+      <button class="ban-type-btn ${d.mode==='single'?'selected light':''}" data-poll-mode="single">${t('pollSingle')}</button>
+      <button class="ban-type-btn ${d.mode==='multi'?'selected light':''}" data-poll-mode="multi">${t('pollMulti')}</button>
+    </div>
+    ${isMulti ? `<div class="section-title">${t('pollMax')}</div><div class="form-row"><input type="text" id="pollMax" value="${escapeHtml(d.max)}" placeholder="${t('pollMaxUnlimited')}"></div>` : ''}
+    <div class="section-title">${t('pollWhenResult')}</div>
+    <div class="ban-type-buttons">
+      <button class="ban-type-btn ${d.whenResult==='start'?'selected light':''}" data-poll-when="start">${t('pollWhenStart')}</button>
+      <button class="ban-type-btn ${d.whenResult==='end'?'selected light':''}" data-poll-when="end">${t('pollWhenEnd')}</button>
+    </div>
+    <div class="section-title">${t('pollWhoResult')}</div>
+    <div class="ban-type-buttons">
+      <button class="ban-type-btn ${d.whoResult==='creator'?'selected light':''}" data-poll-who="creator">${t('pollWhoCreator')}</button>
+      <button class="ban-type-btn ${d.whoResult==='all'?'selected light':''}" data-poll-who="all">${t('pollWhoAll')}</button>
+    </div>
+    <div class="section-title">${t('pollOtherSee')}</div>
+    <div class="ban-type-buttons" style="flex-direction:column">
+      <button class="ban-type-btn ${d.otherSee==='none'?'selected light':''}" data-poll-other="none">${t('pollOtherNone')}</button>
+      <button class="ban-type-btn ${d.otherSee==='who'?'selected light':''}" data-poll-other="who">${t('pollOtherWho')}</button>
+      <button class="ban-type-btn ${d.otherSee==='pct'?'selected light':''}" data-poll-other="pct">${t('pollOtherPct')}</button>
+    </div>
+    <div class="section-title">${t('pollDurationH')}</div>
+    <div class="form-row"><input type="number" id="pollDuration" min="1" value="${escapeHtml(d.duration)}" placeholder="${t('pollDurationPh')}"></div>
+    <button class="btn-primary" data-action="submitPoll">${t('pollSubmit')}</button>
+    <div class="err" id="pollErr"></div>
+  </div></div></div>`;
+  const saveDraft = () => {
+    window._pollDraft.name = (document.getElementById('pollName')||{}).value || '';
+    if (window._pollDraft.optMode === 'one') {
+      const list = [];
+      window._pollDraft.options.forEach((_,i) => { const el = document.getElementById('pollOpt_'+i); list.push(el ? el.value : ''); });
+      window._pollDraft.options = list;
+    } else {
+      const bulk = document.getElementById('pollBulk');
+      if (bulk) window._pollDraft.options = bulk.value.split('\n');
+    }
+    const mx = document.getElementById('pollMax'); if (mx) window._pollDraft.max = mx.value;
+    const du = document.getElementById('pollDuration'); if (du) window._pollDraft.duration = du.value;
+  };
+  document.querySelectorAll('[data-poll-mode]').forEach(b => b.onclick = () => { saveDraft(); window._pollDraft.mode = b.dataset.pollMode; renderPollCreatePage(); });
+  document.querySelectorAll('[data-poll-optmode]').forEach(b => b.onclick = () => { saveDraft(); window._pollDraft.optMode = b.dataset.pollOptmode; renderPollCreatePage(); });
+  document.querySelectorAll('[data-poll-when]').forEach(b => b.onclick = () => { saveDraft(); window._pollDraft.whenResult = b.dataset.pollWhen; renderPollCreatePage(); });
+  document.querySelectorAll('[data-poll-who]').forEach(b => b.onclick = () => { saveDraft(); window._pollDraft.whoResult = b.dataset.pollWho; renderPollCreatePage(); });
+  document.querySelectorAll('[data-poll-other]').forEach(b => b.onclick = () => { saveDraft(); window._pollDraft.otherSee = b.dataset.pollOther; renderPollCreatePage(); });
+  document.querySelectorAll('[data-poll-remove]').forEach(b => b.onclick = () => { saveDraft(); window._pollDraft.options.splice(+b.dataset.pollRemove,1); if (window._pollDraft.options.length < 2) window._pollDraft.options.push(''); renderPollCreatePage(); });
+  const addBtn = document.getElementById('pollAddBtn'); if (addBtn) addBtn.onclick = () => { saveDraft(); window._pollDraft.options.push(''); renderPollCreatePage(); };
+}
+async function submitPoll(){
+  const d = window._pollDraft;
+  d.name = (document.getElementById('pollName')||{}).value || '';
+  if (d.optMode === 'one') { d.options = d.options.map((_,i) => { const el = document.getElementById('pollOpt_'+i); return el ? el.value : ''; }); }
+  else { const bulk = document.getElementById('pollBulk'); if (bulk) d.options = bulk.value.split('\n'); }
+  const mx = document.getElementById('pollMax'); if (mx) d.max = mx.value;
+  const du = document.getElementById('pollDuration'); if (du) d.duration = du.value;
+  const errEl = document.getElementById('pollErr');
+  const name = (d.name||'').trim();
+  if (!name) { errEl.textContent = t('pollNameEmpty'); return; }
+  if (name.length > 50) { errEl.textContent = '50'; return; }
+  const opts = d.options.map(x => (x||'').trim()).filter(x => x.length > 0);
+  if (opts.length < 2) { errEl.textContent = t('pollNeedTwo'); return; }
+  for (const o of opts) { if (o.length > 50) { errEl.textContent = '50'; return; } }
+  const durH = parseInt(d.duration,10); if (!durH || durH < 1) { errEl.textContent = '1'; return; }
+  const maxSel = d.mode === 'multi' ? (d.max && parseInt(d.max,10) > 0 ? parseInt(d.max,10) : 0) : 1;
+  const deadline = Date.now() + durH*3600*1000;
+  try {
+    const c = await get(child(ref(db),'meta/msgCounter'));
+    const next = (c.exists()?c.val():0) + 1;
+    await set(ref(db,'meta/msgCounter'), next);
+    const msgId = 'msg_'+String(next).padStart(4,'0');
+    await set(ref(db,'messages/'+msgId), {
+      id: msgId, username: me.username, displayName: me.displayName, seat: me.seat, color: me.color, avatar: me.avatar, role: me.role,
+      type: 'poll',
+      pollTitle: name,
+      pollOptions: opts,
+      pollMode: d.mode,
+      pollMaxSelect: maxSel,
+      pollResultWhen: d.whenResult,
+      pollResultWho: d.whoResult,
+      pollOtherSee: d.otherSee,
+      pollDeadline: deadline,
+      pollVotes: {},
+      createdAt: Date.now(),
+      deleted: false
+    });
+    await writeLog('send', '建立投票：'+name);
+    closePage();
+    showNotif(t('pollSubmitted'));
+  } catch(e) { errEl.textContent = e.message; }
+}
+
+function pollResultVisibleToMe(m){
+  if (!me) return false;
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  if (isAdmin) return true;
+  const now = Date.now();
+  const ended = m.pollDeadline && now >= m.pollDeadline;
+  if (m.pollResultWhen === 'end' && !ended) return false;
+  if (m.pollResultWho === 'creator' && m.username !== me.username) return false;
+  return true;
+}
+function pollOtherCanSee(m){
+  if (!me) return false;
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  if (isAdmin) return true;
+  const now = Date.now();
+  const ended = m.pollDeadline && now >= m.pollDeadline;
+  if (m.pollResultWhen === 'end' && !ended) return false;
+  if (m.pollResultWho === 'creator' && m.username !== me.username) return false;
+  if (m.username === me.username) return true;
+  return true;
+}
+function pollOtherSeeType(m){ return m.pollOtherSee || 'pct'; }
+
+function renderPollBody(m){
+  const now = Date.now();
+  const ended = m.pollDeadline && now >= m.pollDeadline;
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  const isCreator = m.username === me.username;
+  const votes = m.pollVotes || {};
+  const myVote = votes[me.username] || null;
+  const totalVotes = Object.keys(votes).length;
+  const mode = m.pollMode || 'single';
+  const maxSel = m.pollMaxSelect || 0;
+  const options = m.pollOptions || [];
+  const counts = options.map((_,i) => Object.values(votes).filter(v => Array.isArray(v) && v.includes(i)).length);
+  const canSeeResult = pollResultVisibleToMe(m);
+  const canVote = !ended && !myVote && !(me.banned && me.banned.type === 'light');
+  const otherSee = pollOtherSeeType(m);
+  const showPct = (isAdmin || isCreator || canSeeResult) && (otherSee === 'pct' || isAdmin || isCreator || canSeeResult);
+  const showWhoVoted = (isAdmin || isCreator) || (otherSee === 'who' && canSeeResult) || (otherSee === 'pct' && canSeeResult);
+  const pctArr = counts.map(c => totalVotes > 0 ? Math.round(c/totalVotes*100) : 0);
+  const tempSel = (window._pollSel && window._pollSel[m.id]) ? window._pollSel[m.id] : (Array.isArray(myVote) ? myVote.slice() : []);
+  const optsHTML = options.map((o,i) => {
+    const selected = Array.isArray(myVote) ? myVote.includes(i) : (tempSel.includes(i));
+    const cls = 'poll-opt' + (selected ? ' selected' : '') + (canVote ? '' : ' disabled');
+    const sym = mode === 'multi' ? '<div class="poll-square">' + (selected ? '✓' : '') + '</div>' : '<div class="poll-circle">' + (selected ? '✓' : '') + '</div>';
+    const showBar = !canVote && showPct;
+    const pct = pctArr[i];
+    const bar = showBar ? `<div class="poll-fill" style="width:${pct}%"></div>` : '';
+    const pctTag = showBar ? `<div class="poll-pct">${pct}%</div>` : '';
+    return `<div class="${cls}" data-poll-opt="${i}" data-poll-msg="${m.id}">${bar}${sym}<div class="poll-text">${escapeHtml(o)}</div>${pctTag}</div>`;
+  }).join('');
+  let votersHTML = '';
+  if (showWhoVoted) {
+    const parts = [];
+    options.forEach((o,i) => {
+      const who = Object.keys(votes).filter(u => Array.isArray(votes[u]) && votes[u].includes(i));
+      if (who.length) parts.push(`${escapeHtml(o)}：${who.map(u => escapeHtml((allUsers[u]&&(allUsers[u].displayName||allUsers[u].username)) || u)).join('、')}`);
+    });
+    if (parts.length) votersHTML = `<div class="poll-voters">${t('pollVoters')}：${parts.join(' ｜ ')}</div>`;
+  }
+  const deadlineText = ended ? `<div class="poll-end">${t('pollEnded')}</div>` : `<div>${t('pollEndsIn').replace('X', Math.max(0, Math.ceil((m.pollDeadline - now)/3600000)))}</div>`;
+  const voteBtn = canVote && mode === 'multi' ? `<button class="btn-primary" style="margin-top:8px" data-action="pollConfirmVote" data-arg="${m.id}">${t('pollSubmit')}</button>` : '';
+  const votedTag = myVote ? `<div style="font-size:11.5px;opacity:.85">${t('pollYouVoted')}</div>` : '';
+  return `<div class="poll-box">
+    <div class="poll-title">${escapeHtml(m.pollTitle||'')}</div>
+    <div class="poll-meta-line">${mode === 'multi' ? t('pollMulti') + (maxSel > 0 ? `（${t('pollMax')} ${maxSel}）` : `（${t('pollMaxUnlimited')}）`) : t('pollSingle')}</div>
+    <div class="poll-options">${optsHTML}</div>
+    ${voteBtn}
+    <div class="poll-footer">${deadlineText}${votedTag}<div>${t('pollVotes').replace('X', totalVotes)}</div>${votersHTML}</div>
+  </div>`;
+}
+function pollPickOption(msgId){
+  const m = messages.find(x => x.id === msgId); if (!m) return;
+  const now = Date.now();
+  if (m.pollDeadline && now >= m.pollDeadline) return;
+  const votes = m.pollVotes || {};
+  if (votes[me.username]) return;
+  const mode = m.pollMode || 'single';
+  const maxSel = m.pollMaxSelect || 0;
+  if (!window._pollSel) window._pollSel = {};
+  if (!window._pollSel[msgId]) window._pollSel[msgId] = [];
+  const idx = parseInt(arguments[1] !== undefined ? arguments[1] : 0, 10);
+  // 從事件取 i
+  const ev = window.event;
+  let optionIndex = 0;
+  if (ev && ev.target) { const t2 = ev.target.closest('[data-poll-opt]'); if (t2) optionIndex = parseInt(t2.dataset.pollOpt, 10); }
+  const sel = window._pollSel[msgId];
+  if (mode === 'single') { window._pollSel[msgId] = [optionIndex]; submitPollVote(msgId); return; }
+  const pos = sel.indexOf(optionIndex);
+  if (pos >= 0) { sel.splice(pos,1); }
+  else { if (maxSel > 0 && sel.length >= maxSel) { showNotif(t('pollTooManySelected')); return; } sel.push(optionIndex); }
+  render();
+}
+async function submitPollVote(msgId){
+  const sel = (window._pollSel && window._pollSel[msgId]) || [];
+  if (sel.length === 0) { showNotif(t('pollSelectAtLeast')); return; }
+  const m = messages.find(x => x.id === msgId); if (!m) return;
+  try {
+    const key = m._key;
+    await update(ref(db,'messages/'+key+'/pollVotes'), { [me.username]: sel });
+    window._pollSel[msgId] = [];
+    showNotif(t('pollSubmitted'));
+  } catch(e) { showNotif(t('notifActionFail')); }
+}
+function pollConfirmVote(msgId){ submitPollVote(msgId); }
+function pollShowVoters(msgId){ const m = messages.find(x => x.id === msgId); if (!m) return; showNotif(t('pollVoters')); }
+function requestDeletePoll(msgId){ const reason = prompt(t('pollDeleteReasonPh')); if (!reason || !reason.trim()) return; push(ref(db,'requests'), { type:'delete', msgId, reason:reason.trim(), from:me.username, fromName:me.displayName, createdAt:Date.now(), status:'pending' }).then(() => showNotif(t('pollDeleteSent'))); }
+function reportPoll(msgId){ const reason = prompt(t('reportReasonPh')); if (!reason || !reason.trim()) return; push(ref(db,'requests'), { type:'report', msgId, reason:reason.trim(), from:me.username, fromName:me.displayName, createdAt:Date.now(), status:'pending' }).then(() => showNotif(t('reportSent'))); }
+
+/* ===== 渲染聊天 ===== */
+let encState = {};
 function render(){
   if (messages.length === 0) { chatBox.innerHTML = `<div class="empty">${t('emptyMsg')}</div>`; return; }
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
   let list = messages;
-  if (searchKeyword) list = messages.filter(m => ((m.text||'')+(m.fileName||'')).toLowerCase().includes(searchKeyword.toLowerCase()) || (m.id||'').toLowerCase().includes(searchKeyword.toLowerCase()));
+  if (searchKeyword) list = messages.filter(m => ((m.text||'')+(m.fileName||'')+(m.pollTitle||'')).toLowerCase().includes(searchKeyword.toLowerCase()) || (m.id||'').toLowerCase().includes(searchKeyword.toLowerCase()));
   if (list.length === 0) { chatBox.innerHTML = `<div class="empty">${t('noMatch')}</div>`; return; }
   const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 120;
   chatBox.innerHTML = list.map(m => {
     const isMe = me && m.username === me.username;
     const isAI = m.role === 'ai';
+    const isPoll = m.type === 'poll';
     const time = new Date(m.createdAt).toLocaleTimeString(lang==='en'?'en-US':'zh-TW', { hour:'2-digit', minute:'2-digit' });
     const msgIsAdmin = m.role === 'superadmin' || m.role === 'admin';
     const roleTag = msgIsAdmin ? ' ['+t('adminRole')+']' : (isAI ? ' ['+t('aiRole')+']' : '');
     const shownColor = isAI ? AI_COLOR : (msgIsAdmin ? '#8b5cf6' : (m.color || '#3b82f6'));
-
     if (isAI && m.thinking) {
       return `<div class="msg thinking"><div class="avatar" style="background:${AI_COLOR}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}${isAdmin?` <span class="msgid">${m.id}</span>`:''}</div><div class="bubble">${t('aiThinkingNow')}<span class="thinking-dots"><span></span><span></span><span></span></span></div></div></div>`;
     }
-
     if (isAI && m.exited) {
       return `<div class="msg exit-msg"><div class="bubble-wrap"><div class="meta">${time}${isAdmin?` <span class="msgid">${m.id}</span>`:''}</div><div class="bubble">${escapeHtml(m.text || t('aiExited'))}</div></div></div>`;
     }
-
     let body = '';
-    if (m.type === 'image') body = `<img class="msg-img" src="${m.imageUrl}" data-action="viewImage" data-arg="${m.imageUrl}">`;
+    if (isPoll) body = renderPollBody(m);
+    else if (m.type === 'image') body = `<img class="msg-img" src="${m.imageUrl}" data-action="viewImage" data-arg="${m.imageUrl}">`;
     else if (m.type === 'file') body = `<div class="file-msg"><span class="fi">[F]</span><div style="flex:1;min-width:0"><div class="fn">${escapeHtml(m.fileName||'file')}</div><div class="fs">${formatSize(m.fileSize||0)}</div></div></div>`;
     else if (m.type === 'voice') { const played = myNoticeReads['voice_'+m.id] ? 'played' : ''; body = `<div class="voice-msg ${played}" data-action="playVoice" data-arg="${m.id}"><span class="vi">[V]</span><span class="vt">0:${String(Math.round(m.duration||0)).padStart(2,'0')}</span><div class="vp"><div></div></div><span class="vd"></span></div>`; }
     else if (m.type === 'location') { body = `<div class="loc-msg" data-action="openLocation" data-arg="${m.lat},${m.lng}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lng}&zoom=15&size=220x150&maptype=mapnik&markers=${m.lat},${m.lng},red-pushpin"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`; }
-    else if (m.encrypted && !isAI) {
-      body = renderEncryptedBody(m);
-    } else {
+    else if (m.encrypted && !isAI) body = renderEncryptedBody(m);
+    else {
       let textHTML = escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
       textHTML = textHTML.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="#" data-action="linkCheck" data-arg="$1" style="color:inherit;text-decoration:underline">$1</a>');
       if (isAI && m.reasoning) body = `<div class="think-card"><span class="think-label">${t('aiThinking')}：</span>${escapeHtml(m.reasoning)}</div>` + textHTML;
@@ -1546,6 +1812,7 @@ function render(){
     const deletedTag = m.deleted ? ` <span style="color:#f87171;font-size:10.5px">${t('msgDeleted')}</span>` : '';
     const msgIdTag = isAdmin ? ` <span class="msgid">${m.id}</span>` : '';
     const encTag = m.encrypted ? `<span class="enc-tag">${t('encTag')}</span>` : '';
+    const pollTag = isPoll ? `<span class="poll-tag">${t('pollTitle')}</span>` : '';
     const aiTag = isAI ? `<span class="ai-tag">AI</span>` : '';
     const warnClass = m.warn ? 'warn' : '';
     const customClass = m.customClass || '';
@@ -1554,10 +1821,35 @@ function render(){
       if (isMe) tools += `<button data-action="requestDeleteMsg" data-arg="${m.id}">${t('requestDelete')}</button>`;
       if (!isMe) tools += `<button class="danger" data-action="reportMsg" data-arg="${m.id}">${t('report')}</button>`;
       if (isAdmin) tools += `<button class="danger" data-action="adminDeleteMsg" data-arg="${m.id}">${t('adminDelete')}</button>`;
+      if (isPoll) tools += `<button data-action="pollShowVoters" data-arg="${m.id}">${t('pollVoters')}</button>`;
     } else if (m.deleted && isAdmin) { tools += `<button data-action="restoreMsg" data-arg="${m.id}">${t('restore')}</button><button class="danger" data-action="purgeMsg" data-arg="${m.id}">${t('purge')}</button>`; }
-    return `<div class="msg ${isMe?'me':''} ${customClass}"><div class="avatar" style="background:${shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}${aiTag}</div><div class="bubble ${warnClass}" style="background:${shownColor};${m.deleted?'opacity:.5':''}">${body}</div><div class="msg-tools">${tools}</div></div></div>`;
+    const pollBubbleStyle = isPoll ? `background:${shownColor};width:340px;max-width:80vw;` : `background:${shownColor};${m.deleted?'opacity:.5':''}`;
+    return `<div class="msg ${isMe?'me':''} ${customClass}"><div class="avatar" style="background:${shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}${pollTag}${aiTag}</div><div class="bubble ${warnClass}" style="${pollBubbleStyle}">${body}</div><div class="msg-tools">${tools}</div></div></div>`;
   }).join('');
   if (atBottom && !searchKeyword) chatBox.scrollTop = chatBox.scrollHeight;
+  // 投票選項點擊
+  chatBox.querySelectorAll('[data-poll-opt]').forEach(el => {
+    el.onclick = () => {
+      const msgId = el.dataset.pollMsg;
+      const idx = parseInt(el.dataset.pollOpt, 10);
+      const m = messages.find(x => x.id === msgId); if (!m) return;
+      const now = Date.now();
+      if (m.pollDeadline && now >= m.pollDeadline) return;
+      const votes = m.pollVotes || {};
+      if (votes[me.username]) return;
+      if (me.banned && me.banned.type === 'light') return;
+      const mode = m.pollMode || 'single';
+      const maxSel = m.pollMaxSelect || 0;
+      if (!window._pollSel) window._pollSel = {};
+      if (!window._pollSel[msgId]) window._pollSel[msgId] = [];
+      const sel = window._pollSel[msgId];
+      if (mode === 'single') { window._pollSel[msgId] = [idx]; submitPollVote(msgId); return; }
+      const pos = sel.indexOf(idx);
+      if (pos >= 0) sel.splice(pos,1);
+      else { if (maxSel > 0 && sel.length >= maxSel) { showNotif(t('pollTooManySelected')); return; } sel.push(idx); }
+      render();
+    };
+  });
 }
 
 function renderEncryptedBody(m){
@@ -1608,6 +1900,20 @@ async function purgeMsg(msgId){ if (me.role !== 'superadmin' && me.role !== 'adm
 function closePage(){ pageRoot.innerHTML = ''; banDraft = {}; }
 function openPage({ title, bodyHTML, heroHTML }){ pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`; restoreAllDrafts(); }
 
+async function reloadMe(){
+  if (!me) return null;
+  try {
+    const snap = await get(child(ref(db), 'users/' + me.username));
+    if (!snap.exists()) return null;
+    const data = snap.val();
+    me = { username: data.username, displayName: data.displayName || data.username, seat: data.seat, color: data.color || '#3b82f6', role: data.role || 'member', avatar: data.avatar || null, banned: data.banned || null };
+    sessionStorage.setItem('chat_me', JSON.stringify(me));
+    if (me.role === 'superadmin' || me.role === 'admin') adminBtn.classList.remove('hidden'); else adminBtn.classList.add('hidden');
+    render(); renderClassStatus();
+    return me;
+  } catch (e) { console.warn('reloadMe failed', e); return null; }
+}
+
 async function openProfilePage(username, isSelf){
   const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) { showNotif(t('noUser')); return; }
   const u = snap.val();
@@ -1638,13 +1944,38 @@ async function openProfilePage(username, isSelf){
     openPage({ title: u.displayName || AI_NAME, heroHTML, bodyHTML });
   } else if (isSelf) {
     const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
-    let bodyHTML = `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">${t('saveName')}</button><div class="err" id="nameErr"></div><div class="ok-msg" id="nameOk"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*" capture="environment"><label class="upload-btn" for="avatarFile">${t('uploadAvatar')}</label><div class="err" id="avatarErr"></div><div class="ok-msg" id="avatarOk"></div><div class="section-title">${t('editPwd')}</div><div class="form-row"><input type="password" id="oldPwd" placeholder="${t('oldPwd')}"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="${t('newPwd')}"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="${t('confirmPwd')}"></div><button class="btn-primary" data-action="savePassword">${t('savePwd')}</button><div class="err" id="pwdErr"></div><div class="ok-msg" id="pwdOk"></div><button class="btn-ghost" data-action="openMyLogs">${t('myLogs')}</button><button class="btn-ghost" data-action="openMyNotices">${t('myNotices')}</button><div class="section-title" style="margin-top:28px">${t('about')}</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">${t('author')}</div><div class="ai-sub">${t('authorName')}</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">${t('thanks')}</div><div class="ai-sub">${thanksList.length > 0 ? thanksList.length : t('thanksEmpty')}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">${t('versions')}</div><div class="ai-sub">${t('currentVersion')}</div></div></div><div class="ai-arrow">›</div></div>`;
+    let bodyHTML = `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">${t('saveName')}</button><div class="err" id="nameErr"></div><div class="ok-msg" id="nameOk"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*" capture="environment"><label class="upload-btn" for="avatarFile">${t('uploadAvatar')}</label><div class="err" id="avatarErr"></div><div class="ok-msg" id="avatarOk"></div><div class="section-title">${t('editPwd')}</div><div class="form-row"><input type="password" id="oldPwd" placeholder="${t('oldPwd')}"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="${t('newPwd')}"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="${t('confirmPwd')}"></div><button class="btn-primary" data-action="savePassword">${t('savePwd')}</button><div class="err" id="pwdErr"></div><div class="ok-msg" id="pwdOk"></div><button class="btn-ghost" data-action="openMyLogs">${t('myLogs')}</button><button class="btn-ghost" data-action="openMyNotices">${t('myNotices')}</button><button class="btn-ghost" data-action="openOnlineQuery">${t('onlineQuery')}</button><div class="section-title" style="margin-top:28px">${t('about')}</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">${t('author')}</div><div class="ai-sub">${t('authorName')}</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">${t('thanks')}</div><div class="ai-sub">${thanksList.length > 0 ? thanksList.length : t('thanksEmpty')}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">${t('versions')}</div><div class="ai-sub">${t('currentVersion')}</div></div></div><div class="ai-arrow">›</div></div>`;
     openPage({ title: t('profileTitle'), heroHTML, bodyHTML });
     setTimeout(() => { const f = document.getElementById('avatarFile'); if (f) f.onchange = onAvatarFileChange; }, 0);
   } else {
     const light = lightenColor(bgColor, 40); const dark = darkenColor(bgColor, 20);
     pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div><div class="fp-body"><div class="profile3dWrap"><div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)"><div class="glass"></div><div class="p3content"><span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span><span class="p3text" style="color:${textColor};opacity:.85">#${u.seat} · ${roleLabel}</span></div><div class="p3logo"><span class="circle c1" style="background:${hexA(bgColor,.2)}"></span><span class="circle c2" style="background:${hexA(bgColor,.2)}"></span><span class="circle c3" style="background:${hexA(bgColor,.2)}"></span><span class="circle c4" style="background:${hexA(bgColor,.2)}"></span><span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avatarHTML}</span></div></div></div><div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">${t('cantView')}</div></div></div>`;
   }
+}
+
+/* ===== 在線查詢 ===== */
+async function openOnlineQuery(){
+  if (!me) return;
+  const isAdmin = me.role === 'superadmin' || me.role === 'admin';
+  const pSnap = await get(ref(db,'presence'));
+  const pVal = pSnap.exists() ? pSnap.val() : {};
+  const aiSnap = await get(ref(db,'aiMode'));
+  const aiVal = aiSnap.exists() ? aiSnap.val() : {};
+  const list = Object.values(allUsers).sort((a,b) => (a.seat||0)-(b.seat||0));
+  const onlineCount = list.filter(u => pVal[u.username] === true).length;
+  const offlineCount = list.length - onlineCount;
+  const html = `
+    <div style="padding:10px 0;font-size:13px;color:var(--text-sub)">${t('onlineCount')}：<b style="color:#4ade80">${onlineCount}</b> · ${t('offlineCount')}：<b>${offlineCount}</b></div>
+    <div class="user-list">${list.map(u => {
+      const online = pVal[u.username] === true;
+      const isAI = u.role === 'ai';
+      const isAdminU = u.role === 'superadmin' || u.role === 'admin';
+      const color = isAI ? (u.color||AI_COLOR) : (isAdminU ? '#8b5cf6' : (u.color||'#3b82f6'));
+      const av = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
+      const aion = aiVal[u.username] === true;
+      return `<div class="user-card"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">${isAI?'':'#'+u.seat+' · '}${u.username}</div></div>${isAdmin && !isAI ? `<span class="uc-aion">${aion?t('aiOnTag'):t('aiOffTag')}</span>`:''}<div class="uc-presence ${online?'online':''}"></div></div>`;
+    }).join('')}</div>`;
+  openPage({ title: t('onlineQuery'), bodyHTML: html });
 }
 
 function pickTextColor(hex){ const h = String(hex).replace('#',''); if (h.length !== 6) return '#fff'; const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); const lum = (0.299*r + 0.587*g + 0.114*b)/255; return lum > 0.6 ? '#111' : '#fff'; }
@@ -1693,24 +2024,41 @@ async function renderAdminTab(tab){ document.querySelectorAll('.tab').forEach(x 
 function renderUserList(){
   const list = Object.values(allUsers).sort((a,b) => (a.seat||0)-(b.seat||0));
   if (list.length === 0) return `<div class="empty">${t('loading')}</div>`;
-  return `<div class="user-list">${list.map(u => {
-    const isAdmin = u.role === 'superadmin' || u.role === 'admin';
-    const isSuper = u.role === 'superadmin';
+  const isSuper = me.role === 'superadmin';
+  let modeHTML = '';
+  if (isSuper) {
+    const isOld = metaAIMode === 'keyword';
+    modeHTML = `<div class="section-title">${t('aiModeLabel')}</div><div class="ban-type-buttons"><button class="ban-type-btn ${isOld?'selected light':''}" data-action="toggleAIMeta" data-arg="keyword">${t('aiModeOld')}</button><button class="ban-type-btn ${!isOld?'selected light':''}" data-action="toggleAIMeta" data-arg="button">${t('aiModeNew')}</button></div>`;
+  }
+  return modeHTML + `<div class="user-list">${list.map(u => {
+    const isAdminU = u.role === 'superadmin' || u.role === 'admin';
+    const isSuperU = u.role === 'superadmin';
     const isAI = u.role === 'ai';
-    const color = isAI ? (u.color || AI_COLOR) : (isAdmin ? '#8b5cf6' : (u.color||'#3b82f6'));
+    const color = isAI ? (u.color || AI_COLOR) : (isAdminU ? '#8b5cf6' : (u.color||'#3b82f6'));
     const av = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
     const badges = [];
     if (isAI) badges.push(`<span class="uc-badge badge-ai">${t('aiRole')}</span>`);
-    else if (isSuper) badges.push(`<span class="uc-badge badge-super">${t('superAdmin')}</span>`);
-    else if (isAdmin) badges.push(`<span class="uc-badge badge-admin">${t('adminRole')}</span>`);
+    else if (isSuperU) badges.push(`<span class="uc-badge badge-super">${t('superAdmin')}</span>`);
+    else if (isAdminU) badges.push(`<span class="uc-badge badge-admin">${t('adminRole')}</span>`);
     if (u.banned && u.banned.type === 'severe') badges.push(`<span class="uc-badge badge-ban-severe">${t('banTypeSevere')}</span>`);
     else if (u.banned && u.banned.type === 'light') badges.push(`<span class="uc-badge badge-ban-light">${t('banTypeLight')}</span>`);
-    return `<div class="user-card" data-action="openUserDetail" data-arg="${u.username}"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">${isAI ? '' : '#'+u.seat+' · '}${u.username}</div></div>${badges.join('')}</div>`;
+    const online = presence[u.username] === true;
+    const aion = aiModeMap[u.username] === true;
+    return `<div class="user-card" data-action="openUserDetail" data-arg="${u.username}"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">${isAI ? '' : '#'+u.seat+' · '}${u.username}</div></div>${badges.join('')}${!isAI?`<span class="uc-aion">${aion?t('aiOnTag'):t('aiOffTag')}</span>`:''}<div class="uc-presence ${online?'online':''}"></div></div>`;
   }).join('')}</div>`;
 }
 function renderRequestsList(){ const list = Object.values(requests).filter(r => r.status === 'pending').sort((a,b) => b.createdAt-a.createdAt); if (list.length === 0) return `<div class="empty">${t('noRequests')}</div>`; return list.map(r => { const typeLabel = r.type === 'delete' ? t('deleteRequest') : t('report'); const time = new Date(r.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW'); return `<div class="log-item action-delete" style="border-left-color:#ef4444"><div class="lt">${time} · ${escapeHtml(r.fromName||r.from)} (${typeLabel})</div><div class="lm">${escapeHtml(r.msgId)}<br>${escapeHtml(r.reason)}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="btn-danger" style="margin:0;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="approve">${t('approve')}</button><button class="btn-ghost" style="margin:0;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="reject">${t('reject')}</button></div></div>`; }).join(''); }
 async function handleRequest(key, action){ const req = requests[key]; if (!req) return; if (action === 'approve') { const snap = await get(query(ref(db,'messages'), limitToLast(300))); const val = snap.val()||{}; const mkey = Object.keys(val).find(k => val[k].id === req.msgId); if (mkey) await update(ref(db,'messages/'+mkey), { deleted:true, deletedAt:Date.now(), deletedBy:me.username }); await update(ref(db,'requests/'+key), { status:'approved', handledAt:Date.now(), handledBy:me.username }); } else { await update(ref(db,'requests/'+key), { status:'rejected', handledAt:Date.now(), handledBy:me.username }); } renderAdminTab('requests'); }
 async function renderAllLogs(){ const snap = await get(query(ref(db,'logs'), limitToLast(300))); const val = snap.val()||{}; const list = Object.values(val).sort((a,b) => b.createdAt-a.createdAt); if (list.length === 0) return `<div class="empty">${t('noLogs')}</div>`; return list.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join(''); }
+
+async function toggleAIMetaSetting(arg){
+  if (me.role !== 'superadmin') return;
+  await set(ref(db,'meta/aiMode'), arg);
+  metaAIMode = arg;
+  showOldAIUI();
+  showNotif(arg === 'keyword' ? t('aiModeSwitch') : t('aiModeSwitchNew'));
+  renderAdminTab('users');
+}
 
 async function openUserDetail(username){ const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) return; renderUserDetailPage(snap.val()); }
 function renderUserDetailPage(u){
@@ -1727,9 +2075,7 @@ function renderUserDetailPage(u){
   const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div>${!isTargetAI?`<div class="hero-sub">#${u.seat} · ${u.username}</div>`:`<div class="hero-sub">${u.username}</div>`}<div class="hero-badge">${roleLabel}</div></div>`;
   let bodyHTML = '';
   if (u.banned) bodyHTML += `<div class="ban-status ${u.banned.type}"><b>${u.banned.type === 'severe' ? t('banTypeSevere') : t('banTypeLight')}</b><br>${t('reason')}：${escapeHtml(u.banned.reason||t('noReason'))}</div>`;
-  if (u.password) {
-    bodyHTML += `<div class="section-title">${t('pwdLabel')}</div><div style="font-family:Consolas,monospace;font-size:14px;background:var(--bg-input);border:1px solid var(--border);padding:10px 12px;border-radius:10px;margin-bottom:10px;letter-spacing:1px">${escapeHtml(u.password)}</div>`;
-  }
+  if (u.password) bodyHTML += `<div class="section-title">${t('pwdLabel')}</div><div style="font-family:Consolas,monospace;font-size:14px;background:var(--bg-input);border:1px solid var(--border);padding:10px 12px;border-radius:10px;margin-bottom:10px;letter-spacing:1px">${escapeHtml(u.password)}</div>`;
   if (canBan) { const isBanned = !!u.banned; if (isBanned) bodyHTML += `<div class="section-title">${t('banSection')}</div><div class="ban-block"><div class="ban-label">${t('banned')}</div><div class="ban-sub">${t('unban')}</div><button class="btn-ok" data-action="unban" data-arg="${u.username}">${t('unban')}</button></div>`; else { const dt = (banDraft[u.username] && banDraft[u.username].type) || 'light'; const dr = (banDraft[u.username] && banDraft[u.username].reason) || ''; bodyHTML += `<div class="section-title">${t('banSection')}</div><div class="ban-block"><div class="ban-label">${t('banThis')}</div><div class="ban-sub">${t('banSelect')}</div><div class="ban-type-buttons"><button class="ban-type-btn light ${dt==='light'?'selected':''}" data-action="setBanType" data-arg="${u.username}" data-arg2="light">${t('banTypeLight')}<br><span style="font-size:10.5px;opacity:.85">${t('banLightSub')}</span></button><button class="ban-type-btn severe ${dt==='severe'?'selected':''}" data-action="setBanType" data-arg="${u.username}" data-arg2="severe">${t('banTypeSevere')}<br><span style="font-size:10.5px;opacity:.85">${t('banSevereSub')}</span></button></div><div class="form-row" style="margin-top:12px"><input type="text" id="au_banReason" placeholder="${t('banReasonPh')}" maxlength="100" value="${escapeHtml(dr)}"></div><div class="err" id="banErr"></div><button class="btn-danger" data-action="confirmBan" data-arg="${u.username}">${t('confirmBan')}</button></div>`; } }
   if (canEdit) bodyHTML += `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="au_displayName" value="${escapeHtml(u.displayName||u.username)}" maxlength="20"></div><div class="section-title">Color (hex)</div><div class="form-row"><input type="text" id="au_color" value="${u.color||'#3b82f6'}"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="">x</div></div><button class="btn-primary" data-action="adminSaveProfile" data-arg="${u.username}">${t('saved')}</button><div class="err" id="auErr"></div><div class="ok-msg" id="auOk"></div>`;
   if (canGrant) { bodyHTML += `<div class="section-title">${t('adminRole')}</div>`; if (isTargetAdmin && !isTargetSuper) bodyHTML += `<button class="btn-ghost" data-action="adminRevoke" data-arg="${u.username}">${t('revokeAdmin')}</button>`; else if (!isTargetAdmin) bodyHTML += `<button class="btn-primary" data-action="adminGrant" data-arg="${u.username}">${t('grantAdmin')}</button>`; }
@@ -1751,8 +2097,7 @@ function showNotif(text){ const el = document.createElement('div'); el.id = 'not
 applyTheme(); applyLang(); applyI18n();
 
 (async function boot(){
-  await initVersionCheck();
-
+  await checkVersion();
   const saved = sessionStorage.getItem('chat_me');
   if (!saved) { await ensureAIUser().catch(()=>{}); return; }
   try {
@@ -1762,8 +2107,11 @@ applyTheme(); applyLang(); applyI18n();
     const data = snap.val();
     if (data.banned && data.banned.type === 'severe') { sessionStorage.removeItem('chat_me'); return; }
     me = { username:data.username, displayName:data.displayName||data.username, seat:data.seat, color:data.color||'#3b82f6', role:data.role||'member', avatar:data.avatar||null, banned:data.banned||null };
-    await setPresence();
+    if (data.theme) { theme = data.theme; localStorage.setItem('chat_theme', theme); applyTheme(); }
+    if (data.lang) { lang = data.lang; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); }
+    await set(ref(db,'presence/'+me.username), true);
     await ensureAIUser();
+    runDailySummary().catch(()=>{});
     enterChat();
     if (isReloadAfterVersion()) {
       setTimeout(async () => {
