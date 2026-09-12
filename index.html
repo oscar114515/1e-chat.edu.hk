@@ -95,24 +95,15 @@
   #msgInput{flex:1;padding:11px 14px;border-radius:22px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit;min-width:0}
   #plusBtn{width:42px;height:42px;border-radius:50%;border:none;background:rgba(148,163,184,.15);color:var(--text-main);font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   #sendBtn{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-  #encToggle{
-    display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-sub);
-    padding:4px 8px;border-radius:8px;border:1px solid var(--border-strong);
-    background:var(--bg-input);cursor:pointer;user-select:none;flex-shrink:0;
-    transition:.2s;
-  }
+  #encToggle{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-sub);padding:4px 8px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);cursor:pointer;user-select:none;flex-shrink:0;transition:.2s}
   #encToggle:hover{color:var(--text-main);border-color:var(--primary)}
   #encToggle.active{background:rgba(220,38,38,.2);border-color:#dc2626;color:#fca5a5}
   #encToggle input{display:none}
-  #encToggle .dot-check{
-    width:10px;height:10px;border-radius:50%;border:2px solid var(--border-strong);
-    transition:.2s;
-  }
+  #encToggle .dot-check{width:10px;height:10px;border-radius:50%;border:2px solid var(--border-strong);transition:.2s}
   #encToggle.active .dot-check{background:#dc2626;border-color:#dc2626}
   #plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;transform-origin:bottom left;animation:panelIn .28s cubic-bezier(.34,1.56,.64,1)}
   #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:12px;transition:transform .2s cubic-bezier(.34,1.56,.64,1),background-color .2s}
   #plusPanel .pi:hover{transform:scale(1.08) translateY(-2px);background:rgba(56,189,248,.15)}
-  #plusPanel .pi:active{transform:scale(.95);transition:transform .08s ease}
   #plusPanel .pi .pic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8}
   #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
   @keyframes panelIn{0%{opacity:0;transform:translateY(10px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
@@ -199,7 +190,7 @@
   .ban-status{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:13px}
   .ban-status.severe{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.4);color:#fca5a5}
   .ban-status.light{background:rgba(234,88,12,.15);border:1px solid rgba(234,88,12,.4);color:#fdba74}
-  .ban-block{background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+  .ban-block{background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
   .ban-block .ban-label{font-size:14px;font-weight:600}
   .ban-block .ban-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
   .ban-type-buttons{display:flex;gap:8px;margin-top:12px}
@@ -231,7 +222,7 @@
   #noticeFullscreen .car-actions{padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-card);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
   #noticeFullscreen .car-actions button{flex:1;min-width:100px;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
   #noticeFullscreen .car-progress{text-align:center;font-size:12px;color:var(--text-sub);padding:8px 0}
-  .pending-item{padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+  .pending-item{padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px;cursor:pointer}
   .pending-item .pi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .pending-item .pi-from{font-size:13px;font-weight:600}
   .pending-item .pi-time{font-size:11px;color:var(--text-sub)}
@@ -294,13 +285,13 @@
   #notifBanner{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(59,130,246,.95);color:#fff;padding:10px 18px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:500;max-width:90%;animation:notifIn .4s cubic-bezier(.34,1.56,.64,1)}
   @keyframes notifIn{0%{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.9)}60%{opacity:1;transform:translateX(-50%) translateY(4px) scale(1.02)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
   #linkWarnOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
-  #linkWarnOverlay .lw-card{background:var(--bg-card);border-radius:16px;padding:24px;max-width:400px;width:100%;text-align:center;animation:cardIn .4s cubic-bezier(.22,1,.36,1)}
+  #linkWarnOverlay .lw-card{background:var(--bg-card);border-radius:16px;padding:24px;max-width:400px;width:100%;text-align:center}
   #linkWarnOverlay .lw-card h3{font-size:17px;margin-bottom:10px;color:#fbbf24}
   #linkWarnOverlay .lw-card p{font-size:13.5px;line-height:1.6;color:var(--text-sub);margin-bottom:16px}
   #linkWarnOverlay .lw-card .lw-url{background:var(--bg-input);padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px;word-break:break-all;font-family:monospace}
   #linkWarnOverlay .lw-actions{display:flex;gap:8px}
   #linkWarnOverlay .lw-actions button{flex:1;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-  .about-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:transform .2s,background-color .2s,border-color .2s;animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+  .about-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:transform .2s,background-color .2s,border-color .2s}
   .about-item:not(.disabled):hover{border-color:rgba(56,189,248,.4);background:rgba(56,189,248,.08)}
   .about-item.disabled{cursor:default;opacity:.85}
   .about-item .ai-left{display:flex;align-items:center;gap:12px}
@@ -309,12 +300,12 @@
   .about-item .ai-sub{font-size:11.5px;color:var(--text-sub);margin-top:2px}
   .about-item .ai-arrow{color:var(--text-muted);font-size:14px;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
   .about-item:hover .ai-arrow{transform:translateX(4px)}
-  .thanks-item{padding:10px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;transition:transform .2s,background-color .2s;animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+  .thanks-item{padding:10px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;transition:transform .2s,background-color .2s}
   .thanks-item:hover{transform:translateX(3px);background:rgba(56,189,248,.08)}
   .thanks-item .ti-name{font-weight:600}
   .thanks-item .ti-by{font-size:11px;color:var(--text-sub)}
   .thanks-empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px}
-  .version-item{padding:14px 16px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background-color .25s;animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+  .version-item{padding:14px 16px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background-color .25s}
   .version-item:hover{transform:translateX(4px)}
   .version-item.latest{border-color:#4ade80;background:rgba(74,222,128,.08)}
   .version-item.latest:hover{background:rgba(74,222,128,.14)}
@@ -325,119 +316,43 @@
   .version-item .vi-date{font-size:11px;color:var(--text-muted);margin-left:auto}
   .version-item .vi-changes{font-size:12.5px;color:var(--text-sub);line-height:1.6;margin-top:4px}
   .version-item .vi-changes ul{margin-left:16px}
-  @keyframes cardIn{0%{opacity:0;transform:translateY(24px) scale(.96)}60%{opacity:1;transform:translateY(-4px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1)}}
-  @keyframes msgInV2{0%{opacity:0;transform:translateY(12px) scale(.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
-  .msg{animation:msgInV2 .35s cubic-bezier(.22,1,.36,1) both}
 
-  /* ============ v1.2 新增 ============ */
+  /* 加密訊息（逐字揭示） */
+  .enc-msg{display:flex;flex-direction:column;gap:8px;user-select:none}
+  .enc-display{font-family:Consolas,monospace;font-size:18px;letter-spacing:6px;padding:6px 0;white-space:pre-wrap;word-break:break-all;min-height:30px}
+  .enc-controls{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:11.5px;opacity:.9}
+  .enc-controls button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:.15s}
+  .enc-controls button:hover{background:rgba(255,255,255,.35)}
+  .enc-controls button:disabled{opacity:.35;cursor:default}
+  .enc-progress{font-family:Consolas,monospace;font-size:11px}
+
   /* 頁面切換過場（blob 卡片） */
-  #loadingOverlay{
-    position:fixed;inset:0;background:rgba(15,23,42,.65);
-    z-index:9999;display:flex;align-items:center;justify-content:center;
-    animation:fadeIn .25s ease;backdrop-filter:blur(6px);
-  }
-  .loadCard{
-    position:relative;width:200px;height:250px;border-radius:14px;overflow:hidden;
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:20px 20px 60px rgba(0,0,0,.4),-20px -20px 60px rgba(255,255,255,.05);
-    animation:cardIn .35s cubic-bezier(.22,1,.36,1);
-  }
-  .loadCard .bg{
-    position:absolute;top:5px;left:5px;width:190px;height:240px;z-index:2;
-    background:rgba(255,255,255,.95);backdrop-filter:blur(24px);
-    border-radius:10px;overflow:hidden;outline:2px solid white;
-  }
-  .loadCard .blob{
-    position:absolute;z-index:1;top:50%;left:50%;width:150px;height:150px;
-    border-radius:50%;opacity:1;filter:blur(12px);
-    animation:blob-bounce 5s infinite ease;
-  }
-  @keyframes blob-bounce{
-    0%{transform:translate(-100%,-100%) translate3d(0,0,0)}
-    25%{transform:translate(-100%,-100%) translate3d(100%,0,0)}
-    50%{transform:translate(-100%,-100%) translate3d(100%,100%,0)}
-    75%{transform:translate(-100%,-100%) translate3d(0,100%,0)}
-    100%{transform:translate(-100%,-100%) translate3d(0,0,0)}
-  }
-  .loadCard .loadText{
-    position:relative;z-index:3;color:#1c1e21;font-size:14px;font-weight:700;
-    text-align:center;padding:0 20px;line-height:1.5;
-  }
+  #loadingOverlay{position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .25s ease;backdrop-filter:blur(6px)}
+  .loadCard{position:relative;width:200px;height:250px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:20px 20px 60px rgba(0,0,0,.4),-20px -20px 60px rgba(255,255,255,.05)}
+  .loadCard .bg{position:absolute;top:5px;left:5px;width:190px;height:240px;z-index:2;background:rgba(255,255,255,.95);backdrop-filter:blur(24px);border-radius:10px;overflow:hidden;outline:2px solid white}
+  .loadCard .blob{position:absolute;z-index:1;top:50%;left:50%;width:150px;height:150px;border-radius:50%;opacity:1;filter:blur(12px);animation:blob-bounce 5s infinite ease}
+  @keyframes blob-bounce{0%{transform:translate(-100%,-100%) translate3d(0,0,0)}25%{transform:translate(-100%,-100%) translate3d(100%,0,0)}50%{transform:translate(-100%,-100%) translate3d(100%,100%,0)}75%{transform:translate(-100%,-100%) translate3d(0,100%,0)}100%{transform:translate(-100%,-100%) translate3d(0,0,0)}}
+  .loadCard .loadText{position:relative;z-index:3;color:#1c1e21;font-size:14px;font-weight:700;text-align:center;padding:0 20px;line-height:1.5}
 
   /* 3D 卡片（別人主頁） */
   .profile3dWrap{perspective:1000px;display:flex;justify-content:center;padding:24px 20px 0}
-  .profile3dCard{
-    width:290px;height:300px;border-radius:50px;
-    transition:all .5s ease-in-out;transform-style:preserve-3d;
-    box-shadow:rgba(0,0,0,0) 40px 50px 25px -40px,rgba(0,0,0,.2) 0 25px 25px -5px;
-    position:relative;
-  }
-  .profile3dCard .glass{
-    transform-style:preserve-3d;position:absolute;inset:8px;
-    border-radius:55px;border-top-right-radius:100%;
-    background:linear-gradient(0deg,rgba(255,255,255,.349) 0%,rgba(255,255,255,.815) 100%);
-    transform:translate3d(0,0,25px);
-    border-left:1px solid white;border-bottom:1px solid white;
-    transition:all .5s ease-in-out;
-  }
-  .profile3dCard .p3content{
-    padding:100px 60px 0 30px;transform:translate3d(0,0,26px);
-    position:relative;z-index:5;
-  }
-  .profile3dCard .p3content .p3title{
-    display:block;color:#00894d;font-weight:900;font-size:20px;
-  }
-  .profile3dCard .p3content .p3text{
-    display:block;color:rgba(0,137,78,.76);font-size:14px;margin-top:12px;
-  }
-  .profile3dCard .p3bottom{
-    padding:10px 12px;transform-style:preserve-3d;position:absolute;
-    bottom:20px;left:20px;right:20px;display:flex;align-items:center;justify-content:space-between;
-    transform:translate3d(0,0,26px);z-index:5;
-  }
-  .profile3dCard .p3logo{
-    position:absolute;right:0;top:0;transform-style:preserve-3d;
-  }
-  .profile3dCard .p3logo .circle{
-    display:block;position:absolute;aspect-ratio:1;border-radius:50%;top:0;right:0;
-    box-shadow:rgba(100,100,111,.2) -10px 10px 20px 0;backdrop-filter:blur(5px);
-    transition:all .5s ease-in-out;
-  }
+  .profile3dCard{width:290px;height:300px;border-radius:50px;transition:all .5s ease-in-out;transform-style:preserve-3d;box-shadow:rgba(0,0,0,0) 40px 50px 25px -40px,rgba(0,0,0,.2) 0 25px 25px -5px;position:relative}
+  .profile3dCard .glass{transform-style:preserve-3d;position:absolute;inset:8px;border-radius:55px;border-top-right-radius:100%;background:linear-gradient(0deg,rgba(255,255,255,.349) 0%,rgba(255,255,255,.815) 100%);transform:translate3d(0,0,25px);border-left:1px solid white;border-bottom:1px solid white;transition:all .5s ease-in-out}
+  .profile3dCard .p3content{padding:100px 60px 0 30px;transform:translate3d(0,0,26px);position:relative;z-index:5}
+  .profile3dCard .p3content .p3title{display:block;font-weight:900;font-size:20px}
+  .profile3dCard .p3content .p3text{display:block;font-size:14px;margin-top:12px}
+  .profile3dCard .p3logo{position:absolute;right:0;top:0;transform-style:preserve-3d}
+  .profile3dCard .p3logo .circle{display:block;position:absolute;aspect-ratio:1;border-radius:50%;top:0;right:0;box-shadow:rgba(100,100,111,.2) -10px 10px 20px 0;backdrop-filter:blur(5px);transition:all .5s ease-in-out}
   .profile3dCard .p3logo .c1{width:170px;transform:translate3d(0,0,20px);top:8px;right:8px}
   .profile3dCard .p3logo .c2{width:140px;transform:translate3d(0,0,40px);top:10px;right:10px;transition-delay:.4s}
   .profile3dCard .p3logo .c3{width:110px;transform:translate3d(0,0,60px);top:17px;right:17px;transition-delay:.8s}
   .profile3dCard .p3logo .c4{width:80px;transform:translate3d(0,0,80px);top:23px;right:23px;transition-delay:1.2s}
   .profile3dCard .p3logo .c5{width:50px;transform:translate3d(0,0,100px);top:30px;right:30px;display:flex;align-items:center;justify-content:center;transition-delay:1.6s}
-  .profile3dCard .p3logo .c5 span{font-size:20px;font-weight:900;color:#fff}
-  .profile3dWrap:hover .profile3dCard{
-    transform:rotate3d(1,1,0,30deg);
-    box-shadow:rgba(0,0,0,.3) 30px 50px 25px -40px,rgba(0,0,0,.1) 0 25px 30px 0;
-  }
+  .profile3dWrap:hover .profile3dCard{transform:rotate3d(1,1,0,30deg);box-shadow:rgba(0,0,0,.3) 30px 50px 25px -40px,rgba(0,0,0,.1) 0 25px 30px 0}
   .profile3dWrap:hover .profile3dCard .p3logo .c2{transform:translate3d(0,0,60px)}
   .profile3dWrap:hover .profile3dCard .p3logo .c3{transform:translate3d(0,0,80px)}
   .profile3dWrap:hover .profile3dCard .p3logo .c4{transform:translate3d(0,0,100px)}
   .profile3dWrap:hover .profile3dCard .p3logo .c5{transform:translate3d(0,0,120px)}
-
-  /* 加密訊息（逐字揭示） */
-  .enc-msg{
-    display:flex;flex-direction:column;gap:8px;user-select:none;
-  }
-  .enc-display{
-    font-family:Consolas,monospace;font-size:18px;letter-spacing:6px;
-    padding:6px 0;white-space:pre-wrap;word-break:break-all;min-height:30px;
-  }
-  .enc-controls{
-    display:flex;align-items:center;gap:8px;justify-content:space-between;
-    font-size:11.5px;opacity:.9;
-  }
-  .enc-controls button{
-    background:rgba(255,255,255,.2);color:#fff;border:none;
-    padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;
-    font-family:inherit;transition:.15s;
-  }
-  .enc-controls button:hover{background:rgba(255,255,255,.35)}
-  .enc-controls button:disabled{opacity:.35;cursor:default}
-  .enc-progress{font-family:Consolas,monospace;font-size:11px}
 </style>
 </head>
 <body>
@@ -476,7 +391,7 @@
     <div class="field"><input id="loginUsername" data-i18n-ph="usernamePh" placeholder="帳號"></div>
     <div class="field"><input id="loginPassword" type="password" data-i18n-ph="passwordPh" placeholder="密碼"></div>
     <button id="loginBtn" data-action="login" data-i18n="loginBtn">登入</button>
-    <div id="loginVersion">v1.2 正式版</div>
+    <div id="loginVersion">v1.2.1 正式版</div>
   </div>
 </div>
 
@@ -484,7 +399,7 @@
   <header>
     <div class="title" data-i18n="appTitleShort">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.2</span>
+      <span class="ver">v1.2.1</span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
         <div class="bb8-toggle__container">
@@ -586,11 +501,10 @@ const pageRoot = $('pageRoot'), noticeBar = $('noticeBar');
 const plusPanel = $('plusPanel'), plusBtn = $('plusBtn');
 const encToggle = $('encToggle'), encCheckbox = $('encCheckbox');
 
-/* ============ i18n ============ */
 const I18N = {
-  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號（stu01 ~ stu24）',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...（@ 標記某人）',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.2 正式版',latestBadge:'最新',encLabel:'加密',encTag:'加密',encNext:'下一字',encPrev:'上一字',encShow:'顯示',encPage:'第',encPageOf:'/',loadingTo:'正在前往'},
-  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号（stu01 ~ stu24）',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索消息...',msgPh:'输入消息...（@ 标记某人）',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载消息中...',noNotice:'这里还没有公告，你可以申请公告，使用右边的按钮',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'还没有消息，说点什么吧！',noMatch:'没有符合条件的消息',bannedSevere:'你已被封禁，无法登录。',reason:'原因',noReason:'（无原因）',sendFail:'发送失败',bannedLight:'你目前被限制发言',profileTitle:'我的主页',profileOther:'的主页',cantView:'这是别人的主页',editName:'修改显示名称',saveName:'保存显示名称',editAvatar:'修改头像',uploadAvatar:'上传 / 拍照',editPwd:'修改密码',oldPwd:'当前密码',newPwd:'新密码（至少 6 个字符）',confirmPwd:'再次输入新密码',savePwd:'修改密码',myLogs:'我的日志',myNotices:'我的公告申请',nameEmpty:'显示名称不能为空',nameTooLong:'最多 20 个字符',pwdTooShort:'新密码至少 6 个字符',pwdMismatch:'两次新密码不一致',pwdWrong:'当前密码错误',pwdUpdated:'密码已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'全体日志',superAdmin:'超级管理员',adminRole:'管理员',memberRole:'普通用户',noRequests:'暂无待处理请求',noLogs:'暂无记录',noPending:'暂无待审核公告',noApply:'还没有申请',deleteRequest:'删除请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'确定封禁',banTypeLight:'普通封禁',banTypeSevere:'严重封禁',banLightSub:'可登录，不能发言',banSevereSub:'无法登录',banSection:'封禁管理',banThis:'封禁此用户',banSelect:'选类型 → 填原因 → 确定',banReasonPh:'封禁原因',banReasonEmpty:'请填写封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理员',revokeAdmin:'撤销管理员',viewLogs:'查看该生记录',online:'在线',msgDeleted:'（已删除 · 待恢复）',requestDelete:'请求删除',adminDelete:'管理员删除',restore:'恢复',purge:'彻底删除',deleteReasonPh:'请填写删除原因：',reportReasonPh:'请填写举报原因：',requestSent:'已发送',reportSent:'已发送举报',userDetail:'的资料',noPermission:'你没有权限编辑此用户',changeName:'管理员修改',deletedLog:'删除消息',restoredLog:'恢复消息',purgedLog:'彻底删除消息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名为',changedPwdLog:'修改密码',loggedIn:'登录系统',loggedOut:'退出系统',sentMsg:'发送消息',approvedReq:'批准请求删除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理员',notifRevoked:'已撤销管理员',notifAvatarUpdated:'头像已更新',notifActionFail:'操作失败',notifSaved:'已保存',notifCancel:'已取消',notifSent:'已发送',notifNoticePublished:'已发布',notifNoticeSent:'已发送申请',notifNoticeApproved:'已批准并发布',notifNoticeRejected:'已拒绝',notifNoticeEdited:'已编辑',notifNoticePinned:'已置顶',notifNoticeUnpinned:'已取消置顶',notifNoticeLocked:'已加锁',notifNoticeUnlocked:'已解锁',notifNoticeDeleted:'已删除（2 小时内可恢复）',noticeTitle:'公告',noticeApplyTitle:'申请公告',noticePublishTitle:'发布公告',noticeContent:'内容',noticeContentPh:'输入公告内容...',noticeImgs:'图片（最多 5 张）',noticeChooseImgs:'选择图片',noticeImgUrlPh:'或贴图片网址（按 Enter 加入）',noticeWhen:'发布时间',noticeWhenNow:'立即（管理员） / 等待审核（学生）',noticeWhen3d:'3 天后自动发布（学生申请）',noticeSubmit:'发送',noticeUseHtml:'HTML 模式（管理员）',noticeUseHtmlLabel:'使用 HTML 编辑',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消置顶',noticeLock:'加锁',noticeUnlock:'解锁',noticeDelete:'删除',noticeOver5000:'超过 5000 字',noticeNeedContent:'请输入内容或加图片',noticeRejectReasonPh:'拒绝原因（可留空）：',noticePinTag:'置顶公告',noticeLatest:'最新：',noticeNoOther:'没有其他公告',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'公告申请被拒绝',about:'关于',author:'作者',thanks:'感谢清单',versions:'版本信息',thanksAdd:'新增感谢名称（管理员）',thanksNamePh:'输入名称',thanksSubmit:'提交',thanksEmpty:'尚未有名称',thanksBy:'by',thanksNameEmpty:'请输入名称',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.2 正式版',latestBadge:'最新',encLabel:'加密',encTag:'加密',encNext:'下一字',encPrev:'上一字',encShow:'显示',encPage:'第',encPageOf:'/',loadingTo:'正在前往'},
-  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Enter your username and password',usernamePh:'Username (stu01 ~ stu24)',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search messages...',msgPh:'Type a message... (@ to mention)',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading messages...',noNotice:'No announcements yet. You can apply using the button on the right.',wrongPwd:'Wrong password',noUser:'Account not found',emptyMsg:'No messages yet. Say something!',noMatch:'No matching messages',bannedSevere:'You are banned and cannot sign in.',reason:'Reason',noReason:'(no reason)',sendFail:'Send failed',bannedLight:'You are muted',profileTitle:'My Profile',profileOther:"'s Profile",cantView:"This is someone else's profile",editName:'Change display name',saveName:'Save name',editAvatar:'Change avatar',uploadAvatar:'Upload / Camera',editPwd:'Change password',oldPwd:'Current password',newPwd:'New password (min 6 chars)',confirmPwd:'Confirm new password',savePwd:'Change password',myLogs:'My logs',myNotices:'My notice applications',nameEmpty:'Display name cannot be empty',nameTooLong:'Max 20 characters',pwdTooShort:'Password must be at least 6 characters',pwdMismatch:'Passwords do not match',pwdWrong:'Current password is wrong',pwdUpdated:'Password updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'All Logs',superAdmin:'Super Admin',adminRole:'Admin',memberRole:'Member',noRequests:'No pending requests',noLogs:'No logs',noPending:'No pending notices',noApply:'No applications yet',deleteRequest:'Delete request',report:'Report',approve:'Approve',reject:'Reject',confirmBan:'Confirm Ban',banTypeLight:'Light Ban',banTypeSevere:'Severe Ban',banLightSub:'Can sign in, cannot post',banSevereSub:'Cannot sign in',banSection:'Ban management',banThis:'Ban this user',banSelect:'Pick type → Reason → Confirm',banReasonPh:'Ban reason',banReasonEmpty:'Please enter a ban reason',banned:'Banned',unban:'Unban',grantAdmin:'Grant admin',revokeAdmin:'Revoke admin',viewLogs:'View logs',online:'Online',msgDeleted:'(deleted · recoverable)',requestDelete:'Request delete',adminDelete:'Admin delete',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason for deletion:',reportReasonPh:'Reason for report:',requestSent:'Sent',reportSent:'Report sent',userDetail:"'s info",noPermission:"You don't have permission to edit this user",changeName:'Admin changed',deletedLog:'Deleted message',restoredLog:'Restored message',purgedLog:'Purged message',bannedLog:'Banned',unbannedLog:'Unbanned',grantedLog:'Granted admin to',revokedLog:'Revoked admin from',changedNameLog:'Changed name to',changedPwdLog:'Changed password',loggedIn:'Signed in',loggedOut:'Signed out',sentMsg:'Sent message',approvedReq:'Approved delete request',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted admin',notifRevoked:'Revoked admin',notifAvatarUpdated:'Avatar updated',notifActionFail:'Action failed',notifSaved:'Saved',notifCancel:'Cancelled',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Application sent',notifNoticeApproved:'Approved & published',notifNoticeRejected:'Rejected',notifNoticeEdited:'Edited',notifNoticePinned:'Pinned',notifNoticeUnpinned:'Unpinned',notifNoticeLocked:'Locked',notifNoticeUnlocked:'Unlocked',notifNoticeDeleted:'Deleted (recoverable in 2h)',noticeTitle:'Announcement',noticeApplyTitle:'Apply for Announcement',noticePublishTitle:'Publish Announcement',noticeContent:'Content',noticeContentPh:'Enter content...',noticeImgs:'Images (max 5)',noticeChooseImgs:'Choose images',noticeImgUrlPh:'Or paste image URL (press Enter)',noticeWhen:'Publish time',noticeWhenNow:'Now (admin) / Pending review (student)',noticeWhen3d:'Auto publish after 3 days (student)',noticeSubmit:'Submit',noticeUseHtml:'HTML mode (admin)',noticeUseHtmlLabel:'Use HTML editor',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000 chars',noticeNeedContent:'Please enter content or add images',noticeRejectReasonPh:'Reject reason (optional):',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'No other announcements',noticeApplyBy:'Applied by: ',noticeEditedBy:'Originally by: ',noticeAdminEdited:' · edited by admin',noticeRejected:'Announcement application rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Version Info',thanksAdd:'Add thanks name (admin)',thanksNamePh:'Enter name',thanksSubmit:'Submit',thanksEmpty:'No names yet',thanksBy:'by',thanksNameEmpty:'Please enter a name',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'Current v1.2',latestBadge:'Latest',encLabel:'Encrypt',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',encShow:'Show',encPage:'Page',encPageOf:'/',loadingTo:'Going to'}
+  'zh-Hant':{appTitle:'班級聊天室',appTitleShort:'班級聊天室',loginSub:'請輸入帳號與密碼',usernamePh:'帳號（stu01 ~ stu24）',passwordPh:'密碼',loginBtn:'登入',loginBtnLoading:'登入中...',adminPanel:'管理員後台',myProfile:'個人主頁',logout:'登出',searchPh:'搜尋訊息...',msgPh:'輸入訊息...（@ 標記某人）',sendBtn:'送出',micBtn:'語音',pImage:'圖片',pFile:'檔案',pLoc:'位置',encToggle:'加密',loading:'載入訊息中...',noNotice:'這裏還沒有公告，你可以申請公告，使用右邊的按鈕',wrongPwd:'密碼錯誤',noUser:'帳號不存在',emptyMsg:'還沒有訊息，說點什麼吧！',noMatch:'沒有符合的訊息',bannedSevere:'你已被封禁，無法登入。',reason:'原因',noReason:'（無原因）',sendFail:'送出失敗',bannedLight:'你目前被限制發言',profileTitle:'我的主頁',profileOther:'的主頁',cantView:'這是別人的主頁',editName:'修改顯示名稱',saveName:'儲存顯示名稱',editAvatar:'修改頭像',uploadAvatar:'上傳 / 拍照',editPwd:'修改密碼',oldPwd:'目前密碼',newPwd:'新密碼（至少 6 個字元）',confirmPwd:'再次輸入新密碼',savePwd:'修改密碼',myLogs:'我的日誌',myNotices:'我的公告申請',nameEmpty:'顯示名稱不能為空',nameTooLong:'最多 20 個字元',pwdTooShort:'新密碼至少 6 個字元',pwdMismatch:'兩次新密碼不一致',pwdWrong:'目前密碼錯誤',pwdUpdated:'密碼已更新',saved:'已儲存',updated:'已更新',close:'關閉',usersTab:'用戶',noticesTab:'審核',requestsTab:'請求',logsTab:'全體日誌',superAdmin:'超級管理員',adminRole:'管理員',memberRole:'普通用戶',noRequests:'暫無待處理請求',noLogs:'暫無紀錄',noPending:'暫無待審核公告',noApply:'還沒有申請',deleteRequest:'刪除請求',report:'舉報',approve:'批准',reject:'拒絕',confirmBan:'確定封禁',banTypeLight:'普通封禁',banTypeSevere:'嚴重封禁',banLightSub:'可登入，不能發言',banSevereSub:'無法登入',banSection:'封禁管理',banThis:'封禁此用戶',banSelect:'選類型 → 填原因 → 確定',banReasonPh:'封禁原因',banReasonEmpty:'請填寫封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理員',revokeAdmin:'撤銷管理員',viewLogs:'查看該生紀錄',online:'線上',msgDeleted:'（已刪除 · 待恢復）',requestDelete:'請求刪除',adminDelete:'管理員刪除',restore:'恢復',purge:'徹底刪除',deleteReasonPh:'請填寫刪除原因：',reportReasonPh:'請填寫舉報原因：',requestSent:'已送出',reportSent:'已送出舉報',userDetail:'的資料',noPermission:'你沒有權限編輯此用戶',changeName:'管理員修改',deletedLog:'刪除訊息',restoredLog:'恢復訊息',purgedLog:'徹底刪除訊息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤銷',changedNameLog:'改名為',changedPwdLog:'修改密碼',loggedIn:'登入系統',loggedOut:'登出系統',sentMsg:'發送訊息',approvedReq:'批准請求刪除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理員',notifRevoked:'已撤銷管理員',notifAvatarUpdated:'頭像已更新',notifActionFail:'操作失敗',notifSaved:'已儲存',notifCancel:'已取消',notifSent:'已送出',notifNoticePublished:'已發布',notifNoticeSent:'已送出申請',notifNoticeApproved:'已批准並發布',notifNoticeRejected:'已拒絕',notifNoticeEdited:'已編輯',notifNoticePinned:'已置頂',notifNoticeUnpinned:'已取消置頂',notifNoticeLocked:'已加鎖',notifNoticeUnlocked:'已解鎖',notifNoticeDeleted:'已刪除（2 小時內可恢復）',noticeTitle:'公告',noticeApplyTitle:'申請公告',noticePublishTitle:'發布公告',noticeContent:'內容',noticeContentPh:'輸入公告內容...',noticeImgs:'圖片（最多 5 張）',noticeChooseImgs:'選擇圖片',noticeImgUrlPh:'或貼圖片網址（按 Enter 加入）',noticeWhen:'發布時間',noticeWhenNow:'立即（管理員） / 等待審核（學生）',noticeWhen3d:'3 天後自動發布（學生申請）',noticeSubmit:'送出',noticeUseHtml:'HTML 模式（管理員）',noticeUseHtmlLabel:'使用 HTML 編輯',noticeEdit:'編輯',noticePin:'置頂',noticeUnpin:'取消置頂',noticeLock:'加鎖',noticeUnlock:'解鎖',noticeDelete:'刪除',noticeOver5000:'超過 5000 字',noticeNeedContent:'請輸入內容或加圖片',noticeRejectReasonPh:'拒絕原因（可留空）：',noticePinTag:'置頂公告',noticeLatest:'最新：',noticeNoOther:'沒有其他公告',noticeApplyBy:'申請者：',noticeEditedBy:'原申請者：',noticeAdminEdited:' · 管理員修改',noticeRejected:'公告申請被拒絕',about:'關於',author:'作者',thanks:'感謝清單',versions:'版本資訊',thanksAdd:'新增感謝名稱（管理員）',thanksNamePh:'輸入名稱',thanksSubmit:'提交',thanksEmpty:'尚未有名稱',thanksBy:'by',thanksNameEmpty:'請輸入名稱',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.2.1 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往'},
+  'zh-Hans':{appTitle:'班级聊天室',appTitleShort:'班级聊天室',loginSub:'请输入账号与密码',usernamePh:'账号（stu01 ~ stu24）',passwordPh:'密码',loginBtn:'登录',loginBtnLoading:'登录中...',adminPanel:'管理员后台',myProfile:'个人主页',logout:'退出',searchPh:'搜索消息...',msgPh:'输入消息...（@ 标记某人）',sendBtn:'发送',micBtn:'语音',pImage:'图片',pFile:'文件',pLoc:'位置',encToggle:'加密',loading:'加载消息中...',noNotice:'这里还没有公告，你可以申请公告，使用右边的按钮',wrongPwd:'密码错误',noUser:'账号不存在',emptyMsg:'还没有消息，说点什么吧！',noMatch:'没有符合条件的消息',bannedSevere:'你已被封禁，无法登录。',reason:'原因',noReason:'（无原因）',sendFail:'发送失败',bannedLight:'你目前被限制发言',profileTitle:'我的主页',profileOther:'的主页',cantView:'这是别人的主页',editName:'修改显示名称',saveName:'保存显示名称',editAvatar:'修改头像',uploadAvatar:'上传 / 拍照',editPwd:'修改密码',oldPwd:'当前密码',newPwd:'新密码（至少 6 个字符）',confirmPwd:'再次输入新密码',savePwd:'修改密码',myLogs:'我的日志',myNotices:'我的公告申请',nameEmpty:'显示名称不能为空',nameTooLong:'最多 20 个字符',pwdTooShort:'新密码至少 6 个字符',pwdMismatch:'两次新密码不一致',pwdWrong:'当前密码错误',pwdUpdated:'密码已更新',saved:'已保存',updated:'已更新',close:'关闭',usersTab:'用户',noticesTab:'审核',requestsTab:'请求',logsTab:'全体日志',superAdmin:'超级管理员',adminRole:'管理员',memberRole:'普通用户',noRequests:'暂无待处理请求',noLogs:'暂无记录',noPending:'暂无待审核公告',noApply:'还没有申请',deleteRequest:'删除请求',report:'举报',approve:'批准',reject:'拒绝',confirmBan:'确定封禁',banTypeLight:'普通封禁',banTypeSevere:'严重封禁',banLightSub:'可登录，不能发言',banSevereSub:'无法登录',banSection:'封禁管理',banThis:'封禁此用户',banSelect:'选类型 → 填原因 → 确定',banReasonPh:'封禁原因',banReasonEmpty:'请填写封禁原因',banned:'已封禁',unban:'解除封禁',grantAdmin:'授予管理员',revokeAdmin:'撤销管理员',viewLogs:'查看该生记录',online:'在线',msgDeleted:'（已删除 · 待恢复）',requestDelete:'请求删除',adminDelete:'管理员删除',restore:'恢复',purge:'彻底删除',deleteReasonPh:'请填写删除原因：',reportReasonPh:'请填写举报原因：',requestSent:'已发送',reportSent:'已发送举报',userDetail:'的资料',noPermission:'你没有权限编辑此用户',changeName:'管理员修改',deletedLog:'删除消息',restoredLog:'恢复消息',purgedLog:'彻底删除消息',bannedLog:'封禁',unbannedLog:'解除',grantedLog:'授予',revokedLog:'撤销',changedNameLog:'改名为',changedPwdLog:'修改密码',loggedIn:'登录系统',loggedOut:'退出系统',sentMsg:'发送消息',approvedReq:'批准请求删除',notifBanned:'已封禁',notifUnbanned:'已解除封禁',notifGranted:'已授予管理员',notifRevoked:'已撤销管理员',notifAvatarUpdated:'头像已更新',notifActionFail:'操作失败',notifSaved:'已保存',notifCancel:'已取消',notifSent:'已发送',notifNoticePublished:'已发布',notifNoticeSent:'已发送申请',notifNoticeApproved:'已批准并发布',notifNoticeRejected:'已拒绝',notifNoticeEdited:'已编辑',notifNoticePinned:'已置顶',notifNoticeUnpinned:'已取消置顶',notifNoticeLocked:'已加锁',notifNoticeUnlocked:'已解锁',notifNoticeDeleted:'已删除（2 小时内可恢复）',noticeTitle:'公告',noticeApplyTitle:'申请公告',noticePublishTitle:'发布公告',noticeContent:'内容',noticeContentPh:'输入公告内容...',noticeImgs:'图片（最多 5 张）',noticeChooseImgs:'选择图片',noticeImgUrlPh:'或贴图片网址（按 Enter 加入）',noticeWhen:'发布时间',noticeWhenNow:'立即（管理员） / 等待审核（学生）',noticeWhen3d:'3 天后自动发布（学生申请）',noticeSubmit:'发送',noticeUseHtml:'HTML 模式（管理员）',noticeUseHtmlLabel:'使用 HTML 编辑',noticeEdit:'编辑',noticePin:'置顶',noticeUnpin:'取消置顶',noticeLock:'加锁',noticeUnlock:'解锁',noticeDelete:'删除',noticeOver5000:'超过 5000 字',noticeNeedContent:'请输入内容或加图片',noticeRejectReasonPh:'拒绝原因（可留空）：',noticePinTag:'置顶公告',noticeLatest:'最新：',noticeNoOther:'没有其他公告',noticeApplyBy:'申请者：',noticeEditedBy:'原申请者：',noticeAdminEdited:' · 管理员修改',noticeRejected:'公告申请被拒绝',about:'关于',author:'作者',thanks:'感谢清单',versions:'版本信息',thanksAdd:'新增感谢名称（管理员）',thanksNamePh:'输入名称',thanksSubmit:'提交',thanksEmpty:'尚未有名称',thanksBy:'by',thanksNameEmpty:'请输入名称',thanksAdded:'已新增',authorName:'梁喆',currentVersion:'目前 v1.2.1 正式版',latestBadge:'最新',encTag:'加密',encNext:'下一字',encPrev:'上一字',loadingTo:'正在前往'},
+  'en':{appTitle:'Class Chat',appTitleShort:'Class Chat',loginSub:'Enter your username and password',usernamePh:'Username (stu01 ~ stu24)',passwordPh:'Password',loginBtn:'Sign in',loginBtnLoading:'Signing in...',adminPanel:'Admin',myProfile:'Profile',logout:'Sign out',searchPh:'Search messages...',msgPh:'Type a message... (@ to mention)',sendBtn:'Send',micBtn:'Voice',pImage:'Image',pFile:'File',pLoc:'Location',encToggle:'Encrypt',loading:'Loading messages...',noNotice:'No announcements yet. You can apply using the button on the right.',wrongPwd:'Wrong password',noUser:'Account not found',emptyMsg:'No messages yet. Say something!',noMatch:'No matching messages',bannedSevere:'You are banned and cannot sign in.',reason:'Reason',noReason:'(no reason)',sendFail:'Send failed',bannedLight:'You are muted',profileTitle:'My Profile',profileOther:"'s Profile",cantView:"This is someone else's profile",editName:'Change display name',saveName:'Save name',editAvatar:'Change avatar',uploadAvatar:'Upload / Camera',editPwd:'Change password',oldPwd:'Current password',newPwd:'New password (min 6 chars)',confirmPwd:'Confirm new password',savePwd:'Change password',myLogs:'My logs',myNotices:'My notice applications',nameEmpty:'Display name cannot be empty',nameTooLong:'Max 20 characters',pwdTooShort:'Password must be at least 6 characters',pwdMismatch:'Passwords do not match',pwdWrong:'Current password is wrong',pwdUpdated:'Password updated',saved:'Saved',updated:'Updated',close:'Close',usersTab:'Users',noticesTab:'Review',requestsTab:'Requests',logsTab:'All Logs',superAdmin:'Super Admin',adminRole:'Admin',memberRole:'Member',noRequests:'No pending requests',noLogs:'No logs',noPending:'No pending notices',noApply:'No applications yet',deleteRequest:'Delete request',report:'Report',approve:'Approve',reject:'Reject',confirmBan:'Confirm Ban',banTypeLight:'Light Ban',banTypeSevere:'Severe Ban',banLightSub:'Can sign in, cannot post',banSevereSub:'Cannot sign in',banSection:'Ban management',banThis:'Ban this user',banSelect:'Pick type → Reason → Confirm',banReasonPh:'Ban reason',banReasonEmpty:'Please enter a ban reason',banned:'Banned',unban:'Unban',grantAdmin:'Grant admin',revokeAdmin:'Revoke admin',viewLogs:'View logs',online:'Online',msgDeleted:'(deleted · recoverable)',requestDelete:'Request delete',adminDelete:'Admin delete',restore:'Restore',purge:'Purge',deleteReasonPh:'Reason for deletion:',reportReasonPh:'Reason for report:',requestSent:'Sent',reportSent:'Report sent',userDetail:"'s info",noPermission:"You don't have permission to edit this user",changeName:'Admin changed',deletedLog:'Deleted message',restoredLog:'Restored message',purgedLog:'Purged message',bannedLog:'Banned',unbannedLog:'Unbanned',grantedLog:'Granted admin to',revokedLog:'Revoked admin from',changedNameLog:'Changed name to',changedPwdLog:'Changed password',loggedIn:'Signed in',loggedOut:'Signed out',sentMsg:'Sent message',approvedReq:'Approved delete request',notifBanned:'Banned',notifUnbanned:'Unbanned',notifGranted:'Granted admin',notifRevoked:'Revoked admin',notifAvatarUpdated:'Avatar updated',notifActionFail:'Action failed',notifSaved:'Saved',notifCancel:'Cancelled',notifSent:'Sent',notifNoticePublished:'Published',notifNoticeSent:'Application sent',notifNoticeApproved:'Approved & published',notifNoticeRejected:'Rejected',notifNoticeEdited:'Edited',notifNoticePinned:'Pinned',notifNoticeUnpinned:'Unpinned',notifNoticeLocked:'Locked',notifNoticeUnlocked:'Unlocked',notifNoticeDeleted:'Deleted (recoverable in 2h)',noticeTitle:'Announcement',noticeApplyTitle:'Apply for Announcement',noticePublishTitle:'Publish Announcement',noticeContent:'Content',noticeContentPh:'Enter content...',noticeImgs:'Images (max 5)',noticeChooseImgs:'Choose images',noticeImgUrlPh:'Or paste image URL (press Enter)',noticeWhen:'Publish time',noticeWhenNow:'Now (admin) / Pending review (student)',noticeWhen3d:'Auto publish after 3 days (student)',noticeSubmit:'Submit',noticeUseHtml:'HTML mode (admin)',noticeUseHtmlLabel:'Use HTML editor',noticeEdit:'Edit',noticePin:'Pin',noticeUnpin:'Unpin',noticeLock:'Lock',noticeUnlock:'Unlock',noticeDelete:'Delete',noticeOver5000:'Over 5000 chars',noticeNeedContent:'Please enter content or add images',noticeRejectReasonPh:'Reject reason (optional):',noticePinTag:'Pinned',noticeLatest:'Latest: ',noticeNoOther:'No other announcements',noticeApplyBy:'Applied by: ',noticeEditedBy:'Originally by: ',noticeAdminEdited:' · edited by admin',noticeRejected:'Announcement application rejected',about:'About',author:'Author',thanks:'Thanks',versions:'Version Info',thanksAdd:'Add thanks name (admin)',thanksNamePh:'Enter name',thanksSubmit:'Submit',thanksEmpty:'No names yet',thanksBy:'by',thanksNameEmpty:'Please enter a name',thanksAdded:'Added',authorName:'Liang Zhe',currentVersion:'Current v1.2.1',latestBadge:'Latest',encTag:'Encrypted',encNext:'Next',encPrev:'Prev',loadingTo:'Going to'}
 };
 let lang = localStorage.getItem('chat_lang') || 'zh-Hant';
 function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N['zh-Hant'][k] || k; }
@@ -604,49 +518,37 @@ $('themeToggleChat').addEventListener('change', e => { theme = e.target.checked 
 $('langSelectLogin').addEventListener('change', e => { lang = e.target.value; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); render(); renderNoticeBar(); });
 $('langSelectChat').addEventListener('change', e => { lang = e.target.value; localStorage.setItem('chat_lang', lang); applyLang(); applyI18n(); render(); renderNoticeBar(); });
 
-/* 加密勾選切換 */
-encCheckbox.addEventListener('change', () => {
-  encToggle.classList.toggle('active', encCheckbox.checked);
-});
+encCheckbox.addEventListener('change', () => { encToggle.classList.toggle('active', encCheckbox.checked); });
 
-/* ============ 頁面切換過場 ============ */
-let loadingTimer = null;
-function showLoading(text, userColor){
-  const el = document.createElement('div');
-  el.id = 'loadingOverlay';
-  el.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${userColor||'#3b82f6'}"></div><div class="bg"></div><div class="loadText">${escapeHtml(text)}</div></div>`;
-  document.body.appendChild(el);
-}
-function hideLoading(){
-  const el = document.getElementById('loadingOverlay');
-  if (el) el.remove();
-}
+/* 頁面切換過場 */
 function withTransition(text, userColor, fn){
-  showLoading(text, userColor);
-  clearTimeout(loadingTimer);
-  loadingTimer = setTimeout(() => {
-    hideLoading();
+  const overlay = document.createElement('div');
+  overlay.id = 'loadingOverlay';
+  overlay.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${userColor||'#3b82f6'}"></div><div class="bg"></div><div class="loadText">${escapeHtml(text)}</div></div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    overlay.remove();
     try { fn(); } catch(e){ console.error(e); }
   }, 1500);
 }
 
-/* ============ 版本歷史 ============ */
 const VERSION_HISTORY = [
-  { ver:'v1.2', date:'2026-09-12', changes:['別人的個人主頁改用 3D 卡片（顏色 = 該用戶 hex）','頁面切換加 blob 過場動畫（1.5 秒）','新增加密訊息功能：可勾選加密，加密後一頁一頁看'] },
-  { ver:'v1.1', date:'2026-09-12', changes:['大量動畫：頁面轉場、卡片彈入、按鈕抬升、頭像旋轉、輸入框發光、訊息依序進場、通知彈入、輪播彈性、分頁底線滑動、錄音脈衝'] },
-  { ver:'v1.0', date:'2026-09-12', changes:['正式版','完整翻譯系統（繁 / 簡 / EN）','全站去除 emoji（除頭像）','檔案大小精簡'] },
-  { ver:'v0.9.1', date:'2026-09-12', changes:['個人主頁底部新增「作者」「感謝清單」「版本資訊」','作者：梁喆（不可點入）','感謝清單：管理員可提交名稱','版本資訊：列出所有版本，最新在最上'] },
-  { ver:'v0.9', date:'2026-09-12', changes:['公告系統：申請 / 審核 / 發布 / 置頂 / 加鎖 / 刪除 / 編輯','未讀公告彈出輪播卡片','連結警告','圖片 / 檔案 / 語音 / 位置','@ 提及','搜尋訊息','訊息刪除 / 舉報 / 審核流程','完整日誌'] },
-  { ver:'v0.8', date:'2026-09-12', changes:['黑白主題切換（BB8 開關）','語言切換'] },
-  { ver:'v0.7.1', date:'2026-09-12', changes:['修復 openUserDetail 括號錯誤','封禁改成開關樣式','所有按鈕改用事件委派'] },
-  { ver:'v0.7', date:'2026-09-12', changes:['封禁流程改用頁面按鈕','封禁類型用兩顆按鈕','個人主頁 / 管理員後台 / 用戶詳情全螢幕'] },
-  { ver:'v0.6', date:'2026-09-12', changes:['全螢幕頁面取代彈窗','左上角 ← 退出','封禁改成開關'] },
-  { ver:'v0.5', date:'2026-09-12', changes:['完整日誌系統','訊息刪除 / 舉報 / 審核','兩小時恢復','搜尋','@ 某人','班級狀態','管理員通知紅點'] },
-  { ver:'v0.4', date:'2026-09-12', changes:['管理員後台（用戶清單、封禁、授權、簡易日誌）'] },
-  { ver:'v0.3.1', date:'2026-09-12', changes:['修手機 / iPad 高度問題'] },
-  { ver:'v0.3', date:'2026-09-12', changes:['Header 響應式適配所有裝置'] },
-  { ver:'v0.2', date:'' , changes:['個人主頁','改顯示名稱','改頭像','改密碼','顏色顯示'] },
-  { ver:'v0.1', date:'', changes:['登入畫面','嚴重封禁擋登入','普通封禁警告','聊天室（文字、即時同步）','訊息編號 msg_0001','頭像顏色圓圈','管理員標示'] }
+  { ver:'v1.2.1', date:'2026-09-12', changes:['修正加密訊息顯示','修正 3D 卡片沒出現','修正過場動畫沒觸發'] },
+  { ver:'v1.2', date:'2026-09-12', changes:['別人的個人主頁改用 3D 卡片（顏色 = 該用戶 hex）','頁面切換加 blob 過場動畫（1.5 秒）','新增加密訊息功能'] },
+  { ver:'v1.1', date:'2026-09-12', changes:['大量動畫'] },
+  { ver:'v1.0', date:'2026-09-12', changes:['正式版','完整翻譯系統','全站去除 emoji','檔案精簡'] },
+  { ver:'v0.9.1', date:'2026-09-12', changes:['作者 / 感謝清單 / 版本資訊'] },
+  { ver:'v0.9', date:'2026-09-12', changes:['公告系統','輪播卡片','連結警告','圖片 / 檔案 / 語音 / 位置','@ 提及','搜尋','訊息刪除 / 舉報','完整日誌'] },
+  { ver:'v0.8', date:'2026-09-12', changes:['黑白主題','語言切換'] },
+  { ver:'v0.7.1', date:'2026-09-12', changes:['修復 bug','封禁開關樣式'] },
+  { ver:'v0.7', date:'2026-09-12', changes:['封禁流程','類型按鈕','全螢幕'] },
+  { ver:'v0.6', date:'2026-09-12', changes:['全螢幕取代彈窗'] },
+  { ver:'v0.5', date:'2026-09-12', changes:['完整日誌','訊息刪除 / 舉報','兩小時恢復','搜尋','@ 某人','班級狀態'] },
+  { ver:'v0.4', date:'2026-09-12', changes:['管理員後台'] },
+  { ver:'v0.3.1', date:'2026-09-12', changes:['修手機高度'] },
+  { ver:'v0.3', date:'2026-09-12', changes:['Header 響應式'] },
+  { ver:'v0.2', date:'', changes:['個人主頁','改顯示名稱','改頭像','改密碼','顏色顯示'] },
+  { ver:'v0.1', date:'', changes:['登入畫面','封禁','聊天室','訊息編號','頭像顏色'] }
 ];
 
 let me = null;
@@ -1036,24 +938,26 @@ async function openNoticeCreate(){
   if (me.banned && me.banned.type === 'light') { showNotif(t('bannedLight')); return; }
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
   window._noticeImages = [];
-  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${isAdmin?t('noticePublishTitle'):t('noticeApplyTitle')}</div></div><div class="fp-body"><div class="profile-content">${isAdmin?`<div class="section-title">${t('noticeUseHtml')}</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> ${t('noticeUseHtmlLabel')}</label></div>`:''}<div class="section-title">${t('noticeContent')}</div><div class="form-row"><textarea id="noticeText" placeholder="${t('noticeContentPh')}" maxlength="5000"></textarea><div class="char-count" id="charCount">0 / 5000</div></div><div class="section-title">${t('noticeImgs')}</div><div class="avatar-options" id="imgList"></div><input type="file" id="noticeImgFile" accept="image/*" multiple><label class="upload-btn" for="noticeImgFile">${t('noticeChooseImgs')}</label><div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="${t('noticeImgUrlPh')}"></div><div class="section-title">${t('noticeWhen')}</div><div class="form-row"><select id="noticeWhen"><option value="now">${t('noticeWhenNow')}</option><option value="3days">${t('noticeWhen3d')}</option></select></div><button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">${t('noticeSubmit')}</button><div class="err" id="noticeErr"></div></div></div></div>`;
-  const ta = document.getElementById('noticeText'), cc = document.getElementById('charCount');
-  ta.addEventListener('input', () => { const len = ta.value.length; cc.textContent = `${len} / 5000`; cc.classList.toggle('over', len>5000); });
-  const renderImgs = () => {
-    const box = document.getElementById('imgList');
-    box.innerHTML = window._noticeImages.map((src,i) => `<div class="av-opt" style="position:relative;overflow:hidden"><img src="${/^https?:/.test(src)?escapeHtml(src):src}" style="width:100%;height:100%;object-fit:cover"><button style="position:absolute;top:0;right:0;background:#dc2626;color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;cursor:pointer" data-imgidx="${i}">x</button></div>`).join('');
-    box.querySelectorAll('button[data-imgidx]').forEach(b => { b.onclick = e => { e.stopPropagation(); window._noticeImages.splice(+b.dataset.imgidx,1); renderImgs(); }; });
-  };
-  document.getElementById('noticeImgFile').addEventListener('change', async e => {
-    const files = Array.from(e.target.files).slice(0, 5 - window._noticeImages.length);
-    for (const f of files) {
-      if (f.size > 5*1024*1024) { showNotif('5MB'); continue; }
-      try { const dataUrl = await compressImage(f, 800, 800, 0.75); window._noticeImages.push(dataUrl); } catch(err){}
-    }
-    renderImgs(); e.target.value = '';
-  });
-  document.getElementById('noticeImgUrl').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); const url = e.target.value.trim(); if (!url) return; if (window._noticeImages.length >= 5) return; window._noticeImages.push(url); e.target.value = ''; renderImgs(); }
+  withTransition(t('noticeApplyTitle'), me.color, () => {
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${isAdmin?t('noticePublishTitle'):t('noticeApplyTitle')}</div></div><div class="fp-body"><div class="profile-content">${isAdmin?`<div class="section-title">${t('noticeUseHtml')}</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> ${t('noticeUseHtmlLabel')}</label></div>`:''}<div class="section-title">${t('noticeContent')}</div><div class="form-row"><textarea id="noticeText" placeholder="${t('noticeContentPh')}" maxlength="5000"></textarea><div class="char-count" id="charCount">0 / 5000</div></div><div class="section-title">${t('noticeImgs')}</div><div class="avatar-options" id="imgList"></div><input type="file" id="noticeImgFile" accept="image/*" multiple><label class="upload-btn" for="noticeImgFile">${t('noticeChooseImgs')}</label><div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="${t('noticeImgUrlPh')}"></div><div class="section-title">${t('noticeWhen')}</div><div class="form-row"><select id="noticeWhen"><option value="now">${t('noticeWhenNow')}</option><option value="3days">${t('noticeWhen3d')}</option></select></div><button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">${t('noticeSubmit')}</button><div class="err" id="noticeErr"></div></div></div></div>`;
+    const ta = document.getElementById('noticeText'), cc = document.getElementById('charCount');
+    ta.addEventListener('input', () => { const len = ta.value.length; cc.textContent = `${len} / 5000`; cc.classList.toggle('over', len>5000); });
+    const renderImgs = () => {
+      const box = document.getElementById('imgList');
+      box.innerHTML = window._noticeImages.map((src,i) => `<div class="av-opt" style="position:relative;overflow:hidden"><img src="${/^https?:/.test(src)?escapeHtml(src):src}" style="width:100%;height:100%;object-fit:cover"><button style="position:absolute;top:0;right:0;background:#dc2626;color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;cursor:pointer" data-imgidx="${i}">x</button></div>`).join('');
+      box.querySelectorAll('button[data-imgidx]').forEach(b => { b.onclick = e => { e.stopPropagation(); window._noticeImages.splice(+b.dataset.imgidx,1); renderImgs(); }; });
+    };
+    document.getElementById('noticeImgFile').addEventListener('change', async e => {
+      const files = Array.from(e.target.files).slice(0, 5 - window._noticeImages.length);
+      for (const f of files) {
+        if (f.size > 5*1024*1024) { showNotif('5MB'); continue; }
+        try { const dataUrl = await compressImage(f, 800, 800, 0.75); window._noticeImages.push(dataUrl); } catch(err){}
+      }
+      renderImgs(); e.target.value = '';
+    });
+    document.getElementById('noticeImgUrl').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); const url = e.target.value.trim(); if (!url) return; if (window._noticeImages.length >= 5) return; window._noticeImages.push(url); e.target.value = ''; renderImgs(); }
+    });
   });
 }
 
@@ -1078,16 +982,18 @@ async function submitNotice(role){
 }
 
 async function openMyNotices(){
-  const snap = await get(ref(db,'noticePending'));
-  const val = snap.val()||{};
-  const mine = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(p => p.fromUser === me.username).sort((a,b) => b.createdAt-a.createdAt);
-  const body = mine.length === 0 ? `<div class="empty">${t('noApply')}</div>` :
-    mine.map(p => {
-      const status = p.status === 'pending' ? t('noticesTab') : p.status === 'approved' ? t('approve') : p.status === 'rejected' ? t('reject') : t('notifCancel');
-      const time = new Date(p.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
-      return `<div class="log-item"><div class="lt">${p.id} · ${time} · ${status}</div><div class="lm">${escapeHtml((p.text||'').slice(0,80))}</div>${p.status==='pending'?`<button class="btn-ghost" style="margin-top:8px;padding:6px;font-size:12px" data-action="cancelMyNotice" data-arg="${p._key}">${t('notifCancel')}</button>`:''}${p.status==='rejected'?`<div style="font-size:11.5px;color:#f87171;margin-top:6px">${t('reason')}：${escapeHtml(p.rejectReason||t('noReason'))}</div>`:''}</div>`;
-    }).join('');
-  openPage({ title:t('myNotices'), bodyHTML:body });
+  withTransition(t('myNotices'), me.color, async () => {
+    const snap = await get(ref(db,'noticePending'));
+    const val = snap.val()||{};
+    const mine = Object.keys(val).map(k => ({ _key:k, ...val[k] })).filter(p => p.fromUser === me.username).sort((a,b) => b.createdAt-a.createdAt);
+    const body = mine.length === 0 ? `<div class="empty">${t('noApply')}</div>` :
+      mine.map(p => {
+        const status = p.status === 'pending' ? t('noticesTab') : p.status === 'approved' ? t('approve') : p.status === 'rejected' ? t('reject') : t('notifCancel');
+        const time = new Date(p.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW');
+        return `<div class="log-item"><div class="lt">${p.id} · ${time} · ${status}</div><div class="lm">${escapeHtml((p.text||'').slice(0,80))}</div>${p.status==='pending'?`<button class="btn-ghost" style="margin-top:8px;padding:6px;font-size:12px" data-action="cancelMyNotice" data-arg="${p._key}">${t('notifCancel')}</button>`:''}${p.status==='rejected'?`<div style="font-size:11.5px;color:#f87171;margin-top:6px">${t('reason')}：${escapeHtml(p.rejectReason||t('noReason'))}</div>`:''}</div>`;
+      }).join('');
+    openPage({ title:t('myNotices'), bodyHTML:body });
+  });
 }
 async function cancelMyNotice(key){ try { await update(ref(db,'noticePending/'+key), { status:'cancelled' }); showNotif(t('notifCancel')); openMyNotices(); } catch(e){ showNotif(t('notifActionFail')); } }
 
@@ -1166,7 +1072,9 @@ function showLinkWarning(url){
 function linkContinue(){ if (pendingLink) window.open(pendingLink,'_blank','noopener'); linkCancel(); }
 function linkCancel(){ const el = document.getElementById('linkWarnOverlay'); if (el) el.remove(); pendingLink = ''; }
 
-/* ============ 渲染聊天 ============ */
+/* 加密訊息狀態 */
+let encState = {};
+
 function render(){
   if (messages.length === 0) { chatBox.innerHTML = `<div class="empty">${t('emptyMsg')}</div>`; return; }
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
@@ -1189,8 +1097,7 @@ function render(){
     } else if (m.type === 'location') {
       body = `<div class="loc-msg" data-action="openLocation" data-arg="${m.lat},${m.lng}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lng}&zoom=15&size=220x150&maptype=mapnik&markers=${m.lat},${m.lng},red-pushpin"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`;
     } else if (m.encrypted) {
-      const isOwner = me && m.username === me.username;
-      if (isOwner) {
+      if (isMe) {
         let textHTML = escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
         body = `<div class="enc-msg"><span style="font-size:10.5px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;align-self:flex-start">${t('encTag')}</span>${textHTML}</div>`;
       } else {
@@ -1217,9 +1124,6 @@ function render(){
   }).join('');
   if (atBottom && !searchKeyword) chatBox.scrollTop = chatBox.scrollHeight;
 }
-
-/* 加密訊息：逐字揭示 */
-let encState = {};  // { msgId: index }
 
 function renderEncryptedBody(m){
   const chars = Array.from(m.text || '');
@@ -1296,7 +1200,16 @@ async function restoreMsg(msgId){ if (me.role !== 'superadmin' && me.role !== 'a
 async function purgeMsg(msgId){ if (me.role !== 'superadmin' && me.role !== 'admin') return; const snap = await get(query(ref(db,'messages'), limitToLast(300))); const val = snap.val()||{}; const key = Object.keys(val).find(k => val[k].id === msgId); if (!key) return; await remove(ref(db,'messages/'+key)); }
 
 function closePage(){ pageRoot.innerHTML = ''; banDraft = {}; }
-function openPage({ title, bodyHTML, heroHTML }){ pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`; }
+function openPage({ title, bodyHTML, heroHTML }){
+  const overlay = document.createElement('div');
+  overlay.id = 'loadingOverlay';
+  overlay.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${(me&&me.color)||'#3b82f6'}"></div><div class="bg"></div><div class="loadText">${t('loadingTo')} ${escapeHtml(title)}</div></div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    overlay.remove();
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`;
+  }, 1500);
+}
 
 async function openProfilePage(username, isSelf){
   const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) { showNotif(t('noUser')); return; }
@@ -1307,43 +1220,48 @@ async function openProfilePage(username, isSelf){
   const avatarHTML = u.avatar ? (String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar) : escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
 
   if (isSelf) {
-    const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${pickTextColor(bgColor)}"><div class="hero-avatar" style="background:${bgColor};color:${pickTextColor(bgColor)}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
+    const textColor = pickTextColor(bgColor);
+    const heroHTML = `<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">#${u.seat} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
     let bodyHTML = `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">${t('saveName')}</button><div class="err" id="nameErr"></div><div class="ok-msg" id="nameOk"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*" capture="environment"><label class="upload-btn" for="avatarFile">${t('uploadAvatar')}</label><div class="err" id="avatarErr"></div><div class="ok-msg" id="avatarOk"></div><div class="section-title">${t('editPwd')}</div><div class="form-row"><input type="password" id="oldPwd" placeholder="${t('oldPwd')}"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="${t('newPwd')}"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="${t('confirmPwd')}"></div><button class="btn-primary" data-action="savePassword">${t('savePwd')}</button><div class="err" id="pwdErr"></div><div class="ok-msg" id="pwdOk"></div><button class="btn-ghost" data-action="openMyLogs">${t('myLogs')}</button><button class="btn-ghost" data-action="openMyNotices">${t('myNotices')}</button><div class="section-title" style="margin-top:28px">${t('about')}</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">${t('author')}</div><div class="ai-sub">${t('authorName')}</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">${t('thanks')}</div><div class="ai-sub">${thanksList.length > 0 ? thanksList.length : t('thanksEmpty')}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">${t('versions')}</div><div class="ai-sub">${t('currentVersion')}</div></div></div><div class="ai-arrow">›</div></div>`;
     openPage({ title: t('profileTitle'), heroHTML, bodyHTML });
     setTimeout(() => { const f = document.getElementById('avatarFile'); if (f) f.onchange = onAvatarFileChange; }, 0);
   } else {
-    // 別人的主頁：用 3D 卡片
     const light = lightenColor(bgColor, 40);
     const dark = darkenColor(bgColor, 20);
     const textColor = pickTextColor(dark);
-    const pageHTML = `
-      <div class="fullPage">
-        <div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div>
-        <div class="fp-body">
-          <div class="profile3dWrap">
-            <div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)">
-              <div class="glass"></div>
-              <div class="p3content">
-                <span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span>
-                <span class="p3text" style="color:${textColor};opacity:.85">#${u.seat} · ${roleLabel}</span>
-              </div>
-              <div class="p3logo">
-                <span class="circle c1" style="background:${hexA(bgColor,.2)}"></span>
-                <span class="circle c2" style="background:${hexA(bgColor,.2)}"></span>
-                <span class="circle c3" style="background:${hexA(bgColor,.2)}"></span>
-                <span class="circle c4" style="background:${hexA(bgColor,.2)}"></span>
-                <span class="circle c5" style="background:${bgColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:900">${avatarHTML}</span>
+    const overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.innerHTML = `<div class="loadCard"><div class="blob" style="background-color:${bgColor}"></div><div class="bg"></div><div class="loadText">${t('loadingTo')} ${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div>`;
+    document.body.appendChild(overlay);
+    setTimeout(() => {
+      overlay.remove();
+      pageRoot.innerHTML = `
+        <div class="fullPage">
+          <div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('profileOther')}</div></div>
+          <div class="fp-body">
+            <div class="profile3dWrap">
+              <div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)">
+                <div class="glass"></div>
+                <div class="p3content">
+                  <span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span>
+                  <span class="p3text" style="color:${textColor};opacity:.85">#${u.seat} · ${roleLabel}</span>
+                </div>
+                <div class="p3logo">
+                  <span class="circle c1" style="background:${hexA(bgColor,.2)}"></span>
+                  <span class="circle c2" style="background:${hexA(bgColor,.2)}"></span>
+                  <span class="circle c3" style="background:${hexA(bgColor,.2)}"></span>
+                  <span class="circle c4" style="background:${hexA(bgColor,.2)}"></span>
+                  <span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avatarHTML}</span>
+                </div>
               </div>
             </div>
+            <div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">${t('cantView')}</div>
           </div>
-          <div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">${t('cantView')}</div>
-        </div>
-      </div>`;
-    pageRoot.innerHTML = pageHTML;
+        </div>`;
+    }, 1500);
   }
 }
 
-/* 顏色工具 */
 function pickTextColor(hex){ const h = String(hex).replace('#',''); if (h.length !== 6) return '#fff'; const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); const lum = (0.299*r + 0.587*g + 0.114*b)/255; return lum > 0.6 ? '#111' : '#fff'; }
 function hexA(hex, a){ const h = String(hex).replace('#',''); if (h.length !== 6) return `rgba(59,130,246,${a})`; const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); return `rgba(${r},${g},${b},${a})`; }
 function lightenColor(hex, amt){ const h = String(hex).replace('#',''); if (h.length !== 6) return hex; let r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); r = Math.min(255, r+amt); g = Math.min(255, g+amt); b = Math.min(255, b+amt); return '#'+[r,g,b].map(x => x.toString(16).padStart(2,'0')).join(''); }
@@ -1356,28 +1274,49 @@ async function savePassword(){ const oldPwd = document.getElementById('oldPwd').
 
 async function openThanksPage(){
   const isAdmin = me.role === 'superadmin' || me.role === 'admin';
-  const items = thanksList.length === 0 ? `<div class="thanks-empty">${t('thanksEmpty')}</div>` : thanksList.map(x => `<div class="thanks-item"><div class="ti-name">${escapeHtml(x.name)}</div><div class="ti-by">${t('thanksBy')} ${escapeHtml(x.byName||x.by)}</div></div>`).join('');
-  const adminForm = isAdmin ? `<div class="section-title">${t('thanksAdd')}</div><div class="form-row"><input type="text" id="thanksName" placeholder="${t('thanksNamePh')}" maxlength="30"></div><button class="btn-primary" data-action="submitThanks">${t('thanksSubmit')}</button><div class="err" id="thanksErr"></div>` : '';
-  openPage({ title: t('thanks'), bodyHTML: items + adminForm });
+  withTransition(t('thanks'), me.color, () => {
+    const items = thanksList.length === 0 ? `<div class="thanks-empty">${t('thanksEmpty')}</div>` : thanksList.map(x => `<div class="thanks-item"><div class="ti-name">${escapeHtml(x.name)}</div><div class="ti-by">${t('thanksBy')} ${escapeHtml(x.byName||x.by)}</div></div>`).join('');
+    const adminForm = isAdmin ? `<div class="section-title">${t('thanksAdd')}</div><div class="form-row"><input type="text" id="thanksName" placeholder="${t('thanksNamePh')}" maxlength="30"></div><button class="btn-primary" data-action="submitThanks">${t('thanksSubmit')}</button><div class="err" id="thanksErr"></div>` : '';
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('thanks')}</div></div><div class="fp-body"><div class="profile-content">${items + adminForm}</div></div></div>`;
+  });
 }
 async function submitThanks(){ if (me.role !== 'superadmin' && me.role !== 'admin') return; const name = document.getElementById('thanksName').value.trim(); const errEl = document.getElementById('thanksErr'); if (!name) { if (errEl) errEl.textContent = t('thanksNameEmpty'); return; } await push(ref(db,'thanks'), { name, by:me.username, byName:me.displayName, createdAt:Date.now() }); showNotif(t('thanksAdded')); openThanksPage(); }
 
 async function openVersionPage(){
-  const body = VERSION_HISTORY.map((v,i) => `<div class="version-item ${i===0?'latest':''}"><div class="vi-head"><span class="vi-ver">${v.ver}</span>${i===0?'<span class="vi-badge">'+t('latestBadge')+'</span>':''}${v.date?'<span class="vi-date">'+v.date+'</span>':''}</div><div class="vi-changes"><ul>${v.changes.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
-  openPage({ title: t('versions'), bodyHTML: body });
+  withTransition(t('versions'), me.color, () => {
+    const body = VERSION_HISTORY.map((v,i) => `<div class="version-item ${i===0?'latest':''}"><div class="vi-head"><span class="vi-ver">${v.ver}</span>${i===0?'<span class="vi-badge">'+t('latestBadge')+'</span>':''}${v.date?'<span class="vi-date">'+v.date+'</span>':''}</div><div class="vi-changes"><ul>${v.changes.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('versions')}</div></div><div class="fp-body"><div class="profile-content">${body}</div></div></div>`;
+  });
 }
 
-async function openMyLogs(){ const snap = await get(query(ref(db,'logs'), limitToLast(500))); const val = snap.val()||{}; const list = Object.values(val).filter(l => l.username === me.username).sort((a,b) => b.createdAt-a.createdAt); openLogsPage(t('myLogs'), list); }
-async function openUserLogs(username){ const snap = await get(query(ref(db,'logs'), limitToLast(500))); const val = snap.val()||{}; const list = Object.values(val).filter(l => l.username === username).sort((a,b) => b.createdAt-a.createdAt); openLogsPage(username + ' - ' + t('myLogs'), list); }
-function openLogsPage(title, logs){ const body = logs.length === 0 ? `<div class="empty">${t('noLogs')}</div>` : logs.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join(''); openPage({ title, bodyHTML: `<div class="section-title">${logs.length}</div>` + body }); }
+async function openMyLogs(){
+  withTransition(t('myLogs'), me.color, async () => {
+    const snap = await get(query(ref(db,'logs'), limitToLast(500)));
+    const val = snap.val()||{};
+    const list = Object.values(val).filter(l => l.username === me.username).sort((a,b) => b.createdAt-a.createdAt);
+    const body = list.length === 0 ? `<div class="empty">${t('noLogs')}</div>` : list.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join('');
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('myLogs')}</div></div><div class="fp-body"><div class="profile-content">${body}</div></div></div>`;
+  });
+}
+async function openUserLogs(username){
+  withTransition(t('myLogs'), me.color, async () => {
+    const snap = await get(query(ref(db,'logs'), limitToLast(500)));
+    const val = snap.val()||{};
+    const list = Object.values(val).filter(l => l.username === username).sort((a,b) => b.createdAt-a.createdAt);
+    const body = list.length === 0 ? `<div class="empty">${t('noLogs')}</div>` : list.map(l => `<div class="log-item action-${l.action}"><div class="lt">${new Date(l.createdAt).toLocaleString(lang==='en'?'en-US':'zh-TW')} · ${escapeHtml(l.username)} (#${l.seat})</div><div class="lm">${escapeHtml(l.detail||l.action)}</div></div>`).join('');
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${username}</div></div><div class="fp-body"><div class="profile-content">${body}</div></div></div>`;
+  });
+}
 
 function openAdminPage(tab){
   if (me.role !== 'superadmin' && me.role !== 'admin') return;
-  const isSuper = me.role === 'superadmin';
-  const pendingCount = pendingNotices.length;
-  const reqCount = Object.values(requests).filter(r => r.status === 'pending').length;
-  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('adminPanel')}</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?t('superAdmin'):t('adminRole')}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">${t('usersTab')}</button><button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">${t('noticesTab')}${pendingCount?' ('+pendingCount+')':''}</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">${t('requestsTab')}${reqCount?' ('+reqCount+')':''}</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">${t('logsTab')}</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
-  renderAdminTab(tab);
+  withTransition(t('adminPanel'), me.color, () => {
+    const isSuper = me.role === 'superadmin';
+    const pendingCount = pendingNotices.length;
+    const reqCount = Object.values(requests).filter(r => r.status === 'pending').length;
+    pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${t('adminPanel')}</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?t('superAdmin'):t('adminRole')}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">${t('usersTab')}</button><button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">${t('noticesTab')}${pendingCount?' ('+pendingCount+')':''}</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">${t('requestsTab')}${reqCount?' ('+reqCount+')':''}</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">${t('logsTab')}</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+    renderAdminTab(tab);
+  });
 }
 async function renderAdminTab(tab){
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.arg === tab));
@@ -1435,7 +1374,9 @@ async function renderAllLogs(){
 
 async function openUserDetail(username){
   const snap = await get(child(ref(db),'users/'+username)); if (!snap.exists()) return;
-  renderUserDetailPage(snap.val());
+  withTransition(username + t('userDetail'), (snap.val().color)||'#3b82f6', () => {
+    renderUserDetailPage(snap.val());
+  });
 }
 function renderUserDetailPage(u){
   const isSuper = me.role === 'superadmin';
@@ -1463,7 +1404,7 @@ function renderUserDetailPage(u){
   if (canEdit) bodyHTML += `<div class="section-title">${t('editName')}</div><div class="form-row"><input type="text" id="au_displayName" value="${escapeHtml(u.displayName||u.username)}" maxlength="20"></div><div class="section-title">Color (hex)</div><div class="form-row"><input type="text" id="au_color" value="${u.color||'#3b82f6'}"></div><div class="section-title">${t('editAvatar')}</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e => `<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="adminPickEmoji" data-arg="${u.username}" data-arg2="">x</div></div><button class="btn-primary" data-action="adminSaveProfile" data-arg="${u.username}">${t('saved')}</button><div class="err" id="auErr"></div><div class="ok-msg" id="auOk"></div>`;
   if (canGrant) { bodyHTML += `<div class="section-title">${t('adminRole')}</div>`; if (isTargetAdmin && !isTargetSuper) bodyHTML += `<button class="btn-ghost" data-action="adminRevoke" data-arg="${u.username}">${t('revokeAdmin')}</button>`; else if (!isTargetAdmin) bodyHTML += `<button class="btn-primary" data-action="adminGrant" data-arg="${u.username}">${t('grantAdmin')}</button>`; }
   bodyHTML += `<button class="btn-ghost" data-action="openUserLogs" data-arg="${u.username}">${t('viewLogs')}</button>`;
-  openPage({ title: u.displayName + t('userDetail'), heroHTML, bodyHTML });
+  pageRoot.innerHTML = `<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)}${t('userDetail')}</div></div><div class="fp-body">${heroHTML}<div class="profile-content">${bodyHTML}</div></div></div>`;
 }
 function setBanType(username, type){ if (!banDraft[username]) banDraft[username] = { type:'light', reason:'' }; const r = document.getElementById('au_banReason'); if (r) banDraft[username].reason = r.value; banDraft[username].type = type; openUserDetail(username); }
 async function confirmBan(username){ if (me.role !== 'superadmin') return; const type = (banDraft[username] && banDraft[username].type) || 'light'; const r = document.getElementById('au_banReason'); const reason = r ? r.value.trim() : ((banDraft[username] && banDraft[username].reason) || '').trim(); const errEl = document.getElementById('banErr'); if (!reason) { if (errEl) errEl.textContent = t('banReasonEmpty'); return; } await update(ref(db,'users/'+username), { banned: { type, reason, bannedAt:Date.now(), bannedBy:me.username } }); delete banDraft[username]; showNotif(t('notifBanned') + ' ' + username); openUserDetail(username); }
