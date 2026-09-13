@@ -172,7 +172,6 @@ input[type=file]{display:none}
 .badge-super{background:rgba(239,68,68,.3);color:#fca5a5}
 .badge-ai{background:rgba(102,204,255,.25);color:#66ccff}
 .badge-class{background:rgba(56,189,248,.18);color:#38bdf8}
-/* 黑客日誌風格 */
 .term-log{background:#000;color:#c0c0c0;font-family:Consolas,"Courier New",monospace;font-size:12.5px;line-height:1.6;padding:14px;border-radius:8px;overflow-x:auto}
 .term-log .tl{white-space:pre-wrap;word-break:break-all}
 .term-log .t-time{color:#5f8787}
@@ -230,7 +229,6 @@ input[type=file]{display:none}
 .pending-item .pi-from{font-size:13px;font-weight:600}
 .pending-item .pi-time{font-size:11px;color:var(--text-sub)}
 .pending-item .pi-content{font-size:12.5px;color:var(--text-main);line-height:1.6;word-break:break-word;padding:8px;background:rgba(0,0,0,.15);border-radius:8px;margin-top:8px;max-height:240px;overflow-y:auto}
-/* BB8 */
 .bb8-toggle{--toggle-size:8px;--toggle-width:10.625em;--toggle-height:5.625em;--toggle-offset:calc((var(--toggle-height) - var(--bb8-diameter))/2);--toggle-bg:linear-gradient(#2c4770,#070e2b 35%,#628cac 50% 70%,#a6c5d4) no-repeat;--bb8-diameter:4.375em;--radius:99em;--accent:#de7d2f;--bb8-bg:#fff;display:inline-block;cursor:pointer;font-size:var(--toggle-size)}
 .bb8-toggle *{box-sizing:border-box}
 .bb8-toggle__checkbox{appearance:none;display:none}
@@ -517,7 +515,6 @@ const AI_NAME = '小喆AI';
 const AI_COLOR = '#66ccff';
 const AI_BIO_DEFAULT = '我是小喆AI，班級聊天室的專屬助手。我可以讀取群組裡的對話，回答大家的問題。如果聊天室裡有人吵架、有人講了什麼好笑的話、或你想知道剛剛大家在聊什麼，都可以問我。';
 
-/* 版本檢查 */
 let versionChecking=false,versionMismatchShown=false;
 async function checkVersion(){ if(versionChecking||versionMismatchShown)return; versionChecking=true; try{const snap=await get(ref(db,'meta/version'));if(snap.exists()){const sv=String(snap.val()||'').trim();if(sv&&sv!==CURRENT_VERSION)showVersionModal(sv);}}catch(e){} finally{versionChecking=false;} }
 function showVersionModal(sv){ if(versionMismatchShown)return;versionMismatchShown=true;const old=document.getElementById('versionModal');if(old)old.remove();const m=document.createElement('div');m.id='versionModal';m.innerHTML=`<div class="vm-card"><h3>⚠ 你的網站不是最新版本</h3><p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p><p>最新版本：<b style="color:#4ade80">${sv}</b></p><div class="vm-btns"><button class="vm-go" id="vmGoBtn">前往新版本</button><button class="vm-exit" id="vmExitBtn">退出網站</button></div></div>`;document.body.appendChild(m);document.getElementById('vmGoBtn').onclick=()=>{savePageState();saveAllDrafts();const url=new URL(location.href);url.searchParams.set('_v',Date.now().toString());location.replace(url.toString());};document.getElementById('vmExitBtn').onclick=()=>{try{window.close();}catch(e){}setTimeout(()=>{location.href='about:blank';},200);}; }
@@ -760,7 +757,7 @@ function pickMention(username){ const v=msgInput.value,cur=msgInput.selectionSta
 
 function subscribeAIMode(){ if(unsubAIMode)unsubAIMode();unsubAIMode=onValue(ref(db,'aiChatMode'),snap=>{const v=snap.val();aiChatMode=!!(v&&v.active);}); }
 async function setAIMode(active){ await set(ref(db,'aiChatMode'),{active,updatedAt:Date.now(),by:me?me.username:''}); }
-  /* AI 觸發 */
+
 async function handleAITrigger(text,allowSkip){
   if(aiBusy)return;
   const now=Date.now();if(now-lastAITime<AI_COOLDOWN)return;
@@ -791,7 +788,7 @@ async function handleAITrigger(text,allowSkip){
     const aiSnap2=await get(ref(db,'aiMode'));const aiMap=aiSnap2.exists()?aiSnap2.val():{};
     const userSummary=userList.map(u=>{
       const parts=[`username=${u.username}`,`displayName=${u.displayName||u.username}`];
-      if(u.cls)parts.push(`class=${u.cls}`);
+      if(u.class)parts.push(`class=${u.class}`);
       if(u.role==='ai')parts.push(`role=ai`);
       else if(u.role==='superadmin')parts.push(`role=superadmin`);
       else if(u.role==='admin')parts.push(`role=admin`);
@@ -976,7 +973,7 @@ async function runDailySummary(){
     const allSnap=await get(ref(db,'aiDailySummary'));
     if(allSnap.exists()){const allVal=allSnap.val();const keys=Object.keys(allVal).sort();while(keys.length>30){await remove(ref(db,'aiDailySummary/'+keys.shift()));}}
     const memSnap=await get(ref(db,'aiMemory/messages'));
-    if(memSnap.exists()){const memVal=memSnap.val();for(const k in memVal){if(memVal[k].time>=yStart&&memVal[k].time<yEnd)await remove(ref(db,'aiMemory/messages/'+k);}}
+    if(memSnap.exists()){const memVal=memSnap.val();for(const k in memVal){if(memVal[k].time>=yStart&&memVal[k].time<yEnd)await remove(ref(db,'aiMemory/messages/'+k));}}
   }catch(e){console.warn(e);}
 }
 function showAIConfirm(cmd,asker){
@@ -1063,7 +1060,6 @@ async function executeAIAction(cmd){
   }catch(e){return {ok:false,error:e.message};}
 }
 
-/* 訂閱 */
 function subscribeMessages(){
   if(unsubMsg)unsubMsg();
   unsubMsg=onValue(query(ref(db,'messages'),limitToLast(300)),snap=>{
@@ -1091,7 +1087,6 @@ function renderClassStatus(){
   classStatus.innerHTML=html;
 }
 
-/* 已讀邏輯（新舊兼容） */
 function isNoticeReadBy(noticeKey,username){
   const v=allNoticeReads[noticeKey];
   if(!v)return false;
@@ -1239,7 +1234,6 @@ function showLinkWarning(url){ pendingLink=url;const div=document.createElement(
 function linkContinue(){ if(pendingLink)window.open(pendingLink,'_blank','noopener');linkCancel(); }
 function linkCancel(){ const el=document.getElementById('linkWarnOverlay');if(el)el.remove();pendingLink=''; }
 
-/* 投票 */
 window._pollDraft={name:'',options:['',''],mode:'single',max:'',optMode:'one',whenResult:'start',whoResult:'all',otherSee:'pct',duration:'24'};
 async function openPollCreate(){
   if(!me)return;
@@ -1351,7 +1345,6 @@ function pollConfirmVote(msgId){ submitPollVote(msgId); }
 function requestDeletePoll(msgId){ const reason=prompt(t('deleteReasonPh'));if(!reason||!reason.trim())return;push(ref(db,'requests'),{type:'delete',msgId,reason:reason.trim(),from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'}).then(()=>showNotif(t('requestSent'))); }
 function reportPoll(msgId){ const reason=prompt(t('reportReasonPh'));if(!reason||!reason.trim())return;push(ref(db,'requests'),{type:'report',msgId,reason:reason.trim(),from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'}).then(()=>showNotif(t('reportSent'))); }
 
-/* 渲染聊天 */
 let encState={};
 function render(){
   if(messages.length===0){chatBox.innerHTML=`<div class="empty">${t('emptyMsg')}</div>`;return;}
@@ -1583,6 +1576,7 @@ function renderAccountManage(){
   <div class="err" id="naErr"></div><div class="ok-msg" id="naOk"></div>
   <div class="section-title">${t('accountManage')}</div>`;
 }
+function openAccountManage(){ openAdminPage('accounts'); }
 async function submitCreateAccount(){
   if(me.role!=='superadmin')return;
   const errEl=document.getElementById('naErr'),okEl=document.getElementById('naOk');
@@ -1759,4 +1753,3 @@ applyTheme();applyLang();applyI18n();
 </script>
 </body>
 </html>
-  
