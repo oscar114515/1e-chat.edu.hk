@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.9.2</title>
+<title>班級聊天室 v1.10</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -22,6 +22,12 @@ body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;background:var(--
 #loginBtn:disabled{opacity:.6}
 #loginError{color:#f87171;font-size:13px;text-align:center;min-height:18px;margin-bottom:8px;white-space:pre-wrap}
 #loginVersion{text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px}
+#feedbackToggle{background:transparent;border:none;color:var(--text-sub);font-size:12px;cursor:pointer;font-family:inherit;margin-top:10px;width:100%;text-align:center;padding:8px}
+#feedbackToggle:hover{color:var(--text-main)}
+#feedbackBox{margin-top:10px;padding:12px;background:var(--bg-input);border-radius:10px;border:1px solid var(--border)}
+#feedbackBox input,#feedbackBox textarea{width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-card);color:var(--text-main);font-size:13px;outline:none;font-family:inherit;margin-bottom:8px}
+#feedbackBox textarea{min-height:70px;resize:vertical}
+#feedbackBox .fb-btn{width:100%;padding:9px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
 #chatScreen{display:flex;flex-direction:column;height:100vh;height:100dvh}
 header{background:var(--bg-header);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);flex-shrink:0;min-height:46px}
 header .title{font-size:14px;font-weight:600;white-space:nowrap;flex-shrink:0}
@@ -83,6 +89,7 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .msg-tools button{background:rgba(148,163,184,.15);color:var(--text-sub);border:none;padding:2px 7px;border-radius:6px;font-size:10.5px;cursor:pointer;font-family:inherit}
 .msg-tools button:hover{background:rgba(148,163,184,.3);color:var(--text-main)}
 .msg-tools button.danger:hover{background:rgba(220,38,38,.3);color:#fca5a5}
+.msg-checking{font-size:10.5px;color:#fbbf24;padding:2px 6px;font-style:italic}
 #inputBar{padding:10px 12px 4px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;position:relative;flex-wrap:wrap}
 #micBtn{width:42px;height:42px;border-radius:50%;border:none;background:rgba(148,163,184,.15);color:var(--text-main);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 #micBtn.recording{background:#dc2626;color:#fff}
@@ -101,7 +108,8 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #bottomNav .nav-item:hover{background:rgba(148,163,184,.08);color:var(--text-main)}
 #bottomNav .nav-item .nav-icon{font-size:18px;line-height:1}
 #bottomNav .nav-item .nav-badge{position:absolute;top:4px;right:calc(50% - 20px);min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:8px;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
-#plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50}
+#plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;animation:panelIn .22s cubic-bezier(.4,0,.2,1)}
+@keyframes panelIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
 #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:12px}
 #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
 #plusPanel .pi .pic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8}
@@ -159,6 +167,7 @@ input[type=file]{display:none}
 .badge-admin{background:rgba(139,92,246,.25);color:#c4b5fd}
 .badge-super{background:rgba(239,68,68,.3);color:#fca5a5}
 .badge-class{background:rgba(56,189,248,.18);color:#38bdf8}
+.badge-feedback{background:rgba(251,191,36,.25);color:#fbbf24}
 .term-log{background:#000;color:#c0c0c0;font-family:Consolas,"Courier New",monospace;font-size:12.5px;line-height:1.6;padding:14px;border-radius:8px;overflow-x:auto}
 .term-log .tl{white-space:pre-wrap;word-break:break-all}
 .term-log .t-time{color:#5f8787}
@@ -174,6 +183,7 @@ input[type=file]{display:none}
 .term-log .t-ai .t-act{color:#66ccff}
 .term-log .t-account .t-act{color:#d7af5f}
 .term-log .t-group .t-act{color:#d787af}
+.term-log .t-feedback .t-act{color:#fbbf24}
 .pending-item{padding:12px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px}
 .pending-item .pi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .pending-item .pi-from{font-size:13px;font-weight:600}
@@ -271,7 +281,9 @@ input[type=file]{display:none}
 .version-item .vi-changes ul{margin-left:16px}
 .enc-msg{display:flex;flex-direction:column;gap:8px;user-select:none}
 .enc-display{font-family:Consolas,monospace;font-size:18px;letter-spacing:6px;padding:6px 0;white-space:pre-wrap;word-break:break-all;min-height:30px}
-.enc-controls{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:11.5px;opacity:.9}
+.enc-bar{height:3px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden}
+.enc-bar>div{height:100%;background:rgba(255,255,255,.7);width:0;transition:width .25s ease}
+.enc-controls{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:11.5px;opacity:.9;flex-wrap:wrap}
 .enc-controls button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit}
 .enc-controls button:disabled{opacity:.35;cursor:default}
 .enc-progress{font-family:Consolas,monospace;font-size:11px}
@@ -299,9 +311,11 @@ input[type=file]{display:none}
 .group-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg-app)}
 .group-item:hover{background:rgba(148,163,184,.08)}
 .group-item .gi-avatar{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#8b5cf6,#6366f1)}
+.group-item .gi-avatar.notify{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
 .group-item .gi-info{flex:1;min-width:0}
 .group-item .gi-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .group-item .gi-sub{font-size:12px;color:var(--text-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.group-item .gi-badge{min-width:20px;height:20px;background:#ef4444;color:#fff;border-radius:10px;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0 6px;font-weight:700;flex-shrink:0}
 .member-pick-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer}
 .member-pick-item:hover{background:rgba(148,163,184,.08)}
 .member-pick-item.selected{background:rgba(59,130,246,.15)}
@@ -320,6 +334,83 @@ input[type=file]{display:none}
 #versionModal button{padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
 #versionModal .vm-go{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
 #versionModal .vm-exit{background:rgba(220,38,38,.2);color:#fca5a5}
+#systemNoticeOverlay{position:fixed;inset:0;background:var(--bg-app);z-index:350;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+#systemNoticeOverlay .sn-header{padding:12px 16px;display:flex;align-items:center;gap:12px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0}
+#systemNoticeOverlay .sn-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+#systemNoticeOverlay .sn-title{font-size:16px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#systemNoticeOverlay .sn-body{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.sn-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.sn-card .sn-card-title{font-size:16px;font-weight:700;margin-bottom:8px;color:#fbbf24}
+.sn-card .sn-card-time{font-size:11px;color:var(--text-muted);margin-bottom:10px}
+.sn-card .sn-card-body{font-size:14px;line-height:1.7;color:var(--text-main)}
+.sn-card .sn-card-actions{display:flex;gap:8px;margin-top:14px}
+.sn-card .sn-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.sn-card .sn-card-actions .sn-appeal{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.sn-card .sn-card-actions .sn-confirm{background:rgba(148,163,184,.2);color:var(--text-main)}
+.sn-empty{text-align:center;color:var(--text-muted);padding:60px 20px;font-size:14px}
+.admin-feedback{padding:14px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:12px}
+.admin-feedback .af-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.admin-feedback .af-from{font-size:14px;font-weight:600}
+.admin-feedback .af-status{font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700}
+.admin-feedback .af-status.pending{background:rgba(251,191,36,.25);color:#fbbf24}
+.admin-feedback .af-status.processing{background:rgba(59,130,246,.25);color:#60a5fa}
+.admin-feedback .af-status.done{background:rgba(74,222,128,.25);color:#4ade80}
+.admin-feedback .af-body{font-size:13px;line-height:1.6;color:var(--text-main);padding:10px;background:rgba(0,0,0,.15);border-radius:8px;margin-top:8px;word-break:break-word}
+.admin-feedback .af-time{font-size:11px;color:var(--text-muted);margin-top:6px}
+.admin-feedback .af-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.admin-feedback .af-actions button{flex:1;min-width:80px;padding:8px;border:none;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+/* ===== v1.10 錄音遮罩 ===== */
+#recordingOverlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(2px);animation:fadeInOv .18s ease}
+#recordingOverlay .rec-timer{font-size:52px;font-weight:700;font-family:Consolas,monospace;letter-spacing:2px}
+#recordingOverlay .rec-wave{display:flex;align-items:flex-end;gap:4px;height:46px;margin-top:18px}
+#recordingOverlay .rec-wave span{width:5px;border-radius:3px;background:#f87171;animation:recWave 1s ease-in-out infinite}
+#recordingOverlay .rec-wave span:nth-child(1){animation-delay:0s}
+#recordingOverlay .rec-wave span:nth-child(2){animation-delay:.1s}
+#recordingOverlay .rec-wave span:nth-child(3){animation-delay:.2s}
+#recordingOverlay .rec-wave span:nth-child(4){animation-delay:.3s}
+#recordingOverlay .rec-wave span:nth-child(5){animation-delay:.4s}
+#recordingOverlay .rec-hint{font-size:14px;margin-top:20px;opacity:.85}
+#recordingOverlay .rec-hint .rec-cancel-tip{color:#fca5a5;font-weight:700}
+#recordingOverlay.cancel .rec-wave span{background:#94a3b8}
+#recordingOverlay.cancel .rec-timer{color:#fca5a5}
+@keyframes recWave{0%,100%{height:8px}50%{height:40px}}
+@keyframes fadeInOv{from{opacity:0}to{opacity:1}}
+/* ===== v1.10 公告輪播 ===== */
+#noticeFullscreen .car-stage{flex:1;min-height:0;display:flex;align-items:center;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:20px 12vw;scrollbar-width:none}
+#noticeFullscreen .car-stage::-webkit-scrollbar{display:none}
+#noticeFullscreen .car-card{flex:0 0 70vw;max-width:520px;background:var(--bg-card);color:var(--text-main);border-radius:16px;padding:20px;scroll-snap-align:center;overflow-y:auto;max-height:75vh;border:1px solid var(--border);box-shadow:0 8px 30px rgba(0,0,0,.25);transform:scale(.92);opacity:.55;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .35s ease}
+#noticeFullscreen .car-card.active{transform:scale(1);opacity:1}
+#noticeFullscreen .car-card h3{font-size:15px;color:#fbbf24;margin-bottom:10px}
+#noticeFullscreen .car-card .car-content{font-size:14px;line-height:1.7;word-break:break-word}
+#noticeFullscreen .car-actions{padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-card);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+#noticeFullscreen .car-actions button{flex:1;min-width:100px;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+#noticeFullscreen .car-progress{text-align:center;font-size:12px;color:var(--text-sub);padding:8px 0}
+#noticeFullscreen .car-nav{display:flex;justify-content:center;gap:10px;padding:0 0 6px}
+#noticeFullscreen .car-nav button{background:rgba(148,163,184,.18);color:var(--text-main);border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;font-family:inherit}
+#noticeFullscreen .car-nav button:hover{background:rgba(148,163,184,.35)}
+/* ===== v1.10 投票 ===== */
+.poll-box{min-width:240px;max-width:100%;display:flex;flex-direction:column;gap:10px}
+.poll-title{font-size:16px;font-weight:700;line-height:1.4;word-break:break-word}
+.poll-options{display:flex;flex-direction:column;gap:8px}
+.poll-opt{position:relative;display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.12);cursor:pointer;overflow:hidden;user-select:none;transition:background .2s ease}
+.poll-opt:hover{background:rgba(255,255,255,.2)}
+.poll-opt.disabled{cursor:default}
+.poll-opt.disabled:hover{background:rgba(255,255,255,.12)}
+.poll-opt .poll-fill{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.22);width:0;transition:width .45s cubic-bezier(.4,0,.2,1);z-index:0}
+.poll-opt .poll-circle{position:relative;z-index:1;width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.7);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.poll-opt .poll-square{position:relative;z-index:1;width:18px;height:18px;border-radius:4px;border:2px solid rgba(255,255,255,.7);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.poll-opt.selected .poll-circle,.poll-opt.selected .poll-square{background:#fff;border-color:#fff;color:#1c1e21}
+.poll-opt .poll-text{position:relative;z-index:1;flex:1;font-size:13.5px;line-height:1.4;word-break:break-word}
+.poll-opt .poll-pct{position:relative;z-index:1;font-size:12px;font-weight:700;opacity:.95;flex-shrink:0}
+.poll-footer{font-size:11.5px;opacity:.85;display:flex;flex-direction:column;gap:3px}
+.poll-end{color:#fca5a5;font-weight:600}
+.poll-confirm{background:rgba(255,255,255,.9);color:#1c1e21;border:none;padding:7px 12px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;align-self:flex-start}
+body.theme-light .poll-opt{background:rgba(0,0,0,.06)}
+body.theme-light .poll-opt:hover{background:rgba(0,0,0,.1)}
+body.theme-light .poll-opt .poll-fill{background:rgba(59,130,246,.22)}
+body.theme-light .poll-opt .poll-circle,body.theme-light .poll-opt .poll-square{border-color:rgba(0,0,0,.35);color:#1c1e21}
+body.theme-light .poll-opt.selected .poll-circle,body.theme-light .poll-opt.selected .poll-square{background:#3b82f6;border-color:#3b82f6;color:#fff}
+body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 </style>
 </head>
 <body>
@@ -353,7 +444,14 @@ input[type=file]{display:none}
     <div class="field"><input id="loginUsername" placeholder="帳號"></div>
     <div class="field"><input id="loginPassword" type="password" placeholder="密碼"></div>
     <button id="loginBtn" data-action="login">登入</button>
-    <div id="loginVersion">v1.9.2 正式版</div>
+    <button id="feedbackToggle">問題反饋</button>
+    <div id="feedbackBox" class="hidden">
+      <input type="text" id="fbName" placeholder="你的名稱" maxlength="30">
+      <textarea id="fbText" placeholder="請描述你遇到的問題..." maxlength="1000"></textarea>
+      <button class="fb-btn" data-action="submitFeedback">送出</button>
+      <div class="err" id="fbErr"></div>
+    </div>
+    <div id="loginVersion">v1.10 正式版</div>
   </div>
 </div>
 
@@ -361,7 +459,7 @@ input[type=file]{display:none}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.9.2</span>
+      <span class="ver">v1.10</span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
         <div class="bb8-toggle__container">
@@ -395,7 +493,6 @@ input[type=file]{display:none}
 
   <div id="searchBar">
     <input id="searchInput" placeholder="搜尋訊息...">
-    <span id="searchCount"></span>
   </div>
 
   <div id="chatBox"><div class="empty">載入訊息中...</div></div>
@@ -411,16 +508,17 @@ input[type=file]{display:none}
     <div id="plusPanel" class="hidden">
       <div class="pi" data-action="pickImage"><div class="pic">圖片</div><div class="pit">圖片</div></div>
       <div class="pi" data-action="pickFile"><div class="pic">檔案</div><div class="pit">檔案</div></div>
-      <div class="pi" data-action="pickLocation"><div class="pic">位置</div><div class="pit">位置</div></div>
-      <div class="pi" data-action="openNoticeCreate"><div class="pic">公告</div><div class="pit">公告</div></div>
+    <div class="pi" data-action="pickLocation"><div class="pic">位置</div><div class="pit">位置</div></div>
+    <div class="pi" data-action="openPollCreate"><div class="pic">投票</div><div class="pit">投票</div></div>
+    <div class="pi" data-action="openNoticeCreate"><div class="pic">公告</div><div class="pit">公告</div></div>
     </div>
   </div>
 
   <div id="bottomNav">
     <button class="nav-item" data-action="openMyProfile"><span class="nav-icon">👤</span><span>個人主頁</span></button>
-    <button class="nav-item" data-action="openGroupList"><span class="nav-icon">💬</span><span>群聊</span></button>
+    <button class="nav-item" data-action="openGroupList"><span class="nav-icon">💬</span><span>群聊</span><span class="nav-badge hidden" id="navGroupBadge">0</span></button>
     <button class="nav-item" data-action="openAIPrivate"><span class="nav-icon">🤖</span><span>AI 聊天</span></button>
-    <button class="nav-item hidden" id="navAdminBtn" data-action="openAdmin"><span class="nav-icon">⚙️</span><span>管理員</span></button>
+    <button class="nav-item hidden" id="navAdminBtn" data-action="openAdmin"><span class="nav-icon">⚙️</span><span>管理員</span><span class="nav-badge hidden" id="navAdminBadge">0</span></button>
   </div>
 </div>
 
@@ -434,13 +532,16 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.9.2';
+const CURRENT_VERSION='v1.10';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
 const AI_MODEL='dots3-note-prev';
 const AI_SPONSOR='感謝小紅書熱情贊助本次聊天的 API 費用';
 const AI_NAME='小喆AI';
 const AI_COLOR='#66ccff';
+const AI_BIO_DEFAULT='我是小喆AI，班級聊天室的專屬助手。';
+const SYS_NOTICE_NAME='系統通知';
+const SYS_NOTICE_ICON='🔔';
 
 let versionChecking=false,versionMismatchShown=false;
 async function checkVersion(){ if(versionChecking||versionMismatchShown)return;versionChecking=true;try{const snap=await get(ref(db,'meta/version'));if(snap.exists()){const sv=String(snap.val()||'').trim();if(sv&&sv!==CURRENT_VERSION)showVersionModal(sv);}}catch(e){}finally{versionChecking=false;} }
@@ -450,13 +551,14 @@ const $=id=>document.getElementById(id);
 const loginScreen=$('loginScreen'),chatScreen=$('chatScreen');
 const loginUsername=$('loginUsername'),loginPassword=$('loginPassword'),loginBtn=$('loginBtn'),loginError=$('loginError');
 const chatBox=$('chatBox'),msgInput=$('msgInput'),sendBtn=$('sendBtn');
-const classStatus=$('classStatus'),searchInput=$('searchInput'),searchCount=$('searchCount');
+const classStatus=$('classStatus'),searchInput=$('searchInput');
 const mentionPopup=$('mentionPopup');
 const pageRoot=$('pageRoot'),noticeBar=$('noticeBar');
 const plusPanel=$('plusPanel'),plusBtn=$('plusBtn');
 const encToggle=$('encToggle'),encCheckbox=$('encCheckbox');
 const aiRoundBtn=$('aiRoundBtn');
-const navAdminBtn=$('navAdminBtn');
+const navAdminBtn=$('navAdminBtn'),navAdminBadge=$('navAdminBadge');
+const navGroupBadge=$('navGroupBadge');
 
 let me=null;
 let messages=[],unsubMsg=null;
@@ -466,7 +568,9 @@ let notices=[],unsubNotices=null;
 let allNoticeReads={},unsubAllNoticeReads=null;
 let pendingNotices=[],unsubPendingNotices=null;
 let requests={},unsubRequests=null;
+let feedbacks={},unsubFeedbacks=null;
 let myRejections=[],unsubMyRejections=null;
+let systemNotices=[],unsubSystemNotices=null;
 let thanksList=[],unsubThanks=null;
 let metaAIMode='button',unsubMeta=null;
 let searchKeyword='';
@@ -479,9 +583,36 @@ let currentGroupKey=null,currentGroupMsgs=[],unsubGroupMsgs=null;
 let aiPrivateMsgs=[],unsubAIPrivate=null;
 let theme=localStorage.getItem('chat_theme')||'dark';
 let banDraft={};
+let noticeCarouselShown=false;
+let pendingAIConfirm=null;
+let feedbackMode='login';
 
 function applyTheme(){ document.body.classList.toggle('theme-light',theme==='light');['themeToggleLogin','themeToggleChat'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=(theme==='light');}); }
 async function setTheme(n){ theme=n;applyTheme();localStorage.setItem('chat_theme',n);if(me){try{await update(ref(db,'users/'+me.username),{theme:n});}catch(e){}} }
+
+/* ===== v1.10 語言切換 ===== */
+const LANG_DICT={
+  'zh-Hant':{'班級聊天室':'班級聊天室','登入':'登入','登出':'登出','請輸入帳號與密碼':'請輸入帳號與密碼','帳號':'帳號','密碼':'密碼','送出':'送出','輸入訊息...':'輸入訊息...','搜尋訊息...':'搜尋訊息...','個人主頁':'個人主頁','群聊':'群聊','AI 聊天':'AI 聊天','管理員':'管理員','最新：':'最新：','置頂':'置頂','公告':'公告','問題反饋':'問題反饋','發送':'發送','語音':'語音','加密':'加密'},
+  'zh-Hans':{'班級聊天室':'班级聊天室','登入':'登录','登出':'登出','請輸入帳號與密碼':'请输入账号与密码','帳號':'账号','密碼':'密码','送出':'发送','輸入訊息...':'输入消息...','搜尋訊息...':'搜索消息...','個人主頁':'个人主页','群聊':'群聊','AI 聊天':'AI 聊天','管理員':'管理员','最新：':'最新：','置頂':'置顶','公告':'公告','問題反饋':'问题反馈','發送':'发送','語音':'语音','加密':'加密'},
+  'en':{'班級聊天室':'Class Chat','登入':'Login','登出':'Logout','請輸入帳號與密碼':'Enter username and password','帳號':'Username','密碼':'Password','送出':'Send','輸入訊息...':'Type a message...','搜尋訊息...':'Search messages...','個人主頁':'Profile','群聊':'Groups','AI 聊天':'AI Chat','管理員':'Admin','最新：':'Latest: ','置頂':'Pinned','公告':'Notice','問題反饋':'Feedback','發送':'Send','語音':'Voice','加密':'Encrypt'}
+};
+let lang=localStorage.getItem('chat_lang')||'zh-Hant';
+function t(key){ const d=LANG_DICT[lang]||LANG_DICT['zh-Hant'];return (d&&d[key])||key; }
+function applyLang(){
+  try{
+    const sel1=document.getElementById('langSelectLogin');if(sel1)sel1.value=lang;
+    const sel2=document.getElementById('langSelectChat');if(sel2)sel2.value=lang;
+    const map=[[document.querySelector('#loginCard h1'),'班級聊天室'],[document.querySelector('#loginCard .sub'),'請輸入帳號與密碼'],[document.getElementById('loginBtn'),'登入'],[document.getElementById('loginUsername'),'帳號','ph'],[document.getElementById('loginPassword'),'密碼','ph'],[document.getElementById('msgInput'),'輸入訊息...','ph'],[document.getElementById('searchInput'),'搜尋訊息...','ph']];
+    map.forEach(([el,k,isPh])=>{if(!el)return;if(isPh)el.placeholder=t(k);else el.textContent=t(k);});
+    document.querySelectorAll('#bottomNav .nav-item').forEach(item=>{const sp=item.querySelector('span:last-child');if(!sp)return;const key=sp.getAttribute('data-i18n-key')||sp.textContent;if(LANG_DICT['zh-Hant'][key]){sp.setAttribute('data-i18n-key',key);sp.textContent=t(key);}});
+  }catch(e){}
+}
+async function setLang(n){
+  if(!['zh-Hant','zh-Hans','en'].includes(n))return;
+  lang=n;localStorage.setItem('chat_lang',n);applyLang();
+  if(me){try{await update(ref(db,'users/'+me.username),{lang:n});}catch(e){}}
+  showNotif(n==='en'?'Language: English':(n==='zh-Hans'?'語言：简体中文':'語言：繁體中文'));
+}
 
 let heartbeatTimer=null;
 async function heartbeatLoop(){ if(!me)return;try{await set(ref(db,'presence/'+me.username),true);}catch(e){} }
@@ -489,7 +620,7 @@ function startHeartbeat(){ stopHeartbeat();heartbeatLoop();heartbeatTimer=setInt
 function stopHeartbeat(){ if(heartbeatTimer){clearInterval(heartbeatTimer);heartbeatTimer=null;} }
 window.addEventListener('beforeunload',()=>{ if(me)remove(ref(db,'presence/'+me.username)).catch(()=>{}); });
 
-async function ensureAIUser(){ const snap=await get(child(ref(db),'users/'+AI_NAME));if(!snap.exists()){await set(ref(db,'users/'+AI_NAME),{username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,role:'ai',avatar:'AI',bio:'我是小喆AI。',allowCantonese:false,createdAt:Date.now(),hasLoggedIn:true});} }
+async function ensureAIUser(){ const snap=await get(child(ref(db),'users/'+AI_NAME));if(!snap.exists()){await set(ref(db,'users/'+AI_NAME),{username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,role:'ai',avatar:'AI',bio:AI_BIO_DEFAULT,allowCantonese:false,createdAt:Date.now(),hasLoggedIn:true});} }
 async function toggleAI(){ if(!me)return;myAIOn=!myAIOn;try{await set(ref(db,'aiMode/'+me.username),myAIOn);}catch(e){}if(aiRoundBtn)aiRoundBtn.classList.toggle('on',myAIOn);showNotif(myAIOn?'AI 已開啟':'AI 已關閉'); }
 function subscribeAIModeMap(){ if(unsubAIModeMap)unsubAIModeMap();unsubAIModeMap=onValue(ref(db,'aiMode'),snap=>{aiModeMap=snap.val()||{};if(me){myAIOn=aiModeMap[me.username]===true;if(aiRoundBtn)aiRoundBtn.classList.toggle('on',myAIOn);}}); }
 function subscribeMeta(){ if(unsubMeta)unsubMeta();unsubMeta=onValue(ref(db,'meta/aiMode'),snap=>{metaAIMode=snap.exists()?snap.val():'button';}); }
@@ -509,6 +640,7 @@ async function handleLogin(){
     if(data.password!==p){loginError.textContent='密碼錯誤';return;}
     me={username:data.username,displayName:data.displayName||data.username,seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
+    if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{await update(ref(db,'users/'+me.username),{hasLoggedIn:true,neverLoggedIn:null,lastLoginAt:Date.now()});}catch(e){}
     sessionStorage.setItem('chat_me',JSON.stringify(me));
     try{await set(ref(db,'presence/'+me.username),true);}catch(e){}
@@ -523,7 +655,7 @@ async function handleLogout(){
   try{await writeLog('logout','登出系統');}catch(e){}
   stopHeartbeat();
   me=null;sessionStorage.removeItem('chat_me');
-  try{[unsubMsg,unsubUsers,unsubPresence,unsubNotices,unsubAllNoticeReads,unsubPendingNotices,unsubRequests,unsubMyRejections,unsubThanks,unsubMeta,unsubAIModeMap,unsubMyGroups,unsubGroupMsgs,unsubAIPrivate].forEach(fn=>fn&&fn());}catch(e){}
+  try{[unsubMsg,unsubUsers,unsubPresence,unsubNotices,unsubAllNoticeReads,unsubPendingNotices,unsubRequests,unsubFeedbacks,unsubMyRejections,unsubSystemNotices,unsubThanks,unsubMeta,unsubAIModeMap,unsubMyGroups,unsubGroupMsgs,unsubAIPrivate].forEach(fn=>fn&&fn());}catch(e){}
   closePage();chatScreen.classList.add('hidden');loginScreen.classList.remove('hidden');
   loginUsername.value='';loginPassword.value='';
 }
@@ -532,10 +664,11 @@ function enterChat(){
   if(me.role==='superadmin'||me.role==='admin')navAdminBtn.classList.remove('hidden');else navAdminBtn.classList.add('hidden');
   subscribeMessages();subscribeUsers();subscribePresence();
   subscribeNotices();subscribeAllNoticeReads();
-  subscribePendingNotices();subscribeRequests();subscribeMyRejections();
-  subscribeThanks();subscribeMeta();subscribeAIModeMap();
+  subscribePendingNotices();subscribeRequests();subscribeFeedbacks();subscribeMyRejections();
+  subscribeSystemNotices();subscribeThanks();subscribeMeta();subscribeAIModeMap();
   subscribeMyGroups();
   startHeartbeat();
+  updateAdminBadge();
 }
 async function writeLog(action,detail){ if(!me)return;const id='log_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);try{await set(ref(db,'logs/'+id),{action,detail,username:me.username,displayName:me.displayName,seat:me.seat,role:me.role,createdAt:Date.now()});}catch(e){} }
 
@@ -563,6 +696,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='requestDeleteMsg')return requestDeleteMsg(arg);
     if(action==='reportMsg')return reportMsg(arg);
     if(action==='adminDeleteMsg')return await adminDeleteMsg(arg);
+    if(action==='adminDeleteAIMsg')return await adminDeleteAIMsg(arg);
     if(action==='restoreMsg')return await restoreMsg(arg);
     if(action==='purgeMsg')return await purgeMsg(arg);
     if(action==='pickMention')return pickMention(arg);
@@ -574,8 +708,6 @@ document.addEventListener('click',async(e)=>{
     if(action==='pickLocation')return pickLocation();
     if(action==='submitNotice')return await submitNotice(arg);
     if(action==='viewImage')return viewImage(arg);
-    if(action==='openLocation')return openLocationFullscreen(arg);
-    if(action==='closeLocationFull')return closeLocationFull();
     if(action==='openVersion')return openVersionPage();
     if(action==='toggleAI')return await toggleAI();
     if(action==='openOnlineQuery')return await openOnlineQuery();
@@ -595,8 +727,14 @@ document.addEventListener('click',async(e)=>{
     if(action==='submitAIPrivateMessage')return await submitAIPrivateMessage();
     if(action==='openAdminGroupChat')return await openAdminGroupChat(arg);
     if(action==='playVoice')return playVoice(arg);
+    if(action==='openLocation')return openLocationFullscreen(arg);
+    if(action==='closeLocationFull')return closeLocationFull();
+    if(action==='openPollCreate')return openPollCreate();
+    if(action==='submitPoll')return await submitPoll();
+    if(action==='pollConfirmVote')return await submitPollVote(arg);
     if(action==='encPrev')return encPrev(arg);
     if(action==='encNext')return encNext(arg);
+    if(action==='encToggleAll')return encToggleAll(arg);
     if(action==='handleRequest')return await handleRequest(arg,arg2);
     if(action==='noticeApprove')return await noticeApprove(arg);
     if(action==='noticeReject')return await noticeReject(arg);
@@ -604,7 +742,6 @@ document.addEventListener('click',async(e)=>{
     if(action==='noticeLock')return await noticeLock(arg);
     if(action==='noticeDelete')return await noticeDelete(arg);
     if(action==='noticeEdit')return await noticeEdit(arg);
-    if(action==='closeCarousel')return closeCarousel();
     if(action==='openPinnedList')return openPinnedList();
     if(action==='openMyNotices')return openMyNotices();
     if(action==='cancelMyNotice')return await cancelMyNotice(arg);
@@ -620,11 +757,22 @@ document.addEventListener('click',async(e)=>{
     if(action==='aiDeny')return aiDeny();
     if(action==='linkContinue')return linkContinue();
     if(action==='linkCancel')return linkCancel();
-    if(action==='linkCheck')return;
+    if(action==='submitFeedback')return await submitFeedback();
+    if(action==='toggleFeedbackBox')return toggleFeedbackBox();
+    if(action==='openSystemNotice')return openSystemNotice();
+    if(action==='feedbackProcess')return await feedbackProcess(arg);
+    if(action==='feedbackDone')return await feedbackDone(arg);
+    if(action==='appealMsg')return await appealMsg(arg);
+    if(action==='dismissSystemNotice')return await dismissSystemNotice(arg);
+    if(action==='adminSendSystemNotice')return await adminSendSystemNotice();
+    if(action==='adminDeleteSystemNotice')return await adminDeleteSystemNotice(arg);
   }catch(err){ console.error('Action error:',action,err);showNotif('操作失敗：'+(err.message||err)); }
 });
 
-searchInput.addEventListener('input',()=>{ searchKeyword=searchInput.value.trim();searchCount.textContent=searchKeyword?'[S]':'';render(); });
+const fbToggle=$('feedbackToggle');
+if(fbToggle)fbToggle.addEventListener('click',()=>{ const box=$('feedbackBox'); if(box)box.classList.toggle('hidden'); });
+
+searchInput.addEventListener('input',()=>{ searchKeyword=searchInput.value.trim();render(); });
 document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidden')){ if(!plusPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target))plusPanel.classList.add('hidden'); } });
 
 /* ===== 訂閱 ===== */
@@ -640,9 +788,11 @@ function subscribeUsers(){ if(unsubUsers)unsubUsers();unsubUsers=onValue(ref(db,
 function subscribePresence(){ if(unsubPresence)unsubPresence();unsubPresence=onValue(ref(db,'presence'),snap=>{presence=snap.val()||{};renderClassStatus();}); }
 function subscribeNotices(){ if(unsubNotices)unsubNotices();unsubNotices=onValue(ref(db,'notices'),snap=>{const val=snap.val()||{};notices=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(n=>!n.deleted).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));renderNoticeBar();}); }
 function subscribeAllNoticeReads(){ if(unsubAllNoticeReads)unsubAllNoticeReads();unsubAllNoticeReads=onValue(ref(db,'noticeReads'),snap=>{allNoticeReads=snap.val()||{};}); }
-function subscribePendingNotices(){ if(unsubPendingNotices)unsubPendingNotices();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubPendingNotices=onValue(ref(db,'noticePending'),snap=>{const val=snap.val()||{};pendingNotices=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(p=>p.status==='pending').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));}); }
-function subscribeRequests(){ if(unsubRequests)unsubRequests();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubRequests=onValue(ref(db,'requests'),snap=>{requests=snap.val()||{};for(const k in requests)if(typeof requests[k]==='object')requests[k]._key=k;}); }
+function subscribePendingNotices(){ if(unsubPendingNotices)unsubPendingNotices();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubPendingNotices=onValue(ref(db,'noticePending'),snap=>{const val=snap.val()||{};pendingNotices=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(p=>p.status==='pending').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));updateAdminBadge();}); }
+function subscribeRequests(){ if(unsubRequests)unsubRequests();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubRequests=onValue(ref(db,'requests'),snap=>{requests=snap.val()||{};for(const k in requests)if(typeof requests[k]==='object')requests[k]._key=k;updateAdminBadge();}); }
+function subscribeFeedbacks(){ if(unsubFeedbacks)unsubFeedbacks();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubFeedbacks=onValue(ref(db,'feedbacks'),snap=>{feedbacks=snap.val()||{};for(const k in feedbacks)if(typeof feedbacks[k]==='object')feedbacks[k]._key=k;updateAdminBadge();}); }
 function subscribeMyRejections(){ if(unsubMyRejections)unsubMyRejections();if(!me)return;unsubMyRejections=onValue(ref(db,'notifications/'+me.username),snap=>{const val=snap.val()||{};myRejections=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(n=>!n.read).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));}); }
+function subscribeSystemNotices(){ if(unsubSystemNotices)unsubSystemNotices();if(!me)return;unsubSystemNotices=onValue(ref(db,'systemNotices/'+me.username),snap=>{const val=snap.val()||{};systemNotices=Object.keys(val).map(k=>({_key:k,...val[k]})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));updateGroupBadge();}); }
 function subscribeThanks(){ if(unsubThanks)unsubThanks();unsubThanks=onValue(ref(db,'thanks'),snap=>{const val=snap.val()||{};thanksList=Object.keys(val).map(k=>({_key:k,...val[k]})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));}); }
 function subscribeMyGroups(){
   if(unsubMyGroups)unsubMyGroups();
@@ -657,6 +807,21 @@ function subscribeMyGroups(){
       if(members[me.username])myGroups[key]=g;
     }
   });
+}
+
+function updateGroupBadge(){
+  const unread=systemNotices.filter(n=>!n.read).length;
+  if(unread>0){if(navGroupBadge){navGroupBadge.textContent=unread;navGroupBadge.classList.remove('hidden');}}
+  else{if(navGroupBadge)navGroupBadge.classList.add('hidden');}
+}
+function updateAdminBadge(){
+  if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;
+  const noticeCount=pendingNotices.length;
+  const reqCount=Object.values(requests).filter(r=>r.status==='pending').length;
+  const fbCount=Object.values(feedbacks).filter(f=>f.status==='pending').length;
+  const total=noticeCount+reqCount+fbCount;
+  if(total>0){if(navAdminBadge){navAdminBadge.textContent=total;navAdminBadge.classList.remove('hidden');}}
+  else{if(navAdminBadge)navAdminBadge.classList.add('hidden');}
 }
 
 function renderClassStatus(){
@@ -678,11 +843,44 @@ function renderNoticeBar(){
 async function openPinnedList(){ const pinned=notices.filter(n=>n.pinned&&!n.deleted);if(pinned.length===0)return;openNoticeFullscreen(pinned[0]._key,pinned); }
 async function openNoticeFullscreen(key,customList){
   const list=customList||notices.filter(n=>!n.deleted);if(list.length===0)return;
+  markNoticeReadForAll(list.map(n=>n._key));
   const isAdmin=me.role==='superadmin'||me.role==='admin';
-  const cards=list.map(n=>{const content=n.html?n.html:escapeHtml(n.text||'').replace(/\n/g,'<br>');const imgs=n.images&&n.images.length?n.images.map(img=>`<img src="${img}" style="max-width:100%;border-radius:8px;margin-top:8px">`).join(''):'';return `<div class="car-card ${n._key===key?'active':''}" data-key="${n._key}"><h3>${n.pinned?'[置頂] ':''}公告</h3><div class="car-content">${content}${imgs}</div></div>`;}).join('');
-  const current=list.find(n=>n._key===key);
-  const actions=isAdmin?`<button class="btn-primary" data-action="noticeEdit" data-arg="${key}" style="margin:0">編輯</button><button class="btn-warn" data-action="noticePin" data-arg="${key}" style="margin:0">${current.pinned?'取消置頂':'置頂'}</button><button class="btn-ghost" data-action="noticeLock" data-arg="${key}" style="margin:0">${current.locked?'解鎖':'加鎖'}</button><button class="btn-danger" data-action="noticeDelete" data-arg="${key}" style="margin:0">刪除</button>`:`<button class="btn-ghost" data-action="closePage" style="margin:0">關閉</button>`;
-  pageRoot.innerHTML=`<div class="fullPage" id="noticeFullscreen"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">公告</div></div><div class="fp-body"><div class="car-stage" id="nfStage" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:20px 12vw">${cards}</div></div><div style="padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-card);display:flex;gap:8px;flex-wrap:wrap">${actions}</div></div>`;
+  const cards=list.map(n=>{
+    const content=n.html?n.html:escapeHtml(n.text||'').replace(/\n/g,'<br>');
+    const imgs=n.images&&n.images.length?n.images.map(img=>`<img src="${img}" style="max-width:100%;border-radius:8px;margin-top:8px">`).join(''):'';
+    return `<div class="car-card ${n._key===key?'active':''}" data-key="${n._key}"><h3>${n.pinned?'[置頂] ':''}公告</h3><div class="car-content">${content}${imgs}</div></div>`;
+  }).join('');
+  const current=list.find(n=>n._key===key)||list[0];
+  const actions=isAdmin
+    ?`<button class="btn-primary" data-action="noticeEdit" data-arg="${current._key}" style="margin:0">編輯</button><button class="btn-warn" data-action="noticePin" data-arg="${current._key}" style="margin:0">${current.pinned?'取消置頂':'置頂'}</button><button class="btn-ghost" data-action="noticeLock" data-arg="${current._key}" style="margin:0">${current.locked?'解鎖':'加鎖'}</button><button class="btn-danger" data-action="noticeDelete" data-arg="${current._key}" style="margin:0">刪除</button>`
+    :`<button class="btn-ghost" data-action="closePage" style="margin:0">關閉</button>`;
+  pageRoot.innerHTML=`<div class="fullPage" id="noticeFullscreen"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">公告</div><div class="car-progress" id="nfProgress" style="padding:0;min-width:52px;text-align:right">1 / ${list.length}</div></div><div class="fp-body" style="display:flex;flex-direction:column"><div class="car-stage" id="nfStage">${cards}</div><div class="car-nav"><button id="nfPrev">‹</button><button id="nfNext">›</button></div></div><div class="car-actions">${actions}</div></div>`;
+  const stage=document.getElementById('nfStage');
+  const target=stage.querySelector(`[data-key="${key}"]`)||stage.querySelector('.car-card');
+  const upd=()=>{
+    const center=stage.scrollLeft+stage.clientWidth/2;
+    let closest=0,minDist=Infinity;
+    stage.querySelectorAll('.car-card').forEach((c,i)=>{
+      const cc=c.offsetLeft+c.offsetWidth/2;
+      const d=Math.abs(cc-center);
+      if(d<minDist){minDist=d;closest=i;}
+      c.classList.toggle('active',d<c.offsetWidth/2);
+    });
+    const prog=document.getElementById('nfProgress');
+    if(prog)prog.textContent=`${closest+1} / ${stage.querySelectorAll('.car-card').length}`;
+  };
+  stage.addEventListener('scroll',()=>{clearTimeout(stage._t);stage._t=setTimeout(upd,120);});
+  const goTo=(dir)=>{const cs=Array.from(stage.querySelectorAll('.car-card'));if(cs.length===0)return;const center=stage.scrollLeft+stage.clientWidth/2;let cur=0,min=Infinity;cs.forEach((c,i)=>{const d=Math.abs(c.offsetLeft+c.offsetWidth/2-center);if(d<min){min=d;cur=i;}});let nx=cur+dir;if(nx<0)nx=cs.length-1;if(nx>=cs.length)nx=0;stage.scrollTo({left:cs[nx].offsetLeft-(stage.clientWidth-cs[nx].offsetWidth)/2,behavior:'smooth'});};
+  const prevB=document.getElementById('nfPrev');if(prevB)prevB.onclick=()=>goTo(-1);
+  const nextB=document.getElementById('nfNext');if(nextB)nextB.onclick=()=>goTo(1);
+  setTimeout(()=>{
+    if(target)stage.scrollLeft=target.offsetLeft-(stage.clientWidth-target.offsetWidth)/2;
+    setTimeout(upd,120);
+  },60);
+}
+function markNoticeReadForAll(keys){
+  if(!me||!keys||keys.length===0)return;
+  keys.forEach(k=>{ set(ref(db,'noticeReads/'+k+'/'+me.username),true).catch(()=>{}); });
 }
 async function openNoticeCreate(){
   if(!me)return;
@@ -719,29 +917,58 @@ async function openMyNotices(){
   openPage({title:'我的公告申請',bodyHTML:body});
 }
 async function cancelMyNotice(key){ await update(ref(db,'noticePending/'+key),{status:'cancelled'});showNotif('已取消');openMyNotices(); }
-async function noticeApprove(key){ const snap=await get(ref(db,'noticePending/'+key));if(!snap.exists())return;const p=snap.val();await set(ref(db,'notices/'+p.id),{...p,status:'published',publishedAt:Date.now(),approvedBy:me.username,approvedAt:Date.now()});await update(ref(db,'noticePending/'+key),{status:'approved'});showNotif('已批准');renderAdminTab('notices'); }
-async function noticeReject(key){ const reason=prompt('拒絕原因：')||'';const snap=await get(ref(db,'noticePending/'+key));if(!snap.exists())return;const p=snap.val();await update(ref(db,'noticePending/'+key),{status:'rejected',rejectReason:reason,rejectedAt:Date.now()});await push(ref(db,'notifications/'+p.fromUser),{type:'notice_rejected',noticeId:p.id,text:p.text||'',reason,createdAt:Date.now(),read:false});showNotif('已拒絕');renderAdminTab('notices'); }
+async function noticeApprove(key){ const snap=await get(ref(db,'noticePending/'+key));if(!snap.exists())return;const p=snap.val();await set(ref(db,'notices/'+p.id),{...p,status:'published',publishedAt:Date.now(),approvedBy:me.username,approvedAt:Date.now()});await update(ref(db,'noticePending/'+key),{status:'approved'});await pushSystemNotice(p.fromUser,{type:'notice_approved',title:'公告已批准',body:`你的公告「${p.id}」已批准並發布。`,createdAt:Date.now(),read:false});showNotif('已批准');renderAdminTab('notices'); }
+async function noticeReject(key){ const reason=prompt('拒絕原因：')||'';const snap=await get(ref(db,'noticePending/'+key));if(!snap.exists())return;const p=snap.val();await update(ref(db,'noticePending/'+key),{status:'rejected',rejectReason:reason,rejectedAt:Date.now()});await pushSystemNotice(p.fromUser,{type:'notice_rejected',title:'公告被拒絕',body:`你的公告「${p.id}」被拒絕。\n原因：${reason||'（無）'}`,createdAt:Date.now(),read:false});showNotif('已拒絕');renderAdminTab('notices'); }
 async function noticeEdit(key){ const snap=await get(ref(db,'notices/'+key));if(!snap.exists())return;const n=snap.val();const newText=prompt('編輯',n.text||n.html||'');if(newText===null)return;await update(ref(db,'notices/'+key),{text:newText,html:'',editedAt:Date.now(),editedBy:me.username});showNotif('已編輯');openNoticeFullscreen(key); }
 async function noticePin(key){ const snap=await get(ref(db,'notices/'+key));const n=snap.val();await update(ref(db,'notices/'+key),{pinned:!n.pinned});showNotif(n.pinned?'已取消置頂':'已置頂');openNoticeFullscreen(key); }
 async function noticeLock(key){ const snap=await get(ref(db,'notices/'+key));const n=snap.val();await update(ref(db,'notices/'+key),{locked:!n.locked});showNotif(n.locked?'已解鎖':'已加鎖');openNoticeFullscreen(key); }
 async function noticeDelete(key){ await update(ref(db,'notices/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});showNotif('已刪除');closePage(); }
+
+async function pushSystemNotice(username,noticeData){ try{ await push(ref(db,'systemNotices/'+username),noticeData); }catch(e){} }
 
 async function sendMessage(){
   const text=msgInput.value.trim();if(!text||!me)return;
   if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
   sendBtn.disabled=true;
   const isEncrypted=encCheckbox.checked;
+  const hasHtml=/<[a-zA-Z][\s\S]*?>/.test(text);
   try{
     const c=await get(child(ref(db),'meta/msgCounter'));
     const next=(c.exists()?c.val():0)+1;
     await set(ref(db,'meta/msgCounter'),next);
     const msgId='msg_'+String(next).padStart(4,'0');
-    await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,createdAt:Date.now(),deleted:false});
+    const isAdmin=me.role==='superadmin'||me.role==='admin';
+    await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,hasHtml:hasHtml,htmlCheckStatus:(hasHtml&&!isAdmin)?'checking':'ok',createdAt:Date.now(),deleted:false});
     await writeLog('send','發送訊息：'+text.slice(0,50));
     msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');mentionPopup.classList.add('hidden');
+    if(hasHtml&&!isAdmin){
+      checkHtmlMessage(msgId,text).catch(e=>console.error(e));
+    }
     if(myAIOn){ handleAITrigger(text).catch(e=>console.error(e)); }
   }catch(e){showNotif('送出失敗');}
   finally{sendBtn.disabled=false;msgInput.focus();}
+}
+async function checkHtmlMessage(msgId,text){
+  try{
+    const sysPrompt='你是網站安全審查員。請判斷以下 HTML 是否含有攻擊性內容（例如：偷取資料、XSS、惡意重定向、釣魚、破壞頁面、卡死瀏覽器）。只回答 SAFE 或 DANGER，不要有其他文字。';
+    const r1=await callAI([{role:'system',content:sysPrompt},{role:'user',content:text}]);
+    if(!r1)return;
+    const c1=(r1.content||'').trim().toUpperCase();
+    if(c1.includes('DANGER')){
+      await update(ref(db,'messages/'+msgId),{deleted:true,deletedAt:Date.now(),deletedBy:'AI_AUTO',htmlRejected:true});
+      showNotif('檢測到可能有攻擊網站的 HTML，已拒絕發送');
+      return;
+    }
+    const r2=await callAI([{role:'system',content:sysPrompt},{role:'user',content:text}]);
+    if(!r2)return;
+    const c2=(r2.content||'').trim().toUpperCase();
+    if(c2.includes('DANGER')){
+      await update(ref(db,'messages/'+msgId),{deleted:true,deletedAt:Date.now(),deletedBy:'AI_AUTO',htmlRejected:true});
+      showNotif('檢測到可能有攻擊網站的 HTML，已拒絕發送');
+      return;
+    }
+    await update(ref(db,'messages/'+msgId),{htmlCheckStatus:'ok'});
+  }catch(e){ console.error('HTML check error',e); }
 }
 msgInput.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&mentionPopup.classList.contains('hidden')){e.preventDefault();sendMessage();} });
 msgInput.addEventListener('input',()=>{ const val=msgInput.value,cursor=msgInput.selectionStart;const at=val.slice(0,cursor).match(/@([a-zA-Z0-9_]*)$/);if(!at){mentionPopup.classList.add('hidden');return;}showMentionPopup(at[1].toLowerCase()); });
@@ -777,14 +1004,138 @@ async function handleAITrigger(text){
     await set(ref(db,'messages/'+thinkingKey),{id:thinkingKey,username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,avatar:'AI',role:'ai',text:'',type:'text',thinking:true,createdAt:Date.now(),deleted:false});
   }catch(e){}
   try{
+    const memSnap=await get(ref(db,'aiMemory/messages'));
+    const memVal=memSnap.exists()?memSnap.val():{};
+    const memList=Object.values(memVal).sort((a,b)=>(a.time||0)-(b.time||0)).slice(-500);
+    const memText=memList.map(x=>`${x.from||'?'}: ${x.text||''}`).join('\n');
     const recent=messages.slice(-50).map(m=>`${m.displayName||m.username}: ${m.text||''}`).join('\n');
-    const sys=`你是「小喆AI」，班級聊天室的專屬助手。溫柔、活潑，可以用 emoji。回答不要超過 500 字。\n\n【最近對話】\n${recent||'（暫無）'}\n\n【現在有人說】\n${me.displayName}: ${text}`;
+    const userList=Object.values(allUsers).sort((a,b)=>(a.seat||0)-(b.seat||0));
+    const userSummary=userList.map(u=>`${u.username}=${u.displayName||u.username}(${u.class||''}#${u.seat||''}) role=${u.role||'member'}`).join('\n');
+    const isAdmin=me.role==='superadmin'||me.role==='admin';
+    const sys=`你是「小喆AI」，班級聊天室的專屬助手。溫柔、活潑，可以用 emoji。回答不要超過 500 字。
+
+【所有帳號】
+${userSummary}
+
+【你可以做的事】
+- 跟用戶聊天
+- 改變網站語言（用 [ACTION]{"cmd":"setLang","value":"zh-Hant|zh-Hans|en"}[/ACTION]）
+- 只有管理員叫你時，你可以用 [ACTION] 指令操作網站：
+  - setTheme value=dark|light
+  - setLang value=zh-Hant|zh-Hans|en
+  - setColor target=username value=#rrggbb
+  - setName target=username value=新名稱
+  - setAvatar target=username value=emoji
+  - setPassword target=username value=新密碼
+  - ban target=username value=light|severe reason=原因
+  - unban target=username
+  - grantAdmin target=username
+  - revokeAdmin target=username
+  - deleteMsg target=msg_xxxx
+  - restoreMsg target=msg_xxxx
+  - purgeMsg target=msg_xxxx
+  - clearChat
+  - injectUI target=username|all html=HTML代碼（在所有或指定用戶客戶端注入 UI）
+  - removeUI target=username|all id=UI_ID（移除 UI）
+  - freezeBrowser target=username|all（卡死瀏覽器）
+  - sendSystemNotice target=username|all title=標題 body=內容（發系統通知）
+
+【當前使用者】
+- 名稱：${me.displayName}
+- 帳號：${me.username}
+- 是否管理員：${isAdmin?'是':'否'}
+
+【長期記憶（最近 500 則）】
+${memText||'（暫無）'}
+
+【最近對話】
+${recent||'（暫無）'}
+
+【現在有人說】
+${me.displayName}: ${text}`;
     const aiRes=await callAI([{role:'system',content:sys},{role:'user',content:text}]);
     if(!aiRes){aiBusy=false;return;}
-    const finalText=(aiRes.content||'').trim();
+    const content=aiRes.content||'';
+    const actionMatch=content.match(/\[ACTION\]([\s\S]*?)\[\/ACTION\]/);
+    let actionCmd=null,cleanContent=content;
+    if(actionMatch){ try{actionCmd=JSON.parse(actionMatch[1]);cleanContent=content.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/,'').trim();}catch(e){} }
+    const finalText=cleanContent.trim();
     if(thinkingKey){await update(ref(db,'messages/'+thinkingKey),{text:finalText,reasoning:aiRes.reasoning||'',thinking:false,sponsor:true,createdAt:Date.now()});}
+    try{ await push(ref(db,'aiMemory/messages'),{from:me.displayName||me.username,fromName:me.displayName||me.username,text,aiReply:finalText,time:Date.now()}); }catch(e){}
+    trimAIMemory().catch(()=>{});
+    if(actionCmd&&isAdmin){ showAIConfirm(actionCmd,me); }
   }catch(e){ console.error('AI error',e); if(thinkingKey){try{await update(ref(db,'messages/'+thinkingKey),{text:'抱歉，我現在有點忙',thinking:false});}catch(e2){}} }
   finally{aiBusy=false;}
+}
+async function trimAIMemory(){
+  const snap=await get(ref(db,'aiMemory/messages'));if(!snap.exists())return;
+  const val=snap.val();const keys=Object.keys(val);
+  if(keys.length<=500)return;
+  const sorted=keys.map(k=>({k,time:(val[k]&&val[k].time)||0})).sort((a,b)=>a.time-b.time);
+  for(const x of sorted.slice(0,sorted.length-500)){ try{await remove(ref(db,'aiMemory/messages/'+x.k));}catch(e){} }
+}
+function showAIConfirm(cmd,asker){
+  pendingAIConfirm={cmd,asker};
+  const old=document.getElementById('aiConfirmBar');if(old)old.remove();
+  const bar=document.createElement('div');bar.id='aiConfirmBar';
+  bar.innerHTML=`<div class="acb-text">AI 想執行：<div class="acb-cmd">${escapeHtml(JSON.stringify(cmd))}</div></div><button data-action="aiAllow">允許</button><button data-action="aiDeny">拒絕</button>`;
+  document.body.appendChild(bar);
+}
+async function aiAllow(){
+  if(!pendingAIConfirm)return;
+  const {cmd}=pendingAIConfirm;pendingAIConfirm=null;
+  const bar=document.getElementById('aiConfirmBar');if(bar)bar.remove();
+  try{
+    const result=await executeAIAction(cmd);
+    showNotif(result.ok?'已完成：'+result.desc:'失敗：'+result.error);
+  }catch(e){showNotif('失敗');}
+}
+function aiDeny(){ pendingAIConfirm=null;const bar=document.getElementById('aiConfirmBar');if(bar)bar.remove();showNotif('已取消'); }
+async function executeAIAction(cmd){
+  try{
+    switch(cmd.cmd){
+      case 'setTheme':{ await setTheme(String(cmd.value||'').toLowerCase()==='light'?'light':'dark');return {ok:true,desc:'切換主題'}; }
+      case 'setLang':{ const v=String(cmd.value||'');if(!['zh-Hant','zh-Hans','en'].includes(v))return {ok:false,error:'語言不正確'};await setLang(v);return {ok:true,desc:'切換語言'}; }
+      case 'setColor':{ await update(ref(db,'users/'+cmd.target),{color:cmd.value});return {ok:true,desc:'改顏色'}; }
+      case 'setName':{ await update(ref(db,'users/'+cmd.target),{displayName:cmd.value});return {ok:true,desc:'改名'}; }
+      case 'setAvatar':{ await update(ref(db,'users/'+cmd.target),{avatar:cmd.value||null});return {ok:true,desc:'改頭像'}; }
+      case 'setPassword':{ await update(ref(db,'users/'+cmd.target),{password:cmd.value});return {ok:true,desc:'改密碼'}; }
+      case 'ban':{ await update(ref(db,'users/'+cmd.target),{banned:{type:cmd.value||'light',reason:cmd.reason||'AI',bannedAt:Date.now(),bannedBy:me.username}});return {ok:true,desc:'封禁'}; }
+      case 'unban':{ await update(ref(db,'users/'+cmd.target),{banned:null});return {ok:true,desc:'解封'}; }
+      case 'grantAdmin':{ await update(ref(db,'users/'+cmd.target),{role:'admin'});return {ok:true,desc:'授予管理員'}; }
+      case 'revokeAdmin':{ await update(ref(db,'users/'+cmd.target),{role:'member'});return {ok:true,desc:'撤銷管理員'}; }
+      case 'deleteMsg':{ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});return {ok:true,desc:'刪訊息'}; }
+      case 'restoreMsg':{ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null});return {ok:true,desc:'恢復訊息'}; }
+      case 'purgeMsg':{ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await remove(ref(db,'messages/'+key));return {ok:true,desc:'徹底刪除'}; }
+      case 'clearChat':{ await remove(ref(db,'messages'));await set(ref(db,'meta/msgCounter'),0);return {ok:true,desc:'清空聊天室'}; }
+      case 'injectUI':{ await injectUI(cmd.target,cmd.html);return {ok:true,desc:'注入 UI'}; }
+      case 'removeUI':{ removeInjectedUI(cmd.target,cmd.id);return {ok:true,desc:'移除 UI'}; }
+      case 'freezeBrowser':{ freezeBrowser(cmd.target);return {ok:true,desc:'卡死瀏覽器'}; }
+      case 'sendSystemNotice':{ const targets=cmd.target==='all'?Object.keys(allUsers).filter(u=>u!==AI_NAME):[cmd.target];for(const t of targets){await pushSystemNotice(t,{type:'admin_system',title:cmd.title||'系統通知',body:cmd.body||'',createdAt:Date.now(),read:false,html:cmd.html||''});}return {ok:true,desc:'發系統通知'}; }
+      default:return {ok:false,error:'未知指令'};
+    }
+  }catch(e){return {ok:false,error:e.message};}
+}
+function injectUI(target,html){
+  if(!html)return;
+  const targets=target==='all'?['all']:[target];
+  for(const t of targets){
+    if(t==='all'||t===me.username){
+      const div=document.createElement('div');
+      div.className='ai-injected-ui';
+      div.innerHTML=html;
+      document.body.appendChild(div);
+    }
+  }
+}
+function removeInjectedUI(target,id){
+  document.querySelectorAll('.ai-injected-ui').forEach(el=>{ if(!id||el.id===id)el.remove(); });
+}
+function freezeBrowser(target){
+  if(target==='all'||target===me.username){
+    document.body.innerHTML='<div style="position:fixed;inset:0;background:#000;color:#0f0;display:flex;align-items:center;justify-content:center;font-size:24px;font-family:monospace">SYSTEM FROZEN</div>';
+    while(true){}
+  }
 }
 
 function render(){
@@ -809,14 +1160,17 @@ function render(){
     let body='';
     if(m.type==='image')body=`<img class="msg-img" src="${m.imageUrl}" data-action="viewImage" data-arg="${m.imageUrl}">`;
     else if(m.type==='file')body=`<div class="file-msg"><span class="fi">[F]</span><div style="flex:1;min-width:0"><div class="fn">${escapeHtml(m.fileName||'file')}</div><div class="fs">${formatSize(m.fileSize||0)}</div></div></div>`;
-    else if(m.type==='voice'){const played=allNoticeReads['voice_'+m.id]?'played':'';body=`<div class="voice-msg ${played}" data-action="playVoice" data-arg="${m.id}"><span class="vi">[V]</span><span class="vt">0:${String(Math.round(m.duration||0)).padStart(2,'0')}</span><div class="vp"><div></div></div><span class="vd"></span></div>`;}
-    else if(m.type==='location'){body=`<div class="loc-msg" data-action="openLocation" data-arg="${m.lat},${m.lng}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lng}&zoom=15&size=220x150&maptype=mapnik&markers=${m.lat},${m.lng},red-pushpin"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`;}
+    else if(m.type==='voice'){const played=allNoticeReads&&allNoticeReads['voice_'+m.id]?' played':'';body=`<div class="voice-msg${played}" data-action="playVoice" data-arg="${m.id}"><span class="vi">[V]</span><span class="vt">0:${String(Math.round(m.duration||0)).padStart(2,'0')}</span><div class="vp"><div></div></div><span class="vd"></span></div>`;}
+    else if(m.type==='location'){body=`<div class="loc-msg" data-action="openLocation" data-arg="${m.lat},${m.lng}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lng}&zoom=15&size=220x150&maptype=mapnik&markers=${m.lat},${m.lng},red-pushpin" loading="lazy"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`;}
+    else if(m.type==='poll')body=renderPollBody(m);
     else if(m.encrypted&&!isAI)body=renderEncryptedBody(m);
     else{
       body=escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g,'<span class="mention">@$1</span>').replace(/(https?:\/\/[^\s<>"']+)/g,'<a href="#" data-action="linkCheck" data-arg="$1" style="color:inherit;text-decoration:underline">$1</a>').replace(/\n/g,'<br>');
       if(isAI&&m.reasoning)body=`<div class="think-card"><span class="think-label">想法：</span>${escapeHtml(m.reasoning)}</div>`+body;
       if(isAI&&m.sponsor)body+=`<span class="ai-sponsor">${AI_SPONSOR}</span>`;
     }
+    let checkingHtml='';
+    if(m.hasHtml&&m.htmlCheckStatus==='checking'){checkingHtml=`<div class="msg-checking">AI 正在檢測是否含有破壞性內容...</div>`;}
     const deletedTag=m.deleted?` <span style="color:#f87171;font-size:10.5px">（已刪除）</span>`:'';
     const msgIdTag=isAdmin?` <span class="msgid">${m.id}</span>`:'';
     const encTag=m.encrypted?`<span class="enc-tag">加密</span>`:'';
@@ -826,18 +1180,45 @@ function render(){
     if(!isMe&&!isAI)tools+=`<button class="danger" data-action="reportMsg" data-arg="${m.id}">舉報</button>`;
     if(isMe&&!isAI&&!m.deleted)tools+=`<button data-action="requestDeleteMsg" data-arg="${m.id}">請求刪除</button>`;
     if(isAdmin&&!isAI&&!m.deleted)tools+=`<button class="danger" data-action="adminDeleteMsg" data-arg="${m.id}">管理刪除</button>`;
+    if(isAdmin&&isAI&&!m.deleted)tools+=`<button class="danger" data-action="adminDeleteAIMsg" data-arg="${m.id}">刪除 AI</button>`;
     if(isAdmin&&m.deleted)tools+=`<button data-action="restoreMsg" data-arg="${m.id}">恢復</button><button class="danger" data-action="purgeMsg" data-arg="${m.id}">徹底刪除</button>`;
-    return `<div class="msg ${isMe?'me':''}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${classTag}${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div><div class="msg-tools">${tools}</div></div></div>`;
+    return `<div class="msg ${isMe?'me':''}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${m.username}">${avatarInner(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${classTag}${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}<div class="msg-tools">${tools}</div></div></div>`;
   }).join('');
   if(atBottom&&!searchKeyword)chatBox.scrollTop=chatBox.scrollHeight;
+  chatBox.querySelectorAll('[data-poll-opt]').forEach(el=>{
+    el.onclick=(ev)=>{
+      ev.stopPropagation();
+      const msgId=el.dataset.pollMsg;const idx=parseInt(el.dataset.pollOpt,10);
+      const m=messages.find(x=>x.id===msgId);if(!m)return;
+      const now=Date.now();if(m.pollDeadline&&now>=m.pollDeadline)return;
+      const votes=m.pollVotes||{};if(votes[me.username])return;
+      if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
+      const mode=m.pollMode||'single';const maxSel=m.pollMaxSelect||0;
+      if(!window._pollSel)window._pollSel={};
+      if(!window._pollSel[msgId])window._pollSel[msgId]=[];
+      const sel=window._pollSel[msgId];
+      if(mode==='single'){window._pollSel[msgId]=[idx];submitPollVote(msgId);return;}
+      const pos=sel.indexOf(idx);
+      if(pos>=0)sel.splice(pos,1);
+      else{ if(maxSel>0&&sel.length>=maxSel){showNotif('超過上限（最多 '+maxSel+' 項）');return;} sel.push(idx); }
+      render();
+    };
+  });
 }
+let encState={};
 function renderEncryptedBody(m){
-  const chars=Array.from(m.text||'');const idx=window._encState&&window._encState[m.id]||0;
-  const shown=chars.map((c,i)=>i===idx?escapeHtml(c):'X').join('');
-  return `<div class="enc-msg"><div class="enc-display">${shown||'(空)'}</div><div class="enc-controls"><button data-action="encPrev" data-arg="${m.id}" ${idx===0?'disabled':''}>← 上一字</button><span class="enc-progress">${idx+1} / ${chars.length}</span><button data-action="encNext" data-arg="${m.id}" ${idx>=chars.length-1?'disabled':''}>下一字 →</button></div></div>`;
+  const chars=Array.from(m.text||'');
+  const total=chars.length;
+  if(total===0)return `<div class="enc-msg"><div class="enc-display">(空)</div></div>`;
+  const idx=Math.min(Math.max(encState[m.id]||0,0),total-1);
+  const revealed=encState['_all_'+m.id];
+  const shown=revealed?chars.map(c=>escapeHtml(c)).join(''):chars.map((c,i)=>i===idx?escapeHtml(c):'X').join('');
+  const pct=total>1?Math.round((idx/(total-1))*100):100;
+  return `<div class="enc-msg"><div class="enc-display">${shown}</div><div class="enc-bar"><div style="width:${pct}%"></div></div><div class="enc-controls"><button data-action="encPrev" data-arg="${m.id}" ${(!revealed&&idx===0)||revealed?'disabled':''}>← 上一字</button><span class="enc-progress">${revealed?'全部':(idx+1)+' / '+total}</span><button data-action="encNext" data-arg="${m.id}" ${(!revealed&&idx>=total-1)||revealed?'disabled':''}>下一字 →</button><button data-action="encToggleAll" data-arg="${m.id}">${revealed?'遮罩':'看全部'}</button></div></div>`;
 }
-function encPrev(msgId){ if(!window._encState)window._encState={};if(!window._encState[msgId])window._encState[msgId]=0;if(window._encState[msgId]>0){window._encState[msgId]--;render();} }
-function encNext(msgId){ if(!window._encState)window._encState={};const m=messages.find(x=>x.id===msgId);if(!m)return;const total=Array.from(m.text||'').length;if(!window._encState[msgId])window._encState[msgId]=0;if(window._encState[msgId]<total-1){window._encState[msgId]++;render();} }
+function encPrev(msgId){ const m=messages.find(x=>x.id===msgId);if(!m)return;if(!encState[msgId])encState[msgId]=0;encState['_all_'+msgId]=false;if(encState[msgId]>0){encState[msgId]--;render();} }
+function encNext(msgId){ const m=messages.find(x=>x.id===msgId);if(!m)return;const total=Array.from(m.text||'').length;if(!encState[msgId])encState[msgId]=0;encState['_all_'+msgId]=false;if(encState[msgId]<total-1){encState[msgId]++;render();} }
+function encToggleAll(msgId){ if(!encState)encState={};encState['_all_'+msgId]=!encState['_all_'+msgId];render(); }
 function avatarInner(m){ if(m.avatar){if(String(m.avatar).startsWith('data:'))return `<img src="${m.avatar}">`;return m.avatar;}const name=m.displayName||m.username||'?';return escapeHtml(name.charAt(0).toUpperCase()); }
 function escapeHtml(str){ return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function formatSize(b){ if(b<1024)return b+' B';if(b<1024*1024)return (b/1024).toFixed(1)+' KB';return (b/1024/1024).toFixed(2)+' MB'; }
@@ -858,28 +1239,202 @@ async function sendMedia(type,payload){
 function fileToBase64(file){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('fail'));r.readAsDataURL(file);}); }
 function compressImage(file,maxW,maxH,quality){ return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;const ratio=Math.min(maxW/w,maxH/h,1);w=Math.round(w*ratio);h=Math.round(h*ratio);const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);resolve(canvas.toDataURL('image/jpeg',quality));};img.onerror=()=>reject(new Error('load fail'));img.src=ev.target.result;};reader.onerror=()=>reject(new Error('read fail'));reader.readAsDataURL(file);}); }
 function viewImage(url){ const div=document.createElement('div');div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';div.innerHTML=`<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`;div.onclick=()=>div.remove();document.body.appendChild(div); }
-function openLocationFullscreen(arg){ if(!arg)return;const [lat,lng]=arg.split(',');const div=document.createElement('div');div.id='locationFull';div.style.cssText='position:fixed;inset:0;background:#000;z-index:999;display:flex;flex-direction:column';div.innerHTML=`<div style="padding:12px;background:#1e293b;color:#fff"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer">← 返回</button></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0"></iframe>`;document.body.appendChild(div); }
-function closeLocationFull(){ const el=document.getElementById('locationFull');if(el)el.remove(); }
-function playVoice(msgId){ const m=messages.find(x=>x.id===msgId);if(!m||!m.audioUrl)return;const audio=new Audio(m.audioUrl);audio.play(); }
+
+/* ===== v1.10 語音錄音 ===== */
+let mediaRecorder=null,audioChunks=[],recStartTime=0,recTimer=null,recCancel=false,recStream=null;
+function initVoiceRecorder(){
+  const micBtn=document.getElementById('micBtn');if(!micBtn)return;
+  micBtn.addEventListener('mousedown',e=>{e.preventDefault();startRec();});
+  micBtn.addEventListener('touchstart',e=>{e.preventDefault();startRec();},{passive:false});
+  document.addEventListener('mouseup',stopRec);
+  document.addEventListener('touchend',stopRec);
+  document.addEventListener('mousemove',moveRec);
+  document.addEventListener('touchmove',e=>{if(e.touches&&e.touches[0])moveRec(e.touches[0]);},{passive:true});
+}
+function startRec(){
+  if(!me)return;
+  if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showNotif('此瀏覽器不支援錄音');return;}
+  if(mediaRecorder&&mediaRecorder.state==='recording')return;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    recStream=stream;audioChunks=[];recCancel=false;
+    let mime='';
+    if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
+    try{mediaRecorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);}catch(e){mediaRecorder=new MediaRecorder(stream);}
+    mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorder.start();
+    recStartTime=Date.now();
+    const mb=document.getElementById('micBtn');if(mb)mb.classList.add('recording');
+    const ov=document.createElement('div');
+    ov.id='recordingOverlay';
+    ov.innerHTML=`<div class="rec-timer" id="recTimer">0:00</div><div class="rec-wave"><span></span><span></span><span></span><span></span><span></span></div><div class="rec-hint">放開送出 · <span class="rec-cancel-tip">上滑取消</span></div>`;
+    document.body.appendChild(ov);
+    recTimer=setInterval(()=>{
+      const s=Math.floor((Date.now()-recStartTime)/1000);
+      const el=document.getElementById('recTimer');
+      if(el)el.textContent=`0:${String(s).padStart(2,'0')}`;
+      if(s>=60)stopRec();
+    },100);
+  }).catch(()=>{showNotif('無法取得麥克風權限');});
+}
+function moveRec(e){
+  if(!mediaRecorder||mediaRecorder.state!=='recording')return;
+  const y=e&&e.clientY!=null?e.clientY:null;
+  const ov=document.getElementById('recordingOverlay');
+  if(y!=null){
+    if(window.innerHeight-y>110){recCancel=true;if(ov)ov.classList.add('cancel');}
+    else{recCancel=false;if(ov)ov.classList.remove('cancel');}
+  }
+}
+function stopRec(){
+  if(!mediaRecorder||mediaRecorder.state!=='recording')return;
+  const dur=(Date.now()-recStartTime)/1000;
+  mediaRecorder.onstop=async()=>{
+    if(recTimer){clearInterval(recTimer);recTimer=null;}
+    const mb=document.getElementById('micBtn');if(mb)mb.classList.remove('recording');
+    const ov=document.getElementById('recordingOverlay');if(ov)ov.remove();
+    if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}
+    if(recCancel||dur<1)return;
+    const blob=new Blob(audioChunks,{type:'audio/webm'});
+    if(blob.size>1024*1024*3){showNotif('語音太長或太大');return;}
+    const reader=new FileReader();
+    reader.onload=async()=>{ try{ await sendMedia('voice',{audioUrl:reader.result,duration:Math.round(dur)}); }catch(e){showNotif('送出失敗');} };
+    reader.readAsDataURL(blob);
+  };
+  try{mediaRecorder.stop();}catch(e){}
+  mediaRecorder=null;
+}
+function playVoice(msgId){
+  const m=messages.find(x=>x.id===msgId);
+  if(!m||!m.audioUrl){showNotif('找不到語音');return;}
+  if(window._currentAudio){try{window._currentAudio.pause();}catch(e){}window._currentAudio=null;}
+  const audio=new Audio(m.audioUrl);
+  window._currentAudio=audio;
+  const el=document.querySelector(`[data-action="playVoice"][data-arg="${msgId}"]`);
+  const bar=el?el.querySelector('.vp > div'):null;
+  audio.play().catch(()=>showNotif('無法播放'));
+  audio.ontimeupdate=()=>{ if(bar&&audio.duration)bar.style.width=((audio.currentTime/audio.duration)*100)+'%'; };
+  audio.onended=()=>{ if(bar)bar.style.width='0%'; if(el)el.classList.add('played'); window._currentAudio=null; };
+}
+
 async function requestDeleteMsg(msgId){ const reason=prompt('請填寫刪除原因：');if(!reason)return;push(ref(db,'requests'),{type:'delete',msgId,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'}).then(()=>showNotif('已送出')); }
 async function reportMsg(msgId){ const reason=prompt('請填寫舉報原因：');if(!reason)return;push(ref(db,'requests'),{type:'report',msgId,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'}).then(()=>showNotif('已送出')); }
-async function adminDeleteMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username}); }
+async function adminDeleteMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;const m=val[key];await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});if(m&&m.username&&m.username!==AI_NAME){await pushSystemNotice(m.username,{type:'msg_deleted',title:'訊息被下架',body:`你的訊息「${(m.text||'').slice(0,30)}」已被管理員下架。`,msgId,createdAt:Date.now(),read:false,canAppeal:true});} }
+async function adminDeleteAIMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username}); }
 async function restoreMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null,deletedBy:null}); }
 async function purgeMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await remove(ref(db,'messages/'+key)); }
+async function appealMsg(noticeKey){ const reason=prompt('請填寫申訴理由：');if(!reason)return;await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{appealed:true,appealReason:reason,appealedAt:Date.now()});await push(ref(db,'requests'),{type:'appeal',noticeKey,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'});showNotif('已送出申訴');closePage(); }
+async function dismissSystemNotice(noticeKey){ await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{read:true}); }
 
-/* ===== 頁面工具 ===== */
+/* ===== v1.10 位置全螢幕 ===== */
+function openLocationFullscreen(arg){
+  if(!arg)return;
+  const parts=String(arg).split(',');const lat=parts[0],lng=parts[1];
+  if(lat==null||lng==null)return;
+  const old=document.getElementById('locationFull');if(old)old.remove();
+  const div=document.createElement('div');
+  div.id='locationFull';
+  div.style.cssText='position:fixed;inset:0;background:#000;z-index:999;display:flex;flex-direction:column';
+  div.innerHTML=`<div style="padding:12px;background:#1e293b;color:#fff;display:flex;align-items:center;gap:10px"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0">←</button><div style="flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lat)}, ${escapeHtml(lng)}</div><a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}" target="_blank" rel="noopener" style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:7px 12px;border-radius:8px;font-size:12.5px;flex-shrink:0">開大地圖</a></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0" loading="lazy"></iframe>`;
+  document.body.appendChild(div);
+}
+function closeLocationFull(){ const el=document.getElementById('locationFull');if(el)el.remove(); }
+
+/* ===== v1.10 投票系統 ===== */
+window._pollDraft=null;
+window._pollSel={};
+function openPollCreate(){
+  if(!me)return;
+  if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
+  window._pollDraft={name:'',options:['',''],mode:'single',max:'',optMode:'one',duration:'24'};
+  renderPollCreatePage();
+}
+function renderPollCreatePage(){
+  const d=window._pollDraft;if(!d)return;
+  const isMulti=d.mode==='multi';
+  const optRows=d.options.map((o,i)=>`<div class="form-row" style="display:flex;gap:8px;align-items:center"><input type="text" id="pollOpt_${i}" maxlength="50" value="${escapeHtml(o)}" placeholder="選項 ${i+1}" style="flex:1"><button style="background:#dc2626;color:#fff;border:none;border-radius:10px;width:40px;height:40px;cursor:pointer;flex-shrink:0" data-poll-remove="${i}">x</button></div>`).join('');
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">建立投票</div></div><div class="fp-body"><div class="profile-content"><div class="section-title">投票名稱</div><div class="form-row"><input type="text" id="pollName" maxlength="50" value="${escapeHtml(d.name)}" placeholder="投票名稱"></div><div class="section-title">選項輸入方式</div><div class="ban-type-buttons"><button class="ban-type-btn ${d.optMode==='one'?'selected light':''}" data-poll-optmode="one">逐個輸入</button><button class="ban-type-btn ${d.optMode==='multi'?'selected light':''}" data-poll-optmode="multi">多行輸入</button></div><div class="section-title">選項</div>${d.optMode==='one'?`<div>${optRows}</div><button class="btn-ghost" id="pollAddBtn">+ 新增選項</button>`:`<div class="form-row"><textarea id="pollBulk" style="min-height:120px" placeholder="每行一個選項">${escapeHtml(d.options.join('\n'))}</textarea></div>`}<div class="section-title">模式</div><div class="ban-type-buttons"><button class="ban-type-btn ${d.mode==='single'?'selected light':''}" data-poll-mode="single">單選</button><button class="ban-type-btn ${d.mode==='multi'?'selected light':''}" data-poll-mode="multi">多選</button></div>${isMulti?`<div class="section-title">多選上限（留空為無限）</div><div class="form-row"><input type="text" id="pollMax" value="${escapeHtml(d.max)}" placeholder="無限"></div>`:''}<div class="section-title">截止時間（小時後）</div><div class="form-row"><input type="number" id="pollDuration" min="1" value="${escapeHtml(d.duration)}"></div><button class="btn-primary" data-action="submitPoll">建立投票</button><div class="err" id="pollErr"></div></div></div></div>`;
+  const saveDraft=()=>{
+    const n=document.getElementById('pollName');if(n)d.name=n.value;
+    if(d.optMode==='one'){d.options=d.options.map((_,i)=>{const el=document.getElementById('pollOpt_'+i);return el?el.value:'';});}
+    else{const b=document.getElementById('pollBulk');if(b)d.options=b.value.split('\n');}
+    const m=document.getElementById('pollMax');if(m)d.max=m.value;
+    const du=document.getElementById('pollDuration');if(du)d.duration=du.value;
+  };
+  document.querySelectorAll('[data-poll-mode]').forEach(b=>b.onclick=()=>{saveDraft();d.mode=b.dataset.pollMode;renderPollCreatePage();});
+  document.querySelectorAll('[data-poll-optmode]').forEach(b=>b.onclick=()=>{saveDraft();d.optMode=b.dataset.pollOptmode;renderPollCreatePage();});
+  document.querySelectorAll('[data-poll-remove]').forEach(b=>b.onclick=()=>{saveDraft();d.options.splice(+b.dataset.pollRemove,1);if(d.options.length<2)d.options.push('');renderPollCreatePage();});
+  const addBtn=document.getElementById('pollAddBtn');if(addBtn)addBtn.onclick=()=>{saveDraft();if(d.options.length>=20){showNotif('最多 20 個選項');return;}d.options.push('');renderPollCreatePage();};
+}
+async function submitPoll(){
+  const d=window._pollDraft;if(!d)return;
+  const nEl=document.getElementById('pollName');if(nEl)d.name=nEl.value;
+  if(d.optMode==='one')d.options=d.options.map((_,i)=>{const el=document.getElementById('pollOpt_'+i);return el?el.value:'';});
+  else{const b=document.getElementById('pollBulk');if(b)d.options=b.value.split('\n');}
+  const mx=document.getElementById('pollMax');if(mx)d.max=mx.value;
+  const du=document.getElementById('pollDuration');if(du)d.duration=du.value;
+  const errEl=document.getElementById('pollErr');
+  const name=(d.name||'').trim();
+  if(!name){if(errEl)errEl.textContent='請輸入名稱';return;}
+  if(name.length>50){if(errEl)errEl.textContent='名稱最多 50 字';return;}
+  const opts=d.options.map(x=>(x||'').trim()).filter(x=>x.length>0);
+  if(opts.length<2){if(errEl)errEl.textContent='至少 2 個選項';return;}
+  const durH=parseInt(d.duration,10);if(!durH||durH<1){if(errEl)errEl.textContent='截止時間不正確';return;}
+  const maxSel=d.mode==='multi'?(d.max&&parseInt(d.max,10)>0?parseInt(d.max,10):0):1;
+  const deadline=Date.now()+durH*3600*1000;
+  try{
+    const c=await get(child(ref(db),'meta/msgCounter'));
+    const next=(c.exists()?c.val():0)+1;
+    await set(ref(db,'meta/msgCounter'),next);
+    const msgId='msg_'+String(next).padStart(4,'0');
+    await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text:'',type:'poll',pollTitle:name,pollOptions:opts,pollMode:d.mode,pollMaxSelect:maxSel,pollDeadline:deadline,pollVotes:{},createdAt:Date.now(),deleted:false});
+    await writeLog('send','建立投票：'+name);
+    closePage();
+  }catch(e){if(errEl)errEl.textContent=e.message;}
+}
+function renderPollBody(m){
+  const now=Date.now();const ended=m.pollDeadline&&now>=m.pollDeadline;
+  const isAdmin=me.role==='superadmin'||me.role==='admin';
+  const isCreator=m.username===me.username;
+  const votes=m.pollVotes||{};const myVote=votes[me.username]||null;
+  const totalVotes=Object.keys(votes).length;
+  const mode=m.pollMode||'single';const maxSel=m.pollMaxSelect||0;
+  const options=m.pollOptions||[];
+  const counts=options.map((_,i)=>Object.values(votes).filter(v=>Array.isArray(v)&&v.includes(i)).length);
+  const isMulti=mode==='multi';
+  const canVote=!ended&&!myVote;
+  const showResult=!canVote&&(isAdmin||isCreator||!!myVote);
+  const pctArr=counts.map(c=>totalVotes>0?Math.round(c/totalVotes*100):0);
+  const tempSel=(window._pollSel&&window._pollSel[m.id])||[];
+  const optsHTML=options.map((o,i)=>{
+    const selected=Array.isArray(myVote)?myVote.includes(i):tempSel.includes(i);
+    const cls='poll-opt'+(selected?' selected':'')+(canVote?'':' disabled');
+    const sym=isMulti?'<div class="poll-square">'+(selected?'✓':'')+'</div>':'<div class="poll-circle">'+(selected?'✓':'')+'</div>';
+    const pct=pctArr[i];
+    const bar=showResult?`<div class="poll-fill" style="width:${pct}%"></div>`:'';
+    const pctTag=showResult?`<div class="poll-pct">${pct}% · ${counts[i]}</div>`:'';
+    return `<div class="${cls}" data-poll-opt="${i}" data-poll-msg="${m.id}">${bar}${sym}<div class="poll-text">${escapeHtml(o)}</div>${pctTag}</div>`;
+  }).join('');
+  const deadlineText=ended?`<div class="poll-end">已結束</div>`:`<div>將於約 ${Math.max(1,Math.ceil((m.pollDeadline-now)/3600000))} 小時後結束</div>`;
+  const confirmBtn=canVote&&tempSel.length>0?`<button class="poll-confirm" data-action="pollConfirmVote" data-arg="${m.id}">確認投票</button>`:'';
+  const votedTag=myVote?`<div style="font-size:11.5px;opacity:.85">你已投票${mode==='multi'?'（'+myVote.length+' 項）':''}</div>`:'';
+  return `<div class="poll-box"><div class="poll-title">${escapeHtml(m.pollTitle||'')}</div><div class="poll-options">${optsHTML}</div>${confirmBtn}<div class="poll-footer">${deadlineText}<div>${totalVotes} 人已投票</div>${votedTag}</div></div>`;
+}
+async function submitPollVote(msgId){
+  const sel=(window._pollSel&&window._pollSel[msgId])||[];
+  if(sel.length===0){showNotif('請至少選一個');return;}
+  const m=messages.find(x=>x.id===msgId);if(!m)return;
+  if(m.pollVotes&&m.pollVotes[me.username]){showNotif('你已投過票');return;}
+  try{ await update(ref(db,'messages/'+m._key+'/pollVotes'),{[me.username]:sel.slice()}); window._pollSel[msgId]=[]; showNotif('已投票'); }catch(e){showNotif('投票失敗');}
+}
+
 function closePage(){
   pageRoot.innerHTML='';
-  if(document.getElementById('privateChatScreen')){
-    if(unsubGroupMsgs){unsubGroupMsgs();unsubGroupMsgs=null;}
-    if(unsubAIPrivate){unsubAIPrivate();unsubAIPrivate=null;}
-    currentGroupKey=null;
-    document.getElementById('privateChatScreen').remove();
-  }
+  const ps=document.getElementById('privateChatScreen');if(ps){if(unsubGroupMsgs){unsubGroupMsgs();unsubGroupMsgs=null;}if(unsubAIPrivate){unsubAIPrivate();unsubAIPrivate=null;}currentGroupKey=null;ps.remove();}
+  const sn=document.getElementById('systemNoticeOverlay');if(sn)sn.remove();
 }
 function openPage({title,bodyHTML,heroHTML}){ pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`; }
 
-/* ===== 個人主頁 ===== */
 async function openProfilePage(username,isSelf){
   const snap=await get(child(ref(db),'users/'+username));
   if(!snap.exists()){openPage({title:'已註銷',bodyHTML:'<div class="empty">該用戶已註銷帳戶</div>'});return;}
@@ -892,18 +1447,17 @@ async function openProfilePage(username,isSelf){
   const avatarHTML=u.avatar?(String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar):escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
   if(isSelf){
     const heroHTML=`<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">${clsTag} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
-    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼（至少 6 字元）"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入新密碼"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><div class="section-title" style="margin-top:28px">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div>`;
+    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div>`;
     openPage({title:'我的主頁',heroHTML,bodyHTML});
     setTimeout(()=>{const f=document.getElementById('avatarFile');if(f)f.onchange=onAvatarFileChange;},0);
   } else {
     const light=lightenColor(bgColor,40);const dark=darkenColor(bgColor,20);
-    pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)} 的主頁</div></div><div class="fp-body"><div class="profile3dWrap"><div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)"><div class="glass"></div><div class="p3content"><span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span><span class="p3text" style="color:${textColor};opacity:.85">${clsTag} · ${roleLabel}</span></div><div class="p3logo"><span class="circle c1" style="background:${hexA(bgColor,.2)}"></span><span class="circle c2" style="background:${hexA(bgColor,.2)}"></span><span class="circle c3" style="background:${hexA(bgColor,.2)}"></span><span class="circle c4" style="background:${hexA(bgColor,.2)}"></span><span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avatarHTML}</span></div></div></div><div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">這是別人的主頁</div></div></div>`;
+    pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)} 的主頁</div></div><div class="fp-body"><div style="padding:40px 20px;text-align:center"><div style="width:96px;height:96px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:#fff;background:${bgColor};overflow:hidden;border:4px solid rgba(255,255,255,.25)">${avatarHTML}</div><div style="font-size:24px;font-weight:700">${escapeHtml(u.displayName||u.username)}</div><div style="font-size:14px;color:var(--text-sub);margin-top:4px">${clsTag} · ${roleLabel}</div></div></div></div>`;
   }
 }
 function pickTextColor(hex){ const h=String(hex).replace('#','');if(h.length!==6)return '#fff';const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);const lum=(0.299*r+0.587*g+0.114*b)/255;return lum>0.6?'#111':'#fff'; }
 function lightenColor(hex,amt){ const h=String(hex).replace('#','');if(h.length!==6)return hex;let r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 function darkenColor(hex,amt){ const h=String(hex).replace('#','');if(h.length!==6)return hex;let r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);r=Math.max(0,r-amt);g=Math.max(0,g-amt);b=Math.max(0,b-amt);return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }
-function hexA(hex,a){ const h=String(hex).replace('#','');if(h.length!==6)return `rgba(59,130,246,${a})`;const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return `rgba(${r},${g},${b},${a})`; }
 async function saveDisplayName(){ const el=document.getElementById('editDisplayName');if(!el)return;const name=el.value.trim();if(!name)return;if(name.length>20)return;await update(ref(db,'users/'+me.username),{displayName:name});me.displayName=name;sessionStorage.setItem('chat_me',JSON.stringify(me));showNotif('已更新');setTimeout(()=>location.reload(),600); }
 async function pickEmoji(emoji){ const val=emoji||null;await update(ref(db,'users/'+me.username),{avatar:val});me.avatar=val;sessionStorage.setItem('chat_me',JSON.stringify(me));setTimeout(()=>location.reload(),600); }
 async function onAvatarFileChange(e){ const file=e.target.files[0];if(!file)return;try{const d=await compressImage(file,200,200,0.75);await update(ref(db,'users/'+me.username),{avatar:d});me.avatar=d;sessionStorage.setItem('chat_me',JSON.stringify(me));setTimeout(()=>location.reload(),600);}catch(err){} }
@@ -922,12 +1476,41 @@ async function openOnlineQuery(){
   openPage({title:'在線查詢',bodyHTML:html});
 }
 
+/* ===== 問題反饋 ===== */
+async function submitFeedback(){
+  const isLogin=!me;
+  const nameEl=document.getElementById('fbName');
+  const textEl=isLogin?document.getElementById('fbText'):document.getElementById('profileFb');
+  if(!textEl)return;
+  const text=textEl.value.trim();
+  if(!text){showNotif('請輸入內容');return;}
+  let name=isLogin?(nameEl?nameEl.value.trim():''):(me.displayName||me.username);
+  if(isLogin&&!name){showNotif('請輸入名稱');return;}
+  if(isLogin){
+    const key='fb_rate_'+Date.now();
+    const list=JSON.parse(localStorage.getItem('fb_rate')||'[]');
+    const recent=list.filter(t=>Date.now()-t<3600000);
+    if(recent.length>=4){showNotif('一小時內最多 4 次，請稍後再試');return;}
+    recent.push(Date.now());localStorage.setItem('fb_rate',JSON.stringify(recent));
+  }
+  try{
+    const aiRes=await callAI([{role:'system',content:'請判斷以下用戶反饋是否合理（不是無厘頭、不是亂碼、不是重複無意義字）。只回答 OK 或 NONSENSE。'},{role:'user',content:text}]);
+    const c=(aiRes&&aiRes.content||'').trim().toUpperCase();
+    if(c.includes('NONSENSE')){showNotif('反饋內容無效，已忽略');textEl.value='';return;}
+  }catch(e){}
+  const id='fb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  await set(ref(db,'feedbacks/'+id),{id,fromUser:isLogin?null:me.username,fromName:name,fromSeat:isLogin?null:me.seat,text,status:'pending',createdAt:Date.now()});
+  textEl.value='';if(nameEl)nameEl.value='';
+  showNotif('已送出反饋');
+}
+function toggleFeedbackBox(){ const box=$('feedbackBox'); if(box)box.classList.toggle('hidden'); }
+
 /* ===== 管理員後台 ===== */
 function openAdminPage(tab){
   if(me.role!=='superadmin'&&me.role!=='admin')return;
   const isSuper=me.role==='superadmin';
   const accountTab=isSuper?`<button class="tab ${tab==='accounts'?'active':''}" data-action="switchAdminTab" data-arg="accounts">帳號管理</button>`:'';
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
 async function renderAdminTab(tab){
@@ -937,6 +1520,7 @@ async function renderAdminTab(tab){
   else if(tab==='accounts')body.innerHTML=renderAccountManage();
   else if(tab==='notices')body.innerHTML=renderPendingNotices();
   else if(tab==='requests')body.innerHTML=await renderRequestsList();
+  else if(tab==='feedbacks')body.innerHTML=renderFeedbacksList();
   else if(tab==='logs')body.innerHTML=await renderAllLogs();
   else if(tab==='groups')body.innerHTML=await renderGroupsAdmin();
 }
@@ -944,7 +1528,7 @@ function renderUserList(){
   const list=Object.values(allUsers).filter(u=>u.hasLoggedIn||u.neverLoggedIn!==true).sort((a,b)=>{const ca=a.class||'';const cb=b.class||'';if(ca!==cb)return ca.localeCompare(cb);return (a.seat||0)-(b.seat||0);});
   const isSuper=me.role==='superadmin';
   let modeHTML='';
-  if(isSuper){const isOld=metaAIMode==='keyword';modeHTML=`<div class="section-title">AI 模式</div><div class="ban-type-buttons"><button class="ban-type-btn ${isOld?'selected light':''}" data-action="toggleAIMeta" data-arg="keyword">舊版（關鍵詞觸發）</button><button class="ban-type-btn ${!isOld?'selected light':''}" data-action="toggleAIMeta" data-arg="button">新版（按鈕控制）</button></div>`;}
+  if(isSuper){const isOld=metaAIMode==='keyword';modeHTML=`<div class="section-title">AI 模式</div><div class="ban-type-buttons"><button class="ban-type-btn ${isOld?'selected light':''}" data-action="toggleAIMeta" data-arg="keyword">舊版</button><button class="ban-type-btn ${!isOld?'selected light':''}" data-action="toggleAIMeta" data-arg="button">新版</button></div>`;}
   if(list.length===0)return modeHTML+`<div class="empty">暫無用戶</div>`;
   return modeHTML+`<div class="user-list">${list.map(u=>{
     const isAdminU=u.role==='superadmin'||u.role==='admin';
@@ -1013,7 +1597,7 @@ function generateUniqueColor(existing){
 }
 async function disableAccount(username){ if(me.role!=='superadmin')return;await update(ref(db,'users/'+username),{disabled:true});await writeLog('account','停用帳號 '+username);showNotif('已停用');openUserDetail(username); }
 async function enableAccount(username){ if(me.role!=='superadmin')return;await update(ref(db,'users/'+username),{disabled:false});await writeLog('account','恢復帳號 '+username);showNotif('已恢復');openUserDetail(username); }
-async function deleteAccount(username){ if(me.role!=='superadmin')return;if(!confirm('確定要徹底刪除？此動作不可恢復！'))return;await remove(ref(db,'users/'+username));await remove(ref(db,'presence/'+username));await remove(ref(db,'aiMode/'+username));await remove(ref(db,'aiPrivateChat/'+username));await writeLog('account','徹底刪除帳號 '+username);showNotif('已刪除');closePage();openAdminPage('users'); }
+async function deleteAccount(username){ if(me.role!=='superadmin')return;if(!confirm('確定要徹底刪除？'))return;await remove(ref(db,'users/'+username));await remove(ref(db,'presence/'+username));await remove(ref(db,'aiMode/'+username));await remove(ref(db,'aiPrivateChat/'+username));await writeLog('account','徹底刪除帳號 '+username);showNotif('已刪除');closePage();openAdminPage('users'); }
 function renderPendingNotices(){
   if(!pendingNotices||pendingNotices.length===0)return `<div class="empty">暫無待審核公告</div>`;
   return pendingNotices.map(p=>{
@@ -1026,9 +1610,55 @@ async function renderRequestsList(){
   if(list.length===0)return `<div class="empty">暫無請求</div>`;
   let msgSnap=null;try{msgSnap=await get(query(ref(db,'messages'),limitToLast(300)));}catch(e){}
   const msgVal=msgSnap&&msgSnap.exists()?msgSnap.val():{};
-  return list.map(r=>{const typeLabel=r.type==='delete'?'刪除請求':'舉報';const foundKey=Object.keys(msgVal).find(k=>msgVal[k].id===r.msgId);const m=foundKey?msgVal[foundKey]:null;let contentHTML=`<div style="font-size:11.5px;color:var(--text-sub)">訊息編號：${escapeHtml(r.msgId)}</div>`;if(m){contentHTML+=`<div class="pi-content" style="margin-top:8px">${escapeHtml(m.displayName||m.username)}：${escapeHtml(m.text||'[媒體]')}</div>`;}return `<div class="pending-item"><div class="pi-head"><div class="pi-from">${escapeHtml(r.fromName||r.from)} · ${typeLabel}</div></div><div style="font-size:12.5px;color:var(--text-sub)">原因：${escapeHtml(r.reason||'')}</div>${contentHTML}<div style="display:flex;gap:6px;margin-top:10px"><button class="btn-danger" style="margin:0;flex:1;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="approve">批准</button><button class="btn-ghost" style="margin:0;flex:1;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="reject">不理會</button></div></div>`;}).join('');
+  return list.map(r=>{const typeLabel=r.type==='delete'?'刪除請求':(r.type==='report'?'舉報':'申訴');const foundKey=Object.keys(msgVal).find(k=>msgVal[k].id===r.msgId);const m=foundKey?msgVal[foundKey]:null;let contentHTML=`<div style="font-size:11.5px;color:var(--text-sub)">訊息編號：${escapeHtml(r.msgId||r.noticeKey||'')}</div>`;if(m){contentHTML+=`<div class="pi-content" style="margin-top:8px">${escapeHtml(m.displayName||m.username)}：${escapeHtml(m.text||'[媒體]')}</div>`;}return `<div class="pending-item"><div class="pi-head"><div class="pi-from">${escapeHtml(r.fromName||r.from)} · ${typeLabel}</div></div><div style="font-size:12.5px;color:var(--text-sub)">原因：${escapeHtml(r.reason||'')}</div>${contentHTML}<div style="display:flex;gap:6px;margin-top:10px"><button class="btn-danger" style="margin:0;flex:1;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="approve">批准</button><button class="btn-ghost" style="margin:0;flex:1;padding:8px" data-action="handleRequest" data-arg="${r._key||''}" data-arg2="reject">不理會</button></div></div>`;}).join('');
 }
-async function handleRequest(key,action){ if(!key)return;const snap=await get(ref(db,'requests/'+key));if(!snap.exists())return;const req=snap.val();if(action==='approve'){const mSnap=await get(query(ref(db,'messages'),limitToLast(300)));const mVal=mSnap.val()||{};const mkey=Object.keys(mVal).find(k=>mVal[k].id===req.msgId);if(mkey)await update(ref(db,'messages/'+mkey),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});await update(ref(db,'requests/'+key),{status:'approved',handledAt:Date.now(),handledBy:me.username});}else{await update(ref(db,'requests/'+key),{status:'rejected',handledAt:Date.now(),handledBy:me.username});}renderAdminTab('requests'); }
+async function handleRequest(key,action){
+  if(!key)return;
+  const snap=await get(ref(db,'requests/'+key));if(!snap.exists())return;
+  const req=snap.val();
+  if(action==='approve'){
+    if(req.type==='appeal'){
+      const nSnap=await get(ref(db,'systemNotices/'+req.from+'/'+req.noticeKey));
+      if(nSnap.exists()){
+        const n=nSnap.val();
+        if(n.msgId){
+          const mSnap=await get(query(ref(db,'messages'),limitToLast(300)));
+          const mVal=mSnap.val()||{};
+          const mkey=Object.keys(mVal).find(k=>mVal[k].id===n.msgId);
+          if(mkey){await update(ref(db,'messages/'+mkey),{deleted:false,deletedAt:null,deletedBy:null});}
+        }
+      }
+      await pushSystemNotice(req.from,{type:'appeal_approved',title:'申訴成功',body:'你的申訴已通過，訊息已恢復。',createdAt:Date.now(),read:false});
+    } else if(req.msgId){
+      const mSnap=await get(query(ref(db,'messages'),limitToLast(300)));
+      const mVal=mSnap.val()||{};
+      const mkey=Object.keys(mVal).find(k=>mVal[k].id===req.msgId);
+      if(mkey)await update(ref(db,'messages/'+mkey),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});
+    }
+    await update(ref(db,'requests/'+key),{status:'approved',handledAt:Date.now(),handledBy:me.username});
+  } else {
+    await update(ref(db,'requests/'+key),{status:'rejected',handledAt:Date.now(),handledBy:me.username});
+    if(req.type==='appeal'&&req.from){ await pushSystemNotice(req.from,{type:'appeal_rejected',title:'申訴被拒絕',body:'你的申訴已被拒絕。',createdAt:Date.now(),read:false}); }
+  }
+  renderAdminTab('requests');
+}
+function renderFeedbacksList(){
+  const list=Object.values(feedbacks).sort((a,b)=>b.createdAt-a.createdAt);
+  if(list.length===0)return `<div class="empty">暫無反饋</div>`;
+  return list.map(f=>{
+    const time=new Date(f.createdAt).toLocaleString('zh-TW');
+    const st=f.status||'pending';
+    const statusLabel=st==='pending'?'待處理':st==='processing'?'處理中':'已完成';
+    let actions='';
+    if(st==='pending')actions=`<button class="btn-primary" style="flex:1;padding:8px" data-action="feedbackProcess" data-arg="${f._key}">開始處理</button>`;
+    else if(st==='processing')actions=`<button class="btn-ok" style="flex:1;padding:8px" data-action="feedbackDone" data-arg="${f._key}">處理完成</button>`;
+    let resultHTML='';
+    if(f.result)resultHTML=`<div style="font-size:12.5px;color:#4ade80;margin-top:8px;padding:8px;background:rgba(74,222,128,.1);border-radius:6px">處理結果：${escapeHtml(f.result)}</div>`;
+    return `<div class="admin-feedback"><div class="af-head"><div class="af-from">${escapeHtml(f.fromName||f.fromUser||'匿名')}${f.fromSeat?' #'+f.fromSeat:''}</div><div class="af-status ${st}">${statusLabel}</div></div><div class="af-body">${escapeHtml(f.text||'')}</div>${resultHTML}<div class="af-time">${time}</div><div class="af-actions">${actions}</div></div>`;
+  }).join('');
+}
+async function feedbackProcess(key){ await update(ref(db,'feedbacks/'+key),{status:'processing',processedAt:Date.now(),processedBy:me.username}); const f=feedbacks[key]; if(f&&f.fromUser){await pushSystemNotice(f.fromUser,{type:'feedback_processing',title:'反饋正在處理',body:'你提交的問題反饋正在處理中，請耐心等候。',createdAt:Date.now(),read:false});} showNotif('已標記處理中');renderAdminTab('feedbacks'); }
+async function feedbackDone(key){ const result=prompt('請填寫處理結果：');if(!result)return;await update(ref(db,'feedbacks/'+key),{status:'done',result,doneAt:Date.now(),doneBy:me.username}); const f=feedbacks[key]; if(f&&f.fromUser){await pushSystemNotice(f.fromUser,{type:'feedback_done',title:'反饋已處理',body:'你的問題反饋已處理完成。\n處理結果：'+result,createdAt:Date.now(),read:false});} showNotif('已處理完成');renderAdminTab('feedbacks'); }
 async function renderAllLogs(){ const snap=await get(query(ref(db,'logs'),limitToLast(300)));const val=snap.val()||{};const list=Object.values(val).sort((a,b)=>b.createdAt-a.createdAt);if(list.length===0)return `<div class="empty">暫無紀錄</div>`;return `<div class="term-log">${list.map(l=>`<div class="tl t-${l.action}"><span class="t-time">[${new Date(l.createdAt).toLocaleString('zh-TW')}]</span> <span class="t-act">[${l.action}]</span> <span class="t-user">[${escapeHtml(l.displayName||l.username)}]</span> ${escapeHtml(l.detail||l.action)}</div>`).join('')}</div>`; }
 async function renderGroupsAdmin(){
   const snap=await get(ref(db,'groups'));
@@ -1071,8 +1701,8 @@ async function openUserDetail(username){
   if(u.banned)bodyHTML+=`<div class="ban-status ${u.banned.type}"><b>${u.banned.type==='severe'?'嚴重封禁':'普通封禁'}</b><br>原因：${escapeHtml(u.banned.reason||'（無）')}</div>`;
   if(u.password)bodyHTML+=`<div class="section-title">密碼</div><div style="font-family:Consolas,monospace;font-size:14px;background:var(--bg-input);padding:10px 12px;border-radius:10px;margin-bottom:10px">${escapeHtml(u.password)}</div>`;
   if(canAccount){bodyHTML+=`<div class="section-title">帳號管理</div><div class="ban-block">`;if(u.disabled)bodyHTML+=`<button class="btn-ok" data-action="enableAccount" data-arg="${u.username}">恢復</button>`;else bodyHTML+=`<button class="btn-warn" data-action="disableAccount" data-arg="${u.username}">停用</button>`;bodyHTML+=`<button class="btn-danger" data-action="deleteAccount" data-arg="${u.username}">徹底刪除</button></div>`;}
-  if(canBan){if(u.banned)bodyHTML+=`<button class="btn-ok" data-action="unban" data-arg="${u.username}">解除封禁</button>`;else{bodyHTML+=`<div class="section-title">封禁管理</div><div class="ban-block"><div class="ban-type-buttons"><button class="ban-type-btn light" data-action="confirmBan" data-arg="${u.username}">封禁</button></div></div>`;}}
-  if(canGrant){bodyHTML+=`<div class="section-title">管理員權限</div>`;if(isTargetAdmin&&!isTargetSuper)bodyHTML+=`<button class="btn-ghost" data-action="adminRevoke" data-arg="${u.username}">撤銷管理員</button>`;else if(!isTargetAdmin)bodyHTML+=`<button class="btn-primary" data-action="adminGrant" data-arg="${u.username}">授予管理員</button>`;}
+  if(canBan){if(u.banned)bodyHTML+=`<button class="btn-ok" data-action="unban" data-arg="${u.username}">解除封禁</button>`;else bodyHTML+=`<button class="btn-danger" data-action="confirmBan" data-arg="${u.username}">封禁</button>`;}
+  if(canGrant){if(isTargetAdmin&&!isTargetSuper)bodyHTML+=`<button class="btn-ghost" data-action="adminRevoke" data-arg="${u.username}">撤銷管理員</button>`;else if(!isTargetAdmin)bodyHTML+=`<button class="btn-primary" data-action="adminGrant" data-arg="${u.username}">授予管理員</button>`;}
   bodyHTML+=`<button class="btn-ghost" data-action="openUserLogs" data-arg="${u.username}">查看日誌</button>`;
   openPage({title:(u.displayName||u.username)+' 的資料',heroHTML:`<div class="profile-hero" style="background:${bgColor};color:#fff"><div class="hero-avatar" style="background:${bgColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">${escapeHtml(u.class||'')} #${u.seat||''} · ${u.username}</div></div>`,bodyHTML});
 }
@@ -1084,15 +1714,36 @@ function setBanType(arg,arg2){ if(!banDraft[arg])banDraft[arg]={type:'light'};ba
 async function openUserLogs(username){ const snap=await get(query(ref(db,'logs'),limitToLast(500)));const val=snap.val()||{};const list=Object.values(val).filter(l=>l.username===username).sort((a,b)=>b.createdAt-a.createdAt);const body=list.length===0?`<div class="empty">暫無紀錄</div>`:`<div class="term-log">${list.map(l=>`<div class="tl t-${l.action}"><span class="t-time">[${new Date(l.createdAt).toLocaleString('zh-TW')}]</span> <span class="t-act">[${l.action}]</span> <span class="t-user">[${escapeHtml(l.username)}]</span> ${escapeHtml(l.detail||'')}</div>`).join('')}</div>`;openPage({title:username+' 的日誌',bodyHTML:body}); }
 async function openMyLogs(){ await openUserLogs(me.username); }
 
-/* ===== 群聊 ===== */
+/* ===== 群聊 + 系統通知 ===== */
 async function openGroupList(){
   if(!me)return;
   const keys=Object.keys(myGroups).sort((a,b)=>(myGroups[b].lastAt||0)-(myGroups[a].lastAt||0));
+  const unreadCount=systemNotices.filter(n=>!n.read).length;
   let bodyHTML='';
-  if(keys.length===0){bodyHTML=`<div class="empty">還沒有群聊，點右上角「+ 建立群聊」</div>`;}
-  else{bodyHTML=keys.map(key=>{const g=myGroups[key];const memberCount=Object.keys(g.members||{}).length;const lastMsg=g.lastMsg||'（還沒有訊息）';return `<div class="group-item" data-action="openGroupChat" data-arg="${escapeHtml(key)}"><div class="gi-avatar">群</div><div class="gi-info"><div class="gi-name">${escapeHtml(key)}</div><div class="gi-sub">${memberCount} 人 · ${escapeHtml(String(lastMsg).slice(0,20))}</div></div></div>`;}).join('');}
+  const sysItem=`<div class="group-item" data-action="openSystemNotice"><div class="gi-avatar notify">${SYS_NOTICE_ICON}</div><div class="gi-info"><div class="gi-name">${SYS_NOTICE_NAME}</div><div class="gi-sub">${systemNotices.length} 條通知</div></div>${unreadCount>0?`<div class="gi-badge">${unreadCount}</div>`:''}</div>`;
+  if(keys.length===0){bodyHTML=sysItem+`<div class="empty">還沒有其他群聊，點右上角「+ 建立群聊」</div>`;}
+  else{bodyHTML=sysItem+keys.map(key=>{const g=myGroups[key];const memberCount=Object.keys(g.members||{}).length;const lastMsg=g.lastMsg||'（還沒有訊息）';return `<div class="group-item" data-action="openGroupChat" data-arg="${escapeHtml(key)}"><div class="gi-avatar">群</div><div class="gi-info"><div class="gi-name">${escapeHtml(key)}</div><div class="gi-sub">${memberCount} 人 · ${escapeHtml(String(lastMsg).slice(0,20))}</div></div></div>`;}).join('');}
   pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">我的群聊</div><button class="btn-primary" style="width:auto;padding:8px 14px;margin:0" data-action="openCreateGroup">+ 建立群聊</button></div><div class="fp-body">${bodyHTML}</div></div>`;
 }
+async function openSystemNotice(){
+  if(!me)return;
+  const unread=systemNotices.filter(n=>!n.read);
+  for(const n of unread){ try{await update(ref(db,'systemNotices/'+me.username+'/'+n._key),{read:true});}catch(e){} }
+  let bodyHTML='';
+  if(systemNotices.length===0){bodyHTML=`<div class="sn-empty">暫無通知</div>`;}
+  else{
+    bodyHTML=systemNotices.map(n=>{
+      const time=new Date(n.createdAt).toLocaleString('zh-TW');
+      let actions='';
+      if(n.canAppeal&&!n.appealed)actions=`<button class="sn-appeal" data-action="appealMsg" data-arg="${n._key}">我要申訴</button><button class="sn-confirm" data-action="dismissSystemNotice" data-arg="${n._key}">確定</button>`;
+      return `<div class="sn-card"><div class="sn-card-title">${escapeHtml(n.title||'系統通知')}</div><div class="sn-card-time">${time}</div><div class="sn-card-body">${n.html?n.html:escapeHtml(n.body||'').replace(/\n/g,'<br>')}</div>${actions?`<div class="sn-card-actions">${actions}</div>`:''}</div>`;
+    }).join('');
+  }
+  pageRoot.innerHTML=`<div class="fullPage" id="systemNoticeOverlay"><div class="sn-header"><button class="sn-back" data-action="closePage">←</button><div class="sn-title">${SYS_NOTICE_ICON} ${SYS_NOTICE_NAME}</div></div><div class="sn-body">${bodyHTML}</div></div>`;
+}
+async function adminSendSystemNotice(){ if(me.role!=='superadmin'&&me.role!=='admin')return; const target=prompt('發送給（all 或 username）：'); if(!target)return; const title=prompt('標題：'); if(!title)return; const body=prompt('內容：'); if(!body)return; const targets=target==='all'?Object.keys(allUsers).filter(u=>u!==AI_NAME):[target]; for(const t of targets){ await pushSystemNotice(t,{type:'admin_system',title,body,createdAt:Date.now(),read:false}); } showNotif('已發送'); }
+async function adminDeleteSystemNotice(key){ await remove(ref(db,'systemNotices/'+me.username+'/'+key)); showNotif('已刪除'); openSystemNotice(); }
+
 let _groupDraft={selected:{},search:''};
 function openCreateGroup(){ if(!me)return;_groupDraft={selected:{},search:''};renderCreateGroupPage(); }
 function renderCreateGroupPage(){
@@ -1130,6 +1781,7 @@ async function submitCreateGroup(){
   const errEl=document.getElementById('groupErr');
   if(!name){if(errEl)errEl.textContent='請輸入群聊名稱';return;}
   if(name.length>50){if(errEl)errEl.textContent='群聊名稱最多 50 字';return;}
+  if(name===SYS_NOTICE_NAME){if(errEl)errEl.textContent='此名稱為系統保留';return;}
   const sel=Object.keys(_groupDraft.selected);
   if(sel.length<1){if(errEl)errEl.textContent='最少要選 1 個人';return;}
   try{
@@ -1166,7 +1818,7 @@ function renderGroupChat(groupKey,g){
     const time=new Date(m.createdAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
     const color=m.color||'#3b82f6';
     const av=m.avatar?(String(m.avatar).startsWith('data:')?`<img src="${m.avatar}">`:m.avatar):escapeHtml((m.displayName||m.username).charAt(0).toUpperCase());
-    return `<div class="msg ${isMe?'me':''}"><div class="avatar" style="background:${color}">${av}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}</div><div class="bubble" style="background:${color}">${escapeHtml(m.text||'').replace(/\n/g,'<br>')}</div><div class="msg-tools"><button class="danger" data-action="reportMsg" data-arg="${m.id||m._key}">舉報</button></div></div></div>`;
+    return `<div class="msg ${isMe?'me':''}"><div class="avatar" style="background:${color}">${av}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}</div><div class="bubble" style="background:${color}">${escapeHtml(m.text||'').replace(/\n/g,'<br>')}</div></div></div>`;
   }).join('');
   if(!document.getElementById('privateChatScreen')){
     const div=document.createElement('div');
@@ -1196,7 +1848,6 @@ async function submitGroupMessage(){
     const msgId=currentGroupKey+'_msg_'+counter;
     await update(ref(db,'groups/'+currentGroupKey),{msgCounter:counter,lastMsg:text,lastAt:Date.now()});
     await set(ref(db,'groupMessages/'+currentGroupKey+'/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',createdAt:Date.now(),deleted:false});
-    await writeLog('group','群聊「'+currentGroupKey+'」發送訊息');
   }catch(e){showNotif('送出失敗');}
 }
 async function leaveGroup(groupKey){
@@ -1225,7 +1876,7 @@ function openAIPrivate(){
 }
 function renderAIPrivate(){
   let msgsHTML='';
-  if(aiPrivateMsgs.length===0){msgsHTML=`<div style="text-align:center;padding:30px 20px;color:var(--text-sub);font-size:14px;line-height:1.7">你好！我是小喆AI。這裡是我們單獨的對話，只有你能看到。<br>你可以問我任何問題，也可以叫我幫你做設定。</div>`;}
+  if(aiPrivateMsgs.length===0){msgsHTML=`<div style="text-align:center;padding:30px 20px;color:var(--text-sub);font-size:14px;line-height:1.7">你好！我是小喆AI。這裡是我們單獨的對話，只有你能看到。</div>`;}
   else{
     msgsHTML=aiPrivateMsgs.map(m=>{
       const isMe=m.username===me.username;
@@ -1270,34 +1921,55 @@ async function submitAIPrivateMessage(){
   }catch(e){showNotif('送出失敗');}
 }
 
-/* ===== 版本 / 感謝 ===== */
-async function openVersionPage(){ openPage({title:'版本資訊',bodyHTML:'<div class="version-item latest"><div class="vi-head"><span class="vi-ver">v1.9.2</span><span class="vi-badge">最新</span></div><div class="vi-changes"><ul><li>修復登入問題</li><li>修復審核分頁</li><li>修復請求分頁</li><li>修復 AI 模式切換</li><li>私人群聊</li><li>AI 私人聊天</li><li>底部導航欄</li><li>未登入過的人不顯示</li></ul></div></div>'}); }
+/* ===== 版本 ===== */
+const VERSION_HISTORY=[
+{ver:'v1.10',date:'2026-10-09',changes:['補完語音錄音功能','位置訊息可點開全螢幕地圖','恢復公告輪播卡片','恢復完整投票系統','加密訊息一頁一字修復','語音可播放並顯示進度','AI 記憶擴展至 500 則','AI 可切換網站語言']},
+{ver:'v1.9.3',date:'2026-09-27',changes:['新增問題反饋系統','新增系統通知群聊','新增申訴功能','新增 HTML 訊息 AI 審查','AI 權限大擴展','AI 可注入 UI / 卡死瀏覽器','恢復圖片 / 檔案 / 語音 / 位置 / 投票','恢復完整版本歷史','日誌改用專業術語','管理員紅點通知']},
+{ver:'v1.9.2',date:'2026-09-13',changes:['修復了一些已知錯誤','私人群聊','AI 私人聊天','底部導航欄','未登入過的人不顯示']},
+{ver:'v1.9.1',date:'2026-09-13',changes:['修復了一些已知錯誤']},
+{ver:'v1.9',date:'2026-09-13',changes:['私人群聊','AI 私人聊天','UI 改版（底部導航欄）','未登入過的人不顯示','群聊審核']},
+{ver:'v1.8.3',date:'2026-09-13',changes:['修復了一些已知錯誤']},
+{ver:'v1.8.2',date:'2026-09-13',changes:['新增帳號管理','帳號可停用 / 徹底刪除','新增班別 1A/1B/1C/1D/1E','訊息 meta 顯示班別','在線查詢按班別分組','頭像上傳修復','註銷帳號頭像變灰','隨機顏色']},
+{ver:'v1.8.1',date:'2026-09-13',changes:['公告已讀邏輯','AI 按鈕移到加密旁邊','日誌改黑客風格','管理員後台顯示完整內容','公告已讀名單','資料庫壓縮']},
+{ver:'v1.8',date:'2026-09-12',changes:['投票系統','AI 新模式','管理員可切換新舊 AI 模式','主題語言改存 Firebase','心跳在線檢測','個人主頁在線查詢','AI 可查日誌與摘要']},
+{ver:'v1.7.1',date:'2026-09-12',changes:['AI 新增 setTheme 指令','AI 改自己顏色立即生效','AI 執行完操作後自動重讀 me']},
+{ver:'v1.7',date:'2026-09-12',changes:['版本檢查機制','任何按鈕都檢查','版本不符彈窗無法取消','帶 session + 暫存 + 頁面狀態跳轉','全站漸層過渡']},
+{ver:'v1.6',date:'2026-09-12',changes:['BB8 完整動畫','AI 提示詞加時間','AI 看得到所有管理員資料','AI 操作所有管理員功能','用戶詳情顯示密碼','加密訊息全員遮罩']},
+{ver:'v1.5',date:'2026-09-12',changes:['AI 對話模式','思考中訊息即時替換','退出對話置中訊息','小紅書 Dots API']},
+{ver:'v1.4',date:'2026-09-12',changes:['AI 改用小紅書 Dots API','AI 回覆末尾加贊助小字','提示詞更新','429 重試']},
+{ver:'v1.3',date:'2026-09-12',changes:['新增 AI 用戶','AI 記憶','AI 操作網站','思考卡片','警告訊息']},
+{ver:'v1.2',date:'2026-09-12',changes:['3D 卡片','過場動畫','加密訊息']},
+{ver:'v1.1',date:'2026-09-12',changes:['大量動畫']},
+{ver:'v1.0',date:'2026-09-12',changes:['正式版','完整翻譯','去除 emoji']},
+{ver:'v0.9',date:'2026-09-12',changes:['公告系統','媒體','@ 提及','搜尋','刪訊息 / 舉報','日誌']},
+{ver:'v0.8',date:'2026-09-12',changes:['黑白主題','語言切換']},
+{ver:'v0.5',date:'2026-09-12',changes:['日誌','舉報','搜尋','@']},
+{ver:'v0.4',date:'2026-09-12',changes:['管理員後台']},
+{ver:'v0.2',date:'',changes:['個人主頁','改名稱','改頭像','改密碼','顏色']},
+{ver:'v0.1',date:'',changes:['登入','聊天室','編號','顏色']}
+];
+async function openVersionPage(){ const body=VERSION_HISTORY.map((v,i)=>`<div class="version-item ${i===0?'latest':''}"><div class="vi-head"><span class="vi-ver">${v.ver}</span>${i===0?'<span class="vi-badge">最新</span>':''}${v.date?'<span class="vi-date">'+v.date+'</span>':''}</div><div class="vi-changes"><ul>${v.changes.map(c=>`<li>${escapeHtml(c)}</li>`).join('')}</ul></div></div>`).join('');openPage({title:'版本資訊',bodyHTML:body}); }
 async function openThanksPage(){ const items=thanksList.length===0?`<div class="thanks-empty">尚未有名稱</div>`:thanksList.map(x=>`<div class="thanks-item"><div>${escapeHtml(x.name)}</div><div>by ${escapeHtml(x.byName||x.by)}</div></div>`).join('');openPage({title:'感謝清單',bodyHTML:items}); }
 async function submitThanks(){ if(me.role!=='superadmin'&&me.role!=='admin')return;const name=prompt('新增感謝名稱：');if(!name)return;await push(ref(db,'thanks'),{name,by:me.username,byName:me.displayName,createdAt:Date.now()});showNotif('已新增');openThanksPage(); }
-
-/* ===== AI 設定 / 個人 ===== */
-async function aiSaveSettings(){ const dn=document.getElementById('ai_displayName').value.trim();const color=document.getElementById('ai_color').value.trim();const bio=document.getElementById('ai_bio').value.trim();if(!dn||!/^#[0-9a-fA-F]{6}$/.test(color))return;await update(ref(db,'users/'+AI_NAME),{displayName:dn,color,bio});showNotif('已儲存');setTimeout(()=>location.reload(),600); }
+async function aiSaveSettings(){ const dn=(document.getElementById('ai_displayName')||{}).value;const color=(document.getElementById('ai_color')||{}).value;const bio=(document.getElementById('ai_bio')||{}).value;if(!dn||!/^#[0-9a-fA-F]{6}$/.test(color))return;await update(ref(db,'users/'+AI_NAME),{displayName:dn.trim(),color:color.trim(),bio:(bio||'').trim()});showNotif('已儲存');setTimeout(()=>location.reload(),600); }
 async function aiSetAvatarText(){ await update(ref(db,'users/'+AI_NAME),{avatar:'AI'});showNotif('已更新');setTimeout(()=>location.reload(),600); }
 async function aiSetAvatarEmoji(emoji){ await update(ref(db,'users/'+AI_NAME),{avatar:emoji});showNotif('已更新');setTimeout(()=>location.reload(),600); }
-async function aiAllow(){ if(!pendingAIConfirm)return;pendingAIConfirm=null;const bar=document.getElementById('aiConfirmBar');if(bar)bar.remove();showNotif('已執行'); }
-function aiDeny(){ pendingAIConfirm=null;const bar=document.getElementById('aiConfirmBar');if(bar)bar.remove();showNotif('已取消'); }
-let pendingAIConfirm=null;
-
-/* ===== 連結警告 ===== */
 let pendingLink='';
 function showLinkWarning(url){ pendingLink=url;const div=document.createElement('div');div.id='linkWarnOverlay';div.innerHTML=`<div class="lw-card"><h3>Link Warning</h3><p>此連結不屬於梁喆同學工作室，請自行承擔後果</p><div class="lw-url">${escapeHtml(url)}</div><div class="lw-actions"><button class="btn-ghost" data-action="linkCancel">取消</button><button class="btn-primary" data-action="linkContinue">繼續</button></div></div>`;document.body.appendChild(div); }
 function linkContinue(){ if(pendingLink)window.open(pendingLink,'_blank','noopener');linkCancel(); }
 function linkCancel(){ const el=document.getElementById('linkWarnOverlay');if(el)el.remove();pendingLink=''; }
 document.addEventListener('click',e=>{ const link=e.target.closest('a[data-action="linkCheck"]');if(!link)return;e.preventDefault();const url=link.dataset.arg;if(url.startsWith('https://oscar114515.github.io/'))window.open(url,'_blank','noopener');else showLinkWarning(url); });
-
-function closeCarousel(){ }
 function showNotif(text){ const el=document.createElement('div');el.id='notifBanner';el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),3000); }
 
 document.getElementById('themeToggleLogin').addEventListener('change',e=>setTheme(e.target.checked?'light':'dark'));
 document.getElementById('themeToggleChat').addEventListener('change',e=>setTheme(e.target.checked?'light':'dark'));
 encCheckbox.addEventListener('change',()=>{encToggle.classList.toggle('active',encCheckbox.checked);});
+const _langLogin=document.getElementById('langSelectLogin');if(_langLogin)_langLogin.addEventListener('change',e=>setLang(e.target.value));
+const _langChat=document.getElementById('langSelectChat');if(_langChat)_langChat.addEventListener('change',e=>setLang(e.target.value));
 
 applyTheme();
+applyLang();
+initVoiceRecorder();
 document.addEventListener('click',()=>{ if(!versionMismatchShown)checkVersion(); },true);
 window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
 
@@ -1314,6 +1986,7 @@ window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
     if(data.banned&&data.banned.type==='severe'){sessionStorage.removeItem('chat_me');return;}
     me={username:data.username,displayName:data.displayName||data.username,seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
+    if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{await set(ref(db,'presence/'+me.username),true);}catch(e){}
     try{await ensureAIUser();}catch(e){}
     enterChat();
