@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.10</title>
+<title>班級聊天室 v1.10.1</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -451,7 +451,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.10 正式版</div>
+    <div id="loginVersion">v1.10.1 正式版</div>
   </div>
 </div>
 
@@ -459,7 +459,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.10</span>
+      <span class="ver">v1.10.1</span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
         <div class="bb8-toggle__container">
@@ -532,7 +532,7 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.10';
+const CURRENT_VERSION='v1.10.1';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
 const AI_MODEL='dots3-note-prev';
@@ -614,11 +614,35 @@ async function setLang(n){
   showNotif(n==='en'?'Language: English':(n==='zh-Hans'?'語言：简体中文':'語言：繁體中文'));
 }
 
-let heartbeatTimer=null;
-async function heartbeatLoop(){ if(!me)return;try{await set(ref(db,'presence/'+me.username),true);}catch(e){} }
-function startHeartbeat(){ stopHeartbeat();heartbeatLoop();heartbeatTimer=setInterval(heartbeatLoop,10000); }
-function stopHeartbeat(){ if(heartbeatTimer){clearInterval(heartbeatTimer);heartbeatTimer=null;} }
+let heartbeatTimer=null,presenceRefreshTimer=null;
+/* v1.10.1 修復在線人數：presence 改存心跳時間戳，超過 30 秒視為離線（解舊版 true 幽靈） */
+const PRESENCE_TIMEOUT=30000;
+function isOnline(username){
+  const v=presence[username];
+  return typeof v==='number'&&(Date.now()-v)<PRESENCE_TIMEOUT;
+}
+function onlineCount(){ let n=0;for(const u in presence){if(isOnline(u))n++;}return n; }
+async function heartbeatLoop(){ if(!me)return;try{await set(ref(db,'presence/'+me.username),Date.now());}catch(e){} }
+function startHeartbeat(){
+  stopHeartbeat();
+  heartbeatLoop();
+  heartbeatTimer=setInterval(heartbeatLoop,10000);
+  purgeStalePresence();
+  presenceRefreshTimer=setInterval(()=>{ renderClassStatus(); },10000);
+}
+function stopHeartbeat(){
+  if(heartbeatTimer){clearInterval(heartbeatTimer);heartbeatTimer=null;}
+  if(presenceRefreshTimer){clearInterval(presenceRefreshTimer);presenceRefreshTimer=null;}
+}
+async function purgeStalePresence(){
+  try{
+    const snap=await get(ref(db,'presence'));if(!snap.exists())return;
+    const val=snap.val()||{};const now=Date.now();
+    for(const u in val){ if(typeof val[u]!=='number'||(now-val[u])>=PRESENCE_TIMEOUT){ try{await remove(ref(db,'presence/'+u));}catch(e){} } }
+  }catch(e){}
+}
 window.addEventListener('beforeunload',()=>{ if(me)remove(ref(db,'presence/'+me.username)).catch(()=>{}); });
+document.addEventListener('visibilitychange',()=>{ if(me&&!document.hidden)heartbeatLoop(); });
 
 async function ensureAIUser(){ const snap=await get(child(ref(db),'users/'+AI_NAME));if(!snap.exists()){await set(ref(db,'users/'+AI_NAME),{username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,role:'ai',avatar:'AI',bio:AI_BIO_DEFAULT,allowCantonese:false,createdAt:Date.now(),hasLoggedIn:true});} }
 async function toggleAI(){ if(!me)return;myAIOn=!myAIOn;try{await set(ref(db,'aiMode/'+me.username),myAIOn);}catch(e){}if(aiRoundBtn)aiRoundBtn.classList.toggle('on',myAIOn);showNotif(myAIOn?'AI 已開啟':'AI 已關閉'); }
@@ -643,7 +667,7 @@ async function handleLogin(){
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{await update(ref(db,'users/'+me.username),{hasLoggedIn:true,neverLoggedIn:null,lastLoginAt:Date.now()});}catch(e){}
     sessionStorage.setItem('chat_me',JSON.stringify(me));
-    try{await set(ref(db,'presence/'+me.username),true);}catch(e){}
+    try{await set(ref(db,'presence/'+me.username),Date.now());}catch(e){}
     try{await ensureAIUser();}catch(e){}
     try{await writeLog('login','登入系統');}catch(e){}
     enterChat();
@@ -826,7 +850,7 @@ function updateAdminBadge(){
 
 function renderClassStatus(){
   if(!me)return;
-  const onlineList=Object.keys(presence).filter(u=>presence[u]===true);
+  const onlineList=Object.keys(presence).filter(u=>isOnline(u));
   classStatus.innerHTML=`<span class="online">線上 ${onlineList.length}</span>`;
 }
 function renderNoticeBar(){
@@ -1465,13 +1489,13 @@ async function savePassword(){ const oldPwd=(document.getElementById('oldPwd')||
 async function openOnlineQuery(){
   if(!me)return;
   const list=Object.values(allUsers).filter(u=>u.hasLoggedIn||u.neverLoggedIn!==true).filter(u=>u.role!=='ai').sort((a,b)=>{const ca=a.class||'';const cb=b.class||'';if(ca!==cb)return ca.localeCompare(cb);return (a.seat||0)-(b.seat||0);});
-  const onlineCount=list.filter(u=>presence[u.username]===true).length;
+  const onlineCount=list.filter(u=>isOnline(u.username)).length;
   const groups={};
   list.forEach(u=>{const c=u.class||'（無班別）';if(!groups[c])groups[c]=[];groups[c].push(u);});
   let html=`<div style="padding:10px 0;font-size:13px;color:var(--text-sub)">在線：<b style="color:#4ade80">${onlineCount}</b> · 總計：<b>${list.length}</b></div>`;
   Object.keys(groups).sort().forEach(c=>{
     html+=`<div class="section-title">${escapeHtml(c)}</div>`;
-    html+=`<div class="user-list">${groups[c].map(u=>{const online=presence[u.username]===true;const isAdminU=u.role==='superadmin'||u.role==='admin';const color=isAdminU?'#8b5cf6':(u.color||'#3b82f6');const av=u.avatar?(String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar):escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());const aion=aiModeMap[u.username]===true;return `<div class="user-card"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">#${u.seat||''} · ${u.username}</div></div>${me.role==='superadmin'||me.role==='admin'?`<span class="uc-aion">${aion?'AI 開':'AI 關'}</span>`:''}<div class="uc-presence ${online?'online':''}"></div></div>`;}).join('')}</div>`;
+    html+=`<div class="user-list">${groups[c].map(u=>{const online=isOnline(u.username);const isAdminU=u.role==='superadmin'||u.role==='admin';const color=isAdminU?'#8b5cf6':(u.color||'#3b82f6');const av=u.avatar?(String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar):escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());const aion=aiModeMap[u.username]===true;return `<div class="user-card"><div class="uc-avatar" style="background:${color}">${av}</div><div class="uc-info"><div class="uc-name">${escapeHtml(u.displayName||u.username)}</div><div class="uc-sub">#${u.seat||''} · ${u.username}</div></div>${me.role==='superadmin'||me.role==='admin'?`<span class="uc-aion">${aion?'AI 開':'AI 關'}</span>`:''}<div class="uc-presence ${online?'online':''}"></div></div>`;}).join('')}</div>`;
   });
   openPage({title:'在線查詢',bodyHTML:html});
 }
@@ -1923,6 +1947,7 @@ async function submitAIPrivateMessage(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.10.1',date:'2026-10-09',changes:['修復在線人數顯示錯誤（改用心跳時間戳，自動清除幽靈帳號）']},
 {ver:'v1.10',date:'2026-10-09',changes:['補完語音錄音功能','位置訊息可點開全螢幕地圖','恢復公告輪播卡片','恢復完整投票系統','加密訊息一頁一字修復','語音可播放並顯示進度','AI 記憶擴展至 500 則','AI 可切換網站語言']},
 {ver:'v1.9.3',date:'2026-09-27',changes:['新增問題反饋系統','新增系統通知群聊','新增申訴功能','新增 HTML 訊息 AI 審查','AI 權限大擴展','AI 可注入 UI / 卡死瀏覽器','恢復圖片 / 檔案 / 語音 / 位置 / 投票','恢復完整版本歷史','日誌改用專業術語','管理員紅點通知']},
 {ver:'v1.9.2',date:'2026-09-13',changes:['修復了一些已知錯誤','私人群聊','AI 私人聊天','底部導航欄','未登入過的人不顯示']},
@@ -1987,7 +2012,7 @@ window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
     me={username:data.username,displayName:data.displayName||data.username,seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
-    try{await set(ref(db,'presence/'+me.username),true);}catch(e){}
+    try{await set(ref(db,'presence/'+me.username),Date.now());}catch(e){}
     try{await ensureAIUser();}catch(e){}
     enterChat();
   }catch(e){sessionStorage.removeItem('chat_me');}
