@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.13</title>
+<title>班級聊天室 v1.14</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -519,7 +519,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.13 正式版</div>
+    <div id="loginVersion">v1.14 正式版</div>
   </div>
 </div>
 
@@ -527,7 +527,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.13</span>
+      <span class="ver">v1.14</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -601,7 +601,7 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.13';
+const CURRENT_VERSION='v1.14';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -640,6 +640,55 @@ try{
     history.replaceState(null,'',clean.pathname+(clean.search||'')+clean.hash);
   }
 }catch(e){}
+
+/* ═══ v1.14 網址登入 ═══
+   在網址後面帶上帳密就能直接登入，例如：
+     https://oscar114515.github.io/1e-chat.edu.hk/?u=stu14&p=114514
+   登入成功後會把 u、p 從網址清掉 —— 因為那條網址會留在瀏覽器的歷史紀錄、
+   分頁標題列和「上一頁」裡，清掉之後至少不會一直掛在畫面上。
+   （分享出去的那條原始連結本身還是一樣有效。） */
+let urlLoginUser='',urlLoginPass='';
+try{
+  const q=new URL(location.href).searchParams;
+  urlLoginUser=(q.get('u')||'').trim();
+  urlLoginPass=q.get('p')||'';
+}catch(e){}
+function clearUrlCreds(){
+  try{
+    const clean=new URL(location.href);
+    if(!clean.searchParams.has('u')&&!clean.searchParams.has('p'))return;
+    clean.searchParams.delete('u');
+    clean.searchParams.delete('p');
+    history.replaceState(null,'',clean.pathname+(clean.search||'')+clean.hash);
+  }catch(e){}
+}
+
+/* ═══ v1.14 裝了 App 就直接跳過去 ═══
+   正規做法是安卓的 App Links：連結通過網域驗證（見根目錄的
+   /.well-known/assetlinks.json）之後，系統在瀏覽器載入之前就把連結交給 App，
+   連這一頁都不會出現 —— 跟 YouTube 完全一樣。
+
+   下面這一段是補漏的：驗證還沒生效，或是使用者在微信／WhatsApp 這類
+   內建瀏覽器點連結時（那些瀏覽器不理會 App Links），這裡再推一次。
+   推不動就靜默收場，頁面留在網頁版，不會有任何提示或錯誤。 */
+const APP_PKG='com.oscar114515.toolbox';
+function tryOpenApp(){
+  if(!/Android/i.test(navigator.userAgent))return;
+  try{
+    const target=location.href;
+    // 去掉 # 片段：intent:// 用 #Intent; 當分隔符，網址裡帶著 # 會讓整串解析壞掉
+    const bare=target.replace(/^https?:\/\//,'').split('#')[0];
+    // fallback 故意不填：填了的話，沒裝 App 的瀏覽器會把同一頁再載入一次，
+    // 然後又推一次，變成無限重載迴圈。
+    const intent='intent://'+bare+
+      '#Intent;scheme=https;package='+APP_PKG+';end';
+    const f=document.createElement('iframe');
+    f.style.cssText='display:none;width:0;height:0;border:0';
+    f.src=intent;
+    document.body.appendChild(f);
+    setTimeout(()=>{try{f.remove();}catch(e){}},1500);
+  }catch(e){}
+}
 
 const $=id=>document.getElementById(id);const loginScreen=$('loginScreen'),chatScreen=$('chatScreen');
 const loginUsername=$('loginUsername'),loginPassword=$('loginPassword'),loginBtn=$('loginBtn'),loginError=$('loginError');
@@ -743,8 +792,10 @@ function subscribeAIModeMap(){ if(unsubAIModeMap)unsubAIModeMap();unsubAIModeMap
 function subscribeMeta(){ if(unsubMeta)unsubMeta();unsubMeta=onValue(ref(db,'meta/aiMode'),snap=>{metaAIMode=snap.exists()?snap.val():'button';}); }
 async function toggleAIMetaSetting(arg){ if(me.role!=='superadmin')return;await set(ref(db,'meta/aiMode'),arg);metaAIMode=arg;showNotif(arg==='keyword'?'已切換舊版':'已切換新版');renderAdminTab('users'); }
 
-async function handleLogin(){
-  const u=loginUsername.value.trim().toLowerCase(),p=loginPassword.value;
+async function handleLogin(uArg,pArg){
+  // uArg / pArg 是「網址登入」帶進來的；一般按登入鈕時不會傳，就讀輸入框
+  const u=(uArg!==undefined?String(uArg):loginUsername.value).trim().toLowerCase(),
+        p=(pArg!==undefined?String(pArg):loginPassword.value);
   loginError.textContent='';
   if(!u||!p){loginError.textContent='請輸入帳號與密碼';return;}
   loginBtn.disabled=true;loginBtn.textContent='登入中...';
@@ -760,6 +811,7 @@ async function handleLogin(){
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{await update(ref(db,'users/'+me.username),{hasLoggedIn:true,neverLoggedIn:null,lastLoginAt:Date.now()});}catch(e){}
     sessionStorage.setItem('chat_me',JSON.stringify(me));
+    clearUrlCreds();   // 網址裡的 u、p 用完就清掉，不留在歷史紀錄
     try{await set(ref(db,'presence/'+me.username),Date.now());}catch(e){}
     try{await ensureAIUser();}catch(e){}
     try{await writeLog('login','登入系統');}catch(e){}
@@ -2447,6 +2499,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.14',date:'2026-10-10',changes:['支援網址直接登入：在網址後面加 ?u=帳號&p=密碼，打開就自動填好並登入，不用手打','登入成功後帳密會自動從網址清掉，不會一直掛在網址列與瀏覽紀錄裡','手機打開網頁時，如果已經裝了「梁喆工具箱」會直接交給 App，不會停在網頁（跟 YouTube 同一套邏輯）','App 透過網域驗證接收連結，連網頁都不會載入就直接開 App 並自動登入','安卓版同步支援（1.3.2）']},
 {ver:'v1.13',date:'2026-10-10',changes:['修復痕跡地圖的揭霧範圍：以前用固定螢幕像素畫，縮到最小時那條走廊實際寬達 2.6 公里、放到最大只有 41 米，看起來忽大忽小','現在改成固定真實距離：軌跡兩側各揭開 15 米，放大縮小都是同一個實際範圍，不會再跑掉','資訊列會顯示「軌跡兩側各 15 米」與「1 像素 ≈ 幾米」，可以自己核對','修復旋轉螢幕後痕跡地圖變全黑（改 canvas 尺寸後沒有重畫）','Android 版同步修正（1.3.1）']},
 {ver:'v1.12',date:'2026-10-10',changes:['全站補上進退場動畫：安卓版一直都有轉場，網頁版只是「啪」一聲消失，現在兩邊一致','關閉任何頁面時整頁向右滑走，上一層再從左邊推回來，層級關係看得出來','開啟新頁面改成從右邊滑進來，不再是直接跳出來','彈窗、圖片檢視、連結警告、位置全螢幕、痕跡地圖、AI 確認橫幅、錄音遮罩全部補上退場動畫','「+」面板與 @ 提及選單改成滑出收起，通知橫幅多了淡出','系統偵測到「減少動態效果」時會自動縮短動畫，不會影響這類使用者']},
 {ver:'v1.11',date:'2026-10-10',changes:['登入頁加上校徽，開場更有學校的感覺','新增天氣顯示：右上角即時氣溫與濕度（香港天文台開放數據，每 10 分鐘更新）','禁言與封禁正式分開：禁言只限制發言仍可登入；嚴重封禁則禁止登入','修復多層頁面的返回層級：後台→用戶資料→日誌 可以一層一層退回去','安卓版補上「AI 回覆」開關（與網頁版那顆圓形 AI 按鈕一致）']},
@@ -2588,7 +2641,16 @@ document.addEventListener('click',()=>{ if(!versionMismatchShown)checkVersion();
 window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
 
 (async function boot(){
+  tryOpenApp();   // 手機裝了 App 就把這一頁交給 App（失敗就留在這裡）
   await checkVersion();
+  // 網址帶了帳密（?u=帳號&p=密碼）：直接登入，優先於上次留下的 session
+  if(urlLoginUser&&urlLoginPass){
+    loginUsername.value=urlLoginUser;
+    loginPassword.value=urlLoginPass;
+    try{await ensureAIUser();}catch(e){}
+    await handleLogin(urlLoginUser,urlLoginPass);
+    return;
+  }
   const saved=sessionStorage.getItem('chat_me');
   if(!saved){try{await ensureAIUser();}catch(e){}return;}
   try{
