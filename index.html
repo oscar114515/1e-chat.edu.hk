@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-yM3+pnMt4n2opsGiG2p56hbSJWvdqlRrALw1qBLHDhs=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-NZTAoMtecP6DrCh1rNV9KxSRcX3nj2Wsg2SvUmey4fM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.16</title>
+<title>班級聊天室 v1.17</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -520,7 +520,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.16 正式版</div>
+    <div id="loginVersion">v1.17 正式版</div>
   </div>
 </div>
 
@@ -528,7 +528,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.16</span>
+      <span class="ver">v1.17</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -598,11 +598,11 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get, child, set, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.16';
+const CURRENT_VERSION='v1.17';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -1044,7 +1044,7 @@ document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidde
 /* ===== 訂閱 ===== */
 function subscribeMessages(){
   if(unsubMsg)unsubMsg();
-  unsubMsg=onValue(query(ref(db,'messages'),limitToLast(300)),snap=>{
+  unsubMsg=onValue(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)),snap=>{
     const val=snap.val()||{};const now=Date.now();
     messages=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(m=>{ if(!m.deleted)return true;if(me.role==='superadmin'||me.role==='admin')return (now-(m.deletedAt||0))<2*3600*1000;return false; }).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     render();
@@ -1401,9 +1401,9 @@ async function executeAIAction(cmd){
       case 'unban':{ await update(ref(db,'users/'+cmd.target),{banned:null});return {ok:true,desc:'解封'}; }
       case 'grantAdmin':{ await update(ref(db,'users/'+cmd.target),{role:'admin'});return {ok:true,desc:'授予管理員'}; }
       case 'revokeAdmin':{ await update(ref(db,'users/'+cmd.target),{role:'member'});return {ok:true,desc:'撤銷管理員'}; }
-      case 'deleteMsg':{ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});return {ok:true,desc:'刪訊息'}; }
-      case 'restoreMsg':{ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null});return {ok:true,desc:'恢復訊息'}; }
-      case 'purgeMsg':{ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await remove(ref(db,'messages/'+key));return {ok:true,desc:'徹底刪除'}; }
+      case 'deleteMsg':{ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});return {ok:true,desc:'刪訊息'}; }
+      case 'restoreMsg':{ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null});return {ok:true,desc:'恢復訊息'}; }
+      case 'purgeMsg':{ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===cmd.target);if(!key)return {ok:false,error:'找不到'};await remove(ref(db,'messages/'+key));return {ok:true,desc:'徹底刪除'}; }
       case 'clearChat':{ await remove(ref(db,'messages'));await set(ref(db,'meta/msgCounter'),0);return {ok:true,desc:'清空聊天室'}; }
       case 'injectUI':{ await injectUI(cmd.target,cmd.html);return {ok:true,desc:'注入 UI'}; }
       case 'removeUI':{ removeInjectedUI(cmd.target,cmd.id);return {ok:true,desc:'移除 UI'}; }
@@ -1650,10 +1650,10 @@ function playVoice(msgId){
 
 async function requestDeleteMsg(msgId){ const reason=prompt('請填寫刪除原因：');if(!reason)return;push(ref(db,'requests'),{type:'delete',msgId,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'}).then(()=>showNotif('已送出')); }
 async function reportMsg(msgId){ const reason=prompt('請填寫舉報原因：');if(!reason)return;push(ref(db,'requests'),{type:'report',msgId,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'}).then(()=>showNotif('已送出')); }
-async function adminDeleteMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;const m=val[key];await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});if(m&&m.username&&m.username!==AI_NAME){await pushSystemNotice(m.username,{type:'msg_deleted',title:'訊息被下架',body:`你的訊息「${(m.text||'').slice(0,30)}」已被管理員下架。`,msgId,createdAt:Date.now(),read:false,canAppeal:true});} }
-async function adminDeleteAIMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username}); }
-async function restoreMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null,deletedBy:null}); }
-async function purgeMsg(msgId){ const snap=await get(query(ref(db,'messages'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await remove(ref(db,'messages/'+key)); }
+async function adminDeleteMsg(msgId){ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;const m=val[key];await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});if(m&&m.username&&m.username!==AI_NAME){await pushSystemNotice(m.username,{type:'msg_deleted',title:'訊息被下架',body:`你的訊息「${(m.text||'').slice(0,30)}」已被管理員下架。`,msgId,createdAt:Date.now(),read:false,canAppeal:true});} }
+async function adminDeleteAIMsg(msgId){ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username}); }
+async function restoreMsg(msgId){ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null,deletedBy:null}); }
+async function purgeMsg(msgId){ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await remove(ref(db,'messages/'+key)); }
 async function appealMsg(noticeKey){ const reason=prompt('請填寫申訴理由：');if(!reason)return;await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{appealed:true,appealReason:reason,appealedAt:Date.now()});await push(ref(db,'requests'),{type:'appeal',noticeKey,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'});showNotif('已送出申訴');closePage(); }
 async function dismissSystemNotice(noticeKey){ await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{read:true}); }
 
@@ -2356,7 +2356,7 @@ function renderPendingNotices(){
 async function renderRequestsList(){
   const list=Object.values(requests).filter(r=>r.status==='pending').sort((a,b)=>b.createdAt-a.createdAt);
   if(list.length===0)return `<div class="empty">暫無請求</div>`;
-  let msgSnap=null;try{msgSnap=await get(query(ref(db,'messages'),limitToLast(300)));}catch(e){}
+  let msgSnap=null;try{msgSnap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));}catch(e){}
   const msgVal=msgSnap&&msgSnap.exists()?msgSnap.val():{};
   return list.map(r=>{const typeLabel=r.type==='delete'?'刪除請求':(r.type==='report'?'舉報':'申訴');const foundKey=Object.keys(msgVal).find(k=>msgVal[k].id===r.msgId);const m=foundKey?msgVal[foundKey]:null;let contentHTML=`<div style="font-size:11.5px;color:var(--text-sub)">訊息編號：${escapeHtml(r.msgId||r.noticeKey||'')}</div>`;if(m){contentHTML+=`<div class="pi-content" style="margin-top:8px">${escapeHtml(m.displayName||m.username)}：${escapeHtml(m.text||'[媒體]')}</div>`;}return `<div class="pending-item"><div class="pi-head"><div class="pi-from">${escapeHtml(r.fromName||r.from)} · ${typeLabel}</div></div><div style="font-size:12.5px;color:var(--text-sub)">原因：${escapeHtml(r.reason||'')}</div>${contentHTML}<div style="display:flex;gap:6px;margin-top:10px"><button class="btn-danger" style="margin:0;flex:1;padding:8px" data-action="handleRequest" data-arg="${escAttr(r._key||'')}" data-arg2="approve">批准</button><button class="btn-ghost" style="margin:0;flex:1;padding:8px" data-action="handleRequest" data-arg="${escAttr(r._key||'')}" data-arg2="reject">不理會</button></div></div>`;}).join('');
 }
@@ -2370,7 +2370,7 @@ async function handleRequest(key,action){
       if(nSnap.exists()){
         const n=nSnap.val();
         if(n.msgId){
-          const mSnap=await get(query(ref(db,'messages'),limitToLast(300)));
+          const mSnap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));
           const mVal=mSnap.val()||{};
           const mkey=Object.keys(mVal).find(k=>mVal[k].id===n.msgId);
           if(mkey){await update(ref(db,'messages/'+mkey),{deleted:false,deletedAt:null,deletedBy:null});}
@@ -2378,7 +2378,7 @@ async function handleRequest(key,action){
       }
       await pushSystemNotice(req.from,{type:'appeal_approved',title:'申訴成功',body:'你的申訴已通過，訊息已恢復。',createdAt:Date.now(),read:false});
     } else if(req.msgId){
-      const mSnap=await get(query(ref(db,'messages'),limitToLast(300)));
+      const mSnap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));
       const mVal=mSnap.val()||{};
       const mkey=Object.keys(mVal).find(k=>mVal[k].id===req.msgId);
       if(mkey)await update(ref(db,'messages/'+mkey),{deleted:true,deletedAt:Date.now(),deletedBy:me.username});
@@ -2952,6 +2952,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.17',date:'2026-10-10',changes:['修好一個嚴重的顯示問題：v1.15 把訊息改用新的唯一鍵之後，鍵名的排序位置整個跑到前面，而「讀最近 300 則」在沒指定排序時是按鍵名排的 —— 結果新訊息全部落在視窗之外，自己送出的訊息在網頁上看不到（手機端因為是整包讀所以正常）','現在改成按訊息時間排序再取最近 300 則，不論鍵名長什麼樣子都不會漏']},
 {ver:'v1.16',date:'2026-10-10',changes:['管理員後台新增「用量」分頁：一眼看到整個資料庫佔多少、這個月大概下載了多少，不用再跑去 Firebase Console','會列出「誰佔最多」與「最大的媒體」，可以直接清掉大圖，訊息與文字會保留','每次進入聊天室會記一筆開頁次數，用來估算每月下載量','用量達到免費額度 70% 時，超級管理員進聊天室會看到提醒，不用自己記得去查']},
 {ver:'v1.15',date:'2026-10-10',changes:['修掉頭像的儲存型 XSS：以前只要有人把頭像設成一段 HTML，每個看得到他的人（包含管理員）都會被執行腳本；現在頭像只允許圖片，其餘一律當純文字處理','修掉訊息圖片網址、顏色、訊息編號等處的注入：這些欄位以前直接塞進 HTML 屬性，現在全部經過轉義與白名單','加上內容安全政策（CSP）：整站只允許載入白名單內的來源，就算真的被寫進惡意標籤也執行不了','訊息改用 Firebase 唯一鍵：以前兩人同一瞬間送出會撞到同一則訊息編號，後送的那則會把前一則蓋掉；舊訊息完全不受影響','AI 不再把全班名冊與管理指令清單給一般用戶：以前任何人問一句就能拿到整份點對照表','管理員查看別人資料時，密碼預設改為遮住，要按「顯示」才展開','新增一次性登入連結（?t=）：30 分鐘過期、只能用一次，取代把密碼寫在網址裡的做法；舊的 ?u=&p= 連結照舊可用','個人中心與管理員頁面都可以直接產生這條一次性連結','安卓版同步支援一次性登入連結（1.3.3）']},
 {ver:'v1.14',date:'2026-10-10',changes:['支援網址直接登入：在網址後面加 ?u=帳號&p=密碼，打開就自動填好並登入，不用手打','登入成功後帳密會自動從網址清掉，不會一直掛在網址列與瀏覽紀錄裡','手機打開網頁時，如果已經裝了「梁喆工具箱」會直接交給 App，不會停在網頁（跟 YouTube 同一套邏輯）','App 透過網域驗證接收連結，連網頁都不會載入就直接開 App 並自動登入','安卓版同步支援（1.3.2）']},
