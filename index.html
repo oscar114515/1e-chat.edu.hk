@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.11</title>
+<title>班級聊天室 v1.12</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -125,6 +125,40 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .fullPage .fp-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
 .fullPage .fp-title{font-size:17px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fullPage .fp-body{flex:1;min-height:0;overflow-y:auto}
+/* ═══ v1.12 進退場動畫 ═══
+   安卓版每次離開畫面都有轉場，網頁版原本是「啪」一聲直接消失。
+   這裡把所有會離開畫面的東西都補上動畫：頁面向右滑走、上一層從左邊推回來。 */
+@keyframes pageOutRight{from{opacity:1;transform:none}to{opacity:.28;transform:translateX(62%) scale(.94)}}
+@keyframes pageInRight{from{opacity:0;transform:translateX(34%) scale(.975)}to{opacity:1;transform:none}}
+@keyframes pageInLeft{from{opacity:.45;transform:translateX(-24%) scale(.955)}to{opacity:1;transform:none}}
+@keyframes ovOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.04)}}
+@keyframes ovIn{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:none}}
+@keyframes barIn{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes barOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(22px) scale(.95)}}
+@keyframes zoomOutImg{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.87)}}
+@keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.95)}}
+@keyframes notifIn{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes notifOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-12px)}}
+.anim-in-page{animation:pageInRight .34s cubic-bezier(.32,.72,0,1) both}
+.anim-in-back{animation:pageInLeft .34s cubic-bezier(.32,.72,0,1) both}
+.anim-in-modal{animation:ovIn .26s cubic-bezier(.32,.72,0,1) both}
+.anim-in-bar{animation:barIn .26s cubic-bezier(.32,.72,0,1) both}
+.anim-in-notif{animation:notifIn .24s cubic-bezier(.32,.72,0,1) both}
+/* 退場一律加 !important，也一律排在進場之後：
+   否則同一個元素同時掛著進場與退場 class 時，會由「樣式表順序」而不是「後加的 class」決定，
+   進場動畫會蓋掉退場動畫（#plusPanel 這種 ID 選擇器更是直接壓過 class）。
+   這些 class 只存在幾百毫秒，用完就移除，用 !important 沒有副作用。 */
+.anim-out-page{animation:pageOutRight .3s cubic-bezier(.32,.72,0,1) forwards!important;will-change:transform,opacity;pointer-events:none!important}
+.anim-out-overlay{animation:ovOut .2s ease forwards!important;pointer-events:none!important}
+.anim-out-modal{animation:ovOut .24s cubic-bezier(.32,.72,0,1) forwards!important;pointer-events:none!important}
+.anim-out-bar{animation:barOut .22s cubic-bezier(.32,.72,0,1) forwards!important;pointer-events:none!important}
+.anim-out-zoom{animation:zoomOutImg .2s ease forwards!important;pointer-events:none!important}
+.anim-out-panel{animation:panelOut .16s ease forwards!important;pointer-events:none!important}
+.anim-out-notif{animation:notifOut .22s ease forwards!important;pointer-events:none!important}
+@media (prefers-reduced-motion: reduce){
+  .anim-out-page,.anim-in-page,.anim-in-back,.anim-out-overlay,.anim-out-modal,.anim-in-modal,
+  .anim-out-bar,.anim-in-bar,.anim-out-zoom,.anim-out-panel,.anim-in-notif,.anim-out-notif{animation-duration:.01ms!important}
+}
 .profile-hero{padding:32px 20px 24px;text-align:center;position:relative}
 .profile-hero .hero-avatar{width:96px;height:96px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:#fff;overflow:hidden;border:4px solid rgba(255,255,255,.25)}
 .profile-hero .hero-avatar img{width:100%;height:100%;object-fit:cover}
@@ -485,7 +519,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.11 正式版</div>
+    <div id="loginVersion">v1.12 正式版</div>
   </div>
 </div>
 
@@ -493,7 +527,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.11</span>
+      <span class="ver">v1.12</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -567,7 +601,7 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.11';
+const CURRENT_VERSION='v1.12';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -860,7 +894,7 @@ const fbToggle=$('feedbackToggle');
 if(fbToggle)fbToggle.addEventListener('click',()=>{ const box=$('feedbackBox'); if(box)box.classList.toggle('hidden'); });
 
 searchInput.addEventListener('input',()=>{ searchKeyword=searchInput.value.trim();render(); });
-document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidden')){ if(!plusPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target))plusPanel.classList.add('hidden'); } });
+document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidden')){ if(!plusPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target))closePlus(); } });
 
 /* ===== 訂閱 ===== */
 function subscribeMessages(){
@@ -1035,7 +1069,7 @@ async function sendMessage(){
     const isAdmin=me.role==='superadmin'||me.role==='admin';
     await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,hasHtml:hasHtml,htmlCheckStatus:(hasHtml&&!isAdmin)?'checking':'ok',createdAt:Date.now(),deleted:false});
     await writeLog('send','發送訊息：'+text.slice(0,50));
-    msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');mentionPopup.classList.add('hidden');
+    msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');hideMention();
     if(hasHtml&&!isAdmin){
       checkHtmlMessage(msgId,text).catch(e=>console.error(e));
     }
@@ -1066,14 +1100,14 @@ async function checkHtmlMessage(msgId,text){
   }catch(e){ console.error('HTML check error',e); }
 }
 msgInput.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&mentionPopup.classList.contains('hidden')){e.preventDefault();sendMessage();} });
-msgInput.addEventListener('input',()=>{ const val=msgInput.value,cursor=msgInput.selectionStart;const at=val.slice(0,cursor).match(/@([a-zA-Z0-9_]*)$/);if(!at){mentionPopup.classList.add('hidden');return;}showMentionPopup(at[1].toLowerCase()); });
+msgInput.addEventListener('input',()=>{ const val=msgInput.value,cursor=msgInput.selectionStart;const at=val.slice(0,cursor).match(/@([a-zA-Z0-9_]*)$/);if(!at){hideMention();return;}showMentionPopup(at[1].toLowerCase()); });
 function showMentionPopup(kw){
   const list=Object.values(allUsers).filter(u=>u.username!==me.username).filter(u=>!kw||u.username.toLowerCase().includes(kw)||(u.displayName||'').toLowerCase().includes(kw)).slice(0,8);
-  if(list.length===0){mentionPopup.classList.add('hidden');return;}
-  mentionPopup.classList.remove('hidden');
+  if(list.length===0){hideMention();return;}
+  showMention();
   mentionPopup.innerHTML=list.map(u=>{const isAdminU=u.role==='superadmin'||u.role==='admin';const color=isAdminU?'#8b5cf6':(u.color||'#3b82f6');const av=u.avatar?(String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar):escapeHtml((u.displayName||u.username).charAt(0).toUpperCase());return `<div class="mention-item" data-action="pickMention" data-arg="${u.username}"><div class="mi-av" style="background:${color}">${av}</div><div>${escapeHtml(u.displayName||u.username)}</div></div>`;}).join('');
 }
-function pickMention(username){ const v=msgInput.value,cur=msgInput.selectionStart;msgInput.value=v.slice(0,cur).replace(/@([a-zA-Z0-9_]*)$/,'@'+username+' ')+v.slice(cur);mentionPopup.classList.add('hidden');msgInput.focus(); }
+function pickMention(username){ const v=msgInput.value,cur=msgInput.selectionStart;msgInput.value=v.slice(0,cur).replace(/@([a-zA-Z0-9_]*)$/,'@'+username+' ')+v.slice(cur);hideMention();msgInput.focus(); }
 
 async function callAI(messages,retry=0){
   try{
@@ -1172,20 +1206,20 @@ async function trimAIMemory(){
 function showAIConfirm(cmd,asker){
   pendingAIConfirm={cmd,asker};
   const old=document.getElementById('aiConfirmBar');if(old)old.remove();
-  const bar=document.createElement('div');bar.id='aiConfirmBar';
+  const bar=document.createElement('div');bar.id='aiConfirmBar';bar.classList.add('anim-in-bar');
   bar.innerHTML=`<div class="acb-text">AI 想執行：<div class="acb-cmd">${escapeHtml(JSON.stringify(cmd))}</div></div><button data-action="aiAllow">允許</button><button data-action="aiDeny">拒絕</button>`;
   document.body.appendChild(bar);
 }
 async function aiAllow(){
   if(!pendingAIConfirm)return;
   const {cmd}=pendingAIConfirm;pendingAIConfirm=null;
-  const bar=document.getElementById('aiConfirmBar');if(bar)bar.remove();
+  const bar=document.getElementById('aiConfirmBar');if(bar)animOut(bar,'anim-out-bar',220);
   try{
     const result=await executeAIAction(cmd);
     showNotif(result.ok?'已完成：'+result.desc:'失敗：'+result.error);
   }catch(e){showNotif('失敗');}
 }
-function aiDeny(){ pendingAIConfirm=null;const bar=document.getElementById('aiConfirmBar');if(bar)bar.remove();showNotif('已取消'); }
+function aiDeny(){ pendingAIConfirm=null;const bar=document.getElementById('aiConfirmBar');if(bar)animOut(bar,'anim-out-bar',220);showNotif('已取消'); }
 async function executeAIAction(cmd){
   try{
     switch(cmd.cmd){
@@ -1317,10 +1351,11 @@ function encToggleAll(msgId){ if(!encState)encState={};encState['_all_'+msgId]=!
 function avatarInner(m){ if(m.avatar){if(String(m.avatar).startsWith('data:'))return `<img src="${m.avatar}">`;return m.avatar;}const name=m.displayName||m.username||'?';return escapeHtml(name.charAt(0).toUpperCase()); }
 function escapeHtml(str){ return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function formatSize(b){ if(b<1024)return b+' B';if(b<1024*1024)return (b/1024).toFixed(1)+' KB';return (b/1024/1024).toFixed(2)+' MB'; }
-function togglePlus(){ plusPanel.classList.toggle('hidden'); }
-function pickImage(){ plusPanel.classList.add('hidden');const inp=document.getElementById('globalImgInput');inp.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=await compressImage(f,1200,1200,0.75);await sendMedia('image',{imageUrl:d,text:''});}catch(err){}e.target.value='';};inp.click(); }
-function pickFile(){ plusPanel.classList.add('hidden');const inp=document.getElementById('globalFileInput');inp.onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>5*1024*1024){showNotif('5MB');return;}try{const d=await fileToBase64(f);await sendMedia('file',{fileUrl:d,fileName:f.name,fileSize:f.size});}catch(err){}e.target.value='';};inp.click(); }
-function pickLocation(){ plusPanel.classList.add('hidden');if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(async pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let placeName=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`);const j=await r.json();if(j.display_name)placeName=j.display_name;}catch(e){}await sendMedia('location',{lat,lng,placeName});},err=>showNotif('無法取得位置')); }
+function closePlus(){ if(!plusPanel.classList.contains('hidden'))animHide(plusPanel,'anim-out-panel',160).then(()=>plusPanel.classList.add('hidden')); }
+function togglePlus(){ if(plusPanel.classList.contains('hidden'))plusPanel.classList.remove('hidden');else closePlus(); }
+function pickImage(){ closePlus();const inp=document.getElementById('globalImgInput');inp.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=await compressImage(f,1200,1200,0.75);await sendMedia('image',{imageUrl:d,text:''});}catch(err){}e.target.value='';};inp.click(); }
+function pickFile(){ closePlus();const inp=document.getElementById('globalFileInput');inp.onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>5*1024*1024){showNotif('5MB');return;}try{const d=await fileToBase64(f);await sendMedia('file',{fileUrl:d,fileName:f.name,fileSize:f.size});}catch(err){}e.target.value='';};inp.click(); }
+function pickLocation(){ closePlus();if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(async pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let placeName=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`);const j=await r.json();if(j.display_name)placeName=j.display_name;}catch(e){}await sendMedia('location',{lat,lng,placeName});},err=>showNotif('無法取得位置')); }
 async function sendMedia(type,payload){
   if(!me)return;
   try{
@@ -1333,7 +1368,7 @@ async function sendMedia(type,payload){
 }
 function fileToBase64(file){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('fail'));r.readAsDataURL(file);}); }
 function compressImage(file,maxW,maxH,quality){ return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;const ratio=Math.min(maxW/w,maxH/h,1);w=Math.round(w*ratio);h=Math.round(h*ratio);const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);resolve(canvas.toDataURL('image/jpeg',quality));};img.onerror=()=>reject(new Error('load fail'));img.src=ev.target.result;};reader.onerror=()=>reject(new Error('read fail'));reader.readAsDataURL(file);}); }
-function viewImage(url){ const div=document.createElement('div');div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';div.innerHTML=`<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`;div.onclick=()=>div.remove();document.body.appendChild(div); }
+function viewImage(url){ const div=document.createElement('div');div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';div.innerHTML=`<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`;div.classList.add('anim-in-modal');div.onclick=()=>{div.onclick=null;animOut(div,'anim-out-zoom',200);};document.body.appendChild(div); }
 
 /* ===== v1.10 語音錄音 ===== */
 let mediaRecorder=null,audioChunks=[],recStartTime=0,recTimer=null,recCancel=false,recStream=null;
@@ -1387,7 +1422,7 @@ function stopRec(){
   mediaRecorder.onstop=async()=>{
     if(recTimer){clearInterval(recTimer);recTimer=null;}
     const mb=document.getElementById('micBtn');if(mb)mb.classList.remove('recording');
-    const ov=document.getElementById('recordingOverlay');if(ov)ov.remove();
+    const ov=document.getElementById('recordingOverlay');if(ov)animOut(ov,'anim-out-overlay',200);
     if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}
     if(recCancel||dur<1)return;
     const blob=new Blob(audioChunks,{type:'audio/webm'});
@@ -1429,11 +1464,12 @@ function openLocationFullscreen(arg){
   const old=document.getElementById('locationFull');if(old)old.remove();
   const div=document.createElement('div');
   div.id='locationFull';
+  div.classList.add('anim-in-page');
   div.style.cssText='position:fixed;inset:0;background:#000;z-index:999;display:flex;flex-direction:column';
   div.innerHTML=`<div style="padding:12px;background:#1e293b;color:#fff;display:flex;align-items:center;gap:10px"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0">←</button><div style="flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lat)}, ${escapeHtml(lng)}</div><a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}" target="_blank" rel="noopener" style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:7px 12px;border-radius:8px;font-size:12.5px;flex-shrink:0">開大地圖</a></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0" loading="lazy"></iframe>`;
   document.body.appendChild(div);
 }
-function closeLocationFull(){ const el=document.getElementById('locationFull');if(el)el.remove(); }
+function closeLocationFull(){ const el=document.getElementById('locationFull');if(el)animOut(el,'anim-out-page',260); }
 
 /* ===== v1.10 投票系統 ===== */
 window._pollDraft=null;
@@ -1539,11 +1575,65 @@ async function submitPollVote(msgId){
    以前所有頁面都是直接把 #pageRoot 整個覆寫掉，按「←」就無條件清空，
    所以「管理員後台 → 某同學資料 → 他的日誌」按返回會直接掉回聊天室。
    現在改成：開新一層之前先把「目前這層」的完整 HTML 存起來，返回時還原。 */
+
+/* ── v1.12 退場動畫工具 ──
+   安卓版每次離開畫面都有轉場，網頁版原本沒有。這裡統一收口：
+   任何東西要離開畫面，都先播完動畫，才真的從 DOM 移除。
+   - animOut：播完動畫後把節點整個移除（用於頁面、彈窗、遮罩）
+   - animHide：播完動畫後只加 hidden / 移除 class，節點保留（用於 + 面板這類常駐元素） */
+const ENTER_CLASSES=['anim-in-page','anim-in-back','anim-in-modal','anim-in-bar','anim-in-notif'];
+function animOut(el,cls,ms){
+  return new Promise(res=>{
+    if(!el){res();return;}
+    let done=false;
+    const fin=()=>{
+      if(done)return;done=true;
+      el.removeEventListener('animationend',onEnd);
+      if(el.parentNode)el.parentNode.removeChild(el);
+      res();
+    };
+    // animationend 會冒泡：子元素自己的動畫結束也會傳上來，必須確認是「自己」播完
+    const onEnd=e=>{ if(e.target===el)fin(); };
+    el.classList.remove(...ENTER_CLASSES);   // 進場 class 先拿掉，免得蓋住退場動畫
+    el.classList.add(cls);
+    el.addEventListener('animationend',onEnd);
+    setTimeout(fin,(ms||260)+140);      // 保險：動畫沒觸發（例如元素不可見）也要收尾
+  });
+}
+function animHide(el,cls,ms){
+  return new Promise(res=>{
+    if(!el){res();return;}
+    let done=false;
+    const fin=()=>{
+      if(done)return;done=true;
+      el.removeEventListener('animationend',onEnd);
+      el.classList.remove(cls);
+      res();
+    };
+    const onEnd=e=>{ if(e.target===el)fin(); };
+    el.classList.remove(...ENTER_CLASSES);
+    el.classList.add(cls);
+    el.addEventListener('animationend',onEnd);
+    setTimeout(fin,(ms||160)+140);
+  });
+}
+/* 提及選單（@）用它自己的節奏進退場，避免打錯字時反覆觸發 */
+let _mentionHideToken=0;
+function showMention(){ _mentionHideToken++; mentionPopup.classList.remove('anim-out-panel'); mentionPopup.classList.remove('hidden'); }
+function hideMention(){
+  if(mentionPopup.classList.contains('hidden'))return;
+  const t=++_mentionHideToken;
+  animHide(mentionPopup,'anim-out-panel',120).then(()=>{ if(t===_mentionHideToken)mentionPopup.classList.add('hidden'); });
+}
+
 let pageStack=[];
 let currentPageKey=null;
 function beginPage(key){
   if(currentPageKey===null){ currentPageKey=key; return; }
   if(currentPageKey===key) return;            // 同層重新渲染（例：封禁後刷新），不重複疊加
+  // 存快照前先把動畫 class 拿掉，否則還原時會誤播「從右邊進來」而不是「從左邊推回來」
+  const cur=pageRoot.querySelector(':scope > .fullPage');
+  if(cur)cur.classList.remove('anim-in-page','anim-in-back');
   pageStack.push({html:pageRoot.innerHTML,key:currentPageKey});
   if(pageStack.length>20) pageStack.shift();
   currentPageKey=key;
@@ -1553,12 +1643,46 @@ function popPage(){
   if(prev){ pageRoot.innerHTML=prev.html; currentPageKey=prev.key; }
   else{ pageRoot.innerHTML=''; currentPageKey=null; }
   const fp=pageRoot.querySelector('.fp-body');if(fp)fp.scrollTop=0;
+  const np=pageRoot.querySelector(':scope > .fullPage');
+  if(np){ np.classList.remove('anim-in-page'); np.classList.add('anim-in-back'); }   // 上一層從左邊推回來
 }
 function resetPageStack(){ pageStack=[];currentPageKey=null;pageRoot.innerHTML=''; }
-function closePage(){
-  const ps=document.getElementById('privateChatScreen');if(ps){if(unsubGroupMsgs){unsubGroupMsgs();unsubGroupMsgs=null;}if(unsubAIPrivate){unsubAIPrivate();unsubAIPrivate=null;}currentGroupKey=null;ps.remove();}
-  const sn=document.getElementById('systemNoticeOverlay');if(sn)sn.remove();
-  popPage();
+
+/* 新開一層頁面時，讓它從右邊滑進來（安卓版的 push 效果）。
+   用 MutationObserver 統一掛，不用改 13 個開頁面的地方。 */
+if(window.MutationObserver){
+  new MutationObserver(muts=>{
+    for(const m of muts){
+      if(!m.addedNodes)continue;
+      m.addedNodes.forEach(n=>{
+        if(n&&n.nodeType===1&&n.classList&&n.classList.contains('fullPage')
+           &&!n.classList.contains('anim-in-back')&&!n.classList.contains('anim-in-page')){
+          n.classList.add('anim-in-page');
+        }
+      });
+    }
+  }).observe(pageRoot,{childList:true});
+}
+
+let _pageClosing=false;
+async function closePage(){
+  if(_pageClosing)return;                 // 防止連點「←」播兩次
+  _pageClosing=true;
+  try{
+    const outs=[];
+    const ps=document.getElementById('privateChatScreen');
+    if(ps){
+      if(unsubGroupMsgs){unsubGroupMsgs();unsubGroupMsgs=null;}
+      if(unsubAIPrivate){unsubAIPrivate();unsubAIPrivate=null;}
+      currentGroupKey=null;
+      outs.push(ps);
+    }
+    const sn=document.getElementById('systemNoticeOverlay');if(sn)outs.push(sn);
+    const cur=pageRoot.querySelector(':scope > .fullPage');
+    if(cur&&!outs.includes(cur))outs.push(cur);
+    if(outs.length)await Promise.all(outs.map(el=>animOut(el,'anim-out-page',300)));
+    popPage();
+  }finally{ _pageClosing=false; }
 }
 function openPage({title,bodyHTML,heroHTML,key}){
   beginPage(key||('page:'+title));
@@ -1972,6 +2096,7 @@ function renderGroupChat(groupKey,g){
     beginPage('groupChat');
     const div=document.createElement('div');
     div.id='privateChatScreen';
+    div.classList.add('anim-in-page');
     div.innerHTML=`<div class="pc-header"><button class="pc-back" data-action="closePage">←</button><div style="flex:1;min-width:0"><div class="pc-title">${escapeHtml(groupKey)}</div><div class="pc-info">${memberCount} 人</div></div><button class="hbtn" data-action="leaveGroup" data-arg="${escapeHtml(groupKey)}">退出</button></div><div class="pc-body" id="pcBody">${msgsHTML}</div><div class="pc-input-bar"><input type="text" id="pcInput" placeholder="輸入訊息..." maxlength="5000"><button data-action="submitGroupMessage">送出</button></div>`;
     document.body.appendChild(div);
     const inp=document.getElementById('pcInput');
@@ -2041,6 +2166,7 @@ function renderAIPrivate(){
     beginPage('aiPrivate');
     const div=document.createElement('div');
     div.id='privateChatScreen';
+    div.classList.add('anim-in-page');
     div.innerHTML=`<div class="pc-header"><button class="pc-back" data-action="closePage">←</button><div style="flex:1;min-width:0"><div class="pc-title">AI 私人聊天</div><div class="pc-info">只有你看到</div></div></div><div class="pc-body" id="pcBody">${msgsHTML}</div><div class="pc-input-bar"><input type="text" id="pcInput" placeholder="跟小喆AI聊天..." maxlength="5000"><button data-action="submitAIPrivateMessage">送出</button></div>`;
     document.body.appendChild(div);
     const inp=document.getElementById('pcInput');
@@ -2251,6 +2377,7 @@ async function openTrailMap(){
   beginPage('trail');
   const div=document.createElement('div');
   div.id='trailMapScreen';
+  div.classList.add('anim-in-page');
   div.innerHTML=`<div class="tm-header"><button class="tm-back" data-action="closeTrailMap">←</button><div class="tm-title">痕跡地圖</div><span id="tmCount" style="font-size:11.5px;color:var(--text-sub);flex-shrink:0"></span></div><div class="tm-body"><canvas id="tmTiles"></canvas><canvas id="tmFog"></canvas><canvas id="tmLine"></canvas><div class="tm-empty" id="tmEmpty" style="display:none"><b>還沒有痕跡</b><span>在安卓版 App 打開「痕跡地圖」開始記錄，走過的路就會出現在這裡</span></div><div class="tm-info" id="tmInfo">載入中…</div><div class="tm-actions"><button class="tm-btn" id="tmZoomIn">＋</button><button class="tm-btn" id="tmZoomOut">－</button><button class="tm-btn on" id="tmFogBtn" title="切換霧">霧</button><button class="tm-btn" id="tmFit" title="看全部">⤢</button></div></div>`;
   document.body.appendChild(div);
 
@@ -2293,18 +2420,18 @@ async function openTrailMap(){
 
 function closeTrailMap(){
   const el=document.getElementById('trailMapScreen');
-  if(el)el.remove();
   window.removeEventListener('resize',tmResize);
   window.removeEventListener('mousemove',tmPanMouseMove);
   window.removeEventListener('mouseup',tmPanEnd);
   tmDragging=false;
-  tmState=null;
-  tmTiles=new Map();
-  if(currentPageKey==='trail') popPage();
+  if(currentPageKey==='trail') popPage();          // 先把下面那層推回來，地圖再滑走
+  if(el)animOut(el,'anim-out-page',300).then(()=>{ tmState=null; tmTiles=new Map(); });
+  else { tmState=null; tmTiles=new Map(); }
 }
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.12',date:'2026-10-10',changes:['全站補上進退場動畫：安卓版一直都有轉場，網頁版只是「啪」一聲消失，現在兩邊一致','關閉任何頁面時整頁向右滑走，上一層再從左邊推回來，層級關係看得出來','開啟新頁面改成從右邊滑進來，不再是直接跳出來','彈窗、圖片檢視、連結警告、位置全螢幕、痕跡地圖、AI 確認橫幅、錄音遮罩全部補上退場動畫','「+」面板與 @ 提及選單改成滑出收起，通知橫幅多了淡出','系統偵測到「減少動態效果」時會自動縮短動畫，不會影響這類使用者']},
 {ver:'v1.11',date:'2026-10-10',changes:['登入頁加上校徽，開場更有學校的感覺','新增天氣顯示：右上角即時氣溫與濕度（香港天文台開放數據，每 10 分鐘更新）','禁言與封禁正式分開：禁言只限制發言仍可登入；嚴重封禁則禁止登入','修復多層頁面的返回層級：後台→用戶資料→日誌 可以一層一層退回去','安卓版補上「AI 回覆」開關（與網頁版那顆圓形 AI 按鈕一致）']},
 {ver:'v1.10.5',date:'2026-10-10',changes:['個人主頁新增「痕跡地圖」入口（原本找不到地圖在哪裏）','網頁版可看自己在安卓 App 走過的痕跡，含迷霧效果、可拖動縮放','痕跡地圖只讀自己的資料，不會顯示其他人的位置','修復投票漏洞：已投票不能再改、截止後不能投、被禁言不能投、多選不可超過上限']},
 {ver:'v1.10.4',date:'2026-10-10',changes:['「前往新版本」改為直接重新載入，網址不再被加上參數','若網址帶有 _v 參數會自動清除，回復原本網址']},
@@ -2343,9 +2470,9 @@ async function aiSaveSettings(){ const dn=(document.getElementById('ai_displayNa
 async function aiSetAvatarText(){ await update(ref(db,'users/'+AI_NAME),{avatar:'AI'});showNotif('已更新');setTimeout(()=>location.reload(),600); }
 async function aiSetAvatarEmoji(emoji){ await update(ref(db,'users/'+AI_NAME),{avatar:emoji});showNotif('已更新');setTimeout(()=>location.reload(),600); }
 let pendingLink='';
-function showLinkWarning(url){ pendingLink=url;const div=document.createElement('div');div.id='linkWarnOverlay';div.innerHTML=`<div class="lw-card"><h3>Link Warning</h3><p>此連結不屬於梁喆同學工作室，請自行承擔後果</p><div class="lw-url">${escapeHtml(url)}</div><div class="lw-actions"><button class="btn-ghost" data-action="linkCancel">取消</button><button class="btn-primary" data-action="linkContinue">繼續</button></div></div>`;document.body.appendChild(div); }
+function showLinkWarning(url){ pendingLink=url;const old=document.getElementById('linkWarnOverlay');if(old)old.remove();const div=document.createElement('div');div.id='linkWarnOverlay';div.classList.add('anim-in-modal');div.innerHTML=`<div class="lw-card"><h3>Link Warning</h3><p>此連結不屬於梁喆同學工作室，請自行承擔後果</p><div class="lw-url">${escapeHtml(url)}</div><div class="lw-actions"><button class="btn-ghost" data-action="linkCancel">取消</button><button class="btn-primary" data-action="linkContinue">繼續</button></div></div>`;document.body.appendChild(div); }
 function linkContinue(){ if(pendingLink)window.open(pendingLink,'_blank','noopener');linkCancel(); }
-function linkCancel(){ const el=document.getElementById('linkWarnOverlay');if(el)el.remove();pendingLink=''; }
+function linkCancel(){ const el=document.getElementById('linkWarnOverlay');pendingLink='';if(el)animOut(el,'anim-out-modal',240); }
 document.addEventListener('click',e=>{ const link=e.target.closest('a[data-action="linkCheck"]');if(!link)return;e.preventDefault();const url=link.dataset.arg;if(url.startsWith('https://oscar114515.github.io/'))window.open(url,'_blank','noopener');else showLinkWarning(url); });
 /* ═══════════════ 天氣（香港天文台開放數據，免 key、支援 CORS） ═══════════════ */
 const WEATHER_API='https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc';
@@ -2422,7 +2549,13 @@ function startWeather(){
   _wxTimer=setInterval(()=>loadWeather(true),WEATHER_TTL);
 }
 
-function showNotif(text){ const el=document.createElement('div');el.id='notifBanner';el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),3000); }
+function showNotif(text){
+  const old=document.getElementById('notifBanner');if(old)old.remove();
+  const el=document.createElement('div');el.id='notifBanner';el.classList.add('anim-in-notif');el.textContent=text;
+  document.body.appendChild(el);
+  clearTimeout(window._notifT);
+  window._notifT=setTimeout(()=>{ if(el.parentNode)animOut(el,'anim-out-notif',220); },2700);
+}
 
 document.getElementById('themeToggleLogin').addEventListener('change',e=>setTheme(e.target.checked?'light':'dark'));
 document.getElementById('themeToggleChat').addEventListener('change',e=>setTheme(e.target.checked?'light':'dark'));
