@@ -411,6 +411,21 @@ body.theme-light .poll-opt .poll-fill{background:rgba(59,130,246,.22)}
 body.theme-light .poll-opt .poll-circle,body.theme-light .poll-opt .poll-square{border-color:rgba(0,0,0,.35);color:#1c1e21}
 body.theme-light .poll-opt.selected .poll-circle,body.theme-light .poll-opt.selected .poll-square{background:#3b82f6;border-color:#3b82f6;color:#fff}
 body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
+/* ===== 痕跡地圖（網頁版） ===== */
+#trailMapScreen{position:fixed;inset:0;background:var(--bg-app);z-index:360;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+#trailMapScreen .tm-header{padding:12px 16px;display:flex;align-items:center;gap:12px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0}
+#trailMapScreen .tm-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+#trailMapScreen .tm-title{font-size:16px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#trailMapScreen .tm-body{position:relative;flex:1;min-height:0;overflow:hidden;background:#0e1016;touch-action:none;cursor:grab}
+#trailMapScreen .tm-body.dragging{cursor:grabbing}
+#trailMapScreen canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#trailMapScreen .tm-actions{position:absolute;right:12px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:5}
+#trailMapScreen .tm-btn{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(24,27,35,.9);color:#e8ecf3;font-size:16px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#trailMapScreen .tm-btn:active{transform:scale(.94)}
+#trailMapScreen .tm-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff}
+#trailMapScreen .tm-info{position:absolute;left:12px;bottom:16px;max-width:60%;padding:8px 12px;border-radius:12px;background:rgba(24,27,35,.9);color:#c9d2de;font-size:12px;line-height:1.55;z-index:5;border:1px solid rgba(255,255,255,.1)}
+#trailMapScreen .tm-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:30px;color:#c9d2de;font-size:13.5px;z-index:6;pointer-events:none}
+#trailMapScreen .tm-empty b{font-size:15px;color:#fff}
 </style>
 </head>
 <body>
@@ -532,7 +547,7 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.10.4';
+const CURRENT_VERSION='v1.10.5';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -795,6 +810,8 @@ document.addEventListener('click',async(e)=>{
     if(action==='cancelMyNotice')return await cancelMyNotice(arg);
     if(action==='openUserLogs')return await openUserLogs(arg);
     if(action==='openMyLogs')return await openMyLogs();
+    if(action==='openTrailMap')return await openTrailMap();
+    if(action==='closeTrailMap')return closeTrailMap();
     if(action==='openThanks')return openThanksPage();
     if(action==='submitThanks')return await submitThanks();
     if(action==='aiSaveSettings')return await aiSaveSettings();
@@ -1472,8 +1489,19 @@ async function submitPollVote(msgId){
   const sel=(window._pollSel&&window._pollSel[msgId])||[];
   if(sel.length===0){showNotif('請至少選一個');return;}
   const m=messages.find(x=>x.id===msgId);if(!m)return;
+  // 送出前把所有規則再檢查一次：截止、重複投票、封禁、選項範圍、單選一項、多選上限
+  const now=Date.now();
+  if(m.pollDeadline&&now>=m.pollDeadline){showNotif('投票已結束');return;}
   if(m.pollVotes&&m.pollVotes[me.username]){showNotif('你已投過票');return;}
-  try{ await update(ref(db,'messages/'+m._key+'/pollVotes'),{[me.username]:sel.slice()}); window._pollSel[msgId]=[]; showNotif('已投票'); }catch(e){showNotif('投票失敗');}
+  if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
+  const opts=m.pollOptions||[];
+  const mode=m.pollMode||'single';
+  const maxSel=m.pollMaxSelect||0;
+  let clean=Array.from(new Set(sel)).filter(i=>Number.isInteger(i)&&i>=0&&i<opts.length).sort((a,b)=>a-b);
+  if(clean.length===0){showNotif('請至少選一個');return;}
+  if(mode==='single')clean=[clean[0]];
+  if(mode==='multi'&&maxSel>0&&clean.length>maxSel){showNotif('超過上限（最多 '+maxSel+' 項）');return;}
+  try{ await update(ref(db,'messages/'+m._key+'/pollVotes'),{[me.username]:clean.slice()}); window._pollSel[msgId]=[]; showNotif('已投票'); }catch(e){showNotif('投票失敗');}
 }
 
 function closePage(){
@@ -1495,7 +1523,7 @@ async function openProfilePage(username,isSelf){
   const avatarHTML=u.avatar?(String(u.avatar).startsWith('data:')?`<img src="${u.avatar}">`:u.avatar):escapeHtml((u.displayName||u.username||'?').charAt(0).toUpperCase());
   if(isSelf){
     const heroHTML=`<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avatarHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">${clsTag} · ${u.username}</div><div class="hero-badge">${roleLabel}</div></div>`;
-    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon">D</div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>`;
+    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon">D</div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>`;
     openPage({title:'我的主頁',heroHTML,bodyHTML});
     setTimeout(()=>{const f=document.getElementById('avatarFile');if(f)f.onchange=onAvatarFileChange;},0);
   } else {
@@ -1969,8 +1997,239 @@ async function submitAIPrivateMessage(){
   }catch(e){showNotif('送出失敗');}
 }
 
+/* ===== 痕跡地圖（網頁版） =====
+   只會讀「登入者自己」的 trails/{自己}，沒有查別人軌跡的查詢。
+   資料來源是安卓版 App 上傳的點位（網頁本身不記錄位置）。
+   疊三層 canvas：底圖磚塊 → 迷霧 → 軌跡線。 */
+let tmState=null;
+let tmTiles=new Map();
+let tmDragging=false,tmLastX=0,tmLastY=0;
+const TM_TILE=256;
+
+function tmWorldPx(z){ return TM_TILE*Math.pow(2,z); }
+function tmLon2x(lon,z){ return (lon+180)/360*tmWorldPx(z); }
+function tmLat2y(lat,z){ const s=Math.sin(lat*Math.PI/180); return (0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*tmWorldPx(z); }
+function tmX2lon(x,z){ return x/tmWorldPx(z)*360-180; }
+function tmY2lat(y,z){ const n=Math.PI-2*Math.PI*y/tmWorldPx(z); return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))); }
+
+function tmResize(){
+  const body=document.querySelector('#trailMapScreen .tm-body');
+  if(!body||!tmState)return;
+  const dpr=window.devicePixelRatio||1;
+  const w=body.clientWidth,h=body.clientHeight;
+  if(!w||!h)return;
+  tmState.w=w;tmState.h=h;tmState.dpr=dpr;
+  ['tmTiles','tmFog','tmLine'].forEach(id=>{
+    const c=document.getElementById(id);if(!c)return;
+    c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
+  });
+}
+
+function tmRender(){
+  if(!tmState||!tmState.w||!tmState.h)return;
+  const {w,h,dpr,zoom:z,centerLat,centerLon,fog,points}=tmState;
+  const originX=tmLon2x(centerLon,z)-w/2;
+  const originY=tmLat2y(centerLat,z)-h/2;
+  const xy=points.map(p=>[tmLon2x(p.lng,z)-originX,tmLat2y(p.lat,z)-originY]);
+
+  /* 1. 底圖 */
+  const tctx=document.getElementById('tmTiles').getContext('2d');
+  tctx.setTransform(dpr,0,0,dpr,0,0);
+  tctx.fillStyle='#0e1016';tctx.fillRect(0,0,w,h);
+  const maxIdx=Math.pow(2,z)-1;
+  for(let tx=Math.floor(originX/TM_TILE);tx<=Math.floor((originX+w)/TM_TILE);tx++){
+    if(tx<0||tx>maxIdx)continue;
+    for(let ty=Math.floor(originY/TM_TILE);ty<=Math.floor((originY+h)/TM_TILE);ty++){
+      if(ty<0||ty>maxIdx)continue;
+      const key=z+'/'+tx+'/'+ty;
+      let img=tmTiles.get(key);
+      if(!img){
+        img=new Image();
+        img.onload=()=>{ if(tmState)tmRender(); };
+        img.src='https://tile.openstreetmap.org/'+key+'.png';
+        tmTiles.set(key,img);
+      }
+      if(img.complete&&img.naturalWidth) tctx.drawImage(img,tx*TM_TILE-originX,ty*TM_TILE-originY,TM_TILE,TM_TILE);
+    }
+  }
+
+  /* 2. 迷霧：整層蓋住，再把走過的帶狀區擦亮 */
+  const fctx=document.getElementById('tmFog').getContext('2d');
+  fctx.setTransform(dpr,0,0,dpr,0,0);
+  fctx.clearRect(0,0,w,h);
+  if(fog){
+    fctx.fillStyle='rgba(14,16,22,.74)';
+    fctx.fillRect(0,0,w,h);
+    fctx.globalCompositeOperation='destination-out';
+    fctx.strokeStyle='#000';fctx.fillStyle='#000';
+    fctx.lineWidth=74;fctx.lineCap='round';fctx.lineJoin='round';
+    if(xy.length>=2){
+      fctx.beginPath();
+      xy.forEach(([x,y],i)=>i?fctx.lineTo(x,y):fctx.moveTo(x,y));
+      fctx.stroke();
+    }else if(xy.length===1){
+      fctx.beginPath();fctx.arc(xy[0][0],xy[0][1],90,0,Math.PI*2);fctx.fill();
+    }
+    fctx.globalCompositeOperation='source-over';
+  }
+
+  /* 3. 軌跡線 */
+  const lctx=document.getElementById('tmLine').getContext('2d');
+  lctx.setTransform(dpr,0,0,dpr,0,0);
+  lctx.clearRect(0,0,w,h);
+  if(xy.length){
+    lctx.lineJoin='round';lctx.lineCap='round';
+    if(xy.length>=2){
+      lctx.beginPath();
+      xy.forEach(([x,y],i)=>i?lctx.lineTo(x,y):lctx.moveTo(x,y));
+      lctx.strokeStyle='rgba(255,255,255,.85)';lctx.lineWidth=9;lctx.stroke();
+      lctx.strokeStyle='#3b82f6';lctx.lineWidth=5;lctx.stroke();
+    }
+    const start=xy[0],end=xy[xy.length-1];
+    if(xy.length>=2){
+      lctx.beginPath();lctx.arc(start[0],start[1],6,0,Math.PI*2);
+      lctx.fillStyle='#22c55e';lctx.fill();
+      lctx.strokeStyle='#fff';lctx.lineWidth=2;lctx.stroke();
+    }
+    lctx.beginPath();lctx.arc(end[0],end[1],15,0,Math.PI*2);
+    lctx.strokeStyle='rgba(59,130,246,.5)';lctx.lineWidth=5;lctx.stroke();
+    lctx.beginPath();lctx.arc(end[0],end[1],8,0,Math.PI*2);
+    lctx.fillStyle='#3b82f6';lctx.fill();
+    lctx.strokeStyle='#fff';lctx.lineWidth=2;lctx.stroke();
+  }
+}
+
+function tmFit(){
+  if(!tmState)return;
+  const body=document.querySelector('#trailMapScreen .tm-body');
+  if(!body)return;
+  const w=body.clientWidth||tmState.w,h=body.clientHeight||tmState.h;
+  const pts=tmState.points;
+  if(!pts.length){ tmState.centerLat=22.3193;tmState.centerLon=114.1694;tmState.zoom=12;tmRender();return; }
+  if(pts.length===1){ tmState.centerLat=pts[0].lat;tmState.centerLon=pts[0].lng;tmState.zoom=17;tmRender();return; }
+  const lats=pts.map(p=>p.lat),lngs=pts.map(p=>p.lng);
+  const minLat=Math.min.apply(null,lats),maxLat=Math.max.apply(null,lats);
+  const minLng=Math.min.apply(null,lngs),maxLng=Math.max.apply(null,lngs);
+  tmState.centerLat=(minLat+maxLat)/2;
+  tmState.centerLon=(minLng+maxLng)/2;
+  let z=18;
+  while(z>3){
+    const dx=Math.abs(tmLon2x(maxLng,z)-tmLon2x(minLng,z));
+    const dy=Math.abs(tmLat2y(minLat,z)-tmLat2y(maxLat,z));
+    if(dx<=w*0.72&&dy<=h*0.72)break;
+    z--;
+  }
+  tmState.zoom=z;
+  tmRender();
+}
+
+function tmZoom(delta){
+  if(!tmState)return;
+  tmState.zoom=Math.max(3,Math.min(18,tmState.zoom+delta));
+  tmRender();
+  tmUpdateInfo();
+}
+
+function tmPanMove(clientX,clientY){
+  if(!tmDragging||!tmState)return;
+  const dx=clientX-tmLastX,dy=clientY-tmLastY;
+  tmLastX=clientX;tmLastY=clientY;
+  const z=tmState.zoom;
+  tmState.centerLon=tmX2lon(tmLon2x(tmState.centerLon,z)-dx,z);
+  tmState.centerLat=tmY2lat(tmLat2y(tmState.centerLat,z)-dy,z);
+  tmRender();
+}
+function tmPanMouseMove(e){ tmPanMove(e.clientX,e.clientY); }
+function tmPanTouchMove(e){
+  const t=e.touches&&e.touches[0];if(!t)return;
+  tmPanMove(t.clientX,t.clientY);
+  if(e.cancelable)e.preventDefault();
+}
+function tmPanEnd(){ tmDragging=false; const b=document.querySelector('#trailMapScreen .tm-body'); if(b)b.classList.remove('dragging'); }
+
+function tmBindPan(){
+  const body=document.querySelector('#trailMapScreen .tm-body');
+  if(!body)return;
+  const start=(x,y)=>{ tmDragging=true;tmLastX=x;tmLastY=y;body.classList.add('dragging'); };
+  body.addEventListener('mousedown',e=>start(e.clientX,e.clientY));
+  body.addEventListener('touchstart',e=>{ const t=e.touches[0];if(t)start(t.clientX,t.clientY); },{passive:true});
+  window.addEventListener('mousemove',tmPanMouseMove);
+  window.addEventListener('mouseup',tmPanEnd);
+  body.addEventListener('touchmove',tmPanTouchMove,{passive:false});
+  body.addEventListener('touchend',tmPanEnd);
+  body.addEventListener('touchcancel',tmPanEnd);
+}
+
+function tmUpdateInfo(){
+  const info=document.getElementById('tmInfo');
+  if(!info||!tmState)return;
+  const n=tmState.points.length;
+  info.textContent=n
+    ? '共 '+n+' 個點　·　霧：'+(tmState.fog?'開（走過的範圍才會揭開）':'關')
+    : '這裡只會顯示你自己的痕跡';
+}
+
+async function openTrailMap(){
+  if(!me)return;
+  const old=document.getElementById('trailMapScreen');
+  if(old)old.remove();
+
+  const div=document.createElement('div');
+  div.id='trailMapScreen';
+  div.innerHTML=`<div class="tm-header"><button class="tm-back" data-action="closeTrailMap">←</button><div class="tm-title">痕跡地圖</div><span id="tmCount" style="font-size:11.5px;color:var(--text-sub);flex-shrink:0"></span></div><div class="tm-body"><canvas id="tmTiles"></canvas><canvas id="tmFog"></canvas><canvas id="tmLine"></canvas><div class="tm-empty" id="tmEmpty" style="display:none"><b>還沒有痕跡</b><span>在安卓版 App 打開「痕跡地圖」開始記錄，走過的路就會出現在這裡</span></div><div class="tm-info" id="tmInfo">載入中…</div><div class="tm-actions"><button class="tm-btn" id="tmZoomIn">＋</button><button class="tm-btn" id="tmZoomOut">－</button><button class="tm-btn on" id="tmFogBtn" title="切換霧">霧</button><button class="tm-btn" id="tmFit" title="看全部">⤢</button></div></div>`;
+  document.body.appendChild(div);
+
+  tmState={points:[],centerLat:22.3193,centerLon:114.1694,zoom:12,fog:true,w:0,h:0,dpr:1};
+  tmResize();
+  tmBindPan();
+  tmRender();
+
+  document.getElementById('tmZoomIn').onclick=()=>tmZoom(1);
+  document.getElementById('tmZoomOut').onclick=()=>tmZoom(-1);
+  document.getElementById('tmFit').onclick=()=>{ tmFit();tmUpdateInfo(); };
+  document.getElementById('tmFogBtn').onclick=()=>{
+    if(!tmState)return;
+    tmState.fog=!tmState.fog;
+    document.getElementById('tmFogBtn').classList.toggle('on',tmState.fog);
+    tmRender();tmUpdateInfo();
+  };
+  window.addEventListener('resize',tmResize);
+
+  try{
+    const snap=await get(ref(db,'trails/'+me.username));
+    const val=snap.exists()?snap.val():{};
+    const pts=Object.keys(val).map(k=>val[k])
+      .filter(p=>p&&typeof p.lat==='number'&&typeof p.lng==='number')
+      .map(p=>({lat:p.lat,lng:p.lng,t:p.t||0}))
+      .sort((a,b)=>a.t-b.t);
+    if(!tmState)return; // 載入途中已經關掉了
+    tmState.points=pts;
+    const cnt=document.getElementById('tmCount');
+    if(cnt)cnt.textContent=pts.length?pts.length+' 個點':'';
+    const empty=document.getElementById('tmEmpty');
+    if(empty)empty.style.display=pts.length?'none':'flex';
+    tmFit();
+    tmUpdateInfo();
+  }catch(err){
+    const info=document.getElementById('tmInfo');
+    if(info)info.textContent='載入失敗：'+(err.message||err);
+  }
+}
+
+function closeTrailMap(){
+  const el=document.getElementById('trailMapScreen');
+  if(el)el.remove();
+  window.removeEventListener('resize',tmResize);
+  window.removeEventListener('mousemove',tmPanMouseMove);
+  window.removeEventListener('mouseup',tmPanEnd);
+  tmDragging=false;
+  tmState=null;
+  tmTiles=new Map();
+}
+
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.10.5',date:'2026-10-10',changes:['個人主頁新增「痕跡地圖」入口（原本找不到地圖在哪裏）','網頁版可看自己在安卓 App 走過的痕跡，含迷霧效果、可拖動縮放','痕跡地圖只讀自己的資料，不會顯示其他人的位置','修復投票漏洞：已投票不能再改、截止後不能投、被禁言不能投、多選不可超過上限']},
 {ver:'v1.10.4',date:'2026-10-10',changes:['「前往新版本」改為直接重新載入，網址不再被加上參數','若網址帶有 _v 參數會自動清除，回復原本網址']},
 {ver:'v1.10.3',date:'2026-10-10',changes:['修復安卓版 App 下載入口點不開（改用 a 標籤才觸發連結檢查）']},
 {ver:'v1.10.2',date:'2026-10-09',changes:['個人主頁「關於」下方新增安卓版 App 下載入口']},
