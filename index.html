@@ -532,7 +532,7 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.10.3';
+const CURRENT_VERSION='v1.10.4';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -546,10 +546,33 @@ const SYS_NOTICE_ICON='🔔';
 
 let versionChecking=false,versionMismatchShown=false;
 async function checkVersion(){ if(versionChecking||versionMismatchShown)return;versionChecking=true;try{const snap=await get(ref(db,'meta/version'));if(snap.exists()){const sv=String(snap.val()||'').trim();if(sv&&sv!==CURRENT_VERSION)showVersionModal(sv);}}catch(e){}finally{versionChecking=false;} }
-function showVersionModal(sv){ if(versionMismatchShown)return;versionMismatchShown=true;const old=document.getElementById('versionModal');if(old)old.remove();const m=document.createElement('div');m.id='versionModal';m.innerHTML=`<div class="vm-card"><h3>⚠ 你的網站不是最新版本</h3><p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p><p>最新版本：<b style="color:#4ade80">${sv}</b></p><div class="vm-btns"><button class="vm-go" id="vmGoBtn">前往新版本</button><button class="vm-exit" id="vmExitBtn">退出網站</button></div></div>`;document.body.appendChild(m);document.getElementById('vmGoBtn').onclick=()=>{const url=new URL(location.href);url.searchParams.set('_v',Date.now().toString());location.replace(url.toString());};document.getElementById('vmExitBtn').onclick=()=>{try{window.close();}catch(e){}setTimeout(()=>{location.href='about:blank';},200);}; }
+function showVersionModal(sv){ if(versionMismatchShown)return;versionMismatchShown=true;const old=document.getElementById('versionModal');if(old)old.remove();const m=document.createElement('div');m.id='versionModal';m.innerHTML=`<div class="vm-card"><h3>⚠ 你的網站不是最新版本</h3><p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p><p>最新版本：<b style="color:#4ade80">${sv}</b></p><div class="vm-btns"><button class="vm-go" id="vmGoBtn">前往新版本</button><button class="vm-exit" id="vmExitBtn">退出網站</button></div></div>`;document.body.appendChild(m);document.getElementById('vmGoBtn').onclick=goNewVersion;document.getElementById('vmExitBtn').onclick=()=>{try{window.close();}catch(e){}setTimeout(()=>{location.href='about:blank';},200);}; }
 
-const $=id=>document.getElementById(id);
-const loginScreen=$('loginScreen'),chatScreen=$('chatScreen');
+/* ===== v1.10.4 前往新版本：先無參數重載，網址保持不變 ===== */
+function goNewVersion(){
+  const key='ver_reload_tried';
+  if(sessionStorage.getItem(key)!==CURRENT_VERSION){
+    // 第一次：直接重載。reload 會帶 max-age=0 重新向伺服器驗證，能拿到新版本，網址完全不變。
+    sessionStorage.setItem(key,CURRENT_VERSION);
+    location.reload();
+    return;
+  }
+  // 第二次還是不行（遇到強快取），才加上一次性參數破快取
+  sessionStorage.removeItem(key);
+  const url=new URL(location.href);
+  url.searchParams.set('_v',Date.now().toString());
+  location.replace(url.toString());
+}
+// 若網址帶著 _v 進來，把它清掉讓網址回復原樣（用 replaceState，不會重新載入）
+try{
+  if(location.search.indexOf('_v=')!==-1){
+    const clean=new URL(location.href);
+    clean.searchParams.delete('_v');
+    history.replaceState(null,'',clean.pathname+(clean.search||'')+clean.hash);
+  }
+}catch(e){}
+
+const $=id=>document.getElementById(id);const loginScreen=$('loginScreen'),chatScreen=$('chatScreen');
 const loginUsername=$('loginUsername'),loginPassword=$('loginPassword'),loginBtn=$('loginBtn'),loginError=$('loginError');
 const chatBox=$('chatBox'),msgInput=$('msgInput'),sendBtn=$('sendBtn');
 const classStatus=$('classStatus'),searchInput=$('searchInput');
@@ -1948,6 +1971,7 @@ async function submitAIPrivateMessage(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.10.4',date:'2026-10-10',changes:['「前往新版本」改為直接重新載入，網址不再被加上參數','若網址帶有 _v 參數會自動清除，回復原本網址']},
 {ver:'v1.10.3',date:'2026-10-10',changes:['修復安卓版 App 下載入口點不開（改用 a 標籤才觸發連結檢查）']},
 {ver:'v1.10.2',date:'2026-10-09',changes:['個人主頁「關於」下方新增安卓版 App 下載入口']},
 {ver:'v1.10.1',date:'2026-10-09',changes:['修復在線人數顯示錯誤（改用心跳時間戳，自動清除幽靈帳號）']},
