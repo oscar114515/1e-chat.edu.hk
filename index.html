@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.12</title>
+<title>班級聊天室 v1.13</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -519,7 +519,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.12 正式版</div>
+    <div id="loginVersion">v1.13 正式版</div>
   </div>
 </div>
 
@@ -527,7 +527,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.12</span>
+      <span class="ver">v1.13</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -601,7 +601,7 @@ import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, u
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.12';
+const CURRENT_VERSION='v1.13';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -2212,6 +2212,16 @@ function tmLat2y(lat,z){ const s=Math.sin(lat*Math.PI/180); return (0.5-Math.log
 function tmX2lon(x,z){ return x/tmWorldPx(z)*360-180; }
 function tmY2lat(y,z){ const n=Math.PI-2*Math.PI*y/tmWorldPx(z); return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))); }
 
+/* 揭霧的半徑用「米」定義。
+   以前這裡是寫死 74 像素，但同一條 74 像素的走廊在不同縮放級別代表的真實距離差很大
+   （z12 時寬 2.6 公里、z16 時 164 米、z18 時只有 41 米），所以看起來會「忽大忽小」，
+   也完全不能代表真的走過的範圍。現在改成固定 15 米，再依當下縮放換算成像素。 */
+const TM_REVEAL_RADIUS_M=15;   // 軌跡兩側各揭開 15 米（＝走廊總寬 30 米）
+const TM_REVEAL_MIN_PX=2.5;    // 縮到很遠時至少留一條細線，免得整張圖全黑看不到軌跡
+/* Web Mercator：某緯度、某縮放級別下，1 像素等於幾米地面距離。 */
+function tmMetresPerPx(lat,z){ return 156543.03392804097*Math.cos(lat*Math.PI/180)/Math.pow(2,z); }
+function tmMetresToPx(m,lat,z){ return m/tmMetresPerPx(lat,z); }
+
 function tmResize(){
   const body=document.querySelector('#trailMapScreen .tm-body');
   if(!body||!tmState)return;
@@ -2223,6 +2233,7 @@ function tmResize(){
     const c=document.getElementById(id);if(!c)return;
     c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
   });
+  tmRender();   // 改 canvas 尺寸會清空畫布，要立刻重畫（旋轉螢幕才不會變全黑）
 }
 
 function tmRender(){
@@ -2262,13 +2273,15 @@ function tmRender(){
     fctx.fillRect(0,0,w,h);
     fctx.globalCompositeOperation='destination-out';
     fctx.strokeStyle='#000';fctx.fillStyle='#000';
-    fctx.lineWidth=74;fctx.lineCap='round';fctx.lineJoin='round';
+    // 15 米 → 像素。放大縮小都會換算出不同像素數，但涵蓋的真實範圍永遠是 15 米。
+    const revealR=Math.max(TM_REVEAL_MIN_PX,tmMetresToPx(TM_REVEAL_RADIUS_M,centerLat,z));
+    fctx.lineWidth=revealR*2;fctx.lineCap='round';fctx.lineJoin='round';
     if(xy.length>=2){
       fctx.beginPath();
       xy.forEach(([x,y],i)=>i?fctx.lineTo(x,y):fctx.moveTo(x,y));
       fctx.stroke();
     }else if(xy.length===1){
-      fctx.beginPath();fctx.arc(xy[0][0],xy[0][1],90,0,Math.PI*2);fctx.fill();
+      fctx.beginPath();fctx.arc(xy[0][0],xy[0][1],revealR,0,Math.PI*2);fctx.fill();
     }
     fctx.globalCompositeOperation='source-over';
   }
@@ -2364,8 +2377,11 @@ function tmUpdateInfo(){
   const info=document.getElementById('tmInfo');
   if(!info||!tmState)return;
   const n=tmState.points.length;
+  // 把「揭開半徑」寫出來，這樣放大縮小都可以自己核對是不是同一個實際範圍
+  const scale=tmMetresPerPx(tmState.centerLat,tmState.zoom);
   info.textContent=n
-    ? '共 '+n+' 個點　·　霧：'+(tmState.fog?'開（走過的範圍才會揭開）':'關')
+    ? '共 '+n+' 個點　·　霧：'+(tmState.fog?('開（軌跡兩側各 '+TM_REVEAL_RADIUS_M+' 米）'):'關')
+      +'　·　1 像素 ≈ '+(scale<1?scale.toFixed(2):scale<10?scale.toFixed(1):Math.round(scale))+' 米'
     : '這裡只會顯示你自己的痕跡';
 }
 
@@ -2431,6 +2447,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.13',date:'2026-10-10',changes:['修復痕跡地圖的揭霧範圍：以前用固定螢幕像素畫，縮到最小時那條走廊實際寬達 2.6 公里、放到最大只有 41 米，看起來忽大忽小','現在改成固定真實距離：軌跡兩側各揭開 15 米，放大縮小都是同一個實際範圍，不會再跑掉','資訊列會顯示「軌跡兩側各 15 米」與「1 像素 ≈ 幾米」，可以自己核對','修復旋轉螢幕後痕跡地圖變全黑（改 canvas 尺寸後沒有重畫）','Android 版同步修正（1.3.1）']},
 {ver:'v1.12',date:'2026-10-10',changes:['全站補上進退場動畫：安卓版一直都有轉場，網頁版只是「啪」一聲消失，現在兩邊一致','關閉任何頁面時整頁向右滑走，上一層再從左邊推回來，層級關係看得出來','開啟新頁面改成從右邊滑進來，不再是直接跳出來','彈窗、圖片檢視、連結警告、位置全螢幕、痕跡地圖、AI 確認橫幅、錄音遮罩全部補上退場動畫','「+」面板與 @ 提及選單改成滑出收起，通知橫幅多了淡出','系統偵測到「減少動態效果」時會自動縮短動畫，不會影響這類使用者']},
 {ver:'v1.11',date:'2026-10-10',changes:['登入頁加上校徽，開場更有學校的感覺','新增天氣顯示：右上角即時氣溫與濕度（香港天文台開放數據，每 10 分鐘更新）','禁言與封禁正式分開：禁言只限制發言仍可登入；嚴重封禁則禁止登入','修復多層頁面的返回層級：後台→用戶資料→日誌 可以一層一層退回去','安卓版補上「AI 回覆」開關（與網頁版那顆圓形 AI 按鈕一致）']},
 {ver:'v1.10.5',date:'2026-10-10',changes:['個人主頁新增「痕跡地圖」入口（原本找不到地圖在哪裏）','網頁版可看自己在安卓 App 走過的痕跡，含迷霧效果、可拖動縮放','痕跡地圖只讀自己的資料，不會顯示其他人的位置','修復投票漏洞：已投票不能再改、截止後不能投、被禁言不能投、多選不可超過上限']},
