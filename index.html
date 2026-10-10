@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-upMQnn/f3LIQZGz8XhPuCaUDdb49sqWPKBtOFI8V/lk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-yM3+pnMt4n2opsGiG2p56hbSJWvdqlRrALw1qBLHDhs=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.15</title>
+<title>班級聊天室 v1.16</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -520,7 +520,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.15 正式版</div>
+    <div id="loginVersion">v1.16 正式版</div>
   </div>
 </div>
 
@@ -528,7 +528,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.15</span>
+      <span class="ver">v1.16</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -598,11 +598,11 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, update, remove } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, query, limitToLast, get, child, set, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.15';
+const CURRENT_VERSION='v1.16';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -922,6 +922,8 @@ function enterChat(){
   subscribeSystemNotices();subscribeThanks();subscribeMeta();subscribeAIModeMap();
   subscribeMyGroups();
   startHeartbeat();
+  countPageLoad();                  // 記一筆開頁次數，用來估算每月下載量
+  setTimeout(checkUsageWarning,3000);   // 超級管理員才會有反應
   updateAdminBadge();
 }
 async function writeLog(action,detail){ if(!me)return;const id='log_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);try{await set(ref(db,'logs/'+id),{action,detail,username:me.username,displayName:me.displayName,seat:me.seat,role:me.role,createdAt:Date.now()});}catch(e){} }
@@ -941,6 +943,9 @@ document.addEventListener('click',async(e)=>{
     if(action==='togglePwd')return togglePwd();
     if(action==='openLoginLink')return await openLoginLink(arg);
     if(action==='copyLoginLink')return copyLoginLink();
+    if(action==='usageRescan'){ const b=document.getElementById('adminBody'); if(b)await renderUsageTab(b); return; }
+    if(action==='purgeMedia')return await purgeMedia(arg);
+    if(action==='purgeOldMedia')return await purgeOldMedia();
     if(action==='send')return await sendMessage();
     if(action==='saveDisplayName')return await saveDisplayName();
     if(action==='pickEmoji')return await pickEmoji(arg);
@@ -1963,12 +1968,296 @@ async function submitFeedback(){
 function toggleFeedbackBox(){ const box=$('feedbackBox'); if(box)box.classList.toggle('hidden'); }
 
 /* ===== 管理員後台 ===== */
+/* ═══ v1.16 數據用量（管理員後台） ═══
+   為什麼要這個：
+   Firebase 免費方案是「1 GB 儲存、每月 10 GB 下載」。儲存幾乎不可能滿
+   （整班資料才 0.7 MB），真正會爆的是下載 —— 每次有人打開聊天室，就會把
+   最近 300 則訊息整包抓下來；只要裡面有幾張圖片，一次開頁就是幾百 KB。
+   144 個人每天開幾次，一個月就可能逼近 10 GB。額度一到 Firebase 會限制讀取，
+   網站等於故障，而且只有 Firebase Console 看得到。
+   這裡把同一組數字搬進後台，再加上「誰佔最多」跟「一鍵清掉大圖」。
+
+   數字怎麼來的：
+     * 儲存：逐一節點抓下來量 JSON 大小（整庫才 0.7 MB，掃一次很便宜）
+     * 每次開頁下載：最近 300 則訊息的實際大小 + 全班帳號清單
+     * 每月下載：上面那個數字 × 本月實際開頁次數（meta/stats/monthly）
+   這是估算值。真正的帳單數字只有 Firebase Console 有，但趨勢跟「誰造成的」
+   在這裡就看得出來。 */
+const USAGE_NODES=['messages','logs','notices','users','meta','aiMemory','aiPrivateChat','requests','systemNotices','groupMessages','feedbacks','noticeReads','aiDailySummary','groups','thanks','deviceInfo','aiMode','trails','aiChatMode','presence','devices','pendingNotices','loginTokens'];
+const QUOTA_STORE_BYTES=1024*1048576;      // 免費方案：1 GB 儲存
+const QUOTA_DOWN_BYTES=10*1024*1048576;    // 免費方案：每月 10 GB 下載
+const MSG_WINDOW=300;                      // 跟 subscribeMessages 的 limitToLast 保持一致
+
+function bytesOf(v){ try{ return JSON.stringify(v==null?null:v).length; }catch(e){ return 0; } }
+function fmtBytes(b){
+  b=Number(b)||0;
+  if(b<1024)return b+' B';
+  if(b<1048576)return (b/1024).toFixed(1)+' KB';
+  if(b<1073741824)return (b/1048576).toFixed(2)+' MB';
+  return (b/1073741824).toFixed(2)+' GB';
+}
+function usageColor(pct){ return pct>=90?'#f87171':(pct>=70?'#fbbf24':'#4ade80'); }
+function usageBar(pct){
+  const p=Math.max(0,Math.min(100,Number(pct)||0));
+  return `<div style="height:9px;border-radius:6px;background:var(--bg-input);overflow:hidden;margin:7px 0 3px"><div style="height:100%;width:${p.toFixed(2)}%;border-radius:6px;background:${usageColor(p)}"></div></div>`;
+}
+function usageCard(title,big,sub,pct,note){
+  return `<div class="card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+    <div style="font-size:12px;color:var(--text-sub);letter-spacing:.4pt;margin-bottom:6px">${title}</div>
+    <div style="font-size:24px;font-weight:800;color:var(--text-main);letter-spacing:-.3pt">${big}</div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">${sub}</div>
+    ${usageBar(pct)}
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted)"><span>${note||''}</span><span style="color:${usageColor(pct)};font-weight:700">${(Number(pct)||0).toFixed(2)}%</span></div>
+  </div>`;
+}
+
+/* 每次成功進入聊天室記一筆，用來估算每月下載量。
+   用 transaction 而不是「讀-加一-寫回」，否則多人同時開頁會漏算。 */
+async function countPageLoad(){
+  try{
+    const ym=new Date().toISOString().slice(0,7);
+    await runTransaction(ref(db,'meta/stats/monthly/'+ym),c=>(Number(c)||0)+1);
+  }catch(e){}
+}
+
+/* 逐一節點抓下來量大小。整庫不到 1 MB，掃一次零點幾秒。 */
+async function scanUsage(){
+  const sizes={}; const failed=[]; let total=0; let msgsObj=null;
+  for(const node of USAGE_NODES){
+    try{
+      const snap=await get(ref(db,node));
+      const v=snap.exists()?snap.val():null;
+      const b=bytesOf(v);
+      sizes[node]={bytes:b,count:(v&&typeof v==='object')?Object.keys(v).length:(v==null?0:1)};
+      total+=b;
+      if(node==='messages')msgsObj=(v&&typeof v==='object')?v:{};
+    }catch(e){ failed.push(node); sizes[node]={bytes:0,count:0}; }
+  }
+  return {sizes,failed,total,msgs:msgsObj||{}};
+}
+
+function usageSummary(scan,loads){
+  const {sizes,msgs,total}=scan;
+  const byType={},byUser={},media=[];
+  for(const k of Object.keys(msgs)){
+    const m=msgs[k]||{},b=bytesOf(m),t=m.type||'text',u=m.username||'?';
+    (byType[t]=byType[t]||{n:0,b:0}); byType[t].n++; byType[t].b+=b;
+    (byUser[u]=byUser[u]||{n:0,b:0,media:0}); byUser[u].n++; byUser[u].b+=b;
+    if(t==='image'||t==='file'||t==='voice'){ byUser[u].media+=b; media.push({k,m,b,t}); }
+  }
+  media.sort((a,b)=>b.b-a.b);
+  const sorted=Object.keys(msgs).map(k=>({k,m:msgs[k]||{}}))
+    .sort((a,b)=>((a.m.createdAt)||0)-((b.m.createdAt)||0));
+  const win=sorted.slice(-MSG_WINDOW);
+  const winBytes=win.reduce((s,x)=>s+bytesOf(x.m),0);
+  const usersBytes=(sizes.users&&sizes.users.bytes)||bytesOf(allUsers);
+  return {
+    byType,byUser,media,
+    windowCount:win.length,windowBytes:winBytes,usersBytes,
+    perOpen:winBytes+usersBytes,
+    monthDown:(winBytes+usersBytes)*loads,
+  };
+}
+
+async function renderUsageTab(body){
+  if(!body)return;
+  body.innerHTML='<div class="empty">正在統計資料用量…</div>';
+
+  const scan=await scanUsage();
+  const ym=new Date().toISOString().slice(0,7);
+  let loads=0, history={};
+  try{
+    const snap=await get(child(ref(db),'meta/stats/monthly'));
+    history=snap.exists()?(snap.val()||{}):{};
+    loads=Number(history[ym])||0;
+  }catch(e){}
+
+  const u=usageSummary(scan,loads);
+  const isSuper=me.role==='superadmin';
+  const storePct=scan.total/QUOTA_STORE_BYTES*100;
+  const downPct=u.monthDown/QUOTA_DOWN_BYTES*100;
+
+  const nodeRows=Object.keys(scan.sizes)
+    .map(k=>({k,...scan.sizes[k]}))
+    .filter(x=>x.bytes>0)
+    .sort((a,b)=>b.bytes-a.bytes);
+
+  const userRows=Object.keys(u.byUser)
+    .map(k=>({u:k,...u.byUser[k]}))
+    .sort((a,b)=>b.b-a.b)
+    .slice(0,12);
+
+  const typeLabel={text:'文字',image:'圖片',file:'檔案',voice:'語音',poll:'投票',location:'位置'};
+
+  let html='';
+
+  html+=`<div class="section-title">額度</div>`;
+  html+=usageCard('儲存用量（整個資料庫）',
+    `${fmtBytes(scan.total)} <span style="font-size:14px;color:var(--text-muted);font-weight:600">/ 1 GB</span>`,
+    `免費方案上限 1 GB${scan.failed.length?'　　⚠ 讀取失敗：'+scan.failed.join('、'):''}`,
+    storePct,
+    `共 ${Object.keys(scan.sizes).length} 個節點`);
+
+  html+=usageCard('本月下載估算',
+    `${fmtBytes(u.monthDown)} <span style="font-size:14px;color:var(--text-muted);font-weight:600">/ 10 GB</span>`,
+    `每次開頁約 ${fmtBytes(u.perOpen)}　×　本月已開頁 ${loads} 次`,
+    downPct,
+    `最近 ${u.windowCount} 則訊息 ${fmtBytes(u.windowBytes)} ＋ 帳號清單 ${fmtBytes(u.usersBytes)}`);
+
+  html+=`<div style="font-size:11.5px;color:var(--text-muted);line-height:1.7;margin:-4px 0 12px">
+    這是估算值。真正的帳單數字只有 Firebase Console → Realtime Database → 用量 才看得到，
+    但趨勢跟「誰造成的」在這裡就能判斷。<br>
+    本月 = ${escapeHtml(ym)}；開頁次數是每次有人成功進入聊天室就記一筆。</div>`;
+
+  html+=`<button class="btn-ghost" data-action="usageRescan">重新掃描</button>`;
+
+  html+=`<div class="section-title">誰佔最多（依訊息位元組）</div>`;
+  if(!userRows.length)html+=`<div class="empty">暫無資料</div>`;
+  else{
+    html+=`<div style="font-size:12.5px">`;
+    for(const r of userRows){
+      const w=Math.max(2,(r.b/Math.max(1,userRows[0].b))*100);
+      const nm=(allUsers[r.u]&&allUsers[r.u].displayName)||r.u;
+      html+=`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;gap:10px">
+          <span style="font-weight:600;color:var(--text-main)">${escapeHtml(nm)}</span>
+          <span style="color:var(--text-sub);font-variant-numeric:tabular-nums">${fmtBytes(r.b)} · ${r.n} 則${r.media?' · 媒體 '+fmtBytes(r.media):''}</span>
+        </div>
+        <div style="height:6px;border-radius:4px;background:var(--bg-input);overflow:hidden;margin-top:4px">
+          <div style="height:100%;width:${w.toFixed(1)}%;background:linear-gradient(90deg,#3b82f6,#22d3ee)"></div>
+        </div></div>`;
+    }
+    html+=`</div>`;
+  }
+
+  html+=`<div class="section-title">各型別訊息</div>`;
+  html+=`<div style="font-size:12.5px;color:var(--text-sub);line-height:1.9">`;
+  for(const t of Object.keys(u.byType).sort((a,b)=>u.byType[b].b-u.byType[a].b)){
+    html+=`<div style="display:flex;justify-content:space-between"><span>${escapeHtml(typeLabel[t]||t)}</span>
+      <span style="font-variant-numeric:tabular-nums">${u.byType[t].n} 則 · ${fmtBytes(u.byType[t].b)}</span></div>`;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="section-title">各節點佔用</div>`;
+  html+=`<div style="font-size:12.5px;color:var(--text-sub);line-height:1.9">`;
+  for(const r of nodeRows){
+    html+=`<div style="display:flex;justify-content:space-between"><span>${escapeHtml(r.k)}</span>
+      <span style="font-variant-numeric:tabular-nums">${r.count} 筆 · ${fmtBytes(r.bytes)}</span></div>`;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="section-title">最大的媒體${isSuper?'（可清除）':''}</div>`;
+  if(!u.media.length)html+=`<div class="empty">沒有任何圖片、檔案或語音</div>`;
+  else{
+    html+=`<div style="font-size:12.5px">`;
+    for(const x of u.media.slice(0,15)){
+      const when=new Date(x.m.createdAt||0).toLocaleString('zh-TW');
+      const who=(x.m.displayName||x.m.username||'?');
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;color:var(--text-main)">${fmtBytes(x.b)} · ${escapeHtml(typeLabel[x.t]||x.t)}</div>
+          <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(who)} · ${when}</div>
+        </div>
+        ${isSuper?`<button class="danger" style="flex:0 0 auto;margin:0" data-action="purgeMedia" data-arg="${escAttr(x.k)}">清除</button>`:''}
+      </div>`;
+    }
+    html+=`</div>`;
+    if(isSuper)html+=`<button class="btn-ghost" data-action="purgeOldMedia">清除 30 天前的所有媒體</button>`;
+  }
+
+  html+=`<div class="section-title">說明</div>
+  <div style="font-size:11.5px;color:var(--text-muted);line-height:1.8">
+    「清除」只會拿掉圖片／語音／檔案的內容，訊息本身跟文字會留著，會變成一則註記。<br>
+    訊息愈多、圖片愈大，每次開頁下載就愈多 —— 要壓低流量，先清大圖最快。<br>
+    額度是 Firebase 免費方案（Spark）的數字；如果之後升級成 Blaze 就不是這個上限。
+  </div>`;
+
+  body.innerHTML=html;
+}
+
+async function purgeMedia(key){
+  if(me.role!=='superadmin')return;
+  const snap=await get(child(ref(db),'messages/'+key));
+  if(!snap.exists()){showNotif('訊息不存在');return;}
+  const m=snap.val()||{};
+  const before=bytesOf(m);
+  const label=m.type==='image'?'圖片':(m.type==='voice'?'語音':(m.type==='file'?'檔案':'媒體'));
+  if(!confirm('確定清除這則'+label+'？（約 '+fmtBytes(before)+'）'))return;
+  try{
+    await update(ref(db,'messages/'+key),{
+      type:'text',text:'（'+label+'已由管理員清除，釋出 '+fmtBytes(before)+'）',
+      imageUrl:null,fileUrl:null,audioUrl:null,fileName:null,fileSize:null,duration:null,
+      purged:true,purgedAt:Date.now(),purgedBy:me.username,
+    });
+    await writeLog('purge','清除訊息媒體，釋出 '+before+' bytes');
+    showNotif('已清除 '+fmtBytes(before));
+    const body=document.getElementById('adminBody');
+    if(body)await renderUsageTab(body);
+  }catch(e){showNotif('清除失敗');}
+}
+
+async function purgeOldMedia(){
+  if(me.role!=='superadmin')return;
+  const cutoff=Date.now()-30*86400000;
+  const {msgs}=await scanUsage();
+  const targets=Object.keys(msgs).filter(k=>{
+    const m=msgs[k]||{};
+    return (m.type==='image'||m.type==='voice'||m.type==='file')&&(m.createdAt||0)<cutoff&&!m.purged;
+  });
+  if(!targets.length){showNotif('30 天前沒有可清除的媒體');return;}
+  const total=targets.reduce((s,k)=>s+bytesOf(msgs[k]),0);
+  if(!confirm('要清除 '+targets.length+' 則 30 天前的媒體嗎？\n合計約 '+fmtBytes(total)+'\n（訊息與文字會保留）'))return;
+  let done=0;
+  for(const k of targets){
+    try{
+      const m=msgs[k]||{};
+      const label=m.type==='image'?'圖片':(m.type==='voice'?'語音':'檔案');
+      await update(ref(db,'messages/'+k),{
+        type:'text',text:'（'+label+'已由管理員清除，釋出 '+fmtBytes(bytesOf(m))+'）',
+        imageUrl:null,fileUrl:null,audioUrl:null,fileName:null,fileSize:null,duration:null,
+        purged:true,purgedAt:Date.now(),purgedBy:me.username,
+      });
+      done++;
+    }catch(e){}
+  }
+  await writeLog('purge','批次清除 '+done+' 則舊媒體');
+  showNotif('已清除 '+done+' 則，釋出約 '+fmtBytes(total));
+  const body=document.getElementById('adminBody');
+  if(body)await renderUsageTab(body);
+}
+
+/* 超級管理員登入時，用量偏高就在聊天室上方掛一條提醒，不用自己記得去查。
+   只用「已經載入的訊息」+ 一個小節點，成本幾乎是零。 */
+async function checkUsageWarning(){
+  if(!me||me.role!=='superadmin')return;
+  try{
+    const win=messages.slice(-MSG_WINDOW);
+    const winBytes=win.reduce((s,m)=>s+bytesOf(m),0);
+    const perOpen=winBytes+bytesOf(allUsers);
+    const ym=new Date().toISOString().slice(0,7);
+    const snap=await get(child(ref(db),'meta/stats/monthly/'+ym));
+    const loads=snap.exists()?(Number(snap.val())||0):0;
+    const pct=perOpen*loads/QUOTA_DOWN_BYTES*100;
+    if(pct<70)return;
+    const old=document.getElementById('usageWarn');if(old)old.remove();
+    const el=document.createElement('div');
+    el.id='usageWarn';
+    el.classList.add('anim-in-notif');
+    el.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:900;padding:12px 14px;border-radius:12px;font-size:12.5px;line-height:1.7;background:'+(pct>=90?'#7f1d1d':'#78350f')+';color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.4)';
+    el.innerHTML='本月下載量估算已達免費額度的 <b>'+pct.toFixed(1)+'%</b>（'+fmtBytes(perOpen*loads)+' / 10 GB）<br>'+
+      '建議到「管理員後台 → 用量」清掉大圖，避免額度用完導致網站讀不到資料。'+
+      '<div style="margin-top:8px"><button data-action="openAdmin" style="background:rgba(255,255,255,.18);border:0;color:#fff;padding:7px 14px;border-radius:8px;font-size:12.5px">去看用量</button></div>';
+    document.body.appendChild(el);
+    setTimeout(()=>{ const n=document.getElementById('usageWarn'); if(n&&n.parentNode)animOut(n,'anim-out-notif',260); },14000);
+  }catch(e){}
+}
+
 function openAdminPage(tab){
   if(me.role!=='superadmin'&&me.role!=='admin')return;
   const isSuper=me.role==='superadmin';
   const accountTab=isSuper?`<button class="tab ${tab==='accounts'?'active':''}" data-action="switchAdminTab" data-arg="accounts">帳號管理</button>`:'';
   beginPage('admin');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
 async function renderAdminTab(tab){
@@ -1981,6 +2270,7 @@ async function renderAdminTab(tab){
   else if(tab==='feedbacks')body.innerHTML=renderFeedbacksList();
   else if(tab==='logs')body.innerHTML=await renderAllLogs();
   else if(tab==='groups')body.innerHTML=await renderGroupsAdmin();
+  else if(tab==='usage'){ body.innerHTML='<div class="empty">正在統計資料用量…</div>'; await renderUsageTab(body); }
 }
 function renderUserList(){
   const list=Object.values(allUsers).filter(u=>u.hasLoggedIn||u.neverLoggedIn!==true).sort((a,b)=>{const ca=a.class||'';const cb=b.class||'';if(ca!==cb)return ca.localeCompare(cb);return (a.seat||0)-(b.seat||0);});
@@ -2662,6 +2952,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.16',date:'2026-10-10',changes:['管理員後台新增「用量」分頁：一眼看到整個資料庫佔多少、這個月大概下載了多少，不用再跑去 Firebase Console','會列出「誰佔最多」與「最大的媒體」，可以直接清掉大圖，訊息與文字會保留','每次進入聊天室會記一筆開頁次數，用來估算每月下載量','用量達到免費額度 70% 時，超級管理員進聊天室會看到提醒，不用自己記得去查']},
 {ver:'v1.15',date:'2026-10-10',changes:['修掉頭像的儲存型 XSS：以前只要有人把頭像設成一段 HTML，每個看得到他的人（包含管理員）都會被執行腳本；現在頭像只允許圖片，其餘一律當純文字處理','修掉訊息圖片網址、顏色、訊息編號等處的注入：這些欄位以前直接塞進 HTML 屬性，現在全部經過轉義與白名單','加上內容安全政策（CSP）：整站只允許載入白名單內的來源，就算真的被寫進惡意標籤也執行不了','訊息改用 Firebase 唯一鍵：以前兩人同一瞬間送出會撞到同一則訊息編號，後送的那則會把前一則蓋掉；舊訊息完全不受影響','AI 不再把全班名冊與管理指令清單給一般用戶：以前任何人問一句就能拿到整份點對照表','管理員查看別人資料時，密碼預設改為遮住，要按「顯示」才展開','新增一次性登入連結（?t=）：30 分鐘過期、只能用一次，取代把密碼寫在網址裡的做法；舊的 ?u=&p= 連結照舊可用','個人中心與管理員頁面都可以直接產生這條一次性連結','安卓版同步支援一次性登入連結（1.3.3）']},
 {ver:'v1.14',date:'2026-10-10',changes:['支援網址直接登入：在網址後面加 ?u=帳號&p=密碼，打開就自動填好並登入，不用手打','登入成功後帳密會自動從網址清掉，不會一直掛在網址列與瀏覽紀錄裡','手機打開網頁時，如果已經裝了「梁喆工具箱」會直接交給 App，不會停在網頁（跟 YouTube 同一套邏輯）','App 透過網域驗證接收連結，連網頁都不會載入就直接開 App 並自動登入','安卓版同步支援（1.3.2）']},
 {ver:'v1.13',date:'2026-10-10',changes:['修復痕跡地圖的揭霧範圍：以前用固定螢幕像素畫，縮到最小時那條走廊實際寬達 2.6 公里、放到最大只有 41 米，看起來忽大忽小','現在改成固定真實距離：軌跡兩側各揭開 15 米，放大縮小都是同一個實際範圍，不會再跑掉','資訊列會顯示「軌跡兩側各 15 米」與「1 像素 ≈ 幾米」，可以自己核對','修復旋轉螢幕後痕跡地圖變全黑（改 canvas 尺寸後沒有重畫）','Android 版同步修正（1.3.1）']},
