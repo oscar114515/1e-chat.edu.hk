@@ -130,8 +130,8 @@ const GAMES=[
  {k:'werewolf',n:'狼人殺',min:6,max:18,ok:false,c:'#6d28d9',ab:'狼'},
  {k:'bomb',n:'傳炸彈',min:2,max:10,ok:false,c:'#f97316',ab:'炸'},
  {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:false,c:'#0ea5e9',ab:'劇'},
- {k:'pictionary',n:'猜猜畫畫',min:2,max:10,ok:false,c:'#eab308',ab:'畫'},
- {k:'undercover',n:'誰是臥底',min:4,max:12,ok:true,c:'#f472b6',ab:'臥'}
+ {k:'pictionary',n:'你畫我猜',min:2,max:10,ok:true,c:'#eab308',ab:'畫'},
+ {k:'undercover',n:'誰是臥底',min:3,max:12,ok:true,c:'#f472b6',ab:'臥'}
 ];
 const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,min:2,max:2,ok:false,c:'#888',ab:'?'};
 
@@ -235,7 +235,8 @@ async function doCreate(){
   let topic=null;
   if(GAMES_NEED_TOPIC[g.k]){
     showLoading('AI 正在出題（'+levelName(pick.level)+'）…');
-    try{ topic=await aiMakeTopic(g.k,pick.level,4); }catch(e){ topic=null; }
+    const tn=g.k==='pictionary'?pick.p:4;   // 你畫我猜：每人當一次畫手，題目數＝人數
+    try{ topic=await aiMakeTopic(g.k,pick.level,tn); }catch(e){ topic=null; }
     hideLoading();
     if(!topic) topic={level:pick.level,words:ucFallbackPairs(pick.level,4),source:'fallback'};
   }
@@ -274,6 +275,7 @@ function joinRoom(rid){
       if(curRoom.game==='uno') unoCheckEnd(curRoom);
       else if(curRoom.game==='chess') chessCheckEnd(curRoom);
       else if(curRoom.game==='undercover'){ ucCheckReady(curRoom); ucTally(); }
+      else if(curRoom.game==='pictionary') picCheckEndRound(curRoom);
     }
   });
 }
@@ -470,6 +472,11 @@ function initGameState(r, seed){
   else if(r.game==='gomoku'){ state={board:Array(225).fill(''),last:null}; turn=names[0]; }
   else if(r.game==='ludo'){ state={planes:{},colors:{},dice:0,rolled:false}; 
     names.forEach((u,i)=>{state.planes[u]=[-1,-1,-1,-1];state.colors[u]=i;}); turn=names[0]; }
+  else if(r.game==='pictionary'){
+    const words=(r.topic&&r.topic.words&&r.topic.words.length)?r.topic.words:picFallbackWords((r.topic&&r.topic.level)||'normal', names.length);
+    state={phase:'pick',round:1,drawer:names[0],word:words[0]||'?',strokes:[],guesses:{},scores:{},startAt:null};
+    turn=null;
+  }
   else if(r.game==='undercover'){
     // 題目來自房間的 topic（AI 生成或內置保底）；種子決定用哪一組、誰當臥底
     const words=(r.topic&&r.topic.words&&r.topic.words.length)?r.topic.words:ucFallbackPairs('normal',6);
@@ -503,11 +510,25 @@ function renderGame(r,g){
   else if(r.game==='uno') drawUno(r,g,bar,spec);
   else if(r.game==='chess') drawChess(r,g,bar,spec);
   else if(r.game==='undercover') drawUndercover(r,g,bar,spec);
+  else if(r.game==='pictionary') drawPictionary(r,g,bar,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
 function renderEnded(r,g){
   const w=r.winner;
+  if(r.game==='pictionary'){
+    const scores=r.state&&r.state.scores||{};
+    const rows=playerNames(r).sort((a,b)=>(scores[b]||0)-(scores[a]||0)).map(u=>{
+      const mine=u===me.username;
+      const isTop=playerNames(r).sort((a,b)=>(scores[b]||0)-(scores[a]||0))[0]===u;
+      return `<div class="pitem" style="${mine?'border-color:var(--accent)':''}"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${mine?'（你）':''}${isTop?' · 冠軍':''}</div><div class="pbadge" style="color:var(--gold);border-color:var(--gold)">${scores[u]||0} 分</div></div>`;
+    }).join('');
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+      <div class="wrap"><div class="countdown" style="font-size:30px">${w==='draw'?'平手':'恭喜獲勝！'}</div>
+      <div class="plist">${rows}</div><button class="btn" data-act="home">回到大廳</button></div>`;
+    appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
+    return;
+  }
   const teamWin=(r.state&&r.state.teamWin)||(typeof w==='string'&&w.indexOf('team:')===0?w.slice(5):null);
   if(teamWin){
     const under=(r.state&&r.state.undercover)||[];
@@ -1116,7 +1137,15 @@ async function aiMakeTopic(game, level, n){
     } catch (e) {}
     return { level: level, words: ucFallbackPairs(level, n), source: 'fallback' };
   }
-  // 之後：pictionary / scriptmurder / bomb 在此加各自模板
+  if (game === 'pictionary') {
+    n = n || 3;
+    try {
+      const words = await aiPictionaryWords(level, n);
+      if (words) return { level: level, words: words, source: 'ai' };
+    } catch (e) {}
+    return { level: level, words: picFallbackWords(level, n), source: 'fallback' };
+  }
+  // 之後：scriptmurder / bomb 在此加各自模板
   return null;
 }
 
@@ -1279,6 +1308,226 @@ function ucPickUnder(names, seed, salt){
   const idx = names.map((_, i) => i);
   for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
   return idx.slice(0, nUnder).map(i => names[i]);
+}
+
+/* ===== 你畫我猜（Pictionary）=====
+   每輪一人當畫手、其他人猜；猜中雙方得分；輪流當畫手，全部輪完結算總分。
+   畫手筆跡存 games/{id}/state/strokes，其他人即時重繪；題目由 AI 出（三檔難度）。
+   注意：題目在資料層對技術用戶可讀（靜態網站無伺服器），UI 只顯示給畫手。
+*/
+const PIC_FALLBACK = {
+  fun: ['刷牙','跳舞','扮鬼臉','打嗝','照鏡子','遛狗','開香檳','切洋蔥','跳廣場舞','騎單車','吹蠟燭','戴假髮'],
+  normal: ['太陽','汽車','蘋果','房子','貓','雨傘','蛋糕','眼鏡','書包','時鐘','雨','橋','花','魚','船'],
+  hard: ['時間','自由','重力','夢','噪音','記憶','方向','天氣','愛','壓力','距離','速度','未來'],
+};
+function picFallbackWords(level, n){
+  const pool = (PIC_FALLBACK[level] || PIC_FALLBACK.normal).slice();
+  const out = [];
+  for (let i = 0; i < (n || 3) && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  while (out.length < n) out.push(PIC_FALLBACK.normal[out.length % PIC_FALLBACK.normal.length]);
+  return out;
+}
+async function aiPictionaryWords(level, n){
+  const lv = TOPIC_LEVELS.find(x => x.k === level) || TOPIC_LEVELS[1];
+  const sys = '你是班級桌遊的出題員。不要推理、不要解釋，直接輸出 JSON 陣列。';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const usr = `直接輸出 JSON 陣列（不要其他文字）：為「你畫我猜」出 ${n} 個詞，難度${lv.n}（${lv.d}）。` +
+      `每個詞 1–6 個字、具體、能用簡單線條畫出來、不要太冷門。格式：["詞1","詞2", ...]`;
+    let txt = '';
+    try { txt = await callAI(sys, usr, 1600); } catch (e) { txt = ''; }
+    let j = extractJSON(txt);
+    if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
+    if (Array.isArray(j)) {
+      const words = j.filter(w => typeof w === 'string' && w.trim()).slice(0, n).map(w => String(w).trim().slice(0, 8));
+      if (words.length) return words;
+    }
+  }
+  return null;
+}
+
+function picState(r){ return (r && r.state) ? r.state : {}; }
+function picAliveNames(r){ return playerNames(r); }
+function picNorm(s){ return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+async function picAdvance(path, obj){ await update(ref(db, 'games/' + curRoomId + path), obj); }
+
+/* 猜中或超時後由任一客戶端推進到「本輪結束」 */
+async function picCheckEndRound(r){
+  if (!r || r.game !== 'pictionary' || r.status !== 'playing') return;
+  const st = picState(r);
+  if (st.phase !== 'draw') return;
+  const names = picAliveNames(r);
+  const guesses = st.guesses || {};
+  const guessers = names.filter(u => u !== st.drawer);
+  const allGuessed = guessers.length && guessers.every(u => guesses[u]);
+  const timeout = Date.now() - (st.startAt || 0) > 60000;
+  if (!allGuessed && !timeout) return;
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'draw' ? 'roundEnd' : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+}
+/* 畫手開始畫 */
+async function picStartDraw(){
+  await update(ref(db, 'games/' + curRoomId + '/state'), { phase: 'draw', startAt: Date.now() });
+}
+/* 下一輪：換畫手；全部輪完 → 結算 */
+async function picNextRound(){
+  const r = curRoom; if (!r) return;
+  const st = picState(r);
+  const names = picAliveNames(r);
+  const round = (st.round || 1) + 1;
+  const total = names.length;
+  if (round > total) {
+    await picFinish(r);
+    return;
+  }
+  const words = (r.topic && r.topic.words) || [];
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    phase: 'pick', round: round, drawer: names[round - 1],
+    word: words[round - 1] || ('謎' + round), strokes: null, guesses: {}, startAt: null,
+  });
+}
+/* 猜答案 */
+async function picGuess(text){
+  const r = curRoom; if (!r || r.game !== 'pictionary') return;
+  const st = picState(r);
+  if (st.phase !== 'draw') return;
+  if (me.username === st.drawer) return;
+  if ((st.guesses || {})[me.username]) return;
+  if (picNorm(text) === picNorm(st.word)) {
+    const scores = Object.assign({}, st.scores || {});
+    scores[me.username] = (scores[me.username] || 0) + 2;
+    scores[st.drawer] = (scores[st.drawer] || 0) + 1;
+    // 用 set 分開寫，避免 update 混用帶「/」深層路徑的坑
+    await set(ref(db, 'games/' + curRoomId + '/state/guesses/' + me.username), true);
+    await set(ref(db, 'games/' + curRoomId + '/state/scores'), scores);
+    showNotice('猜中了！＋2 分');
+    setTimeout(() => picCheckEndRound(curRoom), 300);
+  } else {
+    showNotice('不對，再試試');
+  }
+}
+/* 結算：分數最高者勝 */
+async function picFinish(r){
+  if (!r || r.status === 'ended') return;
+  const st = picState(r);
+  const scores = st.scores || {};
+  let top = [], best = -1;
+  Object.keys(scores).forEach(u => { if (scores[u] > best) { best = scores[u]; top = [u]; } else if (scores[u] === best) top.push(u); });
+  const winner = (top.length === 1 && best > 0) ? top[0] : 'draw';
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/winner'), w => (w === null || w === undefined) ? winner : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true });
+  for (const u of playerNames(r)) {
+    try {
+      await runTransaction(ref(db, 'users/' + u + '/gameStats/pictionary'), c => {
+        c = c || {}; const w = Number(c.win) || 0, l = Number(c.lose) || 0, p = Number(c.play) || 0;
+        const won = winner !== 'draw' && winner === u;
+        return { win: w + (won ? 1 : 0), lose: l + (winner === 'draw' ? 0 : (won ? 0 : 1)), play: p + 1 };
+      });
+    } catch (e) {}
+  }
+}
+
+/* 畫布筆跡同步 */
+let picColor = '#e8e8ef', picCur = [];
+const PIC_COLORS = ['#e8e8ef', '#f87171', '#4ade80', '#38bdf8', '#fbbf24'];
+function picClearCanvas(cv){ const c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height); }
+function picDrawStroke(cv, pts, color, scale){
+  const c = cv.getContext('2d');
+  if (!pts || pts.length < 2) { if (pts && pts.length === 1) { c.beginPath(); c.arc(pts[0].x * scale, pts[0].y * scale, 3, 0, Math.PI * 2); c.fillStyle = color; c.fill(); } return; }
+  c.strokeStyle = color; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.beginPath(); c.moveTo(pts[0].x * scale, pts[0].y * scale);
+  for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x * scale, pts[i].y * scale);
+  c.stroke();
+}
+function drawPictionary(r, g, bar, spec){
+  const st = picState(r), names = picAliveNames(r);
+  const amPlayer = !!r.players[me.username], isHost = r.host === me.username;
+  const phase = st.phase || 'pick';
+  const drawer = st.drawer;
+  const amDrawer = (drawer === me.username);
+  const strokes = st.strokes ? Object.values(st.strokes) : [];   // push 寫入的是物件，不是陣列
+  const scores = st.scores || {};
+  const guesses = st.guesses || {};
+  const guessers = names.filter(u => u !== drawer);
+  const guessedN = guessers.filter(u => guesses[u]).length;
+  const W = 720, H = 720;
+
+  const scoreList = names.map(u => `<div class="pitem"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}${u === drawer ? ' · 畫手中' : ''}</div><div class="pbadge">${scores[u] || 0} 分</div></div>`).join('');
+
+  let stage = '';
+  if (phase === 'pick') {
+    stage = amDrawer
+      ? `<div class="countdown" style="font-size:26px;color:var(--gold);word-break:break-all">${escapeHtml(st.word || '')}</div>
+         <div class="hint">輪到你畫，記住題目，不要說出來</div>
+         <button class="btn" data-act="picStart">開始繪畫（60 秒）</button>`
+      : `<div class="turnbar">${escapeHtml(nameOf(r, drawer))} 是畫手，等待開始</div>`;
+  } else if (phase === 'draw') {
+    const myWord = amDrawer ? `<div class="hint">你的題目：<b style="color:var(--gold)">${escapeHtml(st.word || '')}</b></div>` : '';
+    const guessUI = (!amDrawer && amPlayer) ? `
+      <div class="deck-row" style="margin-top:8px">
+        <input id="picInput" placeholder="輸入你猜的答案" style="flex:1;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:10px;padding:11px 13px;color:var(--text-main);font-size:15px">
+        <button class="btn" id="picGuessBtn" style="margin:0;width:auto;padding:11px 20px">猜</button>
+      </div>` : '';
+    stage = `${myWord}
+      <div class="turnbar">${amDrawer ? '你在畫' : escapeHtml(nameOf(r, drawer)) + ' 在畫'} · 已猜中 ${guessedN}/${guessers.length}</div>
+      ${guessUI}`;
+  } else if (phase === 'roundEnd') {
+    stage = `<div class="countdown" style="font-size:26px;color:var(--accent)">答案是「${escapeHtml(st.word || '')}」</div>
+      <div class="hint">${guessedN ? `有 ${guessedN} 人猜中` : '沒人猜中'}</div>
+      ${isHost ? `<button class="btn" data-act="picNext">${(st.round || 1) >= names.length ? '結算成績' : '下一輪'}</button>` : ''}`;
+  } else {
+    stage = `<div class="hint">本局結束</div>`;
+  }
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="board-wrap">
+       ${amDrawer && phase === 'draw' ? `<div class="side" id="picTools" style="margin-bottom:6px">${PIC_COLORS.map(c => `<button class="pic-c" data-c="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:2px solid ${c === picColor ? '#fff' : 'transparent'}"></button>`).join('')}<button class="chip" id="picClear">清除</button></div>` : ''}
+       <canvas id="cv" width="${W}" height="${H}" style="width:100%;height:auto;background:#fff"></canvas>
+     </div>
+     ${stage}
+     <div class="plist" style="margin-top:10px">${scoreList}</div>
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+
+  const cv = appEl.querySelector('#cv');
+  const scale = cv.width / W;
+  strokes.forEach(s => picDrawStroke(cv, s.pts, s.color, scale));
+
+  // 畫手畫布互動
+  if (amDrawer && phase === 'draw') {
+    let drawing = false, curPts = [];
+    const toCanvas = e => {
+      const rct = cv.getBoundingClientRect();
+      return { x: (e.clientX - rct.left) * (W / rct.width), y: (e.clientY - rct.top) * (W / rct.width) };
+    };
+    const start = e => { drawing = true; curPts = [toCanvas(e)]; };
+    const move = e => { if (!drawing) return; const p = toCanvas(e); curPts.push(p); picDrawStroke(cv, [curPts[curPts.length - 2], p], picColor, 1); };
+    const end = async () => { if (!drawing) return; drawing = false; if (curPts.length) await push(ref(db, 'games/' + curRoomId + '/state/strokes'), { pts: curPts, color: picColor }); curPts = []; };
+    cv.addEventListener('pointerdown', start);
+    cv.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    cv.onclick = null;
+    appEl.querySelectorAll('#picTools .pic-c').forEach(b => b.onclick = () => { picColor = b.dataset.c; b.parentElement.querySelectorAll('.pic-c').forEach(x => x.style.borderColor = 'transparent'); b.style.borderColor = '#fff'; });
+    const clr = appEl.querySelector('#picClear');
+    if (clr) clr.onclick = async () => { picClearCanvas(cv); await update(ref(db, 'games/' + curRoomId + '/state'), { strokes: null }); };
+  }
+  const sb = appEl.querySelector('[data-act="picStart"]');
+  if (sb) sb.onclick = picStartDraw;
+  const nb = appEl.querySelector('[data-act="picNext"]');
+  if (nb) nb.onclick = picNextRound;
+  const gb = appEl.querySelector('#picGuessBtn');
+  const gi = appEl.querySelector('#picInput');
+  if (gb && gi) {
+    const doGuess = () => { const v = gi.value.trim(); if (v) { picGuess(v); gi.value = ''; } };
+    gb.onclick = doGuess;
+    gi.addEventListener('keydown', e => { if (e.key === 'Enter') doGuess(); });
+  }
 }
 
 /* ===== 啟動 ===== */
