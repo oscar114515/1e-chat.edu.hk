@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-eEH29hQjJLVHaPQHqJEfrl86W2O9C6/i4OIoVkBFn/g=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-UdxQ/xwvY26wA7oAAltBIyEiUv07wnYLemqCJFX4ItE=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.21</title>
 <style>
@@ -125,6 +125,8 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .game-invite .gi-title{font-size:14.5px;font-weight:700;margin-bottom:3px}
 .game-invite .gi-sub{font-size:12px;opacity:.85;margin-bottom:9px}
 .game-invite .gi-btn{display:inline-block;background:rgba(255,255,255,.9);color:#0b0d14;font-size:12.5px;font-weight:700;border-radius:9px;padding:5px 12px}
+.game-invite.done{opacity:.55;cursor:default;border-style:dashed}
+.game-invite.done .gi-sub{opacity:.9}
 #mentionPopup{position:absolute;bottom:100%;left:12px;right:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);margin-bottom:6px}
 #mentionPopup .mention-item{padding:10px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px}
 #mentionPopup .mention-item:hover{background:rgba(56,189,248,.15)}
@@ -1518,7 +1520,11 @@ function render(){
     else if(m.type==='poll')body=renderPollBody(m);
     else if(m.type==='game_invite'){
       const gname=escapeHtml(m.gameName||'小遊戲');
-      body=`<div class="game-invite" data-action="openGameInvite" data-arg="${escAttr(m.roomId||'')}"><div class="gi-title">對局邀請 · ${gname}</div><div class="gi-sub">點擊進入房間（${Number(m.minP)||2}–${Number(m.maxP)||2} 人）</div><div class="gi-btn">加入對局</div></div>`;
+      if(m.done){
+        body=`<div class="game-invite done"><div class="gi-title">對局邀請 · ${gname}</div><div class="gi-sub">對局已完成</div></div>`;
+      }else{
+        body=`<div class="game-invite" data-action="openGameInvite" data-arg="${escAttr(m.roomId||'')}"><div class="gi-title">對局邀請 · ${gname}</div><div class="gi-sub">點擊進入房間（${Number(m.minP)||2}–${Number(m.maxP)||2} 人）</div><div class="gi-btn">加入對局</div></div>`;
+      }
     }
     else if(m.encrypted&&!isAI)body=renderEncryptedBody(m);
     else{
@@ -3169,7 +3175,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
-{ver:'v1.21',date:'2026-10-11',changes:['新增「小遊戲」：從輸入框的「+」進去，有 16 款經典桌遊（井字棋、五子棋、飛行棋、UNO、國際象棋已經可以玩，其餘陸續開放）','開房後會自動在聊天室發一條帶編號的邀請訊息（走原本的訊息系統），別人點一下就能進房間','人齊自動倒數開局（到最少人數就倒數 15 秒），名額滿了再進去會提示「對局已滿」；房主可以決定這局是否允許觀戰','倒數期間有人退出會立即取消倒數，不會再「人不夠也硬開局（改用連線偵測，關掉頁面也會自動退出房間）」','每局勝負會記進個人戰績，在大廳的遊戲卡片上可以看到自己的勝負場數；結束畫面會分清楚「你贏了／你輸了／XX 獲勝」','UNO 與國際象棋改用成熟規則引擎（uno-engine、chess.js），發牌、出牌合法性、將軍、將死、升變、王車易位等全部由引擎判定','網頁版和安卓版共用同一套遊戲介面，之後新增遊戲兩端同時生效']},
+{ver:'v1.21',date:'2026-10-11',changes:['新增「小遊戲」：從輸入框的「+」進去，有 16 款經典桌遊（井字棋、五子棋、飛行棋、UNO、國際象棋、誰是臥底已經可以玩，其餘陸續開放）','開房後會自動在聊天室發一條帶編號的邀請訊息（走原本的訊息系統），別人點一下就能進房間；對局一結束，那條邀請會自動變成「對局已完成」、加入按鈕消失','誰是臥底（4–12 人）：題目由 AI 即時生成，分「搞笑／普通／困難」三檔難度，每次都不一樣；發詞、輪流描述、投票、淘汰、身分揭曉全程自動判定','人齊自動倒數開局（到最少人數就倒數 15 秒），名額滿了再進去會提示「對局已滿」；房主可以決定這局是否允許觀戰','倒數期間有人退出會立即取消倒數，不會再「人不夠也硬開局（改用連線偵測，關掉頁面也會自動退出房間）」','每局勝負會記進個人戰績，在大廳的遊戲卡片上可以看到自己的勝負場數；結束畫面會分清楚「你贏了／你輸了／XX 獲勝」','UNO 與國際象棋改用成熟規則引擎（uno-engine、chess.js），發牌、出牌合法性、將軍、將死、升變、王車易位等全部由引擎判定','網頁版和安卓版共用同一套遊戲介面，之後新增遊戲兩端同時生效']},
 {ver:'v1.20',date:'2026-10-11',changes:['AI 私人聊天現在有長期記憶：之前的對話即使清掉瀏覽器資料也還在，AI 也記得住更久以前講過的話','AI 私人聊天支援管理員操作：管理員在私人聊天裡叫 AI 改主題、改語言、發系統通知等，跟公開頻道一樣會先跳出確認','系統通知的「確定」按鈕現在按了會立刻有反應：卡片淡出消失並顯示「已讀」，不再像壞掉一樣沒動靜','反饋「送出」按鈕加了載入動畫：送出時按鈕會變灰並轉圈，不會再以為卡住或重複點','聊天室新增「回到最新」箭頭：往上翻看歷史時，右下角會出現一顆向下箭頭，一按就跳回最新訊息；自己送出訊息也會自動滾到底','反饋區的「送出反饋」與下方按鈕之間加了間距，不再擠在一起']},
 {ver:'v1.19',date:'2026-10-11',changes:['訊息編號改回原本的 msg_0001 格式（之前 v1.15 換成 Firebase 自動產生的鍵，鍵名變成 -Pxxxxxxxx 這種看不出順序的樣子）','改回原本格式的同時修好舊寫法的問題：取號改用原子操作，兩個人同時送出不會再拿到同一個編號、也就不會覆蓋掉對方的訊息']},
 {ver:'v1.18',date:'2026-10-10',changes:['修好後台分頁被擠掉的問題：分頁列原本是橫向捲動的，加了新分頁之後右邊的「群聊監看」被推出畫面，看起來像被換掉；現在改成自動換行，每一顆都一直在畫面上']},
