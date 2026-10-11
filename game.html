@@ -1456,24 +1456,27 @@ async function checkCheating(){
   const cv=document.querySelector('#cv'); if(!cv) return;
   let dataUrl;
   try{
-    const sc=document.createElement('canvas'); sc.width=sc.height=256;
-    sc.getContext('2d').drawImage(cv,0,0,256,256);
+    const sc=document.createElement('canvas'); sc.width=sc.height=512;
+    sc.getContext('2d').drawImage(cv,0,0,512,512);
     dataUrl=sc.toDataURL('image/png');
   }catch(e){ return; }
   try{ await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:'checking'}); }catch(e){}
   try{
     const res=await fetch(AI_API,{method:'POST',headers:{'Content-Type':'application/json','api-key':AI_KEY},
-      body:JSON.stringify({model:AI_MODEL,stream:false,max_tokens:200,messages:[
+      body:JSON.stringify({model:AI_MODEL,stream:false,max_tokens:3000,messages:[
         {role:'system',content:'你是防作弊檢測員。'},
         {role:'user',content:[
-          {type:'text',text:'檢查這幅畫裡有沒有出現任何「文字、字母、數字、注音、拼音」或把答案直接寫出來的痕跡。只回 JSON：{"hasText":true/false,"detail":"一句話說明"}。'},
+          {type:'text',text:'仔細看這張畫，裡面有沒有任何「手寫或畫出來」的文字、字母、數字、注音、拼音？只要畫布上有這類痕跡就當作有。只回 JSON：{"hasText":true/false,"detail":"一句話說明"}。'},
           {type:'image_url',image_url:{url:dataUrl}}
         ]}
       ]})});
     if(!res.ok) throw new Error('AI '+res.status);
     const data=await res.json();
-    const content=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
-    const j=extractJSON(content)||{};
+    const msg=(data.choices&&data.choices[0]&&data.choices[0].message)||{};
+    const content=msg.content||'';
+    const reasoning=msg.reasoning_content||'';
+    // 模型會先吐一大段推理，content 可能被截空 → 兩邊都挖 JSON
+    let j=extractJSON(content)||extractJSON(reasoning)||{};
     const hasText=(j.hasText===true);
     await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:hasText?'suspicious':'clean',detail:j.detail||''});
   }catch(e){
