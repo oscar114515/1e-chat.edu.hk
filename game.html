@@ -1478,7 +1478,20 @@ async function checkCheating(){
     // 模型會先吐一大段推理，content 可能被截空 → 兩邊都挖 JSON
     let j=extractJSON(content)||extractJSON(reasoning)||{};
     const hasText=(j.hasText===true);
-    await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:hasText?'suspicious':'clean',detail:j.detail||''});
+    if(hasText){
+      // 作弊成立：扣畫手 3 分（cheatPenalty 事務搶鎖，多個猜手同時猜中只扣一次）
+      let lock=null;
+      try{ lock=await runTransaction(ref(db,'games/'+curRoomId+'/state/cheatPenalty'), v=> v===true?undefined:true); }catch(e){}
+      if(lock && lock.committed){
+        const st=picState(curRoom);
+        const scores=Object.assign({}, st.scores||{});
+        scores[st.drawer]=Math.max(0,(scores[st.drawer]||0)-3);
+        await update(ref(db,'games/'+curRoomId+'/state/scores'), scores);
+      }
+      await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:'suspicious',detail:(j.detail||'')+'（畫手已扣 3 分）'});
+    } else {
+      await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:'clean',detail:j.detail||''});
+    }
   }catch(e){
     await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:'error'});
   }
