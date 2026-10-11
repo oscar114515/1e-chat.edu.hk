@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-7zCMXch47qpOjObIt5BOU1WrHNA/e/dbZV+1VEkM4yE=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CLz7bClzIyd7xzcRlrUevrbTEc9HR+X75lEIerfES4Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.18</title>
+<title>班級聊天室 v1.19</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -520,7 +520,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.18 正式版</div>
+    <div id="loginVersion">v1.19 正式版</div>
   </div>
 </div>
 
@@ -528,7 +528,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.18</span>
+      <span class="ver">v1.19</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -602,7 +602,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.18';
+const CURRENT_VERSION='v1.19';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -1200,6 +1200,41 @@ async function noticeDelete(key){ await update(ref(db,'notices/'+key),{deleted:t
 
 async function pushSystemNotice(username,noticeData){ try{ await push(ref(db,'systemNotices/'+username),noticeData); }catch(e){} }
 
+/* 產生訊息鍵（v1.19 改回 msg_NNNN 格式，但用原子遞增）。
+
+   為什麼不是單純改回舊寫法：
+   舊寫法是「讀編號 → 加一 → 寫回」三步，兩個人同時送出會讀到同一個號，
+   寫進同一個鍵，後送的直接把先送的整則蓋掉（訊息無聲消失）。
+   這裡只把「取號」換成 runTransaction，由 Firebase 保證原子性 ——
+   同時送出也會拿到不同的號，鍵名格式則維持原本的 msg_NNNN。
+
+   第二層保險：Android 端目前還是舊的讀-改-寫（要重新出 App 才改得到），
+   所以萬一號真的被用走了，就補上毫秒當後綴。
+   寧可鍵名長得不一樣，也絕對不覆蓋別人的訊息。 */
+async function nextMsgId(){
+  let seq=0;
+  try{
+    const res=await runTransaction(ref(db,'meta/msgCounter'),c=>(Number(c)||0)+1);
+    seq=Number(res.snapshot.val())||0;
+  }catch(e){}
+  let id='msg_'+String(seq).padStart(4,'0');
+  try{ if((await get(child(ref(db),'messages/'+id))).exists()) id=id+'_'+Date.now(); }catch(e){}
+  return id;
+}
+
+/* 群聊的鍵格式跟主訊息不同：<群組key>_msg_<數字>，號碼記在 groups/{key}/msgCounter。
+   同樣把取號改成原子操作。 */
+async function nextGroupMsgId(gk){
+  let n=0;
+  try{
+    const res=await runTransaction(ref(db,'groups/'+gk+'/msgCounter'),c=>(Number(c)||0)+1);
+    n=Number(res.snapshot.val())||0;
+  }catch(e){}
+  let id=gk+'_msg_'+n;
+  try{ if((await get(child(ref(db),'groupMessages/'+gk+'/'+id))).exists()) id=id+'_'+Date.now(); }catch(e){}
+  return id;
+}
+
 async function sendMessage(){
   const text=msgInput.value.trim();if(!text||!me)return;
   if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
@@ -1214,7 +1249,7 @@ async function sendMessage(){
        push() 由 Firebase 產生唯一且依時間排序的鍵，天生不會撞。
        舊訊息（msg_0001…）完全不用動：讀取端是靠 createdAt 排序、靠 id 欄位找訊息，
        兩種鍵名可以並存，前面的聊天記錄一則都不會少。 */
-    const msgId=push(child(ref(db),'messages')).key;
+    const msgId=await nextMsgId();
     const isAdmin=me.role==='superadmin'||me.role==='admin';
     await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,hasHtml:hasHtml,htmlCheckStatus:(hasHtml&&!isAdmin)?'checking':'ok',createdAt:Date.now(),deleted:false});
     await writeLog('send','發送訊息：'+text.slice(0,50));
@@ -1282,7 +1317,7 @@ async function handleAITrigger(text){
        push() 由 Firebase 產生唯一且依時間排序的鍵，天生不會撞。
        舊訊息（msg_0001…）完全不用動：讀取端是靠 createdAt 排序、靠 id 欄位找訊息，
        兩種鍵名可以並存，前面的聊天記錄一則都不會少。 */
-    thinkingKey=push(child(ref(db),'messages')).key;
+    thinkingKey=await nextMsgId();
     await set(ref(db,'messages/'+thinkingKey),{id:thinkingKey,username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,avatar:'AI',role:'ai',text:'',type:'text',thinking:true,createdAt:Date.now(),deleted:false});
   }catch(e){}
   try{
@@ -1563,7 +1598,7 @@ async function sendMedia(type,payload){
        push() 由 Firebase 產生唯一且依時間排序的鍵，天生不會撞。
        舊訊息（msg_0001…）完全不用動：讀取端是靠 createdAt 排序、靠 id 欄位找訊息，
        兩種鍵名可以並存，前面的聊天記錄一則都不會少。 */
-    const msgId=push(child(ref(db),'messages')).key;
+    const msgId=await nextMsgId();
     await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,...payload,type,createdAt:Date.now(),deleted:false});
   }catch(e){showNotif('送出失敗');}
 }
@@ -1723,7 +1758,7 @@ async function submitPoll(){
        push() 由 Firebase 產生唯一且依時間排序的鍵，天生不會撞。
        舊訊息（msg_0001…）完全不用動：讀取端是靠 createdAt 排序、靠 id 欄位找訊息，
        兩種鍵名可以並存，前面的聊天記錄一則都不會少。 */
-    const msgId=push(child(ref(db),'messages')).key;
+    const msgId=await nextMsgId();
     await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text:'',type:'poll',pollTitle:name,pollOptions:opts,pollMode:d.mode,pollMaxSelect:maxSel,pollDeadline:deadline,pollVotes:{},createdAt:Date.now(),deleted:false});
     await writeLog('send','建立投票：'+name);
     closePage();
@@ -2708,7 +2743,7 @@ async function submitGroupMessage(){
     if(!gSnap.exists())return;
     const g=gSnap.val();
     /* v1.15：群聊訊息鍵同樣改用 push()，理由跟主聊天室一樣（msgCounter 會撞鍵）。 */
-    const msgId=push(child(ref(db),'groupMessages/'+currentGroupKey)).key;
+    const msgId=await nextGroupMsgId(currentGroupKey);
     await update(ref(db,'groups/'+currentGroupKey),{lastMsg:text,lastAt:Date.now()});
     await set(ref(db,'groupMessages/'+currentGroupKey+'/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',createdAt:Date.now(),deleted:false});
   }catch(e){showNotif('送出失敗');}
@@ -3036,6 +3071,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.19',date:'2026-10-11',changes:['訊息編號改回原本的 msg_0001 格式（之前 v1.15 換成 Firebase 自動產生的鍵，鍵名變成 -Pxxxxxxxx 這種看不出順序的樣子）','改回原本格式的同時修好舊寫法的問題：取號改用原子操作，兩個人同時送出不會再拿到同一個編號、也就不會覆蓋掉對方的訊息']},
 {ver:'v1.18',date:'2026-10-10',changes:['修好後台分頁被擠掉的問題：分頁列原本是橫向捲動的，加了新分頁之後右邊的「群聊監看」被推出畫面，看起來像被換掉；現在改成自動換行，每一顆都一直在畫面上']},
 {ver:'v1.17',date:'2026-10-10',changes:['修好一個嚴重的顯示問題：v1.15 把訊息改用新的唯一鍵之後，鍵名的排序位置整個跑到前面，而「讀最近 300 則」在沒指定排序時是按鍵名排的 —— 結果新訊息全部落在視窗之外，自己送出的訊息在網頁上看不到（手機端因為是整包讀所以正常）','現在改成按訊息時間排序再取最近 300 則，不論鍵名長什麼樣子都不會漏']},
 {ver:'v1.16',date:'2026-10-10',changes:['管理員後台新增「用量」分頁：一眼看到整個資料庫佔多少、這個月大概下載了多少，不用再跑去 Firebase Console','會列出「誰佔最多」與「最大的媒體」，可以直接清掉大圖，訊息與文字會保留','每次進入聊天室會記一筆開頁次數，用來估算每月下載量','用量達到免費額度 70% 時，超級管理員進聊天室會看到提醒，不用自己記得去查']},
