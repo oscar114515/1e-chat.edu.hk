@@ -80,9 +80,13 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 </head>
 <body>
 <div id="app"></div>
+<script src="lib/uno-engine.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, get, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { Chess } from "./lib/chess.js";
+// uno-engine 的 UMD 全域名為 Uno
+const UnoEngine = window.Uno || null;
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
@@ -111,10 +115,10 @@ let view='lobby';
 const GAMES=[
  {k:'tictactoe',n:'井字棋',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△'},
  {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○'},
- {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'✈'},
+ {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛'},
  {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U'},
  {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:false,c:'#f59e0b',ab:'象'},
- {k:'chess',n:'國際象棋',min:2,max:2,ok:false,c:'#94a3b8',ab:'♚'},
+ {k:'chess',n:'國際象棋',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋'},
  {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍'},
  {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●'},
  {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:false,c:'#a855f7',ab:'獸'},
@@ -245,6 +249,11 @@ function joinRoom(rid){
     await ensureMembership();
     await checkAbandon(curRoom);
     render();
+    // 引擎驅動的遊戲：由引擎判斷勝負
+    if(curRoom&&curRoom.status==='playing'){
+      if(curRoom.game==='uno') unoCheckEnd(curRoom);
+      else if(curRoom.game==='chess') chessCheckEnd(curRoom);
+    }
   });
 }
 /* 對局中有人退出、人數低於下限 → 留下的人判勝；全走光 → 房間關閉 */
@@ -378,7 +387,9 @@ async function tryStartGame(){
   }catch(e){ return; }
   if(!res.committed) return;
   const st=initGameState(r);
-  await update(ref(db,'games/'+id),{startedAt:Date.now(),turn:st.turn||null,winner:null,state:st.state,players:st.players});
+  // 引擎驅動的遊戲（uno/chess）：只寫「隨機種子」，動作序列從空開始，各端重放得出同一局面
+  const seed=Math.floor(Math.random()*2147483647);
+  await update(ref(db,'games/'+id),{startedAt:Date.now(),turn:st.turn||null,winner:null,seed:seed,actions:null,state:(r.game==='uno'||r.game==='chess')?null:st.state,players:st.players});
 }
 async function leaveRoom(){
   const rid=curRoomId;
@@ -415,23 +426,30 @@ function initGameState(r){
   else if(r.game==='gomoku'){ state={board:Array(225).fill(''),last:null}; turn=names[0]; }
   else if(r.game==='ludo'){ state={planes:{},colors:{},dice:0,rolled:false}; 
     names.forEach((u,i)=>{state.planes[u]=[-1,-1,-1,-1];state.colors[u]=i;}); turn=names[0]; }
-  else if(r.game==='uno'){ 
-    const deck=makeUnoDeck();const hands={};names.forEach(u=>{hands[u]=deck.splice(0,7);});
-    let top=deck.shift();while(top.c==='w'){deck.push(top);top=deck.shift();}
-    state={deck:deck,hands:hands,top:top,color:top.c,dir:1,uno:{} };turn=names[0]; }
+  else if(r.game==='uno'||r.game==='chess'){
+    // 交給第三方引擎：不預先產生任何盤面，開局只寫種子，各端重放動作
+    state={};turn=null;
+  }
   return {players:players,turn:turn,state:state};
 }
 
 function renderGame(r,g){
   if(r.status==='ended') return renderEnded(r,g);
   const spec=!!(r.spectators&&r.spectators[me.username]);
-  const turnName=r.turn;
+  let turnName=r.turn;
+  // 引擎驅動的遊戲：輪次以引擎為準
+  const eng=getEngine(r);
+  if(eng){
+    if(r.game==='uno') turnName=eng.currentPlayer?eng.currentPlayer.name:'';
+    else if(r.game==='chess'){ const nm=playerNames(r); turnName=eng.turn()==='w'?nm[0]:nm[1]; }
+  }
   const myTurn=(turnName===me.username)&&!spec;
   const bar=`<div class="turnbar ${myTurn?'mine':''}">${spec?'觀戰中':(myTurn?'輪到你了':escapeHtml(nameOf(r,turnName))+' 的回合')}</div>`;
   if(r.game==='tictactoe') drawTTT(r,g,bar,spec);
   else if(r.game==='gomoku') drawGomoku(r,g,bar,spec);
   else if(r.game==='ludo') drawLudo(r,g,bar,spec);
   else if(r.game==='uno') drawUno(r,g,bar,spec);
+  else if(r.game==='chess') drawChess(r,g,bar,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
@@ -681,98 +699,246 @@ async function ludoMove(pi){
   setTimeout(tryWinCheck,120);
 }
 
-/* ===== UNO ===== */
-function makeUnoDeck(){
-  const cols=['r','g','b','y'];const deck=[];
-  cols.forEach(c=>{deck.push({c,v:'0'});for(let n=1;n<=9;n++){deck.push({c,v:String(n)});deck.push({c,v:String(n)});}
-    ['skip','rev','+2'].forEach(v=>{deck.push({c,v});deck.push({c,v});});});
-  for(let i=0;i<4;i++){deck.push({c:'w',v:'wild'});deck.push({c:'w',v:'+4'});}
-  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
-  return deck;
+/* ===== 規則引擎（第三方庫，不再自己手寫規則）=====
+   UNO      → lib/uno-engine.js（UMD，全域 UnoEngine）
+   國際象棋 → lib/chess.js（ESM，已 import）
+   多端同步：Firebase 只存「隨機種子 + 動作序列」，各端用同一引擎重放得到相同局面。
+   引擎內部洗牌用 Math.random → 重放時接管為種子化 LCG（已離線驗證同種子結果一致）。
+*/
+function makeRng(s0){ let s = s0 >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function withSeed(seed, fn){ const o = Math.random; Math.random = makeRng(seed >>> 0); try { return fn(); } finally { Math.random = o; } }
+function actionsOf(r){ const a = r.actions || {}; return Object.keys(a).sort().map(k => a[k]); }
+
+let ENG = null, ENGKEY = '';
+function engineKeyOf(r){ return [r.game, r.seed || 0, Object.keys(r.actions || {}).length, r.startedAt || 0].join('|'); }
+function getEngine(r){
+  if (!r) return null;
+  if (r.game !== 'uno' && r.game !== 'chess') return null;
+  const key = engineKeyOf(r);
+  if (ENG && ENGKEY === key) return ENG;
+  try {
+    ENG = withSeed(r.seed || 1, () => (r.game === 'uno' ? new UnoEngine.Game(playerNames(r)) : new Chess()));
+    const acts = actionsOf(r);
+    if (r.game === 'uno') {
+      for (const a of acts) { try {
+        if (a.t === 'play') { const c = unoFindCard(ENG, a.p, a.c, a.v, a.d); if (c) ENG.play(c); }
+        else if (a.t === 'draw') ENG.draw();
+        else if (a.t === 'pass') ENG.pass();
+        else if (a.t === 'uno') ENG.uno(a.p);
+      } catch (e) {} }
+    } else {
+      for (const a of acts) { try { ENG.move({ from: a.f, to: a.to, promotion: a.pr || 'q' }); } catch (e) {} }
+    }
+  } catch (e) { ENG = null; }
+  ENGKEY = key;
+  return ENG;
 }
-function unoLabel(c){const m={'+2':'+2','+4':'+4','skip':'⊘','rev':'⇄','wild':'彩'};return m[c.v]||c.v;}
-function unoCanPlay(card,top,color){ if(card.c==='w')return true; return card.c===color||card.v===top.v; }
-let unoSel=null;
-function drawUno(r,g,bar,spec){
-  const names=playerNames(r);
-  const hands=r.state.hands||{};
-  const mine=hands[me.username]||[];
-  const oppo=names.filter(u=>u!==me.username).map(u=>{
-    const n=(hands[u]||[]).length;
-    return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}</div><div class="pbadge">${n} 張</div></div>`;
+async function pushAction(a){ await push(ref(db, 'games/' + curRoomId + '/actions'), a); }
+
+/* ===== UNO（規則由 uno-engine 負責）===== */
+const UCOLORS = { red: '紅', blue: '藍', green: '綠', yellow: '黃', wild: '變' };
+const UVALUES = { skip: '⊘', reverse: '⇄', draw_two: '+2', wild: '彩', wild_draw_four: '+4', wild_draw_two: '+4' };
+const unoCN = c => String(c).toLowerCase();
+const unoVN = v => String(v).toLowerCase();
+function unoLabel(card){
+  const v = unoVN(card.value), col = unoCN(card.color);
+  return { text: (UVALUES[v] || v).toUpperCase(), cls: col === 'wild' ? 'w' : col[0] };
+}
+function unoFindCard(eng, who, col, val, declared){
+  const p = eng.getPlayer(who); if (!p) return null;
+  if (col === 'wild'){
+    const card = p.hand.find(c => unoCN(c.color) === 'wild' && unoVN(c.value) === val);
+    if (!card) return null;
+    const map = { red: 'RED', blue: 'BLUE', green: 'GREEN', yellow: 'YELLOW' };
+    const dc = map[declared];
+    if (dc && UnoEngine.Colors && UnoEngine.Colors[dc] !== undefined) card.color = UnoEngine.Colors[dc];
+    return card;
+  }
+  return p.hand.find(c => unoCN(c.color) === col && unoVN(c.value) === val) || null;
+}
+function unoPlayable(card, top){
+  if (unoCN(card.color) === 'wild') return true;
+  return unoCN(card.color) === unoCN(top.color) || unoVN(card.value) === unoVN(top.value);
+}
+let unoSel = -1, unoDrew = false;
+async function unoAskColor(){
+  return new Promise(resolve => {
+    const pick = document.createElement('div'); pick.className = 'sheet';
+    pick.innerHTML = `<div class="inner"><h3>選擇顏色</h3><div class="seg" id="segC">${['red','blue','green','yellow'].map(x => `<button data-c="${x}">${UCOLORS[x]}</button>`).join('')}</div><button class="btn ghost" id="cancelP">取消</button></div>`;
+    document.body.appendChild(pick);
+    pick.querySelector('#segC').onclick = e => { const b = e.target.closest('button'); if (!b) return; pick.remove(); resolve(b.dataset.c); };
+    pick.querySelector('#cancelP').onclick = () => { pick.remove(); resolve(null); };
+    pick.onclick = e => { if (e.target === pick) { pick.remove(); resolve(null); } };
+  });
+}
+function drawUno(r, g, bar, spec){
+  const eng = getEngine(r);
+  if (!eng) { appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">牌局載入中…</div>`; return; }
+  const names = playerNames(r);
+  const amPlayer = !!r.players[me.username];
+  const cur = eng.currentPlayer ? eng.currentPlayer.name : '';
+  const myTurn = amPlayer && !spec && cur === me.username;
+  const top = eng.discardedCard;
+  const topL = unoLabel(top);
+  const curColor = unoCN(top.color);
+  const shownColor = curColor === 'wild' ? (r.wildColor || 'wild') : curColor;
+
+  const oppo = names.filter(u => u !== me.username).map(u => {
+    const p = eng.getPlayer(u); const n = p ? p.hand.length : 0;
+    const isCur = u === cur;
+    return `<div class="pitem" style="${isCur ? 'border-color:var(--accent)' : ''}"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}${isCur ? ' · 出牌中' : ''}</div><div class="pbadge">${n} 張</div></div>`;
   }).join('');
-  const top=r.state.top;
-  const color=r.state.color;
-  const myTurn=r.turn===me.username&&!spec;
-  const handHtml=spec?'':mine.map((c,i)=>{
-    const can=myTurn&&unoCanPlay(c,top,color);
-    const sel=unoSel===i?'style="transform:translateY(-8px)"':'';
-    return `<div class="uno ${c.c} ${can?'playable':''}" data-i="${i}" ${sel}>${escapeHtml(unoLabel(c))}</div>`;
-  }).join('');
-  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+
+  let handHtml = '<div class="empty">觀戰中</div>';
+  if (amPlayer) {
+    const mine = eng.getPlayer(me.username).hand;
+    handHtml = mine.map((c, i) => {
+      const L = unoLabel(c);
+      const can = myTurn && unoPlayable(c, top);
+      return `<div class="uno ${L.cls} ${can ? 'playable' : ''}" data-i="${i}" style="${unoSel === i ? 'transform:translateY(-10px)' : ''}">${escapeHtml(L.text)}</div>`;
+    }).join('') || '<div class="empty">（沒有手牌）</div>';
+  }
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="plist">${oppo}</div>
      <div class="deck-row">
-       <div style="text-align:center"><div class="uno ${top.c}" style="margin:0 auto">${escapeHtml(unoLabel(top))}</div><div class="hint" style="margin-top:6px">桌面（顏色：${{r:'紅',g:'綠',b:'藍',y:'黃',w:'變'}[color]||'?'}）</div></div>
-       <div style="text-align:center"><div class="uno w" id="drawBtn" style="margin:0 auto;background:#111827">抽</div><div class="hint" style="margin-top:6px">剩 ${(r.state.deck||[]).length} 張</div></div>
+       <div style="text-align:center"><div class="uno ${topL.cls}" style="margin:0 auto">${escapeHtml(topL.text)}</div>
+         <div class="hint" style="margin-top:6px">檯面 · 顏色 ${UCOLORS[shownColor] || '—'}</div></div>
+       <div style="text-align:center"><div class="uno w" id="drawBtn" style="margin:0 auto;background:#111827">抽</div>
+         <div class="hint" style="margin-top:6px">牌庫 ${eng.deck.length} 張</div></div>
      </div>
-     <div class="hint" style="margin-top:10px">你的手牌（${mine.length} 張）</div>
-     <div class="cards">${handHtml||'<div class="empty">觀戰中</div>'}</div>
+     ${myTurn ? `<div class="side" style="margin-top:8px">
+        <button class="chip" id="passBtn" style="${unoDrew ? 'border-color:var(--gold);color:var(--gold)' : 'opacity:.5'}">過牌</button>
+        <button class="chip" id="unoBtn">喊 UNO</button>
+      </div>` : ''}
+     <div class="hint" style="margin-top:10px">${amPlayer ? `你的手牌（${eng.getPlayer(me.username).hand.length} 張）` : ''}</div>
+     <div class="cards">${handHtml}</div>
    </div>`;
-  if(!spec){
-    appEl.querySelectorAll('.uno[data-i]').forEach(el=>el.onclick=()=>{ unoSel=+el.dataset.i; drawUno(r,g,bar,spec); });
-    const db2=appEl.querySelector('#drawBtn'); if(db2)db2.onclick=unoDraw;
-    if(unoSel!=null&&myTurn){
-      const c=mine[unoSel];
-      if(c&&unoCanPlay(c,top,color)){
-        if(c.c==='w'){
-          const pick=document.createElement('div');pick.className='sheet';
-          pick.innerHTML=`<div class="inner"><h3>選擇顏色</h3><div class="seg" id="segC">${['r','g','b','y'].map(x=>`<button data-c="${x}">${{r:'紅',g:'綠',b:'藍',y:'黃'}[x]}</button>`).join('')}</div><button class="btn ghost" id="cancelP">取消</button></div>`;
-          document.body.appendChild(pick);
-          pick.querySelector('#segC').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.remove();unoPlay(unoSel,b.dataset.c);};
-          pick.querySelector('#cancelP').onclick=()=>pick.remove();
-        } else {
-          unoPlay(unoSel,color);
-        }
-      }
-    }
+
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+  if (!amPlayer) return;
+
+  appEl.querySelectorAll('.uno[data-i]').forEach(el => el.onclick = async () => {
+    const i = +el.dataset.i;
+    if (!myTurn) { showNotice('還沒輪到你'); return; }
+    const mine = eng.getPlayer(me.username).hand;
+    const card = mine[i]; if (!card) return;
+    if (!unoPlayable(card, top)) { showNotice('這張牌不能出'); return; }
+    const col = unoCN(card.color), val = unoVN(card.value);
+    let declared = null;
+    if (col === 'wild') { declared = await unoAskColor(); if (!declared) return; }
+    await pushAction({ t: 'play', p: me.username, c: col, v: val, d: declared });
+    unoSel = -1; unoDrew = false;
+  });
+  const db2 = appEl.querySelector('#drawBtn');
+  if (db2) db2.onclick = async () => {
+    if (!myTurn) { showNotice('還沒輪到你'); return; }
+    await pushAction({ t: 'draw', p: me.username });
+    unoDrew = true;
+  };
+  const pb = appEl.querySelector('#passBtn');
+  if (pb) pb.onclick = async () => {
+    if (!myTurn) { showNotice('還沒輪到你'); return; }
+    if (!unoDrew) { showNotice('要先抽一張才能過牌'); return; }
+    await pushAction({ t: 'pass', p: me.username });
+    unoDrew = false;
+  };
+  const ub = appEl.querySelector('#unoBtn');
+  if (ub) ub.onclick = async () => { await pushAction({ t: 'uno', p: me.username }); showNotice('已喊 UNO'); };
+}
+async function unoCheckEnd(r){
+  const eng = getEngine(r); if (!eng) return;
+  const done = eng.players.find(p => p.hand.length === 0);
+  if (done) await finishGame(done.name);
+}
+
+/* ===== 國際象棋（規則由 chess.js 負責）===== */
+let chessSel = null;
+const CHESS_GLYPH = { p: '兵', n: '馬', b: '象', r: '車', q: '后', k: '王' };
+function drawChess(r, g, bar, spec){
+  const eng = getEngine(r);
+  if (!eng) { appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">棋局載入中…</div>`; return; }
+  const names = playerNames(r);
+  const whiteU = names[0], blackU = names[1];
+  const myColor = me.username === whiteU ? 'w' : (me.username === blackU ? 'b' : null);
+  const amPlayer = !!myColor;
+  const myTurn = amPlayer && !spec && eng.turn() === myColor;
+  const N = 8, CELL = 42, PAD = 6, W = N * CELL + PAD * 2;
+  const board = eng.board();
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="board-wrap"><canvas id="cv" width="${W}" height="${W}"></canvas>
+     <div class="hint" id="chessHint"></div></div>
+     <div class="plist">
+       <div class="pitem" style="${eng.turn() === 'w' ? 'border-color:var(--accent)' : ''}"><div class="pav" style="background:${colorOf(r, whiteU)}">${avatarHTML({ displayName: nameOf(r, whiteU) })}</div><div class="pname">${escapeHtml(nameOf(r, whiteU))}（白）</div><div class="pbadge">${eng.turn() === 'w' ? '行棋中' : ''}</div></div>
+       <div class="pitem" style="${eng.turn() === 'b' ? 'border-color:var(--accent)' : ''}"><div class="pav" style="background:${colorOf(r, blackU)}">${avatarHTML({ displayName: nameOf(r, blackU) })}</div><div class="pname">${escapeHtml(nameOf(r, blackU))}（黑）</div><div class="pbadge">${eng.turn() === 'b' ? '行棋中' : ''}</div></div>
+     </div>
+   </div>`;
+
+  const cv = appEl.querySelector('#cv'), ctx = cv.getContext('2d');
+  const legal = chessSel ? eng.moves({ square: chessSel, verbose: true }).map(m => m.to) : [];
+  for (let rw = 0; rw < N; rw++) for (let cl = 0; cl < N; cl++) {
+    const x = PAD + cl * CELL, y = PAD + rw * CELL;
+    ctx.fillStyle = ((rw + cl) % 2 === 0) ? '#e8dfcc' : '#8a6f52';
+    ctx.fillRect(x, y, CELL, CELL);
+    const sq = String.fromCharCode(97 + cl) + (8 - rw);
+    if (legal.includes(sq)) { ctx.fillStyle = 'rgba(56,189,248,.45)'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + CELL / 2, CELL * 0.18, 0, Math.PI * 2); ctx.fill(); }
+    const pc = board[rw][cl];
+    if (!pc) continue;
+    const cx = x + CELL / 2, cy = y + CELL / 2, R = CELL * 0.36;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = pc.color === 'w' ? '#f8fafc' : '#1f2937'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = pc.color === 'w' ? '#475569' : '#0b0d14'; ctx.stroke();
+    ctx.fillStyle = pc.color === 'w' ? '#1f2937' : '#f8fafc';
+    ctx.font = 'bold 19px "Microsoft JhengHei",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(CHESS_GLYPH[pc.type] || pc.type, cx, cy + 1);
+    if (chessSel === sq) { ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 3; ctx.strokeRect(x + 2, y + 2, CELL - 4, CELL - 4); }
   }
-  const lb=appEl.querySelector('[data-act="leave"]');if(lb)lb.onclick=leaveRoom;
+  const hint = appEl.querySelector('#chessHint');
+  if (hint) {
+    let t = spec ? '觀戰中' : (myTurn ? '輪到你了' + (myColor === 'w' ? '（白）' : '（黑）') : escapeHtml(nameOf(r, eng.turn() === 'w' ? whiteU : blackU)) + ' 思考中');
+    if (eng.isCheck()) t += ' · 將軍！';
+    t += ` · 第 ${Math.floor((eng.history().length) / 2) + 1} 回合`;
+    hint.textContent = t;
+  }
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+  if (!amPlayer) return;
+
+  cv.onclick = async e => {
+    if (!myTurn) { showNotice('還沒輪到你'); return; }
+    const rect = cv.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (W / rect.width), py = (e.clientY - rect.top) * (W / rect.height);
+    const cl = Math.floor((px - PAD) / CELL), rw = Math.floor((py - PAD) / CELL);
+    if (cl < 0 || cl > 7 || rw < 0 || rw > 7) return;
+    const sq = String.fromCharCode(97 + cl) + (8 - rw);
+    const pc = board[rw][cl];
+    if (chessSel && legal.includes(sq)) {
+      const from = chessSel; chessSel = null;
+      const moving = eng.get(from);
+      const promo = (moving && moving.type === 'p' && (sq[1] === '8' || sq[1] === '1')) ? 'q' : null;
+      await pushAction({ t: 'move', p: me.username, f: from, to: sq, pr: promo });
+      return;
+    }
+    if (pc && pc.color === myColor) { chessSel = (chessSel === sq ? null : sq); drawChess(curRoom, gameDef(curRoom.game), bar, spec); return; }
+    chessSel = null;
+  };
 }
-async function unoPlay(i,chooseColor){
-  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username)return;
-  const hands=r.state.hands;const mine=hands[me.username].slice();
-  const card=mine[i];if(!card)return;
-  if(!unoCanPlay(card,r.state.top,r.state.color))return;
-  mine.splice(i,1);
-  let deck=(r.state.deck||[]).slice();
-  let color=card.c==='w'?chooseColor:card.c;
-  const names=playerNames(r);const dir=r.state.dir||1;
-  let idx=names.indexOf(me.username);
-  const step=card.v==='rev'?-dir:dir;
-  let ni=(idx+step+names.length)%names.length;
-  let ndir=card.v==='rev'?-dir:dir;
-  let extraDraw=0;
-  if(card.v==='skip') ni=((ni+step)+names.length)%names.length;
-  if(card.v==='+2') extraDraw=2;
-  if(card.v==='+4') extraDraw=4;
-  unoSel=null;
-  const allHands={};Object.entries(hands).forEach(([u,h])=>allHands[u]=h.slice());
-  allHands[me.username]=mine;
-  if(extraDraw>0){ const target=names[ni]; allHands[target]=allHands[target].concat(deck.splice(0,extraDraw)); ni=((ni+step)+names.length)%names.length; }
-  await update(ref(db,'games/'+curRoomId),{'state/hands':allHands,'state/deck':deck,'state/top':card,'state/color':color,turn:names[ni],'state/dir':ndir});
-  setTimeout(tryWinCheck,120);
-}
-async function unoDraw(){
-  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username)return;
-  const hands=r.state.hands;let deck=(r.state.deck||[]).slice();
-  if(!deck.length)return;
-  const card=deck.shift();
-  const mine=(hands[me.username]||[]).slice();mine.push(card);
-  const allHands={};Object.entries(hands).forEach(([u,h])=>allHands[u]=h.slice());allHands[me.username]=mine;
-  const names=playerNames(r);const next=names[(names.indexOf(r.turn)+1)%names.length];
-  await update(ref(db,'games/'+curRoomId),{'state/hands':allHands,'state/deck':deck,turn:next});
+async function chessCheckEnd(r){
+  const eng = getEngine(r); if (!eng || !eng.isGameOver()) return;
+  const names = playerNames(r);
+  if (eng.isCheckmate()) {
+    // 被將死的一方是「輪到走棋」的那方
+    const loser = eng.turn() === 'w' ? names[0] : names[1];
+    const winner = loser === names[0] ? names[1] : names[0];
+    await finishGame(winner);
+  } else {
+    await finishGame('draw');
+  }
 }
 
 /* ===== 啟動 ===== */
