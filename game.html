@@ -182,7 +182,13 @@ function renderLobby(){
   appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openCreate(el.dataset.g));
   const cb=appEl.querySelector('[data-act="close"]'); if(cb) cb.onclick=closeSelf;
 }
-function closeSelf(){ try{ if(window.parent&&window.parent!==window){window.parent.postMessage({type:'closeGames'},'*');} else { history.back(); } }catch(e){ history.back(); } }
+function closeSelf(){
+  // 先確實把自己從房間移除（連帶處理倒數），再通知外層關閉
+  (async()=>{
+    try{ await leaveRoom(); }catch(e){}
+    try{ if(window.parent&&window.parent!==window){window.parent.postMessage({type:'closeGames'},'*');} else { history.back(); } }catch(e){ history.back(); }
+  })();
+}
 
 /* ===== 建房 ===== */
 let pick={g:null,p:2,spec:true};
@@ -237,8 +243,26 @@ function joinRoom(rid){
     if(!snap.exists()){ curRoom=null; showNotice('房間已不存在'); view='lobby'; render(); return; }
     curRoom=snap.val();
     await ensureMembership();
+    await checkAbandon(curRoom);
     render();
   });
+}
+/* 對局中有人退出、人數低於下限 → 留下的人判勝；全走光 → 房間關閉 */
+async function checkAbandon(r){
+  if(!r||r.status!=='playing')return;
+  const pc=Object.keys(r.players||{}).length;
+  if(pc>=(r.minP||2))return;
+  const left=playerNames(r);
+  if(left.length===0){
+    try{ await update(ref(db,'games/'+curRoomId),{status:'ended',winner:'closed'}); }catch(e){}
+    return;
+  }
+  if(left.length===1){
+    showNotice('對手已離開，你獲勝');
+    await finishGame(left[0]);
+  } else {
+    await finishGame('draw');
+  }
 }
 async function ensureMembership(){
   const r=curRoom; if(!r||!me) return;
@@ -248,16 +272,26 @@ async function ensureMembership(){
   const pcount=r.players?Object.keys(r.players).length:0;
   if(r.status==='waiting'||r.status==='countdown'){
     if(pcount<(r.setMax||r.maxP)){
-      await set(ref(db,'games/'+curRoomId+'/players/'+me.username),{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:pcount});
+      const pr=ref(db,'games/'+curRoomId+'/players/'+me.username);
+      await set(pr,{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:pcount});
+      // 關鍵：連線斷開時由伺服器自動移除，避免「人退了但還在名單裡」→ 倒數照跑
+      registerPresence(pr);
       if(pcount+1>=(r.minP||2)) maybeStartCountdown();
     } else if(r.allowSpectate){
-      await set(ref(db,'games/'+curRoomId+'/spectators/'+me.username),{name:me.displayName});
+      const sr=ref(db,'games/'+curRoomId+'/spectators/'+me.username);
+      await set(sr,{name:me.displayName});
+      registerPresence(sr);
       showNotice('對局已滿，已進入觀戰');
     } else { showNotice('對局已滿'); }
   } else if(r.allowSpectate){
-    await set(ref(db,'games/'+curRoomId+'/spectators/'+me.username),{name:me.displayName});
+    const sr=ref(db,'games/'+curRoomId+'/spectators/'+me.username);
+    await set(sr,{name:me.displayName});
+    registerPresence(sr);
     showNotice('對局進行中，已進入觀戰');
   } else { showNotice('對局已滿'); }
+}
+function registerPresence(nodeRef){
+  try{ onDisconnect(nodeRef).remove(); }catch(e){}
 }
 async function maybeStartCountdown(){
   const r=curRoom; if(!r) return;
@@ -265,6 +299,20 @@ async function maybeStartCountdown(){
   if(r.status==='waiting'&&pc>=(r.minP||2)){
     await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
   }
+}
+/* 倒數期間若人數掉到最少人數以下 → 立即取消倒數（用最新資料，不看快取） */
+async function cancelCountdownIfShort(rid){
+  const id=rid||curRoomId; if(!id)return;
+  try{
+    const snap=await get(ref(db,'games/'+id)); if(!snap.exists())return;
+    const r=snap.val();
+    if(r.status!=='countdown')return;
+    const pc=Object.keys(r.players||{}).length;
+    if(pc<(r.minP||2)){
+      await update(ref(db,'games/'+id),{status:'waiting',startAt:null});
+      showNotice('人數不足，已取消倒數');
+    }
+  }catch(e){}
 }
 function renderRoom(){
   const r=curRoom; if(!r){ appEl.innerHTML='<div class="empty">載入中...</div>'; return; }
@@ -297,7 +345,7 @@ function renderRoom(){
   const cr=appEl.querySelector('[data-act="cancelRoom"]'); if(cr) cr.onclick=closeRoom;
   startCountdownTicker();
 }
-let cdTimer=null;
+let cdTimer=null, cdCheck=0;
 function startCountdownTicker(){
   if(cdTimer)clearInterval(cdTimer);
   cdTimer=setInterval(async()=>{
@@ -305,21 +353,47 @@ function startCountdownTicker(){
     if(!curRoom||curRoom.status!=='countdown'){ clearInterval(cdTimer);cdTimer=null;return; }
     const left=Math.max(0,Math.ceil((curRoom.startAt-Date.now())/1000));
     if(el)el.textContent=left;
+    // 每 500ms 用最新資料复核人數，人不夠就取消倒數（不看快取，避免退房沒更新）
+    cdCheck++;
+    if(cdCheck%2===0) await cancelCountdownIfShort();
     if(left<=0){ clearInterval(cdTimer);cdTimer=null; tryStartGame(); }
   },250);
 }
 async function tryStartGame(){
-  const r=curRoom; if(!r||r.status==='playing')return;
-  const pc=r.players?Object.keys(r.players).length:0;
-  if(pc<(r.minP||2)){ await update(ref(db,'games/'+curRoomId),{status:'waiting',startAt:null}); return; }
-  // 只有房主初始化棋盤，避免多人同時寫
-  if(r.host!==me.username) return;
+  const id=curRoomId; if(!id)return;
+  // 用最新資料判斷，而不是本地快取
+  let r;
+  try{
+    const snap=await get(ref(db,'games/'+id));
+    if(!snap.exists())return;
+    r=snap.val();
+  }catch(e){ return; }
+  if(r.status!=='countdown')return;
+  const pc=Object.keys(r.players||{}).length;
+  if(pc<(r.minP||2)){ await update(ref(db,'games/'+id),{status:'waiting',startAt:null}); return; }
+  // 事務搶鎖：countdown → playing，只允許一個客戶端開局
+  let res;
+  try{
+    res=await runTransaction(ref(db,'games/'+id+'/status'), s=> s==='countdown' ? 'playing' : undefined);
+  }catch(e){ return; }
+  if(!res.committed) return;
   const st=initGameState(r);
-  await update(ref(db,'games/'+curRoomId),{status:'playing',startAt:null,startedAt:Date.now(),turn:st.turn||null,winner:null,state:st.state,players:st.players});
+  await update(ref(db,'games/'+id),{startedAt:Date.now(),turn:st.turn||null,winner:null,state:st.state,players:st.players});
 }
 async function leaveRoom(){
-  if(curRoomId&&me){ try{ await remove(ref(db,'games/'+curRoomId+'/players/'+me.username)); await remove(ref(db,'games/'+curRoomId+'/spectators/'+me.username)); }catch(e){} }
-  if(roomSub)roomSub(); roomSub=null; curRoom=null;view='lobby';render();
+  const rid=curRoomId;
+  if(rid&&me){
+    try{
+      const pr=ref(db,'games/'+rid+'/players/'+me.username);
+      const sr=ref(db,'games/'+rid+'/spectators/'+me.username);
+      try{ onDisconnect(pr).cancel(); }catch(e){}
+      try{ onDisconnect(sr).cancel(); }catch(e){}
+      await remove(pr); await remove(sr);
+      await cancelCountdownIfShort(rid);   // 我走了之後人不夠 → 立刻取消倒數
+    }catch(e){}
+  }
+  if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
+  if(roomSub)roomSub(); roomSub=null; curRoom=null;curRoomId=null;view='lobby';render();
 }
 async function closeRoom(){
   if(!curRoomId)return;
@@ -363,10 +437,27 @@ function renderGame(r,g){
 }
 function renderEnded(r,g){
   const w=r.winner;
-  const txt=w==='draw'?'平手':(w==='closed'?'房間已關閉':escapeHtml(nameOf(r,w))+' 獲勝');
+  const amPlayer=!!(r.players&&r.players[me.username]);
+  const amSpec=!!(r.spectators&&r.spectators[me.username]);
+  let big='',small='',col='var(--text-main)';
+  if(w==='closed'){ big='房間已關閉'; small=''; }
+  else if(w==='draw'){ big='平手'; small='這局誰也奈何不了誰'; col='var(--gold)'; }
+  else if(amPlayer&&w===me.username){ big='你贏了！'; small=escapeHtml(nameOf(r,w))+' 完成對局'; col='var(--green)'; }
+  else if(amPlayer){ big='你輸了'; small=escapeHtml(nameOf(r,w))+' 獲勝，再來一局？'; col='var(--red)'; }
+  else { big=escapeHtml(nameOf(r,w))+' 獲勝'; small=amSpec?'（觀戰結束）':''; col='var(--accent)'; }
+  // 這局各自的勝負排行
+  const rows=playerNames(r).map(u=>{
+    const tag=(w===u)?'勝':(w==='draw'?'和':'負');
+    const c=(w===u)?'var(--green)':(w==='draw'?'var(--gold)':'var(--red)');
+    return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
+  }).join('');
   appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
-    <div class="wrap"><div class="countdown" style="font-size:30px">${txt}</div>
-    <button class="btn" data-act="home">回到大廳</button></div>`;
+    <div class="wrap">
+      <div class="countdown" style="font-size:32px;color:${col}">${big}</div>
+      <div class="hint">${small}</div>
+      <div class="plist">${rows}</div>
+      <button class="btn" data-act="home">回到大廳</button>
+    </div>`;
   appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
 }
 function backHome(){ if(roomSub)roomSub();roomSub=null;curRoom=null;view='lobby';render(); }
@@ -374,11 +465,21 @@ function backHome(){ if(roomSub)roomSub();roomSub=null;curRoom=null;view='lobby'
 /* ===== 勝負與戰績 ===== */
 async function finishGame(winner){
   const r=curRoom; if(!r||r.status==='ended')return;
-  await update(ref(db,'games/'+curRoomId),{status:'ended',winner:winner});
+  // 用 winner 當原子鎖：雙方同時判定勝利時，只有一方能寫入，另一方直接放棄
+  // （否則戰績會被重複累加兩次）
+  let res;
+  try{
+    res=await runTransaction(ref(db,'games/'+curRoomId+'/winner'), w=>{
+      if(w!==null&&w!==undefined) return;   // 已經有贏家了，中止事務
+      return winner;
+    });
+  }catch(e){ return; }
+  if(!res.committed) return;                // 別人搶先結束了，不重複統計
+  await update(ref(db,'games/'+curRoomId),{status:'ended',endedAt:Date.now()});
   const names=playerNames(r);
   for(const u of names){
     try{
-      const res=await runTransaction(ref(db,'users/'+u+'/gameStats/'+r.game),c=>{
+      await runTransaction(ref(db,'users/'+u+'/gameStats/'+r.game),c=>{
         c=c||{};const w=Number(c.win)||0,l=Number(c.lose)||0,p=Number(c.play)||0;
         return {win:w+(winner===u?1:0),lose:l+(winner==='draw'?0:(winner===u?0:1)),play:p+1};
       });
