@@ -135,6 +135,29 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
   width:100%;max-width:400px;max-height:82vh;overflow-y:auto;animation:ucPop .2s ease}
 @keyframes ucPop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
 .ucmodal-card h3{margin:0;font-size:17px;text-align:center}
+
+/* 大富翁 */
+.mpboard{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:3px;margin:10px auto;
+  max-width:430px;aspect-ratio:1}
+.mpcell{position:relative;border-radius:6px;background:#171b28;border:2px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:1px}
+.mpcell .mpnum{position:absolute;top:1px;left:3px;font-size:8px;color:var(--text-sub);opacity:.75}
+.mpcell .mpname{font-size:9px;font-weight:700;line-height:1.05;text-align:center;word-break:keep-all}
+.mpcell .mpprice{font-size:8px;color:var(--gold)}
+.mpcell .mpowner{font-size:8px;font-weight:700}
+.mpcell .mptok{position:absolute;bottom:1px;left:0;right:0;display:flex;justify-content:center;gap:1px;flex-wrap:wrap}
+.mpcell .mptok i{width:7px;height:7px;border-radius:50%;border:1px solid rgba(255,255,255,.6)}
+.mpcell.mpgo{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.55)}
+.mpcell.mpchance{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.5)}
+.mpcell.mptax{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.5)}
+.mpcell.mpjail{background:rgba(148,163,184,.16);border-color:rgba(148,163,184,.5)}
+.mpcell.mppark{background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.45)}
+.mpcell.mppending{animation:bombPulse .5s infinite alternate}
+.mpcenter{grid-row:2/8;grid-column:2/8;border-radius:12px;background:rgba(13,17,32,.72);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;text-align:center}
+.mpcenter .mptitle{font-size:15px;font-weight:800;letter-spacing:3px;color:var(--text-sub)}
+.mpcenter .btn{width:auto;padding:9px 18px;margin:0}
+.mpcenter .inputrow{margin:0}
 .dice{width:64px;height:64px;border-radius:14px;background:linear-gradient(145deg,#232838,#151926);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:11px;gap:3px;cursor:pointer}
 .dice:active{transform:scale(.94)}
 .dice.rolling{animation:shake .4s}
@@ -209,9 +232,9 @@ const GAMES=[
  {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●'},
  {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:true,c:'#a855f7',ab:'獸'},
  {k:'konglok',n:'康樂棋',min:2,max:4,ok:true,c:'#14b8a6',ab:'康'},
- {k:'monopoly',n:'大富翁',min:2,max:6,ok:false,c:'#10b981',ab:'$'},
+ {k:'monopoly',n:'大富翁',min:2,max:6,ok:true,c:'#10b981',ab:'$'},
  {k:'sanguosha',n:'三國殺',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺'},
- {k:'werewolf',n:'狼人殺',min:6,max:18,ok:false,c:'#6d28d9',ab:'狼'},
+ {k:'werewolf',n:'狼人殺',min:6,max:18,ok:true,c:'#6d28d9',ab:'狼'},
  {k:'bomb',n:'傳炸彈',min:2,max:10,ok:true,c:'#f97316',ab:'炸'},
  {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:true,c:'#0ea5e9',ab:'劇'},
  {k:'pictionary',n:'你畫我猜',min:2,max:10,ok:true,c:'#eab308',ab:'畫'},
@@ -236,7 +259,19 @@ async function loadUser(){
   }catch(e){ renderNoUser(); return; }
   await loadStats();
   const rid=params.get('room');
-  if(rid){ joinRoom(rid); } else { view='lobby'; render(); }
+  if(rid){ joinRoom(rid); return; }
+  view='lobby'; render();
+  // v1.24 網址引導：?game=<遊戲代號> → 直接打開那一款遊戲的開房面板
+  const gk=(params.get('game')||'').trim().toLowerCase();
+  if(gk){
+    const gd=gameDef(gk);
+    if(GAMES.some(x=>x.k===gk)){
+      setTimeout(()=>{
+        if(gd.ok) openCreate(gk);
+        else showNotice('「'+gd.n+'」即將推出，敬請期待');
+      },250);
+    } else showNotice('找不到這款遊戲：'+gk);
+  }
 }
 function renderNoUser(){
   appEl.innerHTML=`<div class="topbar"><h1>小遊戲</h1></div><div class="empty">請先登入班級聊天室，再從「＋」進入小遊戲</div>`;
@@ -250,7 +285,11 @@ async function loadStats(){
 
 /* ===== 大廳 ===== */
 function render(){
-  if(view!=='room'){ const m=document.getElementById('ucModal'); if(m) m.remove(); }
+  if(view!=='room'){
+    const m=document.getElementById('ucModal'); if(m) m.remove();
+    const w=document.getElementById('wwModal'); if(w) w.remove();
+    if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
+  }
   if(view==='lobby') return renderLobby();
   if(view==='room') return renderRoom();
 }
@@ -387,19 +426,28 @@ async function ensureTopic(r){
 }
 
 /* ===== 房間 ===== */
+// v1.24 從網址（?room=）進來的「遲到者」：對局在我進來之前就已經結束了
+let lateJoin = false;
 function joinRoom(rid){
   curRoomId=rid; view='room'; try{window.__roomId=rid;}catch(e){}
+  lateJoin=false;
   if(roomSub)roomSub();
   roomSub=onValue(ref(db,'games/'+rid),async snap=>{
-    if(!snap.exists()){ curRoom=null; showNotice('房間已不存在'); view='lobby'; render(); return; }
+    if(!snap.exists()){ curRoom=null; showNotice('房間已不存在或已被關閉'); view='lobby'; render(); return; }
+    const prev=curRoom;
     curRoom=snap.val();
-    await ensureMembership();
+    // 第一次收到資料時就已經是「已結束」，而且我不是這場的玩家 → 我是遲到的人
+    if(!prev && curRoom.status==='ended' && !(curRoom.players&&curRoom.players[me.username])) lateJoin=true;
+    if(!lateJoin) await ensureMembership();     // 已結束的房間不要再把自己塞進去
     await checkAbandon(curRoom);
     // 需要題目但還沒出好 → 後台補（不阻塞介面）
     if(curRoom && GAMES_NEED_TOPIC[curRoom.game] && curRoom.status!=='ended') ensureTopic(curRoom);
     render();
     // 投票結果框要在「所有階段」都會彈（包括投票直接分出勝負、已經進到結束畫面時）
     if(curRoom&&curRoom.game==='undercover') ucShowResultModal();
+    if(curRoom&&curRoom.game==='werewolf'){
+      wwCheckNight(); wwSettle(); wwAutoDawn(); wwShowVoteModal();
+    }
     // 對局一結束（分出勝負／有人退出／房主關房）→ 把聊天室那條邀請標成已完成
     if(curRoom) markInviteDone(curRoom);
     // 引擎驅動的遊戲：由引擎判斷勝負
@@ -509,6 +557,7 @@ async function cancelCountdownIfShort(rid){
 function renderRoom(){
   const r=curRoom; if(!r){ appEl.innerHTML='<div class="empty">載入中...</div>'; return; }
   const g=gameDef(r.game);
+  if(lateJoin) return renderLateRoom(r,g);          // 對局在我進來之前就結束了
   if(r.status==='playing'||r.status==='ended'){ return renderGame(r,g); }
   // 等待 / 倒计时
   const players=Object.entries(r.players||{}).sort((a,b)=>(a[1].seat||0)-(b[1].seat||0));
@@ -535,11 +584,62 @@ function renderRoom(){
       ${cdHtml}
       <div class="plist">${plist}</div>${slist}
       ${isHost?`<button class="btn ghost" data-act="cancelRoom">關閉房間</button>`:''}
+      <button class="btn ghost" data-act="copyRoomLink">複製房間連結</button>
       <button class="btn danger" data-act="leave">離開房間</button>
     </div>`;
   appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
   const cr=appEl.querySelector('[data-act="cancelRoom"]'); if(cr) cr.onclick=closeRoom;
+  const cp=appEl.querySelector('[data-act="copyRoomLink"]'); if(cp) cp.onclick=copyRoomLink;
   startCountdownTicker();
+}
+/** 從網址進來的遲到者：對局已經結束 */
+function renderLateRoom(r,g){
+  const w=r.winner;
+  let detail='';
+  if(w==='draw') detail='這局最後平手收場';
+  else if(w==='closed') detail='房間已經被關閉了';
+  else if(typeof w==='string'&&w.indexOf('team:')===0){
+    const t=w.slice(5);
+    detail=(t==='uc')?'最後是臥底獲勝':(t==='wolf'?'最後是狼人獲勝':(t==='det'?'最後是好人一方獲勝':'最後是另一方獲勝'));
+  }
+  else if(w) detail=escapeHtml(nameOf(r,w))+' 最後獲勝';
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)}</h1></div>
+    <div class="wrap">
+      <div class="countdown" style="font-size:32px;color:var(--gold)">你來遲了</div>
+      <div class="hint">對局已經結束${detail?'（'+detail+'）':''}</div>
+      <div class="hint" style="margin-top:6px">下次早一點進來，或者自己開一局新的</div>
+      <button class="btn" data-act="home">回到大廳</button>
+      <button class="btn ghost" data-act="copyRoomLink">複製這間房間的連結</button>
+    </div>`;
+  appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
+  const cp=appEl.querySelector('[data-act="copyRoomLink"]'); if(cp) cp.onclick=copyRoomLink;
+}
+/* 房間連結（每一間房間都有自己的網址）：?room=<房號> */
+function gameRoomUrl(roomId){
+  const rid=roomId||curRoomId||'';
+  try{
+    const u=new URL(location.href);
+    let p=u.pathname||'/';
+    if(/game\.html$/.test(p))p=p.replace(/game\.html$/,'');
+    if(/index\.html$/.test(p))p=p.replace(/index\.html$/,'');
+    if(!/\/$/.test(p))p+='/';
+    return u.origin+p+'?room='+encodeURIComponent(rid);
+  }catch(e){ return location.origin+'/?room='+encodeURIComponent(rid); }
+}
+function copyRoomLink(){
+  if(!curRoomId&&!lateJoin){ showNotice('現在沒有房間可以分享'); return; }
+  const link=gameRoomUrl();
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(()=>showNotice('房間連結已複製')).catch(()=>showNotice('請長按手動複製：'+link));
+      return;
+    }
+  }catch(e){}
+  try{
+    const ta=document.createElement('textarea');ta.value=link;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.removeAttribute('readonly');ta.focus();ta.select();
+    document.execCommand('copy');ta.remove();showNotice('房間連結已複製');
+  }catch(e){ showNotice('請長按手動複製：'+link); }
 }
 let cdTimer=null, cdCheck=0;
 function startCountdownTicker(){
@@ -597,6 +697,8 @@ async function leaveRoom(){
   }
   if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
   if(bombTimer){clearInterval(bombTimer);bombTimer=null;}
+  if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
+  const wm=document.getElementById('wwModal'); if(wm) wm.remove();
   if(roomSub)roomSub(); roomSub=null; curRoom=null;curRoomId=null;view='lobby';render();
 }
 async function closeRoom(){
@@ -669,6 +771,19 @@ function initGameState(r, seed){
     // 完全由動作序列重放，不預先寫任何局面
     state={};turn=names[0];
   }
+  else if(r.game==='monopoly'){
+    const pos={},money={}; names.forEach(u=>{pos[u]=0;money[u]=MP_MONEY0;});
+    state={pos:pos,money:money,owner:{},out:[],turnIdx:0,dice:0,rolling:false,pending:null,log:[],lastCard:null};
+    turn=names[0];
+  }
+  else if(r.game==='werewolf'){
+    // 角色由種子分配（各端一致）；開局直接入夜
+    const roles=wwAssign(names,seed);
+    state={phase:'night',roles:roles,night:1,round:1,wolfPicks:null,seerChecks:null,
+      eliminated:[],lastNightVictim:null,dawnAt:null,descIdx:0,descs:null,
+      votes:null,runoff:null,runoffVotes:null,voteResult:null,lastOut:null,tie:false,revealed:false};
+    turn=null;
+  }
   else if(r.game==='xiangqi'){
     // 同上：只寫動作，各端重放
     state={};turn=names[0];
@@ -693,6 +808,8 @@ function renderGame(r,g){
   // 鬥獸棋不是引擎驅動，輪次由「已走幾步」推出來（r.turn 不會即時更新）
   if(r.game==='doushou'){ const nm=playerNames(r); turnName=nm[actionsOf(r).length%2]||nm[0]; }
   if(r.game==='xiangqi'){ const nm=playerNames(r); turnName=xqPlayerOf(xqTurnSide(r),nm)||nm[0]; }
+  if(r.game==='monopoly') turnName=mpTurnU(r);
+  if(r.game==='werewolf'){ const nm=playerNames(r); turnName=nm[0]||''; }
   const myTurn=(turnName===me.username)&&!spec;
   const bar=`<div class="turnbar ${myTurn?'mine':''}">${spec?'觀戰中':(myTurn?'輪到你了':escapeHtml(nameOf(r,turnName))+' 的回合')}</div>`;
   if(r.game==='tictactoe') drawTTT(r,g,bar,spec);
@@ -707,6 +824,8 @@ function renderGame(r,g){
   else if(r.game==='konglok') drawKonglok(r,g,bar,spec);
   else if(r.game==='doushou') drawDoushou(r,g,bar,spec);
   else if(r.game==='xiangqi') drawXiangqi(r,g,bar,spec);
+  else if(r.game==='werewolf') drawWerewolf(r,g,'',spec);
+  else if(r.game==='monopoly') drawMonopoly(r,g,bar,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
@@ -722,6 +841,27 @@ function renderEnded(r,g){
     appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap"><div class="countdown" style="font-size:30px">${w==='draw'?'平手':'恭喜獲勝！'}</div>
       <div class="plist">${rows}</div><button class="btn" data-act="home">回到大廳</button></div>`;
+    appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
+    return;
+  }
+  if(r.game==='werewolf'){
+    const st=r.state||{};
+    const rl=st.roles||{};
+    const wolfWin=w==='team:wolf';
+    const iAmWolf=rl[me.username]==='wolf';
+    const iWon=wolfWin?iAmWolf:!iAmWolf;
+    const rows=playerNames(r).map(u=>{
+      const isW=rl[u]==='wolf';
+      const c=isW?'#f472b6':'var(--green)';
+      return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${WW_NAME[rl[u]]||'平民'}</div></div>`;
+    }).join('');
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+      <div class="wrap">
+        <div class="countdown" style="font-size:28px;color:${iWon?'var(--green)':'var(--red)'}">${iWon?'你贏了！':'你輸了'}</div>
+        <div class="hint">${wolfWin?'狼人獲勝':'村民獲勝'} · 共進行 ${Number(st.night)||1} 夜</div>
+        <div class="plist">${rows}</div>
+        <button class="btn" data-act="home">回到大廳</button>
+      </div>`;
     appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
     return;
   }
@@ -2859,6 +2999,638 @@ function drawXiangqi(r, g, bar, spec) {
     }
     xqSel = null; render();
   });
+}
+
+/* ══════════════════ 狼人殺（6–18 人）══════════════════
+   角色：狼人 ×N（人數越多越多）、預言家 ×1、其餘村民。
+   流程：夜晚（狼人選要殺誰、預言家查身分）→ 天亮公布死者 → 輪流發言（像聊天）
+        → 投票放逐（票高者出局，平票則平票的人單獨再投）→ 入夜再來一次。
+   勝負：狼人全出局＝村民勝；存活狼人 ≥ 存活其他人＝狼人勝。
+   角色由種子決定，跟其他遊戲一樣各端重算，不信任客戶端寫的中間狀態。
+*/
+const WW_NAME = { wolf: '狼人', seer: '預言家', villager: '村民' };
+function wwState(r){ return (r && r.state) ? r.state : {}; }
+function wwAlive(r){ const el = wwState(r).eliminated || []; return playerNames(r).filter(u => !el.includes(u)); }
+function wwRoleOf(r, u){ return (wwState(r).roles || {})[u] || ''; }
+function wwWolfNames(r){ const rl = wwState(r).roles || {}; return playerNames(r).filter(u => rl[u] === 'wolf'); }
+function wwSeerOf(r){ const rl = wwState(r).roles || {}; return playerNames(r).find(u => rl[u] === 'seer') || ''; }
+/** 依人數分配角色（種子洗牌，各端一致） */
+function wwAssign(names, seed){
+  const rng = makeRng((seed >>> 0) || 1);
+  const n = names.length;
+  const nWolf = n <= 6 ? 1 : (n <= 9 ? 2 : (n <= 12 ? 3 : 4));
+  const deck = ['seer'].concat(new Array(nWolf).fill('wolf'));
+  while (deck.length < n) deck.push('villager');
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)) % deck.length; const t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
+  const roles = {}; names.forEach((u, i) => { roles[u] = deck[i] || 'villager'; });
+  return roles;
+}
+/** 用「假設把某些人算成出局」之後的存活名單判斷勝負 */
+function wwWinTeam(r, eliminated){
+  const all = playerNames(r), rl = wwState(r).roles || {};
+  const alive = all.filter(u => !(eliminated || []).includes(u));
+  const wolves = alive.filter(u => rl[u] === 'wolf').length;
+  const others = alive.length - wolves;
+  if (wolves === 0) return 'village';
+  if (wolves >= others) return 'wolf';
+  return null;
+}
+function wwCurrentWin(r){
+  const st = wwState(r);
+  const tested = wwWinTeam(r, st.eliminated);
+  if (tested) return tested;
+  // 夜晚剛殺完、還沒寫進 eliminated 時，用「連同死者」一起判斷
+  return wwWinTeam(r, (st.eliminated || []).concat(st.pendingKill ? [st.pendingKill] : []));
+}
+async function wwFinish(team, r){
+  if (!r || r.status === 'ended') return;
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/winner'), w => (w === null || w === undefined) ? ('team:' + team) : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true, 'state/teamWin': team });
+  const st = wwState(r), rl = st.roles || {};
+  for (const u of playerNames(r)) {
+    const isWolf = rl[u] === 'wolf';
+    const won = (team === 'wolf') === isWolf;
+    try {
+      await runTransaction(ref(db, 'users/' + u + '/gameStats/werewolf'), c => {
+        c = c || {}; const w = Number(c.win) || 0, l = Number(c.lose) || 0, p = Number(c.play) || 0;
+        return { win: w + (won ? 1 : 0), lose: l + (won ? 0 : 1), play: p + 1 };
+      });
+    } catch (e) {}
+  }
+}
+/* ── 夜晚 ── */
+async function wwWolfPick(target){
+  const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
+  const st = wwState(r);
+  if (st.phase !== 'night') return showNotice('現在不是晚上');
+  if (wwRoleOf(r, me.username) !== 'wolf') return showNotice('只有狼人可以在晚上行動');
+  if (!wwAlive(r).includes(target) || target === me.username) return;
+  await update(ref(db, 'games/' + curRoomId + '/state/wolfPicks'), { [me.username]: target });
+  setTimeout(wwCheckNight, 250);
+}
+async function wwSeerCheck(target){
+  const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
+  const st = wwState(r);
+  if (st.phase !== 'night') return showNotice('現在不是晚上');
+  if (wwRoleOf(r, me.username) !== 'seer') return showNotice('只有預言家可以查身分');
+  if (!wwAlive(r).includes(target) || target === me.username) return;
+  const done = (st.seerChecks || {})[me.username];
+  if (done && done.night === st.night) return showNotice('今晚已經查過了');
+  await update(ref(db, 'games/' + curRoomId + '/state/seerChecks'), {
+    [me.username]: { night: Number(st.night) || 1, target: target, isWolf: wwRoleOf(r, target) === 'wolf' },
+  });
+  setTimeout(wwCheckNight, 250);
+}
+/** 狼人與預言家都行動完 → 結算今晚的死者 */
+async function wwCheckNight(){
+  const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
+  const st = wwState(r);
+  if (st.phase !== 'night') return;
+  const alive = wwAlive(r), roles = st.roles || {};
+  const wolves = alive.filter(u => roles[u] === 'wolf');
+  const picks = st.wolfPicks || {};
+  if (wolves.length && !wolves.every(u => picks[u])) return;      // 狼人還沒選完
+  const seer = alive.find(u => roles[u] === 'seer');
+  const sc = (st.seerChecks || {})[seer];
+  if (seer && !(sc && sc.night === (Number(st.night) || 1))) return;   // 預言家還沒查
+  // 統計狼人選票（同票取座位較前的）
+  const cnt = {}; wolves.forEach(u => { const t = picks[u]; if (t && alive.includes(t)) cnt[t] = (cnt[t] || 0) + 1; });
+  let max = 0, victim = '';
+  playerNames(r).forEach(u => { if ((cnt[u] || 0) > max) { max = cnt[u]; victim = u; } });
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'night' ? 'dawn' : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  const eliminated = (st.eliminated || []).slice();
+  if (victim && !eliminated.includes(victim)) eliminated.push(victim);
+  const win = wwWinTeam(r, eliminated);
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    phase: win ? 'end' : 'dawn', eliminated: eliminated, lastNightVictim: victim || null,
+    wolfPicks: null, seerChecks: null, descIdx: 0, dawnAt: Date.now(), revealed: !!win,
+  });
+  if (win) await wwFinish(win, r);
+}
+let wwDawnTimer = null;
+/** 天亮畫面停留幾秒後自動進入發言（不用房主按） */
+function wwAutoDawn(){
+  const r = curRoom;
+  if (!r || r.game !== 'werewolf' || wwState(r).phase !== 'dawn') {
+    if (wwDawnTimer) { clearTimeout(wwDawnTimer); wwDawnTimer = null; }
+    return;
+  }
+  if (wwDawnTimer) return;
+  const left = Math.max(0, (Number(wwState(r).dawnAt) || Date.now()) + 4000 - Date.now());
+  wwDawnTimer = setTimeout(async () => {
+    wwDawnTimer = null;
+    const rr = curRoom;
+    if (!rr || rr.game !== 'werewolf' || wwState(rr).phase !== 'dawn') return;
+    try { await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'dawn' ? 'discuss' : undefined); } catch (e) {}
+    await update(ref(db, 'games/' + curRoomId + '/state'), { descIdx: 0 });
+  }, left + 250);
+}
+/* ── 白天發言（像聊天，講完自動到下一位）── */
+function wwDescList(r){
+  const d = wwState(r).descs || {};
+  return Object.values(d).filter(x => x && x.t).sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
+}
+function wwCurSpeaker(r){
+  const alive = wwAlive(r);
+  if (!alive.length) return '';
+  return alive[(Number(wwState(r).descIdx) || 0) % alive.length];
+}
+async function wwSendDesc(text){
+  const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return false;
+  const st = wwState(r);
+  if (st.phase !== 'discuss') return false;
+  const alive = wwAlive(r);
+  if (!alive.length) return false;
+  if (wwCurSpeaker(r) !== me.username) { showNotice('現在不是你的發言時間'); return false; }
+  const t = String(text || '').trim();
+  if (!t) { showNotice('要先寫一句話'); return false; }
+  const next = (Number(st.descIdx) || 0) + 1;
+  const done = next >= alive.length;
+  await push(ref(db, 'games/' + curRoomId + '/state/descs'), {
+    u: me.username, t: t.slice(0, 90), r: Number(st.round) || 1, at: Date.now(),
+  });
+  const upd = { descIdx: done ? 0 : next };
+  if (done) { upd.phase = 'vote'; upd.votes = null; }
+  await update(ref(db, 'games/' + curRoomId + '/state'), upd);
+  return true;
+}
+/* ── 投票放逐 ── */
+async function wwCastVote(target){
+  const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
+  const st = wwState(r), alive = wwAlive(r);
+  if (!alive.includes(me.username)) { showNotice('你已經出局了'); return; }
+  if (!alive.includes(target) || target === me.username) return;
+  if (st.phase === 'vote') {
+    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [me.username]: target });
+  } else if (st.phase === 'runoff') {
+    if (!(st.runoff || []).includes(target)) return showNotice('這一輪只能投平票的那幾位');
+    if ((st.runoff || []).includes(me.username)) return showNotice('平票的人不能投票');
+    await update(ref(db, 'games/' + curRoomId + '/state/runoffVotes'), { [me.username]: target });
+  } else return;
+  setTimeout(wwSettle, 250);
+}
+async function wwSettle(){
+  const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
+  const st = wwState(r), alive = wwAlive(r);
+  if (st.phase === 'vote') {
+    const votes = st.votes || {};
+    if (alive.some(u => !votes[u])) return;
+    const cnt = {};
+    alive.forEach(u => { const t = votes[u]; if (alive.includes(t) && t !== u) cnt[t] = (cnt[t] || 0) + 1; });
+    let max = 0, top = [];
+    Object.keys(cnt).forEach(u => { if (cnt[u] > max) { max = cnt[u]; top = [u]; } else if (cnt[u] === max) top.push(u); });
+    const target = top.length === 1 ? 'result' : (top.length > 1 ? 'runoff' : 'result');
+    let res;
+    try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'vote' ? target : undefined); }
+    catch (e) { return; }
+    if (!res.committed) return;
+    if (target === 'runoff') {
+      await update(ref(db, 'games/' + curRoomId + '/state'), {
+        runoff: top, runoffVotes: null,
+        voteResult: { tally: cnt, voters: votes, out: null, tie: true, at: Date.now() },
+      });
+      return;
+    }
+    await wwCommitOut(top.length === 1 ? top[0] : null, cnt, votes, top.length !== 1);
+    return;
+  }
+  if (st.phase === 'runoff') {
+    const cand = st.runoff || [];
+    const voters = alive.filter(u => !cand.includes(u));
+    const rv = st.runoffVotes || {};
+    if (voters.length && voters.some(u => !rv[u])) return;
+    const cnt = {}; cand.forEach(u => { cnt[u] = 0; });
+    voters.forEach(u => { const t = rv[u]; if (cnt[t] !== undefined) cnt[t]++; });
+    let max = -1, top = [];
+    cand.forEach(u => { if (cnt[u] > max) { max = cnt[u]; top = [u]; } else if (cnt[u] === max) top.push(u); });
+    let res;
+    try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'runoff' ? 'result' : undefined); }
+    catch (e) { return; }
+    if (!res.committed) return;
+    await wwCommitOut(top.length === 1 ? top[0] : null, cnt, rv, top.length !== 1);
+  }
+}
+async function wwCommitOut(out, cnt, voters, tie){
+  const r = curRoom; if (!r) return;
+  const st = wwState(r);
+  const eliminated = (st.eliminated || []).slice();
+  if (out && !eliminated.includes(out)) eliminated.push(out);
+  const win = wwWinTeam(r, eliminated);
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    phase: win ? 'end' : 'result', eliminated: eliminated, lastOut: out || null, tie: !!tie,
+    votes: null, runoffVotes: null, runoff: null, revealed: !!win, descIdx: 0,
+    voteResult: { tally: cnt || {}, voters: voters || {}, out: out || null, tie: !!tie, at: Date.now() },
+  });
+  if (win) await wwFinish(win, r);
+}
+/** 出局結果確認後 → 進入下一晚（任何玩家都可以按） */
+async function wwNextNight(){
+  const r = curRoom; if (!r || r.game !== 'werewolf') return;
+  const st = wwState(r);
+  if (st.phase !== 'result') return;
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'result' ? 'night' : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    night: (Number(st.night) || 1) + 1, round: (Number(st.round) || 1) + 1,
+    wolfPicks: null, seerChecks: null, lastOut: null, tie: false, voteResult: null, descIdx: 0,
+  });
+}
+let wwSeenResultAt = 0;
+function wwShowVoteModal(){
+  const r = curRoom, el = document.getElementById('wwModal');
+  const vr = r ? wwState(r).voteResult : null;
+  if (!r || !vr || !vr.at || vr.at === wwSeenResultAt) { if (el) el.remove(); return; }
+  const names = playerNames(r), tally = vr.tally || {}, voters = vr.voters || {};
+  const rows = names.slice().sort((a, b) => (Number(tally[b]) || 0) - (Number(tally[a]) || 0)).map(u => {
+    const who = names.filter(v => voters[v] === u).map(v => escapeHtml(nameOf(r, v))).join('、') || '（沒人投他）';
+    const out = vr.out === u;
+    return `<div class="pitem" style="${out ? 'border-color:var(--red)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${out ? ' · 被放逐' : ''}
+        <div class="hint" style="margin:2px 0 0;text-align:left">${who}</div></div>
+      <div class="pbadge" style="${out ? 'color:var(--red);border-color:var(--red)' : ''}">${Number(tally[u]) || 0} 票</div>
+    </div>`;
+  }).join('');
+  const head = vr.tie
+    ? '<span style="color:var(--gold)">平票！最高的幾位要單獨再投一次</span>'
+    : (vr.out ? `${escapeHtml(nameOf(r, vr.out))} 被放逐出局` : '沒有人被放逐');
+  const m = document.createElement('div');
+  m.id = 'wwModal';
+  m.className = 'ucmodal';
+  m.innerHTML = `<div class="ucmodal-card">
+    <h3>放逐投票結果</h3>
+    <div class="hint" style="margin:6px 0 10px">${head}</div>
+    <div class="plist">${rows}</div>
+    <button class="btn" id="wwModalClose">知道了</button>
+  </div>`;
+  if (el) el.remove();
+  document.body.appendChild(m);
+  m.onclick = e => { if (e.target === m) { wwSeenResultAt = vr.at; m.remove(); } };
+  const cb = m.querySelector('#wwModalClose');
+  if (cb) cb.onclick = () => { wwSeenResultAt = vr.at; m.remove(); };
+}
+function drawWerewolf(r, g, bar, spec){
+  const st = wwState(r), names = playerNames(r);
+  const amPlayer = !!r.players[me.username];
+  const phase = st.phase || 'night';
+  const alive = wwAlive(r), eliminated = st.eliminated || [];
+  const dead = amPlayer && eliminated.includes(me.username);
+  const myRole = wwRoleOf(r, me.username);
+  const isWolf = myRole === 'wolf', isSeer = myRole === 'seer';
+  const wolves = wwWolfNames(r);
+  const aliveWolves = wolves.filter(u => alive.includes(u));
+  const sc = (st.seerChecks || {})[me.username];
+  const night = Number(st.night) || 1;
+
+  const plist = names.map(u => {
+    const isDead = eliminated.includes(u);
+    const role = st.revealed ? (WW_NAME[wwRoleOf(r, u)] || '') : '';
+    const rc = st.revealed ? ((wwRoleOf(r, u) === 'wolf') ? 'color:#f472b6;border-color:#f472b6' : 'color:var(--green);border-color:var(--green)') : '';
+    const showWolf = !st.revealed && isWolf && wwRoleOf(r, u) === 'wolf';
+    return `<div class="pitem" style="${isDead ? 'opacity:.45' : ''}${(phase === 'discuss' && u === wwCurSpeaker(r)) ? ';border-color:var(--accent)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isDead ? ' · 已出局' : ''}${(phase === 'discuss' && u === wwCurSpeaker(r)) ? ' · 發言中' : ''}</div>
+      <div class="pbadge" style="${rc || (showWolf ? 'color:#f472b6;border-color:#f472b6' : '')}">${st.revealed ? role : (showWolf ? '同夥' : '')}</div>
+    </div>`;
+  }).join('');
+
+  // 白天發言紀錄（像聊天）
+  const feed = wwDescList(r);
+  const feedHtml = `<div class="ucfeed" id="wwFeed">${feed.length
+    ? feed.map(x => `<div class="ucmsg">
+        <div class="pav" style="background:${colorOf(r, x.u)}">${avatarHTML({ displayName: nameOf(r, x.u) })}</div>
+        <div class="ucbody">
+          <div class="ucmeta">${escapeHtml(nameOf(r, x.u))}${x.u === me.username ? '（你）' : ''} · 第 ${Number(x.r) || 1} 天</div>
+          <div class="uctext">${escapeHtml(x.t)}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:16px 6px">還沒有人發言</div>'}</div>`;
+
+  const roleCard = amPlayer
+    ? `<div class="smcard" style="${isWolf ? 'border-color:#f472b6' : (isSeer ? 'border-color:var(--gold)' : '')}">
+         <div class="smtag">你的身分</div>
+         <div class="smname" style="color:${isWolf ? '#f472b6' : (isSeer ? 'var(--gold)' : 'var(--text-main)')}">${WW_NAME[myRole] || '村民'}</div>
+         <div class="smline">${isWolf ? `你和 ${wolves.filter(u => u !== me.username).map(u => escapeHtml(nameOf(r, u))).join('、') || '（沒有人）'} 是狼人，每晚一起選一個人殺。白天要裝成村民。` : (isSeer ? '每晚可以查一個人的身分。' : '你沒有特殊能力，靠推理找出狼人。')}</div>
+       </div>`
+    : `<div class="hint">觀戰中，看不到身分牌</div>`;
+
+  const listFor = (arr, cls) => `<div class="plist">${arr.map(u => `<div class="pitem" data-${cls}="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">選他</div></div>`).join('')}</div>`;
+
+  let stage = '';
+  if (phase === 'night') {
+    if (isWolf && !dead) {
+      const myPick = (st.wolfPicks || {})[me.username];
+      stage = `<div class="turnbar" style="border-color:#f472b6;color:#f472b6">第 ${night} 夜 · 狼人請睜眼，選今晚要殺的人</div>
+        <div class="hint" style="margin-top:8px">${myPick ? '你選了 ' + escapeHtml(nameOf(r, myPick)) + '（等其他狼人）' : '你們的目標要一致，選好就等其他人'}</div>
+        ${!myPick ? listFor(alive.filter(u => !wolves.includes(u)), 'wwolf') : ''}
+        <div class="hint">同夥：${wolves.filter(u => u !== me.username).map(u => escapeHtml(nameOf(r, u))).join('、') || '你是唯一的狼人'}</div>`;
+    } else if (isSeer && !dead) {
+      const done = sc && sc.night === night;
+      stage = `<div class="turnbar" style="border-color:var(--gold);color:var(--gold)">第 ${night} 夜 · 預言家請睜眼</div>
+        ${done
+          ? `<div class="hint" style="margin-top:8px">你查了 ${escapeHtml(nameOf(r, sc.target))} → <b style="color:${sc.isWolf ? '#f472b6' : 'var(--green)'}">${sc.isWolf ? '狼人' : '好人'}</b></div>`
+          : `${listFor(alive.filter(u => u !== me.username), 'wseer')}<div class="hint">選一個人查身分</div>`}`;
+    } else {
+      stage = `<div class="turnbar">第 ${night} 夜 · 天黑請閉眼…</div>
+        <div class="hint" style="margin-top:8px">${dead ? '你已出局，只能旁觀' : '狼人正在行動，預言家正在查身分'}</div>`;
+    }
+  } else if (phase === 'dawn') {
+    const v = st.lastNightVictim;
+    stage = `<div class="countdown" style="font-size:26px;color:${v ? 'var(--red)' : 'var(--gold)'}">${v ? escapeHtml(nameOf(r, v)) + ' 昨晚被狼人殺害' : '昨晚是平安夜'}</div>
+      <div class="hint">即將進入發言階段…</div>`;
+  } else if (phase === 'discuss') {
+    const cur = wwCurSpeaker(r);
+    stage = `<div class="turnbar" style="margin-bottom:6px">第 ${night} 天 · 輪流發言（按座位順序）</div>
+      <div class="hint" style="margin-bottom:6px">${dead ? '你已出局，只能旁觀' : (cur === me.username ? '輪到你發言' : escapeHtml(nameOf(r, cur)) + ' 正在發言…')}</div>
+      ${(cur === me.username && !dead) ? `<div class="inputrow"><input id="wwInput" placeholder="說一句話…" autocomplete="off" maxlength="90"><button class="btn" id="wwSend">送出</button></div>` : ''}
+      ${feedHtml}`;
+  } else if (phase === 'vote') {
+    const votes = st.votes || {}, myVote = votes[me.username];
+    const votedN = alive.filter(u => votes[u]).length;
+    stage = `<div class="turnbar">放逐投票 · 已投 ${votedN}/${alive.length}</div>
+      <div class="hint" style="margin-top:8px">${myVote ? '你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）' : (dead ? '你已出局，不能投票' : '選出你認為是狼人的人')}</div>
+      ${(!dead && amPlayer && !myVote) ? listFor(alive.filter(u => u !== me.username), 'wvote') : ''}
+      ${feedHtml}`;
+  } else if (phase === 'runoff') {
+    const cand = st.runoff || [], rv = st.runoffVotes || {};
+    const voters = alive.filter(u => !cand.includes(u));
+    const votedN = voters.filter(u => rv[u]).length;
+    const iAmCand = cand.includes(me.username);
+    stage = `<div class="turnbar" style="border-color:var(--gold);color:var(--gold)">平票！由 ${cand.map(u => escapeHtml(nameOf(r, u))).join(' 對 ')} 單獨再投一次</div>
+      <div class="hint" style="margin-top:8px">${iAmCand ? '你是平票的人，這一輪不能投票' : (rv[me.username] ? '你已經投了（等其他人）' : (dead ? '你已出局' : '投出你認為是狼人的人'))}</div>
+      ${(!iAmCand && !dead && amPlayer && !rv[me.username]) ? listFor(cand, 'wvote') : ''}
+      <div class="hint">已投 ${votedN}/${voters.length}</div>
+      ${feedHtml}`;
+  } else if (phase === 'result') {
+    const out = st.lastOut;
+    stage = `<div class="countdown" style="font-size:26px;color:${out ? 'var(--red)' : 'var(--gold)'}">${out ? escapeHtml(nameOf(r, out)) + ' 被放逐' : '平票，本輪無人被放逐'}</div>
+      <div class="hint">身分暫不公開</div>
+      ${amPlayer ? `<button class="btn" data-act="wwNight">進入第 ${night + 1} 夜</button>` : ''}`;
+  } else {
+    stage = `<div class="hint">本局結束</div>`;
+  }
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${roleCard}
+     ${phase === 'end' ? '' : stage}
+     <div class="plist">${plist}</div>
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+  const nb = appEl.querySelector('[data-act="wwNight"]');
+  if (nb) nb.onclick = wwNextNight;
+  appEl.querySelectorAll('[data-wwolf]').forEach(el => el.onclick = () => wwWolfPick(el.dataset.wwolf));
+  appEl.querySelectorAll('[data-wseer]').forEach(el => el.onclick = () => wwSeerCheck(el.dataset.wseer));
+  appEl.querySelectorAll('[data-wvote]').forEach(el => el.onclick = () => wwCastVote(el.dataset.wvote));
+  const gi = appEl.querySelector('#wwInput');
+  const gb = appEl.querySelector('#wwSend');
+  if (gi && gb) {
+    const send = async () => {
+      const v = gi.value.trim(); if (!v) return;
+      gb.disabled = true;
+      const ok = await wwSendDesc(v);
+      if (ok) gi.value = ''; else gb.disabled = false;
+    };
+    gb.onclick = send;
+    gi.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    if (wwCurSpeaker(r) === me.username) setTimeout(() => { try { gi.focus(); } catch (e) {} }, 60);
+  }
+  const fd = appEl.querySelector('#wwFeed');
+  if (fd) fd.scrollTop = fd.scrollHeight;
+  wwShowVoteModal();
+}
+
+/* ══════════════════ 大富翁（2–6 人，簡化版）══════════════════
+   28 格環形棋盤：買地、收租、機會卡、稅金、免費停車。
+   經過起點收 200；付不出錢就破產出局，最後剩下的人獲勝。
+   骰子與結果由「擲骰的那一端」寫入 DB，其餘端照讀（跟康樂棋同一套做法）。
+*/
+const MP_MONEY0 = 1500, MP_SALARY = 200;
+const MP_BOARD = [
+  { t: 'go', n: '起點' }, { t: 'prop', n: '台北', price: 60 }, { t: 'chance', n: '機會' },
+  { t: 'prop', n: '高雄', price: 80 }, { t: 'tax', n: '稅金', amount: 100 }, { t: 'prop', n: '台中', price: 100 },
+  { t: 'jail', n: '監獄' }, { t: 'prop', n: '香港', price: 140 }, { t: 'chance', n: '機會' },
+  { t: 'prop', n: '東京', price: 180 }, { t: 'prop', n: '首爾', price: 200 }, { t: 'park', n: '免費停車' },
+  { t: 'prop', n: '新加坡', price: 220 }, { t: 'chance', n: '機會' }, { t: 'prop', n: '曼谷', price: 240 },
+  { t: 'tax', n: '稅金', amount: 150 }, { t: 'prop', n: '雪梨', price: 260 }, { t: 'prop', n: '倫敦', price: 280 },
+  { t: 'chance', n: '機會' }, { t: 'prop', n: '巴黎', price: 300 }, { t: 'prop', n: '紐約', price: 320 },
+  { t: 'chance', n: '機會' }, { t: 'prop', n: '柏林', price: 340 }, { t: 'prop', n: '羅馬', price: 360 },
+  { t: 'park', n: '免費停車' }, { t: 'chance', n: '機會' }, { t: 'prop', n: '杜拜', price: 380 },
+  { t: 'prop', n: '里約', price: 400 },
+];
+const MP_N = MP_BOARD.length;
+const mpRent = p => Math.round(p * 0.35);
+const MP_CHANCE = [
+  { d: 200, t: '銀行派息，收 200' }, { d: -150, t: '繳交維修費，付 150' },
+  { d: 100, t: '中了小獎，收 100' }, { d: -100, t: '請大家吃飯，付 100' },
+  { d: 300, t: '股票獲利，收 300' }, { d: -200, t: '交通罰款，付 200' },
+  { d: 50, t: '拾金不昧，收 50' }, { d: -50, t: '買了杯咖啡，付 50' },
+];
+/** 把格子索引排到 8×8 的外圈（一圈 28 格） */
+function mpCell(i){
+  if (i <= 7) return [7, i];
+  if (i <= 14) return [7 - (i - 7), 7];
+  if (i <= 21) return [0, 7 - (i - 14)];
+  return [1 + (i - 22), 0];
+}
+function mpState(r){ return (r && r.state) ? r.state : {}; }
+function mpAlive(r){
+  const st = mpState(r), out = st.out || [];
+  return playerNames(r).filter(u => !out.includes(u));
+}
+function mpTurnU(r){
+  const st = mpState(r), names = playerNames(r);
+  const alive = names.filter(u => !(st.out || []).includes(u));
+  if (!alive.length) return '';
+  return alive[(Number(st.turnIdx) || 0) % alive.length];
+}
+async function mpRoll(){
+  const r = curRoom; if (!r || r.game !== 'monopoly' || r.status !== 'playing') return;
+  const st = mpState(r);
+  if (st.pending) return showNotice('要先決定買不買');
+  if (st.rolling) return;
+  if (mpTurnU(r) !== me.username) return showNotice('還沒輪到你擲骰');
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/rolling'), v => (v === true) ? undefined : true); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  const names = playerNames(r);
+  const pos = Object.assign({}, st.pos || {}), money = Object.assign({}, st.money || {});
+  names.forEach(u => { if (typeof pos[u] !== 'number') pos[u] = 0; if (typeof money[u] !== 'number') money[u] = MP_MONEY0; });
+  const dice = 1 + Math.floor(Math.random() * 6);
+  const from = pos[me.username];
+  const to = (from + dice) % MP_N;
+  let salary = 0;
+  const log = [];
+  if (to < from) { salary = MP_SALARY; money[me.username] += salary; log.push(`${nameOf(r, me.username)} 經過起點，收 ${salary}`); }
+  pos[me.username] = to;
+  const cell = MP_BOARD[to];
+  const owner = Object.assign({}, st.owner || {});
+  let pending = null, extra = {};
+  if (cell.t === 'prop') {
+    const ow = owner[to];
+    if (!ow) pending = { uid: me.username, tile: to };
+    else if (ow !== me.username && !(st.out || []).includes(ow)) {
+      const rent = mpRent(cell.price);
+      money[me.username] -= rent; money[ow] = (money[ow] || 0) + rent;
+      log.push(`${nameOf(r, me.username)} 付租金 ${rent} 給 ${nameOf(r, ow)}`);
+    } else if (ow === me.username) log.push(`${nameOf(r, me.username)} 回到自己的地`);
+  } else if (cell.t === 'tax') {
+    money[me.username] -= cell.amount;
+    log.push(`${nameOf(r, me.username)} 繳稅 ${cell.amount}`);
+  } else if (cell.t === 'chance') {
+    const c = MP_CHANCE[Math.floor(Math.random() * MP_CHANCE.length) % MP_CHANCE.length];
+    money[me.username] += c.d;
+    log.push(`${nameOf(r, me.username)}：${c.t}`);
+    extra.lastCard = c.t;
+  } else if (cell.t === 'go') log.push(`${nameOf(r, me.username)} 停在起點`);
+  // 付不出錢 → 破產
+  const out = (st.out || []).slice();
+  if (money[me.username] < 0) {
+    log.push(`${nameOf(r, me.username)} 付不出錢，破產出局`);
+    out.push(me.username);
+    const ow2 = Object.assign({}, owner);
+    Object.keys(ow2).forEach(k => { if (ow2[k] === me.username) delete ow2[k]; });
+    // 破產者的地全部釋出，餘款歸零
+    money[me.username] = 0;
+    await update(ref(db, 'games/' + curRoomId + '/state'), {
+      dice: dice, pos: pos, money: money, owner: ow2, out: out, rolling: false, pending: null,
+      log: (st.log || []).concat(log).slice(-40), turnIdx: (Number(st.turnIdx) || 0),
+      lastCard: extra.lastCard || null,
+    });
+    await mpAfterMove(r, out, pos, money, ow2, log);
+    return;
+  }
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    dice: dice, pos: pos, money: money, owner: owner, rolling: false, pending: pending,
+    log: (st.log || []).concat(log).slice(-40),
+    turnIdx: pending ? (Number(st.turnIdx) || 0) : ((Number(st.turnIdx) || 0) + 1) % Math.max(1, names.length),
+    lastCard: extra.lastCard || null,
+  });
+  if (!pending) await mpAfterMove(r, out, pos, money, owner, log);
+}
+async function mpAfterMove(r, out, pos, money, owner, log){
+  const alive = playerNames(r).filter(u => !out.includes(u));
+  if (alive.length <= 1) {
+    if (alive.length === 1) await finishGame(alive[0]);
+    else await finishGame('draw');
+  }
+}
+async function mpBuy(){
+  const r = curRoom; if (!r || r.game !== 'monopoly') return;
+  const st = mpState(r);
+  const pd = st.pending;
+  if (!pd || pd.uid !== me.username) return showNotice('現在不是你的決定');
+  const cell = MP_BOARD[pd.tile];
+  const money = Object.assign({}, st.money || {});
+  if ((money[me.username] || 0) < cell.price) return showNotice('錢不夠');
+  money[me.username] -= cell.price;
+  const owner = Object.assign({}, st.owner || {});
+  owner[pd.tile] = me.username;
+  const names = playerNames(r);
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    money: money, owner: owner, pending: null,
+    turnIdx: ((Number(st.turnIdx) || 0) + 1) % Math.max(1, names.length),
+    log: (st.log || []).concat([`${nameOf(r, me.username)} 買下 ${cell.n}（${cell.price}）`]).slice(-40),
+  });
+}
+async function mpSkip(){
+  const r = curRoom; if (!r || r.game !== 'monopoly') return;
+  const st = mpState(r);
+  const pd = st.pending;
+  if (!pd || pd.uid !== me.username) return showNotice('現在不是你的決定');
+  const names = playerNames(r);
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    pending: null,
+    turnIdx: ((Number(st.turnIdx) || 0) + 1) % Math.max(1, names.length),
+    log: (st.log || []).concat([`${nameOf(r, me.username)} 放棄買地`]).slice(-40),
+  });
+}
+function drawMonopoly(r, g, bar, spec){
+  const st = mpState(r), names = playerNames(r);
+  const amPlayer = !!r.players[me.username];
+  const pos = st.pos || {}, money = st.money || {}, owner = st.owner || {}, out = st.out || [];
+  const cur = mpTurnU(r);
+  const myTurn = (cur === me.username) && !spec && !out.includes(me.username);
+  const pd = st.pending;
+
+  const cells = [];
+  for (let i = 0; i < MP_N; i++) {
+    const [rr, cc] = mpCell(i);
+    const cell = MP_BOARD[i];
+    const ow = owner[i];
+    const isPd = pd && pd.tile === i;
+    const here = names.filter(u => (pos[u] || 0) === i && !out.includes(u));
+    let cls = 'mpcell mp' + cell.t;
+    if (ow) cls += ' owned';
+    if (isPd) cls += ' mppending';
+    cells.push(`<div class="${cls}" style="grid-row:${rr + 1};grid-column:${cc + 1}${ow ? `;border-color:${safeColor(colorOf(r, ow), '#3b82f6')}` : ''}">
+      <span class="mpnum">${i}</span>
+      <span class="mpname">${escapeHtml(cell.n)}</span>
+      ${cell.price ? `<span class="mpprice">$${cell.price}</span>` : ''}
+      ${ow ? `<span class="mpowner" style="color:${safeColor(colorOf(r, ow), '#3b82f6')}">${escapeHtml(nameOf(r, ow).slice(0, 3))}</span>` : ''}
+      <span class="mptok">${here.map(u => `<i style="background:${colorOf(r, u)}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</span>
+    </div>`);
+  }
+
+  const rows = names.map(u => {
+    const isOut = out.includes(u);
+    return `<div class="pitem" style="${u === cur ? 'border-color:var(--accent)' : ''}${isOut ? ';opacity:.45' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isOut ? ' · 破產' : ''}
+        <div class="hint" style="margin:2px 0 0;text-align:left">第 ${pos[u] || 0} 格 · 持有 ${Object.keys(owner).filter(k => owner[k] === u).length} 塊地</div></div>
+      <div class="pbadge" style="${(money[u] || 0) < 300 ? 'color:var(--red);border-color:var(--red)' : ''}">$${money[u] || 0}</div>
+    </div>`;
+  }).join('');
+
+  let action = '';
+  if (!amPlayer) action = `<div class="hint">觀戰中</div>`;
+  else if (out.includes(me.username)) action = `<div class="hint">你已破產出局，只能旁觀</div>`;
+  else if (pd && pd.uid === me.username) {
+    const cell = MP_BOARD[pd.tile];
+    action = `<div class="turnbar mine">要買下「${escapeHtml(cell.n)}」嗎？</div>
+      <div class="hint" style="margin-top:8px">地價 $${cell.price} · 別人踩到要付你 $${mpRent(cell.price)} · 你現在有 $${money[me.username] || 0}</div>
+      <button class="btn" data-act="mpBuy">買下（$${cell.price}）</button>
+      <button class="btn ghost" data-act="mpSkip">放棄</button>`;
+  } else if (pd) {
+    action = `<div class="turnbar">等 ${escapeHtml(nameOf(r, pd.uid))} 決定要不要買「${escapeHtml(MP_BOARD[pd.tile].n)}」…</div>`;
+  } else if (myTurn) {
+    action = `<div class="turnbar mine">輪到你擲骰</div>
+      <div class="side"><div class="dice">${dicePips(Number(st.dice) || 0)}</div></div>
+      <button class="btn" id="mpRoll">擲骰</button>`;
+  } else {
+    action = `<div class="turnbar">${escapeHtml(nameOf(r, cur))} 正在擲骰…</div>
+      <div class="side"><div class="dice">${dicePips(Number(st.dice) || 0)}</div></div>`;
+  }
+
+  const log = (st.log || []).slice(-8).reverse();
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="mpboard">${cells.join('')}
+       <div class="mpcenter">
+         <div class="mptitle">大富翁</div>
+         ${st.lastCard ? `<div class="hint" style="margin:4px 0">${escapeHtml(st.lastCard)}</div>` : ''}
+         ${action}
+       </div>
+     </div>
+     <div class="hint">起始資金 $${MP_MONEY0} · 經過起點收 $${MP_SALARY} · 租金約為地價 35% · 付不出錢即破產出局</div>
+     <div class="plist">${rows}</div>
+     ${log.length ? `<div class="hint" style="margin-top:10px">最近事件</div><div class="ucfeed" style="max-height:22vh">${log.map(x => `<div class="ucmsg"><div class="ucbody"><div class="uctext">${escapeHtml(x)}</div></div></div>`).join('')}</div>` : ''}
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+  const rb = appEl.querySelector('#mpRoll');
+  if (rb) rb.onclick = async () => { rb.disabled = true; await mpRoll(); };
+  const bb = appEl.querySelector('[data-act="mpBuy"]'); if (bb) bb.onclick = mpBuy;
+  const sb = appEl.querySelector('[data-act="mpSkip"]'); if (sb) sb.onclick = mpSkip;
 }
 
 /* ===== 啟動 ===== */
