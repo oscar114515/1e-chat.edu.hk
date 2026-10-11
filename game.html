@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>小遊戲 · 班級聊天室</title>
+<style>
+:root{
+  --bg:#0b0d14;--bg-card:#151926;--bg-input:#1c2130;--border:#262c3d;--border-strong:#333b52;
+  --text-main:#f2f4f9;--text-sub:#9aa2ba;--accent:#38bdf8;--accent2:#8b5cf6;--gold:#fbbf24;
+  --red:#ef4444;--green:#22c55e;--blue:#3b82f6;--yellow:#eab308;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--bg);color:var(--text-main);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.5;overscroll-behavior:none}
+#app{min-height:100%;display:flex;flex-direction:column}
+.hidden{display:none!important}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,13,20,.92);backdrop-filter:blur(12px);z-index:20}
+.topbar h1{font-size:17px;margin:0;font-weight:700;flex:1}
+.back-btn{background:var(--bg-card);border:1px solid var(--border-strong);color:var(--text-main);width:36px;height:36px;border-radius:11px;font-size:17px;cursor:pointer}
+.back-btn:active{transform:scale(.94)}
+.wrap{padding:16px;flex:1;overflow-y:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gcard{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;transition:transform .15s,border-color .15s;position:relative;overflow:hidden}
+.gcard:active{transform:scale(.97)}
+.gcard.on{border-color:var(--accent)}
+.gcard.off{opacity:.5}
+.gcard .gname{font-size:16px;font-weight:700;margin-bottom:4px}
+.gcard .gmeta{font-size:12px;color:var(--text-sub)}
+.gcard .gtag{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 7px;border-radius:7px;background:rgba(56,189,248,.18);color:var(--accent)}
+.gcard .gtag.soon{background:rgba(154,162,186,.15);color:var(--text-sub)}
+.gicon{width:40px;height:40px;border-radius:12px;margin-bottom:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#0b0d14}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;z-index:60}
+.sheet .inner{background:var(--bg-card);width:100%;border-radius:20px 20px 0 0;padding:18px;max-height:88vh;overflow-y:auto;animation:up .25s cubic-bezier(.4,0,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 6px;font-size:17px}
+.sheet .desc{font-size:13px;color:var(--text-sub);margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid var(--border)}
+.row .lbl{font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{background:var(--bg-input);border:1px solid var(--border-strong);color:var(--text-main);border-radius:10px;padding:7px 12px;font-size:14px;cursor:pointer;min-width:40px}
+.seg button.sel{background:var(--accent);border-color:var(--accent);color:#0b0d14;font-weight:700}
+.btn{display:block;width:100%;border:none;border-radius:13px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;background:var(--accent);color:#0b0d14}
+.btn.ghost{background:var(--bg-input);color:var(--text-main);border:1px solid var(--border-strong)}
+.btn.danger{background:var(--red);color:#fff}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.plist{display:flex;flex-direction:column;gap:9px;margin:10px 0}
+.pitem{display:flex;align-items:center;gap:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:13px;padding:10px 12px}
+.pav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden}
+.pav img{width:100%;height:100%;object-fit:cover}
+.pname{flex:1;font-size:14px}
+.pbadge{font-size:11px;color:var(--text-sub);border:1px solid var(--border-strong);border-radius:8px;padding:2px 7px}
+.countdown{text-align:center;font-size:44px;font-weight:800;color:var(--gold);margin:16px 0 4px;font-variant-numeric:tabular-nums}
+.hint{text-align:center;font-size:13px;color:var(--text-sub);margin-bottom:10px}
+.board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
+canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touch-action:manipulation}
+.side{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.turnbar{text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border)}
+.turnbar.mine{background:rgba(56,189,248,.14);border-color:var(--accent);color:var(--accent)}
+.dice{width:64px;height:64px;border-radius:14px;background:linear-gradient(145deg,#232838,#151926);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:11px;gap:3px;cursor:pointer}
+.dice:active{transform:scale(.94)}
+.dice.rolling{animation:shake .4s}
+@keyframes shake{0%,100%{transform:none}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+.pip{border-radius:50%;background:#3a4260}
+.pip.on{background:#fff}
+.cards{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;padding:8px 0}
+.uno{width:52px;height:78px;border-radius:9px;border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.uno.playable{outline:3px solid var(--gold);outline-offset:2px}
+.uno.r{background:#dc2626}.uno.g{background:#16a34a}.uno.b{background:#2563eb}.uno.y{background:#ca8a04}.uno.w{background:#1f2937}
+.uno.sm{width:34px;height:52px;font-size:14px;cursor:default}
+.deck-row{display:flex;gap:12px;align-items:center;justify-content:center}
+.notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,36,.96);border:1px solid var(--border-strong);border-radius:14px;padding:18px 24px;font-size:15px;z-index:99;text-align:center;max-width:80vw}
+.empty{text-align:center;color:var(--text-sub);padding:50px 20px;font-size:14px}
+.chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-strong);margin:2px}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:9px 13px;font-size:13px}
+.stat b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, get, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
+const app=initializeApp(firebaseConfig);const db=getDatabase(app);
+
+/* ===== 工具 ===== */
+const $=s=>document.querySelector(s);
+const appEl=$('#app');
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function escAttr(s){return escapeHtml(s);}
+function safeColor(v,fb){return /^#[0-9a-fA-F]{3,8}$/.test(v||'')?v:(/^[a-zA-Z]+$/.test(v||'')?v:fb);}
+function avatarHTML(m){const a=String(m&&m.avatar||'');if(/^data:image\//.test(a))return `<img src="${escAttr(a)}">`;const t=escapeHtml((m&&(m.displayName||m.username)||'?').slice(0,3));return t;}
+let noticeTimer=null;
+function showNotice(txt,ms=1800){let el=document.getElementById('noteBox');if(!el){el=document.createElement('div');el.id='noteBox';el.className='notice';document.body.appendChild(el);}el.textContent=txt;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.remove(),ms);}
+function fmtWin(w){return w||'？';}
+
+/* ===== 用戶 ===== */
+const params=new URLSearchParams(location.search);
+let me=null;               // {username,displayName,color,avatar,role,cls,seat}
+let myStats={};
+let roomsSub=null, roomSub=null;
+let curRoom=null, curRoomId=null;
+let view='lobby';
+
+/* ===== 遊戲定義 ===== */
+// min/max = 每款遊戲允許的人數範圍（房主在此範圍內設定）
+const GAMES=[
+ {k:'tictactoe',n:'井字棋',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△'},
+ {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○'},
+ {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'✈'},
+ {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U'},
+ {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:false,c:'#f59e0b',ab:'象'},
+ {k:'chess',n:'國際象棋',min:2,max:2,ok:false,c:'#94a3b8',ab:'♚'},
+ {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍'},
+ {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●'},
+ {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:false,c:'#a855f7',ab:'獸'},
+ {k:'konglok',n:'康樂棋',min:2,max:4,ok:false,c:'#14b8a6',ab:'康'},
+ {k:'monopoly',n:'大富翁',min:2,max:6,ok:false,c:'#10b981',ab:'$'},
+ {k:'sanguosha',n:'三國殺',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺'},
+ {k:'werewolf',n:'狼人殺',min:6,max:18,ok:false,c:'#6d28d9',ab:'狼'},
+ {k:'bomb',n:'傳炸彈',min:2,max:10,ok:false,c:'#f97316',ab:'炸'},
+ {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:false,c:'#0ea5e9',ab:'劇'},
+ {k:'pictionary',n:'猜猜畫畫',min:2,max:10,ok:false,c:'#eab308',ab:'畫'}
+];
+const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,min:2,max:2,ok:false,c:'#888',ab:'?'};
+
+/* ===== 載入用戶 ===== */
+async function loadUser(){
+  let uname=params.get('u')||localStorage.getItem('game_user')||'';
+  if(!uname){
+    // 由外層網頁注入
+    try{ uname=(window.parent&&window.parent.__gameUser)||''; }catch(e){}
+  }
+  if(!uname){ renderNoUser(); return; }
+  localStorage.setItem('game_user',uname);
+  try{
+    const s=await get(ref(db,'users/'+uname));
+    if(!s.exists()){ renderNoUser(); return; }
+    const u=s.val();
+    me={username:uname,displayName:u.displayName||uname,color:safeColor(u.color,'#3b82f6'),avatar:u.avatar||'',role:u.role||'student',cls:u.cls||'',seat:u.seat||''};
+  }catch(e){ renderNoUser(); return; }
+  await loadStats();
+  const rid=params.get('room');
+  if(rid){ joinRoom(rid); } else { view='lobby'; render(); }
+}
+function renderNoUser(){
+  appEl.innerHTML=`<div class="topbar"><h1>小遊戲</h1></div><div class="empty">請先登入班級聊天室，再從「＋」進入小遊戲</div>`;
+}
+async function loadStats(){
+  try{
+    const s=await get(ref(db,'users/'+me.username+'/gameStats'));
+    myStats=s.exists()?s.val():{};
+  }catch(e){ myStats={}; }
+}
+
+/* ===== 大廳 ===== */
+function render(){
+  if(view==='lobby') return renderLobby();
+  if(view==='room') return renderRoom();
+}
+function renderLobby(){
+  const cards=GAMES.map(g=>{
+    const st=myStats[g.k]||{};
+    const tag=g.ok?'<span class="gtag">可玩</span>':'<span class="gtag soon">即將推出</span>';
+    const rng=g.min===g.max?`${g.min} 人`:`${g.min}–${g.max} 人`;
+    const rec=st.play?`<div class="gmeta">戰績 ${st.win||0} 勝 ${st.lose||0} 負</div>`:'';
+    return `<div class="gcard ${g.ok?'on':'off'}" data-g="${g.k}">${tag}
+      <div class="gicon" style="background:${g.c}">${escapeHtml(g.ab)}</div>
+      <div class="gname">${escapeHtml(g.n)}</div>
+      <div class="gmeta">${rng}</div>${rec}</div>`;
+  }).join('');
+  appEl.innerHTML=`
+    <div class="topbar"><h1>小遊戲</h1><button class="back-btn" data-act="close">×</button></div>
+    <div class="wrap">
+      <div class="hint">選一款遊戲開房，邀請會自動發到聊天室；人數到齊自動開局</div>
+      <div class="grid">${cards}</div>
+    </div>`;
+  appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openCreate(el.dataset.g));
+  const cb=appEl.querySelector('[data-act="close"]'); if(cb) cb.onclick=closeSelf;
+}
+function closeSelf(){ try{ if(window.parent&&window.parent!==window){window.parent.postMessage({type:'closeGames'},'*');} else { history.back(); } }catch(e){ history.back(); } }
+
+/* ===== 建房 ===== */
+let pick={g:null,p:2,spec:true};
+function openCreate(gk){
+  const g=gameDef(gk);
+  if(!g.ok){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
+  pick={g:gk,p:g.min,spec:true};
+  const cnt=[];for(let i=g.min;i<=g.max;i++)cnt.push(i);
+  const inner=`<h3>開房：${escapeHtml(g.n)}</h3><div class="desc">設定人數與觀戰後，邀請會發到聊天室</div>
+    <div class="row"><div class="lbl">玩家人數</div><div class="seg" id="segP">${cnt.map(i=>`<button data-p="${i}" class="${i===pick.p?'sel':''}">${i}</button>`).join('')}</div></div>
+    <div class="row"><div class="lbl">允許觀戰</div><div class="seg" id="segS"><button data-s="1" class="sel">允許</button><button data-s="0">不允許</button></div></div>
+    <button class="btn" id="doCreate">發出邀請並開房</button>
+    <button class="btn ghost" id="cancelCreate">取消</button>`;
+  const sheet=document.createElement('div');sheet.className='sheet';sheet.innerHTML=`<div class="inner">${inner}</div>`;
+  document.body.appendChild(sheet);
+  sheet.onclick=e=>{if(e.target===sheet)sheet.remove();};
+  sheet.querySelector('#segP').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.p=+b.dataset.p;sheet.querySelectorAll('#segP button').forEach(x=>x.classList.toggle('sel',x===b));};
+  sheet.querySelector('#segS').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.spec=b.dataset.s==='1';sheet.querySelectorAll('#segS button').forEach(x=>x.classList.toggle('sel',x===b));};
+  sheet.querySelector('#doCreate').onclick=()=>{sheet.remove();doCreate();};
+  sheet.querySelector('#cancelCreate').onclick=()=>sheet.remove();
+}
+
+async function nextMsgId(){
+  const res=await runTransaction(ref(db,'meta/msgCounter'),c=>(Number(c)||0)+1);
+  const seq=res.snapshot.val();return 'msg_'+String(seq).padStart(4,'0');
+}
+async function doCreate(){
+  const g=gameDef(pick.g);
+  const rid=push(ref(db,'games')).key;
+  const now=Date.now();
+  const room={game:g.k,gameName:g.n,host:me.username,hostName:me.displayName,
+    minP:pick.p,maxP:g.max,setMax:pick.p,allowSpectate:pick.spec,status:'waiting',
+    createdAt:now,startAt:null,turn:null,winner:null,state:{},
+    players:{[me.username]:{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:0}},
+    spectators:{}};
+  await set(ref(db,'games/'+rid), room);
+  // 發邀請訊息（走既有訊息系統：msg_ 編號 + createdAt 排序）
+  let msgId='msg_'+now;
+  try{ msgId=await nextMsgId(); }catch(e){}
+  const invite={id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls,color:me.color,
+    avatar:me.avatar,role:me.role,type:'game_invite',text:`邀請你玩 ${g.n}`,
+    game:g.k,gameName:g.n,roomId:rid,minP:pick.p,maxP:g.max,createdAt:now,deleted:false};
+  await set(ref(db,'messages/'+msgId),invite);
+  joinRoom(rid);
+}
+
+/* ===== 房間 ===== */
+function joinRoom(rid){
+  curRoomId=rid; view='room'; try{window.__roomId=rid;}catch(e){}
+  if(roomSub)roomSub();
+  roomSub=onValue(ref(db,'games/'+rid),async snap=>{
+    if(!snap.exists()){ curRoom=null; showNotice('房間已不存在'); view='lobby'; render(); return; }
+    curRoom=snap.val();
+    await ensureMembership();
+    render();
+  });
+}
+async function ensureMembership(){
+  const r=curRoom; if(!r||!me) return;
+  const isPlayer=r.players&&r.players[me.username];
+  const isSpec=r.spectators&&r.spectators[me.username];
+  if(isPlayer||isSpec) return;
+  const pcount=r.players?Object.keys(r.players).length:0;
+  if(r.status==='waiting'||r.status==='countdown'){
+    if(pcount<(r.setMax||r.maxP)){
+      await set(ref(db,'games/'+curRoomId+'/players/'+me.username),{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:pcount});
+      if(pcount+1>=(r.minP||2)) maybeStartCountdown();
+    } else if(r.allowSpectate){
+      await set(ref(db,'games/'+curRoomId+'/spectators/'+me.username),{name:me.displayName});
+      showNotice('對局已滿，已進入觀戰');
+    } else { showNotice('對局已滿'); }
+  } else if(r.allowSpectate){
+    await set(ref(db,'games/'+curRoomId+'/spectators/'+me.username),{name:me.displayName});
+    showNotice('對局進行中，已進入觀戰');
+  } else { showNotice('對局已滿'); }
+}
+async function maybeStartCountdown(){
+  const r=curRoom; if(!r) return;
+  const pc=r.players?Object.keys(r.players).length:0;
+  if(r.status==='waiting'&&pc>=(r.minP||2)){
+    await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
+  }
+}
+function renderRoom(){
+  const r=curRoom; if(!r){ appEl.innerHTML='<div class="empty">載入中...</div>'; return; }
+  const g=gameDef(r.game);
+  if(r.status==='playing'||r.status==='ended'){ return renderGame(r,g); }
+  // 等待 / 倒计时
+  const players=Object.entries(r.players||{}).sort((a,b)=>(a[1].seat||0)-(b[1].seat||0));
+  const specs=Object.entries(r.spectators||{});
+  const pc=players.length;
+  const isHost=r.host===me.username;
+  let cdHtml='';
+  if(r.status==='countdown'&&r.startAt){
+    const left=Math.max(0,Math.ceil((r.startAt-Date.now())/1000));
+    cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint">人數已到齊，倒數後自動開局</div>`;
+  } else {
+    cdHtml=`<div class="hint">還需要 ${Math.max(0,(r.minP||2)-pc)} 人才能開局</div>`;
+  }
+  const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="background:${safeColor(p.color,'#3b82f6')}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
+  const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="background:#475569">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
+  appEl.innerHTML=`
+    <div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)} · 房間</h1></div>
+    <div class="wrap">
+      <div class="hint">房主：${escapeHtml(r.hostName||r.host)} · 人數 ${pc}/${r.setMax||r.maxP}${r.allowSpectate?' · 可觀戰':' · 不可觀戰'}</div>
+      ${cdHtml}
+      <div class="plist">${plist}</div>${slist}
+      ${isHost?`<button class="btn ghost" data-act="cancelRoom">關閉房間</button>`:''}
+      <button class="btn danger" data-act="leave">離開房間</button>
+    </div>`;
+  appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
+  const cr=appEl.querySelector('[data-act="cancelRoom"]'); if(cr) cr.onclick=closeRoom;
+  startCountdownTicker();
+}
+let cdTimer=null;
+function startCountdownTicker(){
+  if(cdTimer)clearInterval(cdTimer);
+  cdTimer=setInterval(async()=>{
+    const el=document.getElementById('cdNum');
+    if(!curRoom||curRoom.status!=='countdown'){ clearInterval(cdTimer);cdTimer=null;return; }
+    const left=Math.max(0,Math.ceil((curRoom.startAt-Date.now())/1000));
+    if(el)el.textContent=left;
+    if(left<=0){ clearInterval(cdTimer);cdTimer=null; tryStartGame(); }
+  },250);
+}
+async function tryStartGame(){
+  const r=curRoom; if(!r||r.status==='playing')return;
+  const pc=r.players?Object.keys(r.players).length:0;
+  if(pc<(r.minP||2)){ await update(ref(db,'games/'+curRoomId),{status:'waiting',startAt:null}); return; }
+  // 只有房主初始化棋盤，避免多人同時寫
+  if(r.host!==me.username) return;
+  const st=initGameState(r);
+  await update(ref(db,'games/'+curRoomId),{status:'playing',startAt:null,startedAt:Date.now(),turn:st.turn||null,winner:null,state:st.state,players:st.players});
+}
+async function leaveRoom(){
+  if(curRoomId&&me){ try{ await remove(ref(db,'games/'+curRoomId+'/players/'+me.username)); await remove(ref(db,'games/'+curRoomId+'/spectators/'+me.username)); }catch(e){} }
+  if(roomSub)roomSub(); roomSub=null; curRoom=null;view='lobby';render();
+}
+async function closeRoom(){
+  if(!curRoomId)return;
+  await update(ref(db,'games/'+curRoomId),{status:'ended',winner:'closed'});
+  showNotice('房間已關閉');
+}
+
+/* ===== 遊戲邏輯入口 ===== */
+function seatOf(r,u){const p=r.players&&r.players[u];return p?(p.seat||0):-1;}
+function playerNames(r){const e=Object.entries(r.players||{});e.sort((a,b)=>(a[1].seat||0)-(b[1].seat||0));return e.map(x=>x[0]);}
+function colorOf(r,u){const p=r.players&&r.players[u];return safeColor(p&&p.color,'#3b82f6');}
+function nameOf(r,u){const p=r.players&&r.players[u];return (p&&p.name)||u;}
+
+function initGameState(r){
+  const names=playerNames(r);
+  const players={};names.forEach((u,i)=>players[u]=Object.assign({},r.players[u],{seat:i}));
+  let state={},turn=null;
+  if(r.game==='tictactoe'){ state={board:Array(9).fill('')}; turn=names[0]; }
+  else if(r.game==='gomoku'){ state={board:Array(225).fill(''),last:null}; turn=names[0]; }
+  else if(r.game==='ludo'){ state={planes:{},colors:{},dice:0,rolled:false}; 
+    names.forEach((u,i)=>{state.planes[u]=[-1,-1,-1,-1];state.colors[u]=i;}); turn=names[0]; }
+  else if(r.game==='uno'){ 
+    const deck=makeUnoDeck();const hands={};names.forEach(u=>{hands[u]=deck.splice(0,7);});
+    let top=deck.shift();while(top.c==='w'){deck.push(top);top=deck.shift();}
+    state={deck:deck,hands:hands,top:top,color:top.c,dir:1,uno:{} };turn=names[0]; }
+  return {players:players,turn:turn,state:state};
+}
+
+function renderGame(r,g){
+  if(r.status==='ended') return renderEnded(r,g);
+  const spec=!!(r.spectators&&r.spectators[me.username]);
+  const turnName=r.turn;
+  const myTurn=(turnName===me.username)&&!spec;
+  const bar=`<div class="turnbar ${myTurn?'mine':''}">${spec?'觀戰中':(myTurn?'輪到你了':escapeHtml(nameOf(r,turnName))+' 的回合')}</div>`;
+  if(r.game==='tictactoe') drawTTT(r,g,bar,spec);
+  else if(r.game==='gomoku') drawGomoku(r,g,bar,spec);
+  else if(r.game==='ludo') drawLudo(r,g,bar,spec);
+  else if(r.game==='uno') drawUno(r,g,bar,spec);
+  else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
+  const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
+}
+function renderEnded(r,g){
+  const w=r.winner;
+  const txt=w==='draw'?'平手':(w==='closed'?'房間已關閉':escapeHtml(nameOf(r,w))+' 獲勝');
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+    <div class="wrap"><div class="countdown" style="font-size:30px">${txt}</div>
+    <button class="btn" data-act="home">回到大廳</button></div>`;
+  appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
+}
+function backHome(){ if(roomSub)roomSub();roomSub=null;curRoom=null;view='lobby';render(); }
+
+/* ===== 勝負與戰績 ===== */
+async function finishGame(winner){
+  const r=curRoom; if(!r||r.status==='ended')return;
+  await update(ref(db,'games/'+curRoomId),{status:'ended',winner:winner});
+  const names=playerNames(r);
+  for(const u of names){
+    try{
+      const res=await runTransaction(ref(db,'users/'+u+'/gameStats/'+r.game),c=>{
+        c=c||{};const w=Number(c.win)||0,l=Number(c.lose)||0,p=Number(c.play)||0;
+        return {win:w+(winner===u?1:0),lose:l+(winner==='draw'?0:(winner===u?0:1)),play:p+1};
+      });
+    }catch(e){}
+  }
+}
+async function tryWinCheck(){
+  const r=curRoom; if(!r||r.status!=='playing')return;
+  if(r.game==='tictactoe'){
+    const b=r.state.board;const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for(const [x,y,z] of L){ if(b[x]&&b[x]===b[y]&&b[y]===b[z]){ await finishGame(b[x]);return; } }
+    if(b.every(c=>c)){ await finishGame('draw'); }
+  } else if(r.game==='gomoku'){
+    const b=r.state.board,N=15;const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+    for(let i=0;i<N;i++)for(let j=0;j<N;j++){const v=b[i*N+j];if(!v)continue;
+      for(const [dx,dy] of dirs){let c=1;for(let k=1;k<5;k++){const ni=i+dx*k,nj=j+dy*k;if(ni<0||nj<0||ni>=N||nj>=N)break;if(b[ni*N+nj]!==v)break;c++;}
+        if(c>=5){ await finishGame(v);return; } } }
+  } else if(r.game==='ludo'){
+    for(const [u,pl] of Object.entries(r.state.planes)){ if(pl.every(p=>p>=57)){ await finishGame(u);return; } }
+  } else if(r.game==='uno'){
+    for(const [u,h] of Object.entries(r.state.hands)){ if(h.length===0){ await finishGame(u);return; } }
+  }
+}
+
+/* ===== 井字棋 ===== */
+let tttCanvas=null;
+function drawTTT(r,g,bar,spec){
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="330" height="330"></canvas>
+   <div class="hint" id="tttHint">你執 ○</div></div></div>`;
+  const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
+  const names=playerNames(r);
+  const myMark=names.indexOf(me.username)===0?'X':'O';
+  ctx.clearRect(0,0,330,330);ctx.strokeStyle='#333b52';ctx.lineWidth=3;
+  for(let i=1;i<3;i++){ctx.beginPath();ctx.moveTo(i*110,12);ctx.lineTo(i*110,318);ctx.stroke();ctx.beginPath();ctx.moveTo(12,i*110);ctx.lineTo(318,i*110);ctx.stroke();}
+  ctx.lineWidth=7;ctx.lineCap='round';
+  r.state.board.forEach((v,i)=>{ if(!v)return;const c=i%3,rw=Math.floor(i/3);const cx=c*110+55,cy=rw*110+55;
+    ctx.strokeStyle=colorOf(r,names[v==='X'?'0':'1']||names[0]);
+    if(v==='X'){ctx.beginPath();ctx.moveTo(cx-28,cy-28);ctx.lineTo(cx+28,cy+28);ctx.moveTo(cx+28,cy-28);ctx.lineTo(cx-28,cy+28);ctx.stroke();}
+    else{ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);ctx.stroke();}
+  });
+  const hintEl=appEl.querySelector('#tttHint'); if(hintEl)hintEl.textContent='你執 '+(myMark==='X'?'○（先手）':'△（後手）');
+  cv.onclick=e=>{ if(spec)return;const rect=cv.getBoundingClientRect();
+    const x=(e.clientX-rect.left)*(330/rect.width),y=(e.clientY-rect.top)*(330/rect.height);
+    const c=Math.floor(x/110),rw=Math.floor(y/110);if(c<0||c>2||rw<0||rw>2)return;
+    tttMove(rw*3+c);
+  };
+}
+async function tttMove(i){
+  const r=curRoom; if(r.status!=='playing'||r.turn!==me.username||r.game!=='tictactoe')return;
+  const names=playerNames(r);const board=r.state.board.slice();
+  if(board[i])return;
+  board[i]=r.turn===names[0]?'X':'O';
+  const next=names[(names.indexOf(r.turn)+1)%names.length];
+  await update(ref(db,'games/'+curRoomId),{'state/board':board,turn:next});
+  setTimeout(tryWinCheck,120);
+}
+
+/* ===== 五子棋 ===== */
+function drawGomoku(r,g,bar,spec){
+  const S=15,C=23,PAD=18,W=C*(S-1)+PAD*2; // 345
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="${W}" height="${W}"></canvas>
+   <div class="hint">五子連線者勝</div></div></div>`;
+  const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
+  ctx.fillStyle='#d9b382';ctx.fillRect(0,0,W,W);
+  ctx.strokeStyle='#6b4f2a';ctx.lineWidth=1;
+  for(let i=0;i<S;i++){ctx.beginPath();ctx.moveTo(PAD,PAD+i*C);ctx.lineTo(PAD+(S-1)*C,PAD+i*C);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PAD+i*C,PAD);ctx.lineTo(PAD+i*C,PAD+(S-1)*C);ctx.stroke();}
+  const names=playerNames(r);
+  for(let i=0;i<S;i++)for(let j=0;j<S;j++){const v=r.state.board[i*S+j];if(!v)continue;
+    const x=PAD+j*C,y=PAD+i*C;ctx.beginPath();ctx.arc(x,y,C*0.42,0,Math.PI*2);
+    ctx.fillStyle=colorOf(r,names[v==='1'?'0':'1']||names[0]);ctx.fill();
+  }
+  if(r.state.last){const i=r.state.last.i,j=r.state.last.j;ctx.beginPath();ctx.arc(PAD+j*C,PAD+i*C,C*0.12,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();}
+  cv.onclick=e=>{if(spec)return;const rect=cv.getBoundingClientRect();
+    const j=Math.round(((e.clientX-rect.left)*(W/rect.width)-PAD)/C);
+    const i=Math.round(((e.clientY-rect.top)*(W/rect.height)-PAD)/C);
+    if(i<0||j<0||i>=S||j>=S)return; gomokuMove(i,j);
+  };
+}
+async function gomokuMove(i,j){
+  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username||r.game!=='gomoku')return;
+  const names=playerNames(r);const S=15;const board=r.state.board.slice();
+  if(board[i*S+j])return;
+  board[i*S+j]=r.turn===names[0]?'1':'2';
+  const next=names[(names.indexOf(r.turn)+1)%names.length];
+  await update(ref(db,'games/'+curRoomId),{'state/board':board,'state/last':{i,j},turn:next});
+  setTimeout(tryWinCheck,120);
+}
+
+/* ===== 飛行棋 ===== */
+// 52 格環形（14×14 周長）+ 每色 6 格歸航道，起點在四角
+function ringCells(){const N=14,out=[];for(let j=0;j<N;j++)out.push([0,j]);for(let i=1;i<N;i++)out.push([i,N-1]);for(let j=N-2;j>=0;j--)out.push([N-1,j]);for(let i=N-2;i>=1;i--)out.push([i,0]);return out;} // 4N-4=52
+const RING=ringCells();
+const STCOLORS=['#ef4444','#22c55e','#eab308','#3b82f6'];
+const STNAMES=['紅','綠','黃','藍'];
+const START=[0,13,26,39];
+function planePos(pi,color,steps){ // steps: 0..57 (>51 進航道)
+  if(steps<0)return null;
+  if(steps<52){const idx=(START[color]+steps)%52;return RING[idx];}
+  const hm=steps-52; // 0..5 歸航道：由該角往中心
+  const corner=[ [0,0],[0,13],[13,13],[13,0] ][color];
+  const center=6.5;
+  const t=(hm+1)/7;
+  return [corner[0]+(center-corner[0])*t, corner[1]+(center-corner[1])*t];
+}
+let ludoSel=-1;
+function drawLudo(r,g,bar,spec){
+  const N=14,CELL=24,PAD=6,W=N*CELL+PAD*2;
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="${W}" height="${W}"></canvas>
+   <div class="side" id="diceRow"></div>
+   <div class="hint">擲到 6 才能起飛；踩到對手送回基地；4 架全到終點獲勝</div></div></div>`;
+  const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
+  ctx.fillStyle='#0f1320';ctx.fillRect(0,0,W,W);
+  // 底色格
+  ctx.fillStyle='#1c2130';ctx.fillRect(PAD,PAD,N*CELL,N*CELL);
+  // 環格
+  RING.forEach(([i,j])=>{ctx.fillStyle='#2a3145';ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);});
+  // 各色起點標色
+  Object.entries(r.state.colors||{}).forEach(([u,ci])=>{const [i,j]=RING[START[ci]];ctx.fillStyle=STCOLORS[ci];ctx.globalAlpha=.45;ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);ctx.globalAlpha=1;});
+  // 基地
+  const bases=[[0,0],[0,13],[13,13],[13,0]];
+  Object.entries(r.state.colors||{}).forEach(([u,ci])=>{
+    const [bi,bj]=bases[ci];
+    ctx.strokeStyle=STCOLORS[ci];ctx.lineWidth=3;
+    ctx.strokeRect(PAD+bj*CELL-CELL*0.6,PAD+bi*CELL-CELL*0.6,CELL*2.2,CELL*2.2);
+    (r.state.planes[u]||[]).forEach((p,pi)=>{
+      if(p>=0)return;
+      const ox=PAD+bj*CELL+ (pi%2)*CELL*0.9, oy=PAD+bi*CELL+Math.floor(pi/2)*CELL*0.9;
+      ctx.beginPath();ctx.arc(ox,oy,CELL*0.28,0,Math.PI*2);ctx.fillStyle=STCOLORS[ci];ctx.fill();
+    });
+  });
+  // 飛機
+  const names=playerNames(r);
+  Object.entries(r.state.planes||{}).forEach(([u,pl])=>{
+    pl.forEach((steps,pi)=>{ if(steps<0)return;
+      const pos=planePos(pi,r.state.colors[u],steps);if(!pos)return;
+      const [i,j]=pos;const x=PAD+j*CELL+CELL/2,y=PAD+i*CELL+CELL/2;
+      ctx.beginPath();ctx.arc(x,y,CELL*0.36,0,Math.PI*2);ctx.fillStyle=STCOLORS[r.state.colors[u]];ctx.fill();
+      ctx.strokeStyle='#0b0d14';ctx.lineWidth=1.5;ctx.stroke();
+    });
+  });
+  // 骰子
+  const myTurn=r.turn===me.username&&!spec;
+  const d=r.state.dice||0;
+  const dr=appEl.querySelector('#diceRow');
+  dr.innerHTML=`<div class="dice" id="dice">${dicePips(d)}</div>`;
+  const diceEl=dr.querySelector('#dice');
+  diceEl.onclick=async()=>{ if(!myTurn)return; if(r.state.rolled){await ludoPass();return;} ludoRoll(); };
+  if(myTurn&&r.state.rolled){
+    const my=r.state.planes[me.username]||[];
+    const btns=my.map((p,i)=>{
+      const can=canMove(r,i);return `<button class="chip" data-pi="${i}" style="${can?'border-color:#fbbf24;color:#fbbf24':''}">${STNAMES[r.state.colors[me.username]]}${i+1}：${p<0?'基地':(p>=57?'完成':p+'步')}</button>`;
+    }).join('');
+    const bar2=document.createElement('div');bar2.className='side';bar2.innerHTML=btns;dr.appendChild(bar2);
+    bar2.querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>ludoMove(+b.dataset.pi));
+  }
+}
+function dicePips(d){let h='';for(let i=0;i<9;i++)h+=`<div class="pip"></div>`;const map={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};const on=map[d]||[];h='';for(let i=0;i<9;i++)h+=`<div class="pip ${on.includes(i)?'on':''}"></div>`;return h;}
+function canMove(r,pi){
+  const p=r.state.planes[me.username][pi];const d=r.state.dice;
+  if(p>=57)return false;
+  if(p<0)return d===6;
+  return p+d<=57;
+}
+async function ludoRoll(){
+  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username)return;
+  const d=1+Math.floor(Math.random()*6);
+  await update(ref(db,'games/'+curRoomId),{'state/dice':d,'state/rolled':true});
+}
+async function ludoPass(){
+  const r=curRoom;const names=playerNames(r);
+  const next=names[(names.indexOf(r.turn)+1)%names.length];
+  await update(ref(db,'games/'+curRoomId),{turn:next,'state/dice':0,'state/rolled':false});
+}
+async function ludoMove(pi){
+  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username||!r.state.rolled)return;
+  const pl=(r.state.planes[me.username]||[]).slice();const d=r.state.dice;
+  if(!canMove(r,pi))return;
+  let np=pl[pi]<0?0:pl[pi]+d;
+  if(np>57)return;
+  pl[pi]=np;
+  // 更新棋盤
+  const planes={};Object.entries(r.state.planes).forEach(([u,v])=>planes[u]=v.slice());
+  planes[me.username]=pl;
+  // 撞子：同一環格上的對手送回基地
+  if(np<52){
+    const myIdx=(START[r.state.colors[me.username]]+np)%52;
+    Object.entries(planes).forEach(([u,v])=>{ if(u===me.username)return;
+      v.forEach((p2,i2)=>{ if(p2<0||p2>=52)return;
+        if((START[r.state.colors[u]]+p2)%52===myIdx){ planes[u][i2]=-1; } });
+    });
+  }
+  const names=playerNames(r);
+  const next=names[(names.indexOf(r.turn)+1)%names.length];
+  await update(ref(db,'games/'+curRoomId),{'state/planes':planes,turn:next,'state/dice':0,'state/rolled':false});
+  setTimeout(tryWinCheck,120);
+}
+
+/* ===== UNO ===== */
+function makeUnoDeck(){
+  const cols=['r','g','b','y'];const deck=[];
+  cols.forEach(c=>{deck.push({c,v:'0'});for(let n=1;n<=9;n++){deck.push({c,v:String(n)});deck.push({c,v:String(n)});}
+    ['skip','rev','+2'].forEach(v=>{deck.push({c,v});deck.push({c,v});});});
+  for(let i=0;i<4;i++){deck.push({c:'w',v:'wild'});deck.push({c:'w',v:'+4'});}
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  return deck;
+}
+function unoLabel(c){const m={'+2':'+2','+4':'+4','skip':'⊘','rev':'⇄','wild':'彩'};return m[c.v]||c.v;}
+function unoCanPlay(card,top,color){ if(card.c==='w')return true; return card.c===color||card.v===top.v; }
+let unoSel=null;
+function drawUno(r,g,bar,spec){
+  const names=playerNames(r);
+  const hands=r.state.hands||{};
+  const mine=hands[me.username]||[];
+  const oppo=names.filter(u=>u!==me.username).map(u=>{
+    const n=(hands[u]||[]).length;
+    return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}</div><div class="pbadge">${n} 張</div></div>`;
+  }).join('');
+  const top=r.state.top;
+  const color=r.state.color;
+  const myTurn=r.turn===me.username&&!spec;
+  const handHtml=spec?'':mine.map((c,i)=>{
+    const can=myTurn&&unoCanPlay(c,top,color);
+    const sel=unoSel===i?'style="transform:translateY(-8px)"':'';
+    return `<div class="uno ${c.c} ${can?'playable':''}" data-i="${i}" ${sel}>${escapeHtml(unoLabel(c))}</div>`;
+  }).join('');
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="plist">${oppo}</div>
+     <div class="deck-row">
+       <div style="text-align:center"><div class="uno ${top.c}" style="margin:0 auto">${escapeHtml(unoLabel(top))}</div><div class="hint" style="margin-top:6px">桌面（顏色：${{r:'紅',g:'綠',b:'藍',y:'黃',w:'變'}[color]||'?'}）</div></div>
+       <div style="text-align:center"><div class="uno w" id="drawBtn" style="margin:0 auto;background:#111827">抽</div><div class="hint" style="margin-top:6px">剩 ${(r.state.deck||[]).length} 張</div></div>
+     </div>
+     <div class="hint" style="margin-top:10px">你的手牌（${mine.length} 張）</div>
+     <div class="cards">${handHtml||'<div class="empty">觀戰中</div>'}</div>
+   </div>`;
+  if(!spec){
+    appEl.querySelectorAll('.uno[data-i]').forEach(el=>el.onclick=()=>{ unoSel=+el.dataset.i; drawUno(r,g,bar,spec); });
+    const db2=appEl.querySelector('#drawBtn'); if(db2)db2.onclick=unoDraw;
+    if(unoSel!=null&&myTurn){
+      const c=mine[unoSel];
+      if(c&&unoCanPlay(c,top,color)){
+        if(c.c==='w'){
+          const pick=document.createElement('div');pick.className='sheet';
+          pick.innerHTML=`<div class="inner"><h3>選擇顏色</h3><div class="seg" id="segC">${['r','g','b','y'].map(x=>`<button data-c="${x}">${{r:'紅',g:'綠',b:'藍',y:'黃'}[x]}</button>`).join('')}</div><button class="btn ghost" id="cancelP">取消</button></div>`;
+          document.body.appendChild(pick);
+          pick.querySelector('#segC').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.remove();unoPlay(unoSel,b.dataset.c);};
+          pick.querySelector('#cancelP').onclick=()=>pick.remove();
+        } else {
+          unoPlay(unoSel,color);
+        }
+      }
+    }
+  }
+  const lb=appEl.querySelector('[data-act="leave"]');if(lb)lb.onclick=leaveRoom;
+}
+async function unoPlay(i,chooseColor){
+  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username)return;
+  const hands=r.state.hands;const mine=hands[me.username].slice();
+  const card=mine[i];if(!card)return;
+  if(!unoCanPlay(card,r.state.top,r.state.color))return;
+  mine.splice(i,1);
+  let deck=(r.state.deck||[]).slice();
+  let color=card.c==='w'?chooseColor:card.c;
+  const names=playerNames(r);const dir=r.state.dir||1;
+  let idx=names.indexOf(me.username);
+  const step=card.v==='rev'?-dir:dir;
+  let ni=(idx+step+names.length)%names.length;
+  let ndir=card.v==='rev'?-dir:dir;
+  let extraDraw=0;
+  if(card.v==='skip') ni=((ni+step)+names.length)%names.length;
+  if(card.v==='+2') extraDraw=2;
+  if(card.v==='+4') extraDraw=4;
+  unoSel=null;
+  const allHands={};Object.entries(hands).forEach(([u,h])=>allHands[u]=h.slice());
+  allHands[me.username]=mine;
+  if(extraDraw>0){ const target=names[ni]; allHands[target]=allHands[target].concat(deck.splice(0,extraDraw)); ni=((ni+step)+names.length)%names.length; }
+  await update(ref(db,'games/'+curRoomId),{'state/hands':allHands,'state/deck':deck,'state/top':card,'state/color':color,turn:names[ni],'state/dir':ndir});
+  setTimeout(tryWinCheck,120);
+}
+async function unoDraw(){
+  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username)return;
+  const hands=r.state.hands;let deck=(r.state.deck||[]).slice();
+  if(!deck.length)return;
+  const card=deck.shift();
+  const mine=(hands[me.username]||[]).slice();mine.push(card);
+  const allHands={};Object.entries(hands).forEach(([u,h])=>allHands[u]=h.slice());allHands[me.username]=mine;
+  const names=playerNames(r);const next=names[(names.indexOf(r.turn)+1)%names.length];
+  await update(ref(db,'games/'+curRoomId),{'state/hands':allHands,'state/deck':deck,turn:next});
+}
+
+/* ===== 啟動 ===== */
+window.addEventListener('message',e=>{ if(e.data&&e.data.type==='setUser'){ localStorage.setItem('game_user',e.data.username||''); if(e.data.username)location.reload(); } });
+loadUser();
+window.addEventListener('beforeunload',()=>{ if(curRoomId&&me){ try{ remove(ref(db,'games/'+curRoomId+'/players/'+me.username)); remove(ref(db,'games/'+curRoomId+'/spectators/'+me.username)); }catch(e){} } });
+</script>
+</body>
+</html>
