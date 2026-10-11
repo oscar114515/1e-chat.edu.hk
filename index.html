@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-eb/xYhbFH84XWhAy8CcsKGUktEjTiOPtNYFTK2qA/xo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-gNm9IJRAByF1Yo5FXWJZu4liNKUAJk1vsRvGyIPNrhk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.20</title>
+<title>班級聊天室 v1.21</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -118,6 +118,13 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
 #plusPanel .pi .pic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:#38bdf8}
 #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
+/* ===== 小遊戲 ===== */
+#gamesOverlay{position:fixed;inset:0;background:#0b0d14;z-index:200;animation:panelIn .22s cubic-bezier(.4,0,.2,1)}
+#gamesOverlay iframe{width:100%;height:100%;border:0;display:block}
+.game-invite{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.28);border-radius:12px;padding:10px 12px;cursor:pointer}
+.game-invite .gi-title{font-size:14.5px;font-weight:700;margin-bottom:3px}
+.game-invite .gi-sub{font-size:12px;opacity:.85;margin-bottom:9px}
+.game-invite .gi-btn{display:inline-block;background:rgba(255,255,255,.9);color:#0b0d14;font-size:12.5px;font-weight:700;border-radius:9px;padding:5px 12px}
 #mentionPopup{position:absolute;bottom:100%;left:12px;right:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);margin-bottom:6px}
 #mentionPopup .mention-item{padding:10px 14px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px}
 #mentionPopup .mention-item:hover{background:rgba(56,189,248,.15)}
@@ -528,7 +535,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.20 正式版</div>
+    <div id="loginVersion">v1.21 正式版</div>
   </div>
 </div>
 
@@ -536,7 +543,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.20</span>
+      <span class="ver">v1.21</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -589,6 +596,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
     <div class="pi" data-action="pickLocation"><div class="pic">位置</div><div class="pit">位置</div></div>
     <div class="pi" data-action="openPollCreate"><div class="pic">投票</div><div class="pit">投票</div></div>
     <div class="pi" data-action="openNoticeCreate"><div class="pic">公告</div><div class="pit">公告</div></div>
+    <div class="pi" data-action="openGames"><div class="pic">遊戲</div><div class="pit">小遊戲</div></div>
     </div>
   </div>
 
@@ -610,7 +618,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.20';
+const CURRENT_VERSION='v1.21';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -1002,6 +1010,8 @@ document.addEventListener('click',async(e)=>{
     if(action==='openLocation')return openLocationFullscreen(arg);
     if(action==='closeLocationFull')return closeLocationFull();
     if(action==='openPollCreate')return openPollCreate();
+    if(action==='openGames')return openGames(arg||'');
+    if(action==='openGameInvite')return openGames(arg||'');
     if(action==='submitPoll')return await submitPoll();
     if(action==='pollConfirmVote')return await submitPollVote(arg);
     if(action==='encPrev')return encPrev(arg);
@@ -1506,6 +1516,10 @@ function render(){
     else if(m.type==='voice'){const played=allNoticeReads&&allNoticeReads['voice_'+m.id]?' played':'';body=`<div class="voice-msg${played}" data-action="playVoice" data-arg="${escAttr(m.id)}"><span class="vi">[V]</span><span class="vt">0:${String(Math.round(m.duration||0)).padStart(2,'0')}</span><div class="vp"><div></div></div><span class="vd"></span></div>`;}
     else if(m.type==='location'){const la=Number(m.lat)||0,ln=Number(m.lng)||0;body=`<div class="loc-msg" data-action="openLocation" data-arg="${la},${ln}"><div class="lm-map"><img src="https://staticmap.openstreetmap.de/staticmap.php?center=${la},${ln}&zoom=15&size=220x150&maptype=mapnik&markers=${la},${ln},red-pushpin" loading="lazy"></div><div class="lm-label">[L] ${escapeHtml(m.placeName||'')}</div></div>`;}
     else if(m.type==='poll')body=renderPollBody(m);
+    else if(m.type==='game_invite'){
+      const gname=escapeHtml(m.gameName||'小遊戲');
+      body=`<div class="game-invite" data-action="openGameInvite" data-arg="${escAttr(m.roomId||'')}"><div class="gi-title">對局邀請 · ${gname}</div><div class="gi-sub">點擊進入房間（${Number(m.minP)||2}–${Number(m.maxP)||2} 人）</div><div class="gi-btn">加入對局</div></div>`;
+    }
     else if(m.encrypted&&!isAI)body=renderEncryptedBody(m);
     else{
       body=escapeHtml(m.text||'').replace(/@([a-zA-Z0-9_]+)/g,'<span class="mention">@$1</span>').replace(/(https?:\/\/[^\s<>"']+)/g,'<a href="#" data-action="linkCheck" data-arg="$1" style="color:inherit;text-decoration:underline">$1</a>').replace(/\n/g,'<br>');
@@ -1738,6 +1752,21 @@ function closeLocationFull(){ const el=document.getElementById('locationFull');i
 /* ===== v1.10 投票系統 ===== */
 window._pollDraft=null;
 window._pollSel={};
+/* ===== 小遊戲：同源 iframe 覆蓋層（網頁與安卓共用同一份 game.html）===== */
+function openGames(roomId){
+  if(!me){showNotif('請先登入');return;}
+  let ov=document.getElementById('gamesOverlay');
+  if(ov)ov.remove();
+  ov=document.createElement('div');
+  ov.id='gamesOverlay';
+  const url='game.html?u='+encodeURIComponent(me.username)+(roomId?('&room='+encodeURIComponent(roomId)):'');
+  ov.innerHTML=`<iframe id="gamesFrame" src="${escAttr(url)}" allow="clipboard-write"></iframe>`;
+  document.body.appendChild(ov);
+  window._gamesFrame=ov.querySelector('#gamesFrame');
+}
+window.addEventListener('message',(e)=>{
+  if(e.data&&e.data.type==='closeGames'){const ov=document.getElementById('gamesOverlay');if(ov)ov.remove();}
+});
 function openPollCreate(){
   if(!me)return;
   if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
@@ -3140,6 +3169,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.21',date:'2026-10-11',changes:['新增「小遊戲」：從輸入框的「+」進去，有 16 款經典桌遊（井字棋、五子棋、飛行棋、UNO 已經可以玩，其餘陸續開放）','開房後會自動在聊天室發一條帶編號的邀請訊息（走原本的訊息系統），別人點一下就能進房間','人齊自動倒數開局（到最少人數就倒數 15 秒），名額滿了再進去會提示「對局已滿」；房主可以決定這局是否允許觀戰','每局勝負會記進個人戰績，在大廳的遊戲卡片上可以看到自己的勝負場數','網頁版和安卓版共用同一套遊戲介面，之後新增遊戲兩端同時生效']},
 {ver:'v1.20',date:'2026-10-11',changes:['AI 私人聊天現在有長期記憶：之前的對話即使清掉瀏覽器資料也還在，AI 也記得住更久以前講過的話','AI 私人聊天支援管理員操作：管理員在私人聊天裡叫 AI 改主題、改語言、發系統通知等，跟公開頻道一樣會先跳出確認','系統通知的「確定」按鈕現在按了會立刻有反應：卡片淡出消失並顯示「已讀」，不再像壞掉一樣沒動靜','反饋「送出」按鈕加了載入動畫：送出時按鈕會變灰並轉圈，不會再以為卡住或重複點','聊天室新增「回到最新」箭頭：往上翻看歷史時，右下角會出現一顆向下箭頭，一按就跳回最新訊息；自己送出訊息也會自動滾到底','反饋區的「送出反饋」與下方按鈕之間加了間距，不再擠在一起']},
 {ver:'v1.19',date:'2026-10-11',changes:['訊息編號改回原本的 msg_0001 格式（之前 v1.15 換成 Firebase 自動產生的鍵，鍵名變成 -Pxxxxxxxx 這種看不出順序的樣子）','改回原本格式的同時修好舊寫法的問題：取號改用原子操作，兩個人同時送出不會再拿到同一個編號、也就不會覆蓋掉對方的訊息']},
 {ver:'v1.18',date:'2026-10-10',changes:['修好後台分頁被擠掉的問題：分頁列原本是橫向捲動的，加了新分頁之後右邊的「群聊監看」被推出畫面，看起來像被換掉；現在改成自動換行，每一顆都一直在畫面上']},
