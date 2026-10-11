@@ -100,6 +100,8 @@ function safeColor(v,fb){return /^#[0-9a-fA-F]{3,8}$/.test(v||'')?v:(/^[a-zA-Z]+
 function avatarHTML(m){const a=String(m&&m.avatar||'');if(/^data:image\//.test(a))return `<img src="${escAttr(a)}">`;const t=escapeHtml((m&&(m.displayName||m.username)||'?').slice(0,3));return t;}
 let noticeTimer=null;
 function showNotice(txt,ms=1800){let el=document.getElementById('noteBox');if(!el){el=document.createElement('div');el.id='noteBox';el.className='notice';document.body.appendChild(el);}el.textContent=txt;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.remove(),ms);}
+function showLoading(txt){ let el=document.getElementById('loadBox'); if(!el){ el=document.createElement('div'); el.id='loadBox'; el.className='notice'; document.body.appendChild(el); } el.innerHTML=`<div style="font-size:15px">${escapeHtml(txt)}</div><div style="margin-top:10px;font-size:13px;color:var(--text-sub)">請稍候…</div>`; }
+function hideLoading(){ const el=document.getElementById('loadBox'); if(el) el.remove(); }
 function fmtWin(w){return w||'？';}
 
 /* ===== 用戶 ===== */
@@ -128,7 +130,8 @@ const GAMES=[
  {k:'werewolf',n:'狼人殺',min:6,max:18,ok:false,c:'#6d28d9',ab:'狼'},
  {k:'bomb',n:'傳炸彈',min:2,max:10,ok:false,c:'#f97316',ab:'炸'},
  {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:false,c:'#0ea5e9',ab:'劇'},
- {k:'pictionary',n:'猜猜畫畫',min:2,max:10,ok:false,c:'#eab308',ab:'畫'}
+ {k:'pictionary',n:'猜猜畫畫',min:2,max:10,ok:false,c:'#eab308',ab:'畫'},
+ {k:'undercover',n:'誰是臥底',min:4,max:12,ok:true,c:'#f472b6',ab:'臥'}
 ];
 const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,min:2,max:2,ok:false,c:'#888',ab:'?'};
 
@@ -195,14 +198,17 @@ function closeSelf(){
 }
 
 /* ===== 建房 ===== */
-let pick={g:null,p:2,spec:true};
+let pick={g:null,p:2,spec:true,level:'normal'};
 function openCreate(gk){
   const g=gameDef(gk);
   if(!g.ok){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
-  pick={g:gk,p:g.min,spec:true};
+  pick={g:gk,p:g.min,spec:true,level:'normal'};
   const cnt=[];for(let i=g.min;i<=g.max;i++)cnt.push(i);
-  const inner=`<h3>開房：${escapeHtml(g.n)}</h3><div class="desc">設定人數與觀戰後，邀請會發到聊天室</div>
+  const needTopic=!!GAMES_NEED_TOPIC[gk];
+  const lvRow=needTopic?`<div class="row"><div class="lbl">題目難度<br><span style="font-size:11px;color:var(--text-sub)">由 AI 即時出題</span></div><div class="seg" id="segL">${TOPIC_LEVELS.map(l=>`<button data-l="${l.k}" class="${l.k==='normal'?'sel':''}">${l.n}</button>`).join('')}</div></div>`:'';
+  const inner=`<h3>開房：${escapeHtml(g.n)}</h3><div class="desc">設定人數與觀戰後，邀請會發到聊天室${needTopic?'；題目由 AI 即時生成，每次都不一樣':''}</div>
     <div class="row"><div class="lbl">玩家人數</div><div class="seg" id="segP">${cnt.map(i=>`<button data-p="${i}" class="${i===pick.p?'sel':''}">${i}</button>`).join('')}</div></div>
+    ${lvRow}
     <div class="row"><div class="lbl">允許觀戰</div><div class="seg" id="segS"><button data-s="1" class="sel">允許</button><button data-s="0">不允許</button></div></div>
     <button class="btn" id="doCreate">發出邀請並開房</button>
     <button class="btn ghost" id="cancelCreate">取消</button>`;
@@ -211,6 +217,8 @@ function openCreate(gk){
   sheet.onclick=e=>{if(e.target===sheet)sheet.remove();};
   sheet.querySelector('#segP').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.p=+b.dataset.p;sheet.querySelectorAll('#segP button').forEach(x=>x.classList.toggle('sel',x===b));};
   sheet.querySelector('#segS').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.spec=b.dataset.s==='1';sheet.querySelectorAll('#segS button').forEach(x=>x.classList.toggle('sel',x===b));};
+  const segL=sheet.querySelector('#segL');
+  if(segL) segL.onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.level=b.dataset.l;sheet.querySelectorAll('#segL button').forEach(x=>x.classList.toggle('sel',x===b));};
   sheet.querySelector('#doCreate').onclick=()=>{sheet.remove();doCreate();};
   sheet.querySelector('#cancelCreate').onclick=()=>sheet.remove();
 }
@@ -223,9 +231,17 @@ async function doCreate(){
   const g=gameDef(pick.g);
   const rid=push(ref(db,'games')).key;
   const now=Date.now();
+  // 需要題目的遊戲：建房時就請 AI 出題（AI 失敗自動退回內置題庫）
+  let topic=null;
+  if(GAMES_NEED_TOPIC[g.k]){
+    showLoading('AI 正在出題（'+levelName(pick.level)+'）…');
+    try{ topic=await aiMakeTopic(g.k,pick.level,4); }catch(e){ topic=null; }
+    hideLoading();
+    if(!topic) topic={level:pick.level,words:ucFallbackPairs(pick.level,4),source:'fallback'};
+  }
   const room={game:g.k,gameName:g.n,host:me.username,hostName:me.displayName,
     minP:pick.p,maxP:g.max,setMax:pick.p,allowSpectate:pick.spec,status:'waiting',
-    createdAt:now,startAt:null,turn:null,winner:null,state:{},
+    createdAt:now,startAt:null,turn:null,winner:null,state:{},topic:topic,
     players:{[me.username]:{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:0}},
     spectators:{}};
   await set(ref(db,'games/'+rid), room);
@@ -236,6 +252,8 @@ async function doCreate(){
     avatar:me.avatar,role:me.role,type:'game_invite',text:`邀請你玩 ${g.n}`,
     game:g.k,gameName:g.n,roomId:rid,minP:pick.p,maxP:g.max,createdAt:now,deleted:false};
   await set(ref(db,'messages/'+msgId),invite);
+  // 記住邀請訊息編號：對局結束時要把這條訊息標成「已完成」，聊天室的加入按鈕才會消失
+  await update(ref(db,'games/'+rid),{msgId:msgId});
   joinRoom(rid);
 }
 
@@ -249,10 +267,13 @@ function joinRoom(rid){
     await ensureMembership();
     await checkAbandon(curRoom);
     render();
+    // 對局一結束（分出勝負／有人退出／房主關房）→ 把聊天室那條邀請標成已完成
+    if(curRoom) markInviteDone(curRoom);
     // 引擎驅動的遊戲：由引擎判斷勝負
     if(curRoom&&curRoom.status==='playing'){
       if(curRoom.game==='uno') unoCheckEnd(curRoom);
       else if(curRoom.game==='chess') chessCheckEnd(curRoom);
+      else if(curRoom.game==='undercover'){ ucCheckReady(curRoom); ucTally(); }
     }
   });
 }
@@ -301,6 +322,29 @@ async function ensureMembership(){
 }
 function registerPresence(nodeRef){
   try{ onDisconnect(nodeRef).remove(); }catch(e){}
+}
+/* 誰是臥底：全員都按了「我記好了」→ 自動進入描述階段（由任一客戶端推進） */
+async function ucCheckReady(r){
+  if(!r||r.game!=='undercover'||r.status!=='playing') return;
+  const st=ucState(r);
+  if(st.phase!=='reveal') return;
+  const alive=ucAlive(r), ready=st.ready||{};
+  if(!alive.length||!alive.every(u=>ready[u])) return;
+  try{ await runTransaction(ref(db,'games/'+curRoomId+'/state/phase'), p=>p==='reveal'?'play':undefined); }catch(e){}
+}
+/* 對局結束 → 把聊天室那條邀請標記為「已完成」（用房間旗標搶鎖，只寫一次） */
+async function markInviteDone(r){
+  const rid=r&&r.__rid?r.__rid:curRoomId;
+  if(!rid||!r) return;
+  if(r.status!=='ended') return;
+  if(r.inviteDone) return;
+  if(!r.msgId) return;
+  let res;
+  try{
+    res=await runTransaction(ref(db,'games/'+rid+'/inviteDone'),v=>v===true?undefined:true);
+  }catch(e){ return; }
+  if(!res.committed) return;
+  try{ await update(ref(db,'messages/'+r.msgId),{done:true,doneAt:Date.now()}); }catch(e){}
 }
 async function maybeStartCountdown(){
   const r=curRoom; if(!r) return;
@@ -386,9 +430,9 @@ async function tryStartGame(){
     res=await runTransaction(ref(db,'games/'+id+'/status'), s=> s==='countdown' ? 'playing' : undefined);
   }catch(e){ return; }
   if(!res.committed) return;
-  const st=initGameState(r);
-  // 引擎驅動的遊戲（uno/chess）：只寫「隨機種子」，動作序列從空開始，各端重放得出同一局面
   const seed=Math.floor(Math.random()*2147483647);
+  const st=initGameState(r, seed);
+  // 引擎驅動的遊戲（uno/chess）：只寫「隨機種子」，動作序列從空開始，各端重放得出同一局面
   await update(ref(db,'games/'+id),{startedAt:Date.now(),turn:st.turn||null,winner:null,seed:seed,actions:null,state:(r.game==='uno'||r.game==='chess')?null:st.state,players:st.players});
 }
 async function leaveRoom(){
@@ -418,7 +462,7 @@ function playerNames(r){const e=Object.entries(r.players||{});e.sort((a,b)=>(a[1
 function colorOf(r,u){const p=r.players&&r.players[u];return safeColor(p&&p.color,'#3b82f6');}
 function nameOf(r,u){const p=r.players&&r.players[u];return (p&&p.name)||u;}
 
-function initGameState(r){
+function initGameState(r, seed){
   const names=playerNames(r);
   const players={};names.forEach((u,i)=>players[u]=Object.assign({},r.players[u],{seat:i}));
   let state={},turn=null;
@@ -426,6 +470,14 @@ function initGameState(r){
   else if(r.game==='gomoku'){ state={board:Array(225).fill(''),last:null}; turn=names[0]; }
   else if(r.game==='ludo'){ state={planes:{},colors:{},dice:0,rolled:false}; 
     names.forEach((u,i)=>{state.planes[u]=[-1,-1,-1,-1];state.colors[u]=i;}); turn=names[0]; }
+  else if(r.game==='undercover'){
+    // 題目來自房間的 topic（AI 生成或內置保底）；種子決定用哪一組、誰當臥底
+    const words=(r.topic&&r.topic.words&&r.topic.words.length)?r.topic.words:ucFallbackPairs('normal',6);
+    const rng=makeRng((seed>>>0)||1);
+    const pair=words[Math.floor(rng()*words.length)%words.length];
+    state={phase:'reveal',pair:pair,undercover:ucPickUnder(names,seed,7),eliminated:[],votes:{},ready:{},descIdx:0,round:1,revealed:false};
+    turn=null;
+  }
   else if(r.game==='uno'||r.game==='chess'){
     // 交給第三方引擎：不預先產生任何盤面，開局只寫種子，各端重放動作
     state={};turn=null;
@@ -450,11 +502,34 @@ function renderGame(r,g){
   else if(r.game==='ludo') drawLudo(r,g,bar,spec);
   else if(r.game==='uno') drawUno(r,g,bar,spec);
   else if(r.game==='chess') drawChess(r,g,bar,spec);
+  else if(r.game==='undercover') drawUndercover(r,g,bar,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
 function renderEnded(r,g){
   const w=r.winner;
+  const teamWin=(r.state&&r.state.teamWin)||(typeof w==='string'&&w.indexOf('team:')===0?w.slice(5):null);
+  if(teamWin){
+    const under=(r.state&&r.state.undercover)||[];
+    const myTeam=(under.includes(me.username))?'uc':'civ';
+    const iWon=(teamWin===myTeam);
+    const big=teamWin==='uc'?'臥底獲勝':'平民獲勝';
+    const rows=playerNames(r).map(u=>{
+      const isU=under.includes(u);
+      const tag=isU?'臥底':'平民';
+      const c=isU?'#f472b6':'var(--green)';
+      return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
+    }).join('');
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+      <div class="wrap">
+        <div class="countdown" style="font-size:30px;color:${iWon?'var(--green)':'var(--red)'}">${iWon?'你贏了！':'你輸了'}</div>
+        <div class="hint">${big}${r.state&&r.state.pair?` · 題目「${escapeHtml(r.state.pair[0])}／${escapeHtml(r.state.pair[1])}」`:''}</div>
+        <div class="plist">${rows}</div>
+        <button class="btn" data-act="home">回到大廳</button>
+      </div>`;
+    appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
+    return;
+  }
   const amPlayer=!!(r.players&&r.players[me.username]);
   const amSpec=!!(r.spectators&&r.spectators[me.username]);
   let big='',small='',col='var(--text-main)';
@@ -939,6 +1014,271 @@ async function chessCheckEnd(r){
   } else {
     await finishGame('draw');
   }
+}
+
+/* ===== AI 出題（共用層）=====
+   題目由 AI 每次即時生成，三檔難度：搞笑／普通／困難。
+   生成結果寫進房間（games/{id}/topic），所有玩家讀同一份 → 不需要各端各自呼叫。
+   AI 失敗或超時 → 自動退回內置題庫，保證不卡住開局。
+   之後新增遊戲只要在這裡加一個 prompt 模板即可（劇本殺／猜猜畫畫／傳炸彈…）。
+*/
+const AI_KEY = 'ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
+const AI_API = 'https://note3-prev-api.askdiandian.com/v1/chat/completions';
+const AI_MODEL = 'dots3-note-prev';
+const TOPIC_LEVELS = [
+  { k: 'fun', n: '搞笑', d: '誇張、好笑、越荒謬越好，但兩個詞要明顯是同一類東西' },
+  { k: 'normal', n: '普通', d: '日常、常見，兩個詞相近但能分辨' },
+  { k: 'hard', n: '困難', d: '非常接近、容易混淆，連本地人都要想一下才分得出' },
+];
+function levelName(k){ const l = TOPIC_LEVELS.find(x => x.k === k); return l ? l.n : '普通'; }
+const GAMES_NEED_TOPIC = { undercover: true, pictionary: true, scriptmurder: true, bomb: true };
+
+async function callAI(systemPrompt, userPrompt, maxTokens, retry){
+  retry = retry || 0;
+  try {
+    const res = await fetch(AI_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': AI_KEY },
+      body: JSON.stringify({
+        model: AI_MODEL, stream: false, max_tokens: maxTokens || 1200,
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      }),
+    });
+    if (res.status === 429 && retry < 2) { await new Promise(r => setTimeout(r, 2000)); return callAI(systemPrompt, userPrompt, maxTokens, retry + 1); }
+    if (!res.ok) throw new Error('AI ' + res.status);
+    const data = await res.json();
+    const ch = data.choices && data.choices[0];
+    const msg = (ch && ch.message) || {};
+    const content = msg.content || '';
+    const reasoning = msg.reasoning_content || '';
+    try { window.__lastAI = { content: content, reasoning: reasoning, finish: ch && ch.finish_reason }; } catch (e) {}
+    // 這個模型會先吐一大段推理，content 可能被 max_tokens 截斷 → 用推理內容當後備
+    return content || reasoning;
+  } catch (e) {
+    if (retry < 2) { await new Promise(r => setTimeout(r, 1500)); return callAI(systemPrompt, userPrompt, maxTokens, retry + 1); }
+    throw e;
+  }
+}
+function extractJSON(text){
+  if (!text) return null;
+  let s = String(text).replace(/```[a-zA-Z]*/g, '').replace(/```/g, '').trim();
+  const i = s.search(/[\[{]/); if (i < 0) return null;
+  const open = s[i], close = open === '[' ? ']' : '}';
+  let depth = 0, end = -1;
+  for (let j = i; j < s.length; j++) {
+    if (s[j] === open) depth++;
+    else if (s[j] === close) { depth--; if (depth === 0) { end = j; break; } }
+  }
+  if (end < 0) return null;
+  try { return JSON.parse(s.slice(i, end + 1)); } catch (e) { return null; }
+}
+
+/* 內置題庫（AI 不可用時的保底），按難度分檔 */
+const UC_FALLBACK = {
+  fun: [['珍珠奶茶','紅豆奶茶'],['泡麵','即食麵'],['蛋糕','麵包'],['口罩','圍巾'],['雪櫃','冰箱'],['潛水','游泳']],
+  normal: [['牛奶','豆漿'],['可樂','雪碧'],['米飯','饅頭'],['地鐵','巴士'],['鉛筆','原子筆'],['眼鏡','隱形眼鏡'],['枕頭','抱枕'],['雨傘','陽傘']],
+  hard: [['老師','教授'],['婚禮','訂婚'],['微信','QQ'],['手機','平板'],['足球','籃球'],['演唱會','音樂會'],['校服','便服'],['醫生','護士']],
+};
+function ucFallbackPairs(level, n){
+  const pool = (UC_FALLBACK[level] || UC_FALLBACK.normal).slice();
+  const out = [];
+  for (let i = 0; i < (n || 6) && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  return out.length ? out : UC_FALLBACK.normal;
+}
+/* 讓 AI 出「誰是臥底」詞對 */
+async function aiUndercoverPairs(level, n, avoid){
+  const lv = TOPIC_LEVELS.find(x => x.k === level) || TOPIC_LEVELS[1];
+  const sys = '你是班級桌遊的出題員。不要推理、不要解釋，直接輸出 JSON 陣列。';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const usr = `直接輸出 JSON（不要任何其他文字）：為「誰是臥底」出 ${n} 組詞對，難度${lv.n}（${lv.d}）。` +
+      `每組兩個詞，同一組要同類、相近但不同，能靠描述分辨。` +
+      (avoid && avoid.length ? `避開：${avoid.join('、')}。` : '') +
+      `格式：["詞A","詞B"] 這樣的 ${n} 組`;
+    let txt = '';
+    try { txt = await callAI(sys, usr, 3000); } catch (e) { txt = ''; }
+    let j = extractJSON(txt);
+    if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
+    if (Array.isArray(j)) {
+      const pairs = j.filter(p => Array.isArray(p) && p.length >= 2 && p[0] && p[1])
+        .slice(0, n).map(p => [String(p[0]).slice(0, 14), String(p[1]).slice(0, 14)]);
+      if (pairs.length) return pairs;
+    }
+  }
+  return null;
+}
+/* 統一入口：依遊戲種類出題，回傳 { level, words, source } */
+async function aiMakeTopic(game, level, n){
+  if (game === 'undercover') {
+    n = n || 4;
+    try {
+      const words = await aiUndercoverPairs(level, n);
+      if (words) return { level: level, words: words, source: 'ai' };
+    } catch (e) {}
+    return { level: level, words: ucFallbackPairs(level, n), source: 'fallback' };
+  }
+  // 之後：pictionary / scriptmurder / bomb 在此加各自模板
+  return null;
+}
+
+/* ===== 誰是臥底（4–12 人）=====
+   平民拿到同一組詞的第一個，臥底拿第二個；輪流描述 → 投票 → 票最高者出局。
+   勝負：臥底全部出局＝平民勝；臥底人數 ≥ 平民人數＝臥底勝。
+   題目放在 games/{id}/topic（AI 生成或內置保底），開局由種子挑一組。
+*/
+function ucState(r){ return (r && r.state) ? r.state : {}; }
+function ucAlive(r){ const el = ucState(r).eliminated || []; return playerNames(r).filter(u => !el.includes(u)); }
+function ucWordOf(r, u){
+  const st = ucState(r), pair = st.pair || ['？','？'];
+  return (st.undercover || []).includes(u) ? pair[1] : pair[0];
+}
+async function ucTally(){
+  const r = curRoom; if (!r || r.game !== 'undercover') return;
+  const st = ucState(r);
+  if (st.phase !== 'vote') return;
+  const alive = ucAlive(r), votes = st.votes || {};
+  if (alive.some(u => !votes[u])) return;            // 還沒投完
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'vote' ? 'tally' : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;                        // 別的客戶端已在結算
+  const cnt = {};
+  alive.forEach(u => { const t = votes[u]; if (t) cnt[t] = (cnt[t] || 0) + 1; });
+  let max = 0, top = [];
+  Object.keys(cnt).forEach(u => { if (cnt[u] > max) { max = cnt[u]; top = [u]; } else if (cnt[u] === max) top.push(u); });
+  const eliminated = (st.eliminated || []).slice();
+  let out = null, tie = false;
+  if (top.length === 1) { out = top[0]; eliminated.push(out); } else { tie = true; }
+  const under = st.undercover || [];
+  const aliveAfter = playerNames(r).filter(u => !eliminated.includes(u));
+  const underAlive = under.filter(u => aliveAfter.includes(u));
+  const civAlive = aliveAfter.length - underAlive.length;
+  let teamWin = null;
+  if (underAlive.length === 0) teamWin = 'civ';
+  else if (underAlive.length >= civAlive) teamWin = 'uc';
+  await update(ref(db, 'games/' + curRoomId + '/state'), { phase: teamWin ? 'end' : 'result', lastOut: out, tie: !!tie, votes: {}, eliminated: eliminated, revealed: !!teamWin, descIdx: 0 });
+  if (teamWin) await ucFinish(teamWin, r);
+}
+async function ucFinish(teamWin, r){
+  if (!r || r.status === 'ended') return;
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/winner'), w => (w === null || w === undefined) ? ('team:' + teamWin) : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  const st = ucState(r);
+  // 只改需要改的欄位：整份覆蓋會把 ucTally 剛寫入的 eliminated 沖掉
+  await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true, 'state/teamWin': teamWin });
+  const under = st.undercover || [];
+  for (const u of playerNames(r)) {
+    const won = (teamWin === 'uc') === under.includes(u);
+    try {
+      await runTransaction(ref(db, 'users/' + u + '/gameStats/undercover'), c => {
+        c = c || {}; const w = Number(c.win) || 0, l = Number(c.lose) || 0, p = Number(c.play) || 0;
+        return { win: w + (won ? 1 : 0), lose: l + (won ? 0 : 1), play: p + 1 };
+      });
+    } catch (e) {}
+  }
+}
+// 注意：Firebase 的 update() 只接受物件，寫純量（true／字串／數字）會報
+// "values argument must be an object" → 這裡一律用 set()
+function ucSet(path, val){ return set(ref(db, 'games/' + curRoomId + path), val); }
+function drawUndercover(r, g, bar, spec){
+  const st = ucState(r), names = playerNames(r);
+  const amPlayer = !!r.players[me.username], isHost = r.host === me.username;
+  const alive = ucAlive(r), under = st.undercover || [], eliminated = st.eliminated || [];
+  const phase = st.phase || 'reveal';
+  const dead = amPlayer && eliminated.includes(me.username);
+  const myWord = amPlayer ? ucWordOf(r, me.username) : '';
+  const ready = st.ready || {};
+  const readyN = alive.filter(u => ready[u]).length;
+  const curU = alive.length ? alive[(st.descIdx || 0) % alive.length] : '';
+
+  const plist = names.map(u => {
+    const isDead = eliminated.includes(u);
+    const isCur = phase === 'play' && u === curU;
+    const role = st.revealed ? (under.includes(u) ? '臥底' : '平民') : '';
+    const rcStyle = st.revealed ? (under.includes(u) ? 'color:#f472b6;border-color:#f472b6' : 'color:var(--green);border-color:var(--green)') : '';
+    return `<div class="pitem" style="${isCur ? 'border-color:var(--accent)' : ''}${isDead ? ';opacity:.45' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isDead ? ' · 已出局' : ''}${isCur ? ' · 描述中' : ''}</div>
+      <div class="pbadge" style="${rcStyle}">${st.revealed ? role : (ready[u] ? '已準備' : '')}</div>
+    </div>`;
+  }).join('');
+
+  const src = (r.topic && r.topic.source === 'fallback') ? '（AI 無法連線，使用內置題目）' : '';
+  let stage = '';
+  if (phase === 'reveal') {
+    stage = amPlayer
+      ? `<div class="countdown" style="font-size:24px;color:var(--gold);word-break:break-all">${escapeHtml(myWord)}</div>
+         <div class="hint">這是你的詞，記住它，不要給別人看到</div>
+         <button class="btn" data-act="ucReady">${ready[me.username] ? '已準備（等其他人）' : '我記好了'}</button>
+         ${isHost ? `<button class="btn ghost" data-act="ucNewPair">換一題</button>` : ''}
+         <div class="hint" style="margin-top:8px">已準備 ${readyN}/${alive.length} · 難度 ${levelName(r.topic && r.topic.level)} ${src}</div>`
+      : `<div class="hint">觀戰中，等待玩家準備</div>`;
+  } else if (phase === 'play') {
+    stage = `${myWord ? `<div class="hint">你的詞：<b style="color:var(--gold)">${escapeHtml(myWord)}</b></div>` : ''}
+      <div class="turnbar ${curU === me.username ? 'mine' : ''}">${dead ? '你已出局，只能旁觀' : (curU === me.username ? '輪到你描述' : escapeHtml(nameOf(r, curU)) + ' 正在描述')}</div>
+      <div class="hint" style="margin-top:8px">第 ${st.round || 1} 輪 · 一句話描述你的詞，不可以直接說出詞本身</div>
+      ${isHost ? `<button class="btn" data-act="ucNext">下一位</button>
+        <button class="btn ghost" data-act="ucToVote">進入投票</button>` : ''}`;
+  } else if (phase === 'vote') {
+    const votes = st.votes || {};
+    const myVote = votes[me.username];
+    const votedN = alive.filter(u => votes[u]).length;
+    stage = `${myWord ? `<div class="hint">你的詞：<b style="color:var(--gold)">${escapeHtml(myWord)}</b></div>` : ''}
+      <div class="turnbar">投票中 · 已投 ${votedN}/${alive.length}</div>
+      <div class="hint" style="margin-top:8px">${myVote ? '你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）' : (dead ? '你已出局，不能投票' : '選出你認為是臥底的人')}</div>
+      ${(!dead && amPlayer && !myVote) ? `<div class="plist">${alive.filter(u => u !== me.username).map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
+  } else if (phase === 'result') {
+    const out = st.lastOut;
+    stage = `<div class="countdown" style="font-size:26px;color:${out ? 'var(--red)' : 'var(--gold)'}">${out ? escapeHtml(nameOf(r, out)) + ' 出局' : '平票，本輪無人出局'}</div>
+      <div class="hint">${out ? '（身份暫不公開）' : '再描述一輪，然後重新投票'}</div>
+      ${isHost ? `<button class="btn" data-act="ucRound">開始第 ${(st.round || 1) + 1} 輪</button>` : ''}
+      <div class="plist">${plist}</div>`;
+  } else {
+    stage = `<div class="hint">本局結束</div>`;
+  }
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">${bar}${stage}${phase === 'result' ? '' : `<div class="plist">${plist}</div>`}</div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+
+  const rb = appEl.querySelector('[data-act="ucReady"]');
+  if (rb) rb.onclick = async () => {
+    await ucSet('/state/ready/' + me.username, true);
+    const fresh = await get(ref(db, 'games/' + curRoomId));
+    const rr = fresh.val();
+    const al = ucAlive(rr), rd = (rr.state && rr.state.ready) || {};
+    if (al.every(u => rd[u])) {
+      try { await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'reveal' ? 'play' : undefined); } catch (e) {}
+    }
+  };
+  const nb = appEl.querySelector('[data-act="ucNext"]');
+  if (nb) nb.onclick = async () => { await ucSet('/state/descIdx', (st.descIdx || 0) + 1); };
+  const vb = appEl.querySelector('[data-act="ucToVote"]');
+  if (vb) vb.onclick = async () => { await ucSet('/state', Object.assign({}, st, { phase: 'vote', votes: {} })); };
+  const rnd = appEl.querySelector('[data-act="ucRound"]');
+  if (rnd) rnd.onclick = async () => { await ucSet('/state', Object.assign({}, st, { phase: 'play', descIdx: 0, round: (st.round || 1) + 1, votes: {}, lastOut: null, tie: false })); };
+  const np = appEl.querySelector('[data-act="ucNewPair"]');
+  if (np) np.onclick = async () => {
+    const words = (r.topic && r.topic.words) || [];
+    if (!words.length) return;
+    const pair = words[Math.floor(Math.random() * words.length)];
+    const names2 = playerNames(r);
+    const under = ucPickUnder(names2, r.seed || 1, Date.now() % 9973);
+    await ucSet('/state', Object.assign({}, st, { pair: pair, undercover: under, phase: 'reveal', ready: {}, eliminated: [], votes: {}, descIdx: 0, round: 1, revealed: false }));
+  };
+  appEl.querySelectorAll('[data-vote]').forEach(el => el.onclick = async () => {
+    if (st.phase !== 'vote') return;
+    await ucSet('/state/votes/' + me.username, el.dataset.vote);
+    setTimeout(ucTally, 250);
+  });
+}
+function ucPickUnder(names, seed, salt){
+  const rng = makeRng(((seed >>> 0) ^ ((salt || 0) * 2654435761)) >>> 0);
+  const nUnder = names.length >= 7 ? 2 : 1;
+  const idx = names.map((_, i) => i);
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+  return idx.slice(0, nUnder).map(i => names[i]);
 }
 
 /* ===== 啟動 ===== */
