@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-c0MxjyBGV+9DwnGCsPtX7VTqg2kLSgg+gh+RNGdT3xs=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-TrwmYt6ksulZ4pS1RiYp/5Kt96bYw3/rKo46nelsZ0o=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.21</title>
 <style>
@@ -622,7 +622,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.24';
+const CURRENT_VERSION='v1.25';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -3240,6 +3240,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.25',date:'2026-10-11',changes:['修好等待室卡住的問題：以前只有在「你自己加入的那一刻」才會開始倒數，如果最後一位是別端（另一支手機、安卓版、或直接寫進資料庫）加進來的，兩邊都不會開始倒數，畫面就會一直停在「人數 2/2 · 等待中」','現在改成只要人數已到齊、而且還沒有開始倒數，房間裡任何一個人都會自動把它推進倒數；倒數途中有人退出而取消，補齊人數後也會自己重新倒數','順手把文字改清楚：人數已到齊就顯示「人數已到齊，倒數後自動開局」，不會再出現「還需要 0 人才能開局」這種句子；題目還沒準備好時也會老實說「正在準備題目」','安卓版 1.7.1：同步這個修正']},
 {ver:'v1.24',date:'2026-10-11',changes:['安卓版小遊戲改用「原生介面」重寫（不再內嵌網頁）：大廳、開房、等待室、倒數、觀戰、對局、結算全部由安卓自己畫，讀寫的是同一份資料，跟網頁版互通','安卓版第一批原生支援 7 款：井字棋、五子棋、誰是臥底、傳炸彈、康樂棋、大富翁、狼人殺（其餘款式的原生介面會在後續版本一款一款補上）','新增「網址引導」：在網址後面加 ?game=遊戲代號 或 ?room=房間編號，打開就跟平常一樣走登入（能自動登入就自動登入、要打密碼就打密碼），登入完成後直接跳到那個小遊戲或那一間房間','每一間房間都有自己的網址（?room=<房號>），房間內與聊天室的對局邀請卡都有「複製房間連結 / 複製這間房間的連結」可以一鍵複製，傳給同學點開就能進同一間房','如果點進去時那局已經結束了（而且你不是當時的玩家）→ 顯示「你來遲了，對局已經結束」並說明最後是誰獲勝，不會再把你塞進已經打完的房間','房間已經被關閉或不存在 → 明確顯示「房間已不存在或已被關閉」，不會停在「載入中」','支援 ?game=<代號>：直接打開那一款遊戲的開房面板（例如 ?game=gomoku 直接彈出五子棋開房）','新增「狼人殺」（6–18 人）：狼人／預言家／村民三種角色，夜晚狼人選人殺、預言家查身分，天亮公布死者後輪流發言（像聊天、講完自動輪下一位），再投票放逐；票高者出局，平票則平票的人單獨再投；狼人全出局＝村民勝、狼人數量不少於其他人＝狼人勝','新增「大富翁」（2–6 人，簡化版）：28 格環形棋盤、買地收租、機會卡、稅金、經過起點收 200，付不出錢就破產出局，最後剩下的人獲勝']},
 {ver:'v1.23',date:'2026-10-11',changes:['修好「誰是臥底」全部人拿到同一個詞的問題：AI 偶爾會出「兩個詞一樣」的題目（例如「水果／水果」），這種題目會直接淘汰不用，而且開局時一定會有一個臥底拿不同的詞','誰是臥底改成「打字描述」：輪到你時輸入框會出現，打完按送出就自動輪到下一位，不再由房主決定什麼時候換人','新增像聊天一樣的描述紀錄：每個人講的話都留在裡面，新的在下面、舊的往上推，所有人都看得到','三個人一輪講完就自動進入投票；不用房主按任何按鈕','投票完成會彈出結果框，列出每個人的票數以及誰投了誰，票最高的那位出局','平票會讓最高的幾位單獨再投一次（其他人只能在他們之間二選一，平票的人自己不能再投）','出局後如果還有得玩（場上多於兩人）就可以繼續下一輪描述；人數不夠就直接判勝負並顯示「平民獲勝／臥底獲勝」','沒收房主專屬的「下一位／進入投票」按鈕：描述輪替、進投票、下一輪全部自動或人人可操作','新增「中國象棋」（9×10 棋盤）：車馬炮象士將卒的走法、蹩馬腿、塞象眼、炮隔子才可食、過河兵可橫行、將帥不可對面（白臉將）、被將死或無棋可走判負，規則完整實作','修好提示訊息會擋住畫面、按不到底下的按鈕（例如象棋選棋子）的問題']},
 {ver:'v1.22',date:'2026-10-11',changes:['小遊戲一次開放 4 款新桌遊：傳炸彈、劇本殺、康樂棋、鬥獸棋（連同之前 7 款，現在共 11 款可以直接玩）','傳炸彈（2–10 人）：題目是 AI 出的「類別」（例如「水果」「三國人物」），炸彈輪流傳，輪到你要在限時內講出一個答案，講過不能重複；時間到就爆在你手上被淘汰，每淘汰一人時間縮短、換一個新題目，最後剩下的人贏','劇本殺（4–10 人）：AI 當場寫一宗案件（背景＋每個角色一份公開資料與一個秘密），每個人只看到自己的角色卡，其中一人是兇手；讀完劇本進討論，接著投票，投中兇手大家贏、投錯兇手贏','康樂棋（2–4 人）：香港經典擲骰競速，踩到綠格加速、紅格後退，先到第 52 格的人獲勝','鬥獸棋（2 人）：象獅虎豹狼狗貓鼠，大食細、鼠食象、獅虎可以跳河、走進對方陷阱的棋子戰力歸零，攻入對方獸穴或食光對方棋子就贏','兩款新 AI 遊戲（傳炸彈、劇本殺）同樣有三檔難度「搞笑／普通／困難」，題目每次都不一樣；AI 連不上時會自動用內置題庫，不會卡住開不了局','安卓版 1.6.0：聊天室「＋」面板新增「小遊戲」入口，進去就是同一套遊戲介面；聊天室收到對局邀請也可以直接點卡片進房間','修好「題目是否已備妥」的判斷：以前只有詞對類題目會被認得，現在各款遊戲用自己的方式判斷，開局前一定等到題目真的好了','團隊勝負（劇本殺）現在會正確記錄每個人的勝負，不再是只有一個人算贏']},
