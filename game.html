@@ -81,12 +81,19 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 <body>
 <div id="app"></div>
 <script src="lib/uno-engine.js"></script>
+<script src="lib/opencc-t2cn.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, get, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { Chess } from "./lib/chess.js";
-// uno-engine 的 UMD 全域名為 Uno
+// uno-engine 的 UMD 全域名為 Uno；opencc 的 UMD 全域名為 OpenCC
 const UnoEngine = window.Uno || null;
+const OpenCC = window.OpenCC || null;
+let _t2s = null;
+function toSimplified(s){
+  if(!OpenCC) return s;
+  try{ if(!_t2s) _t2s = OpenCC.Converter({from:'tw',to:'cn'}); return _t2s(s); }catch(e){ return s; }
+}
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
@@ -1383,7 +1390,7 @@ async function aiPictionaryWords(level, n){
 
 function picState(r){ return (r && r.state) ? r.state : {}; }
 function picAliveNames(r){ return playerNames(r); }
-function picNorm(s){ return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+function picNorm(s){ return toSimplified(String(s || '').replace(/\s+/g, '').toLowerCase()); }
 async function picAdvance(path, obj){ await update(ref(db, 'games/' + curRoomId + path), obj); }
 
 /* 猜中或超時後由任一客戶端推進到「本輪結束」 */
@@ -1439,8 +1446,38 @@ async function picGuess(text){
     await set(ref(db, 'games/' + curRoomId + '/state/scores'), scores);
     showNotice('猜中了！＋2 分');
     setTimeout(() => picCheckEndRound(curRoom), 300);
+    checkCheating();   // 猜中後：AI 掃描整幅畫有沒有寫字（防作弊）
   } else {
     showNotice('不對，再試試');
+  }
+}
+/* 防作弊：把整幅畫送給多模態 AI，檢查有沒有寫出任何文字 */
+async function checkCheating(){
+  const cv=document.querySelector('#cv'); if(!cv) return;
+  let dataUrl;
+  try{
+    const sc=document.createElement('canvas'); sc.width=sc.height=256;
+    sc.getContext('2d').drawImage(cv,0,0,256,256);
+    dataUrl=sc.toDataURL('image/png');
+  }catch(e){ return; }
+  try{ await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:'checking'}); }catch(e){}
+  try{
+    const res=await fetch(AI_API,{method:'POST',headers:{'Content-Type':'application/json','api-key':AI_KEY},
+      body:JSON.stringify({model:AI_MODEL,stream:false,max_tokens:200,messages:[
+        {role:'system',content:'你是防作弊檢測員。'},
+        {role:'user',content:[
+          {type:'text',text:'檢查這幅畫裡有沒有出現任何「文字、字母、數字、注音、拼音」或把答案直接寫出來的痕跡。只回 JSON：{"hasText":true/false,"detail":"一句話說明"}。'},
+          {type:'image_url',image_url:{url:dataUrl}}
+        ]}
+      ]})});
+    if(!res.ok) throw new Error('AI '+res.status);
+    const data=await res.json();
+    const content=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+    const j=extractJSON(content)||{};
+    const hasText=(j.hasText===true);
+    await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:hasText?'suspicious':'clean',detail:j.detail||''});
+  }catch(e){
+    await update(ref(db,'games/'+curRoomId+'/state/cheatCheck'),{status:'error'});
   }
 }
 /* 結算：分數最高者勝 */
@@ -1503,6 +1540,12 @@ function drawPictionary(r, g, bar, spec){
       : `<div class="turnbar">${escapeHtml(nameOf(r, drawer))} 是畫手，等待開始</div>`;
   } else if (phase === 'draw') {
     const myWord = amDrawer ? `<div class="hint">你的題目：<b style="color:var(--gold)">${escapeHtml(st.word || '')}</b></div>` : '';
+    const cc = st.cheatCheck;
+    const ccHtml = cc && cc.status ? (cc.status==='checking'
+      ? `<div class="hint" style="color:var(--accent)">正在檢查是否作弊…</div>`
+      : cc.status==='suspicious'
+        ? `<div class="hint" style="color:var(--red)">⚠ 檢測到疑似作弊：畫中出現文字${cc.detail?'（'+escapeHtml(cc.detail)+'）':''}</div>`
+        : `<div class="hint" style="color:var(--green)">已通過防作弊檢查</div>`) : '';
     const guessUI = (!amDrawer && amPlayer) ? `
       <div class="deck-row" style="margin-top:8px">
         <input id="picInput" placeholder="輸入你猜的答案" style="flex:1;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:10px;padding:11px 13px;color:var(--text-main);font-size:15px">
@@ -1510,10 +1553,15 @@ function drawPictionary(r, g, bar, spec){
       </div>` : '';
     stage = `${myWord}
       <div class="turnbar">${amDrawer ? '你在畫' : escapeHtml(nameOf(r, drawer)) + ' 在畫'} · 已猜中 ${guessedN}/${guessers.length}</div>
-      ${guessUI}`;
+      ${guessUI}${ccHtml}`;
   } else if (phase === 'roundEnd') {
+    const cc2 = st.cheatCheck;
+    const cc2Html = cc2 && cc2.status ? (cc2.status==='suspicious'
+      ? `<div class="hint" style="color:var(--red)">⚠ 檢測到疑似作弊：畫中出現文字${cc2.detail?'（'+escapeHtml(cc2.detail)+'）':''}</div>`
+      : cc2.status==='clean' ? `<div class="hint" style="color:var(--green)">防作弊檢查：通過</div>` : '') : '';
     stage = `<div class="countdown" style="font-size:26px;color:var(--accent)">答案是「${escapeHtml(st.word || '')}」</div>
       <div class="hint">${guessedN ? `有 ${guessedN} 人猜中` : '沒人猜中'}</div>
+      ${cc2Html}
       ${isHost ? `<button class="btn" data-act="picNext">${(st.round || 1) >= names.length ? '結算成績' : '下一輪'}</button>` : ''}`;
   } else {
     stage = `<div class="hint">本局結束</div>`;
