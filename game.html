@@ -106,6 +106,35 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 .dscell.dssel{outline:3px solid var(--gold);outline-offset:-3px}
 .dscell.dsmove::after{content:'';position:absolute;inset:0;border:2px dashed var(--gold);border-radius:7px;opacity:.85}
 .dsg{width:80%;height:80%;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:#0f1320}
+
+/* 中國象棋 */
+.xqboard{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;margin:10px auto;max-width:420px;aspect-ratio:9/10;
+  background:#1b2233;border:1px solid var(--border-strong);border-radius:10px;padding:3px}
+.xqcell{position:relative;display:flex;align-items:center;justify-content:center;border-radius:5px;background:rgba(255,255,255,.03);cursor:pointer}
+.xqcell.xqsel{background:rgba(251,191,36,.20);outline:2px solid var(--gold);outline-offset:-2px}
+.xqcell.xqmove::after{content:'';position:absolute;inset:14%;border:2px dashed var(--gold);border-radius:50%;opacity:.8}
+.xqg{width:86%;height:86%;border-radius:50%;border:1.5px solid;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;background:#0d1120}
+
+/* 誰是臥底：聊天式的描述紀錄 */
+.ucfeed{display:flex;flex-direction:column;gap:9px;max-height:38vh;min-height:110px;overflow-y:auto;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:13px;padding:11px;margin:10px 0;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ucmsg{display:flex;gap:9px;align-items:flex-start}
+.ucmsg .pav{width:30px;height:30px;flex:none;font-size:11px}
+.ucbody{flex:1;min-width:0}
+.ucmeta{font-size:10.5px;color:var(--text-sub);margin-bottom:2px}
+.uctext{font-size:13.5px;line-height:1.45;word-break:break-word;background:var(--bg-input);
+  border:1px solid var(--border-strong);border-radius:10px;padding:7px 10px}
+
+/* 投票結果彈框 */
+.ucmodal{position:fixed;inset:0;background:rgba(5,7,12,.72);display:flex;align-items:center;justify-content:center;
+  z-index:120;padding:20px;animation:ucFade .18s ease}
+@keyframes ucFade{from{opacity:0}to{opacity:1}}
+.ucmodal-card{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:18px;padding:18px 16px;
+  width:100%;max-width:400px;max-height:82vh;overflow-y:auto;animation:ucPop .2s ease}
+@keyframes ucPop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
+.ucmodal-card h3{margin:0;font-size:17px;text-align:center}
 .dice{width:64px;height:64px;border-radius:14px;background:linear-gradient(145deg,#232838,#151926);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:11px;gap:3px;cursor:pointer}
 .dice:active{transform:scale(.94)}
 .dice.rolling{animation:shake .4s}
@@ -118,7 +147,7 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 .uno.r{background:#dc2626}.uno.g{background:#16a34a}.uno.b{background:#2563eb}.uno.y{background:#ca8a04}.uno.w{background:#1f2937}
 .uno.sm{width:34px;height:52px;font-size:14px;cursor:default}
 .deck-row{display:flex;gap:12px;align-items:center;justify-content:center}
-.notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,36,.96);border:1px solid var(--border-strong);border-radius:14px;padding:18px 24px;font-size:15px;z-index:99;text-align:center;max-width:80vw}
+.notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,36,.96);border:1px solid var(--border-strong);border-radius:14px;padding:18px 24px;font-size:15px;z-index:99;text-align:center;max-width:80vw;pointer-events:none}
 .empty{text-align:center;color:var(--text-sub);padding:50px 20px;font-size:14px}
 .chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-strong);margin:2px}
 .stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
@@ -174,7 +203,7 @@ const GAMES=[
  {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○'},
  {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛'},
  {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U'},
- {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:false,c:'#f59e0b',ab:'象'},
+ {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:true,c:'#f59e0b',ab:'象'},
  {k:'chess',n:'國際象棋',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋'},
  {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍'},
  {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●'},
@@ -221,6 +250,7 @@ async function loadStats(){
 
 /* ===== 大廳 ===== */
 function render(){
+  if(view!=='room'){ const m=document.getElementById('ucModal'); if(m) m.remove(); }
   if(view==='lobby') return renderLobby();
   if(view==='room') return renderRoom();
 }
@@ -368,16 +398,19 @@ function joinRoom(rid){
     // 需要題目但還沒出好 → 後台補（不阻塞介面）
     if(curRoom && GAMES_NEED_TOPIC[curRoom.game] && curRoom.status!=='ended') ensureTopic(curRoom);
     render();
+    // 投票結果框要在「所有階段」都會彈（包括投票直接分出勝負、已經進到結束畫面時）
+    if(curRoom&&curRoom.game==='undercover') ucShowResultModal();
     // 對局一結束（分出勝負／有人退出／房主關房）→ 把聊天室那條邀請標成已完成
     if(curRoom) markInviteDone(curRoom);
     // 引擎驅動的遊戲：由引擎判斷勝負
     if(curRoom&&curRoom.status==='playing'){
       if(curRoom.game==='uno') unoCheckEnd(curRoom);
       else if(curRoom.game==='chess') chessCheckEnd(curRoom);
-      else if(curRoom.game==='undercover'){ ucCheckReady(curRoom); ucTally(); }
+      else if(curRoom.game==='undercover'){ ucCheckReady(curRoom); ucSettle(); }
       else if(curRoom.game==='pictionary') picCheckEndRound(curRoom);
       else if(curRoom.game==='scriptmurder'){ smCheckReady(curRoom); smTally(); }
       else if(curRoom.game==='doushou') doushouCheckEnd(curRoom);
+      else if(curRoom.game==='xiangqi') xqCheckEnd(curRoom);
     }
   });
 }
@@ -593,10 +626,17 @@ function initGameState(r, seed){
   }
   else if(r.game==='undercover'){
     // 題目來自房間的 topic（AI 生成或內置保底）；種子決定用哪一組、誰當臥底
-    const words=(r.topic&&r.topic.words&&r.topic.words.length)?r.topic.words:ucFallbackPairs('normal',6);
+    const raw=(r.topic&&r.topic.words&&r.topic.words.length)?r.topic.words:ucFallbackPairs('normal',6);
+    // 只留「兩個詞真的不一樣」的組合，否則會出現全部人拿到同一個詞
+    const okPairs=raw.filter(p=>Array.isArray(p)&&p[0]&&p[1]&&picNorm(p[0])!==picNorm(p[1]));
+    const pool=okPairs.length?okPairs:ucFallbackPairs('normal',6);
     const rng=makeRng((seed>>>0)||1);
-    const pair=words[Math.floor(rng()*words.length)%words.length];
-    state={phase:'reveal',pair:pair,undercover:ucPickUnder(names,seed,7),eliminated:[],votes:{},ready:{},descIdx:0,round:1,revealed:false};
+    const pair=pool[Math.floor(rng()*pool.length)%pool.length]||['牛奶','豆漿'];
+    // 一定要有臥底；人多（≥7）時兩個
+    let under=ucPickUnder(names,seed,7);
+    if(!under.length&&names.length) under=[names[Math.floor(rng()*names.length)%names.length]];
+    state={phase:'reveal',pair:pair,undercover:under,eliminated:[],votes:{},ready:{},
+      descs:null,descIdx:0,round:1,revealed:false,runoff:null,runoffVotes:null,voteResult:null};
     turn=null;
   }
   else if(r.game==='bomb'){
@@ -629,6 +669,10 @@ function initGameState(r, seed){
     // 完全由動作序列重放，不預先寫任何局面
     state={};turn=names[0];
   }
+  else if(r.game==='xiangqi'){
+    // 同上：只寫動作，各端重放
+    state={};turn=names[0];
+  }
   else if(r.game==='uno'||r.game==='chess'){
     // 交給第三方引擎：不預先產生任何盤面，開局只寫種子，各端重放動作
     state={};turn=null;
@@ -648,6 +692,7 @@ function renderGame(r,g){
   }
   // 鬥獸棋不是引擎驅動，輪次由「已走幾步」推出來（r.turn 不會即時更新）
   if(r.game==='doushou'){ const nm=playerNames(r); turnName=nm[actionsOf(r).length%2]||nm[0]; }
+  if(r.game==='xiangqi'){ const nm=playerNames(r); turnName=xqPlayerOf(xqTurnSide(r),nm)||nm[0]; }
   const myTurn=(turnName===me.username)&&!spec;
   const bar=`<div class="turnbar ${myTurn?'mine':''}">${spec?'觀戰中':(myTurn?'輪到你了':escapeHtml(nameOf(r,turnName))+' 的回合')}</div>`;
   if(r.game==='tictactoe') drawTTT(r,g,bar,spec);
@@ -655,12 +700,13 @@ function renderGame(r,g){
   else if(r.game==='ludo') drawLudo(r,g,bar,spec);
   else if(r.game==='uno') drawUno(r,g,bar,spec);
   else if(r.game==='chess') drawChess(r,g,bar,spec);
-  else if(r.game==='undercover') drawUndercover(r,g,bar,spec);
+  else if(r.game==='undercover') drawUndercover(r,g,'',spec);   // 自己有一條「輪到誰描述」的提示，不用上面那條
   else if(r.game==='pictionary') drawPictionary(r,g,bar,spec);
   else if(r.game==='bomb') drawBomb(r,g,bar,spec);
   else if(r.game==='scriptmurder') drawScriptMurder(r,g,bar,spec);
   else if(r.game==='konglok') drawKonglok(r,g,bar,spec);
   else if(r.game==='doushou') drawDoushou(r,g,bar,spec);
+  else if(r.game==='xiangqi') drawXiangqi(r,g,bar,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
@@ -1280,10 +1326,12 @@ const UC_FALLBACK = {
   hard: [['老師','教授'],['婚禮','訂婚'],['微信','QQ'],['手機','平板'],['足球','籃球'],['演唱會','音樂會'],['校服','便服'],['醫生','護士']],
 };
 function ucFallbackPairs(level, n){
-  const pool = (UC_FALLBACK[level] || UC_FALLBACK.normal).slice();
+  const src = (UC_FALLBACK[level] || UC_FALLBACK.normal).concat(UC_FALLBACK.normal);
+  // 兩個詞相同的組合一律不要
+  const pool = src.filter(p => p && p[0] && p[1] && picNorm(p[0]) !== picNorm(p[1]));
   const out = [];
   for (let i = 0; i < (n || 6) && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-  return out.length ? out : UC_FALLBACK.normal;
+  return out.length ? out : [['牛奶', '豆漿']];
 }
 /* 讓 AI 出「誰是臥底」詞對 */
 async function aiUndercoverPairs(level, n, avoid){
@@ -1300,18 +1348,30 @@ async function aiUndercoverPairs(level, n, avoid){
     if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
     if (Array.isArray(j)) {
       const pairs = j.filter(p => Array.isArray(p) && p.length >= 2 && p[0] && p[1])
-        .slice(0, n).map(p => [String(p[0]).slice(0, 14), String(p[1]).slice(0, 14)]);
+        .map(p => [String(p[0]).slice(0, 14), String(p[1]).slice(0, 14)])
+        // 兩個詞一樣（含繁簡寫法差異）＝無效題目：全部人會拿到同一個詞
+        .filter(p => picNorm(p[0]) !== picNorm(p[1]))
+        .slice(0, n);
       if (pairs.length) return pairs;
     }
   }
   return null;
+}
+/* 單次 AI 呼叫的硬性上限：模型偶爾會吐很久的推理，等太久玩家會以為卡死。
+   超時就當失敗 → 各遊戲改用內置保底題目，至少開得成局。 */
+function withTimeout(p, ms){
+  let t = null;
+  return Promise.race([
+    Promise.resolve(p).finally(() => { if (t) clearTimeout(t); }),
+    new Promise((_, rej) => { t = setTimeout(() => rej(new Error('AI timeout')), ms || 30000); }),
+  ]);
 }
 /* 統一入口：依遊戲種類出題，回傳 { level, words, source } */
 async function aiMakeTopic(game, level, n){
   if (game === 'undercover') {
     n = n || 4;
     try {
-      const words = await aiUndercoverPairs(level, n);
+      const words = await withTimeout(aiUndercoverPairs(level, n), 30000);
       if (words) return { level: level, words: words, source: 'ai' };
     } catch (e) {}
     return { level: level, words: ucFallbackPairs(level, n), source: 'fallback' };
@@ -1319,7 +1379,7 @@ async function aiMakeTopic(game, level, n){
   if (game === 'pictionary') {
     n = n || 3;
     try {
-      const words = await aiPictionaryWords(level, n);
+      const words = await withTimeout(aiPictionaryWords(level, n), 30000);
       if (words) return { level: level, words: words, source: 'ai' };
     } catch (e) {}
     return { level: level, words: picFallbackWords(level, n), source: 'fallback' };
@@ -1328,16 +1388,16 @@ async function aiMakeTopic(game, level, n){
   if (game === 'bomb') {
     n = n || 6;
     try {
-      const cats = await aiBombCategories(level, n);
+      const cats = await withTimeout(aiBombCategories(level, n), 30000);
       if (cats) return { level: level, categories: cats, source: 'ai' };
     } catch (e) {}
     return { level: level, categories: bombFallbackCategories(level, n), source: 'fallback' };
   }
-  // 劇本殺：題目是一整宗案件（背景 + 每個角色一份資料與秘密）
+  // 劇本殺：題目是一整宗案件（背景 + 每個角色一份資料與秘密）；這款 AI 寫得久，等 45 秒就轉保底
   if (game === 'scriptmurder') {
     const np = Math.max(4, Math.min(10, n || 4));
     try {
-      const cs = await aiScriptCase(level, np);
+      const cs = await withTimeout(aiScriptCase(level, np), 45000);
       if (cs) return cs;
     } catch (e) {}
     return smFallbackCase(level, np);
@@ -1345,9 +1405,11 @@ async function aiMakeTopic(game, level, n){
   return null;
 }
 
-/* ===== 誰是臥底（4–12 人）=====
-   平民拿到同一組詞的第一個，臥底拿第二個；輪流描述 → 投票 → 票最高者出局。
-   勝負：臥底全部出局＝平民勝；臥底人數 ≥ 平民人數＝臥底勝。
+/* ===== 誰是臥底（3–12 人）=====
+   平民拿到同一組詞的第一個，臥底拿第二個（兩個詞一定不可以相同）。
+   流程：發詞 → 按座位順序「打字描述」（像聊天，講完自動到下一位）→
+        全部講完一輪就投票 → 票最高者出局 → 未分出勝負就再描述一輪。
+   勝負：臥底全部出局＝平民勝；存活臥底 ≥ 存活平民＝臥底勝。
    題目放在 games/{id}/topic（AI 生成或內置保底），開局由種子挑一組。
 */
 function ucState(r){ return (r && r.state) ? r.state : {}; }
@@ -1356,32 +1418,134 @@ function ucWordOf(r, u){
   const st = ucState(r), pair = st.pair || ['？','？'];
   return (st.undercover || []).includes(u) ? pair[1] : pair[0];
 }
-async function ucTally(){
-  const r = curRoom; if (!r || r.game !== 'undercover') return;
+/** 這一輪輪到誰描述（依座位順序，跳過已出局的） */
+function ucCurDesc(r){
+  const alive = ucAlive(r);
+  if (!alive.length) return '';
+  return alive[(Number(ucState(r).descIdx) || 0) % alive.length];
+}
+/** 描述紀錄（像聊天：時間在前的在上、新的在下） */
+function ucDescList(r){
+  const d = ucState(r).descs || {};
+  return Object.values(d).filter(x => x && x.t).sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
+}
+/** 輪到我的時候打一句描述送出 → 自動輪到下一位；全員講完 → 進入投票 */
+async function ucSendDesc(text){
+  const r = curRoom; if (!r || r.game !== 'undercover' || r.status !== 'playing') return false;
   const st = ucState(r);
-  if (st.phase !== 'vote') return;
-  const alive = ucAlive(r), votes = st.votes || {};
-  if (alive.some(u => !votes[u])) return;            // 還沒投完
-  let res;
-  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'vote' ? 'tally' : undefined); }
-  catch (e) { return; }
-  if (!res.committed) return;                        // 別的客戶端已在結算
-  const cnt = {};
-  alive.forEach(u => { const t = votes[u]; if (t) cnt[t] = (cnt[t] || 0) + 1; });
-  let max = 0, top = [];
-  Object.keys(cnt).forEach(u => { if (cnt[u] > max) { max = cnt[u]; top = [u]; } else if (cnt[u] === max) top.push(u); });
+  if (st.phase !== 'play') return false;
+  const alive = ucAlive(r);
+  if (!alive.length) return false;
+  if (ucCurDesc(r) !== me.username) { showNotice('現在不是你的回合'); return false; }
+  const t = String(text || '').trim();
+  if (!t) { showNotice('要先寫一句描述'); return false; }
+  if (picNorm(t) === picNorm(ucWordOf(r, me.username))) { showNotice('不可以直接說出你的詞'); return false; }
+  const idx = (Number(st.descIdx) || 0);
+  const next = idx + 1;
+  const done = next >= alive.length;
+  await push(ref(db, 'games/' + curRoomId + '/state/descs'), {
+    u: me.username, t: t.slice(0, 80), r: Number(st.round) || 1, at: Date.now(),
+  });
+  const upd = { descIdx: done ? 0 : next };
+  if (done) { upd.phase = 'vote'; upd.votes = null; }
+  await update(ref(db, 'games/' + curRoomId + '/state'), upd);
+  await update(ref(db, 'games/' + curRoomId), { turn: done ? null : (alive[next] || null) });
+  return true;
+}
+/** 投票（或平票後的單獨再投） */
+async function ucCastVote(target){
+  const r = curRoom; if (!r || r.game !== 'undercover' || r.status !== 'playing') return;
+  const st = ucState(r);
+  const alive = ucAlive(r);
+  if (!alive.includes(me.username)) { showNotice('你已經出局了'); return; }
+  if (!alive.includes(target) || target === me.username) return;
+  if (st.phase === 'vote') {
+    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [me.username]: target });
+  } else if (st.phase === 'runoff') {
+    if (!(st.runoff || []).includes(target)) return showNotice('這一輪只能投平票的那幾位');
+    if ((st.runoff || []).includes(me.username)) return showNotice('平票的人不能投票');
+    await update(ref(db, 'games/' + curRoomId + '/state/runoffVotes'), { [me.username]: target });
+  } else return;
+  setTimeout(ucSettle, 250);
+}
+/** 結算：票高者出局；平票 → 只有平票的人被單獨再投一次 */
+async function ucSettle(){
+  const r = curRoom; if (!r || r.game !== 'undercover' || r.status !== 'playing') return;
+  const st = ucState(r), alive = ucAlive(r);
+  if (st.phase === 'vote') {
+    const votes = st.votes || {};
+    if (alive.some(u => !votes[u])) return;                 // 還沒投完
+    const cnt = {};
+    alive.forEach(u => { const t = votes[u]; if (alive.includes(t) && t !== u) cnt[t] = (cnt[t] || 0) + 1; });
+    let max = 0, top = [];
+    Object.keys(cnt).forEach(u => { if (cnt[u] > max) { max = cnt[u]; top = [u]; } else if (cnt[u] === max) top.push(u); });
+    const target = (top.length === 1) ? 'result' : (top.length > 1 ? 'runoff' : 'result');
+    let res;
+    try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'vote' ? target : undefined); }
+    catch (e) { return; }
+    if (!res.committed) return;                             // 別的端已經結算
+    if (target === 'runoff') {
+      await update(ref(db, 'games/' + curRoomId + '/state'), {
+        runoff: top, runoffVotes: null,
+        voteResult: { tally: cnt, voters: votes, out: null, tie: true, at: Date.now() },
+      });
+      return;
+    }
+    await ucCommitOut(top.length === 1 ? top[0] : null, cnt, votes, top.length !== 1);
+    return;
+  }
+  if (st.phase === 'runoff') {
+    const cand = st.runoff || [];
+    const voters = alive.filter(u => !cand.includes(u));
+    const rv = st.runoffVotes || {};
+    if (voters.length && voters.some(u => !rv[u])) return;   // 還沒投完
+    const cnt = {}; cand.forEach(u => { cnt[u] = 0; });
+    voters.forEach(u => { const t = rv[u]; if (cnt[t] !== undefined) cnt[t]++; });
+    let max = -1, top = [];
+    cand.forEach(u => { if (cnt[u] > max) { max = cnt[u]; top = [u]; } else if (cnt[u] === max) top.push(u); });
+    let res;
+    try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'runoff' ? 'result' : undefined); }
+    catch (e) { return; }
+    if (!res.committed) return;
+    await ucCommitOut(top.length === 1 ? top[0] : null, cnt, rv, top.length !== 1);
+  }
+}
+/** 真的把人踢出去，然後看要不要分勝負 */
+async function ucCommitOut(out, cnt, voters, tie){
+  const r = curRoom; if (!r) return;
+  const st = ucState(r);
   const eliminated = (st.eliminated || []).slice();
-  let out = null, tie = false;
-  if (top.length === 1) { out = top[0]; eliminated.push(out); } else { tie = true; }
+  if (out && !eliminated.includes(out)) eliminated.push(out);
   const under = st.undercover || [];
-  const aliveAfter = playerNames(r).filter(u => !eliminated.includes(u));
+  const all = playerNames(r);
+  const aliveAfter = all.filter(u => !eliminated.includes(u));
   const underAlive = under.filter(u => aliveAfter.includes(u));
   const civAlive = aliveAfter.length - underAlive.length;
   let teamWin = null;
   if (underAlive.length === 0) teamWin = 'civ';
-  else if (underAlive.length >= civAlive) teamWin = 'uc';
-  await update(ref(db, 'games/' + curRoomId + '/state'), { phase: teamWin ? 'end' : 'result', lastOut: out, tie: !!tie, votes: {}, eliminated: eliminated, revealed: !!teamWin, descIdx: 0 });
+  else if (civAlive === 0 || underAlive.length >= civAlive) teamWin = 'uc';
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    phase: teamWin ? 'end' : 'result', eliminated: eliminated,
+    lastOut: out || null, tie: !!tie, votes: null, runoffVotes: null, runoff: null,
+    revealed: !!teamWin, descIdx: 0,
+    voteResult: { tally: cnt || {}, voters: voters || {}, out: out || null, tie: !!tie, at: Date.now() },
+  });
   if (teamWin) await ucFinish(teamWin, r);
+}
+/** 出局結果確認後，開始下一輪描述（任何玩家都可以按，不用房主） */
+async function ucNextRound(){
+  const r = curRoom; if (!r || r.game !== 'undercover') return;
+  const st = ucState(r);
+  if (st.phase !== 'result') return;
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'result' ? 'play' : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  const alive = ucAlive(r);
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    descIdx: 0, round: (Number(st.round) || 1) + 1, votes: null, voteResult: null, lastOut: null, tie: false,
+  });
+  await update(ref(db, 'games/' + curRoomId), { turn: alive[0] || null });
 }
 async function ucFinish(teamWin, r){
   if (!r || r.status === 'ended') return;
@@ -1390,7 +1554,7 @@ async function ucFinish(teamWin, r){
   catch (e) { return; }
   if (!res.committed) return;
   const st = ucState(r);
-  // 只改需要改的欄位：整份覆蓋會把 ucTally 剛寫入的 eliminated 沖掉
+  // 只改需要改的欄位：整份覆蓋會把結算剛寫入的 eliminated 沖掉
   await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true, 'state/teamWin': teamWin });
   const under = st.undercover || [];
   for (const u of playerNames(r)) {
@@ -1406,6 +1570,41 @@ async function ucFinish(teamWin, r){
 // 注意：Firebase 的 update() 只接受物件，寫純量（true／字串／數字）會報
 // "values argument must be an object" → 這裡一律用 set()
 function ucSet(path, val){ return set(ref(db, 'games/' + curRoomId + path), val); }
+let ucSeenResultAt = 0;
+/** 投票結算後彈出的結果框：列出每個人的票數與誰投了誰，票高者出局 */
+function ucShowResultModal(){
+  const r = curRoom, el = document.getElementById('ucModal');
+  const vr = r ? ucState(r).voteResult : null;
+  if (!r || !vr || !vr.at || vr.at === ucSeenResultAt) { if (el) el.remove(); return; }
+  const names = playerNames(r), tally = vr.tally || {}, voters = vr.voters || {};
+  const rows = names.slice().sort((a, b) => (Number(tally[b]) || 0) - (Number(tally[a]) || 0)).map(u => {
+    const who = names.filter(v => voters[v] === u).map(v => escapeHtml(nameOf(r, v))).join('、') || '（沒人投他）';
+    const out = vr.out === u;
+    return `<div class="pitem" style="${out ? 'border-color:var(--red)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${out ? ' · 出局' : ''}
+        <div class="hint" style="margin:2px 0 0;text-align:left">${who}</div></div>
+      <div class="pbadge" style="${out ? 'color:var(--red);border-color:var(--red)' : ''}">${Number(tally[u]) || 0} 票</div>
+    </div>`;
+  }).join('');
+  const head = vr.tie
+    ? '<span style="color:var(--gold)">平票！最高的幾位要單獨再投一次</span>'
+    : (vr.out ? `${escapeHtml(nameOf(r, vr.out))} 被投出局` : '沒有人被投出局');
+  const m = document.createElement('div');
+  m.id = 'ucModal';
+  m.className = 'ucmodal';
+  m.innerHTML = `<div class="ucmodal-card">
+    <h3>投票結果</h3>
+    <div class="hint" style="margin:6px 0 10px">${head}</div>
+    <div class="plist">${rows}</div>
+    <button class="btn" id="ucModalClose">知道了</button>
+  </div>`;
+  if (el) el.remove();
+  document.body.appendChild(m);
+  m.onclick = e => { if (e.target === m) { ucSeenResultAt = vr.at; m.remove(); } };
+  const cb = m.querySelector('#ucModalClose');
+  if (cb) cb.onclick = () => { ucSeenResultAt = vr.at; m.remove(); };
+}
 function drawUndercover(r, g, bar, spec){
   const st = ucState(r), names = playerNames(r);
   const amPlayer = !!r.players[me.username], isHost = r.host === me.username;
@@ -1415,7 +1614,8 @@ function drawUndercover(r, g, bar, spec){
   const myWord = amPlayer ? ucWordOf(r, me.username) : '';
   const ready = st.ready || {};
   const readyN = alive.filter(u => ready[u]).length;
-  const curU = alive.length ? alive[(st.descIdx || 0) % alive.length] : '';
+  const curU = ucCurDesc(r);
+  const myTurnDesc = (phase === 'play') && (curU === me.username) && !dead && amPlayer;
 
   const plist = names.map(u => {
     const isDead = eliminated.includes(u);
@@ -1429,6 +1629,18 @@ function drawUndercover(r, g, bar, spec){
     </div>`;
   }).join('');
 
+  // 描述紀錄：像聊天一樣，舊的在上、新的在下
+  const feed = ucDescList(r);
+  const feedHtml = `<div class="ucfeed" id="ucFeed">${feed.length
+    ? feed.map(x => `<div class="ucmsg">
+        <div class="pav" style="background:${colorOf(r, x.u)}">${avatarHTML({ displayName: nameOf(r, x.u) })}</div>
+        <div class="ucbody">
+          <div class="ucmeta">${escapeHtml(nameOf(r, x.u))}${x.u === me.username ? '（你）' : ''} · 第 ${Number(x.r) || 1} 輪</div>
+          <div class="uctext">${escapeHtml(x.t)}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:16px 6px">還沒有人描述</div>'}</div>`;
+
   const src = (r.topic && r.topic.source === 'fallback') ? '（AI 無法連線，使用內置題目）' : '';
   let stage = '';
   if (phase === 'reveal') {
@@ -1439,32 +1651,43 @@ function drawUndercover(r, g, bar, spec){
          ${isHost ? `<button class="btn ghost" data-act="ucNewPair">換一題</button>` : ''}
          <div class="hint" style="margin-top:8px">已準備 ${readyN}/${alive.length} · 難度 ${levelName(r.topic && r.topic.level)} ${src}</div>`
       : `<div class="hint">觀戰中，等待玩家準備</div>`;
-  } else if (phase === 'play') {
-    stage = `${myWord ? `<div class="hint">你的詞：<b style="color:var(--gold)">${escapeHtml(myWord)}</b></div>` : ''}
-      <div class="turnbar ${curU === me.username ? 'mine' : ''}">${dead ? '你已出局，只能旁觀' : (curU === me.username ? '輪到你描述' : escapeHtml(nameOf(r, curU)) + ' 正在描述')}</div>
-      <div class="hint" style="margin-top:8px">第 ${st.round || 1} 輪 · 一句話描述你的詞，不可以直接說出詞本身</div>
-      ${isHost ? `<button class="btn" data-act="ucNext">下一位</button>
-        <button class="btn ghost" data-act="ucToVote">進入投票</button>` : ''}`;
-  } else if (phase === 'vote') {
-    const votes = st.votes || {};
-    const myVote = votes[me.username];
-    const votedN = alive.filter(u => votes[u]).length;
-    stage = `${myWord ? `<div class="hint">你的詞：<b style="color:var(--gold)">${escapeHtml(myWord)}</b></div>` : ''}
-      <div class="turnbar">投票中 · 已投 ${votedN}/${alive.length}</div>
-      <div class="hint" style="margin-top:8px">${myVote ? '你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）' : (dead ? '你已出局，不能投票' : '選出你認為是臥底的人')}</div>
-      ${(!dead && amPlayer && !myVote) ? `<div class="plist">${alive.filter(u => u !== me.username).map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
-  } else if (phase === 'result') {
-    const out = st.lastOut;
-    stage = `<div class="countdown" style="font-size:26px;color:${out ? 'var(--red)' : 'var(--gold)'}">${out ? escapeHtml(nameOf(r, out)) + ' 出局' : '平票，本輪無人出局'}</div>
-      <div class="hint">${out ? '（身份暫不公開）' : '再描述一輪，然後重新投票'}</div>
-      ${isHost ? `<button class="btn" data-act="ucRound">開始第 ${(st.round || 1) + 1} 輪</button>` : ''}
-      <div class="plist">${plist}</div>`;
   } else {
-    stage = `<div class="hint">本局結束</div>`;
+    let action = '';
+    if (phase === 'play') {
+      action = myTurnDesc
+        ? `<div class="inputrow"><input id="ucInput" placeholder="用一句話描述你的詞…" autocomplete="off" maxlength="80"><button class="btn" id="ucSend">送出</button></div>`
+        : `<div class="turnbar">${dead ? '你已出局，只能旁觀' : (curU ? escapeHtml(nameOf(r, curU)) + ' 正在想…' : '')}</div>`;
+    } else if (phase === 'vote') {
+      const votes = st.votes || {}, myVote = votes[me.username];
+      const votedN = alive.filter(u => votes[u]).length;
+      action = `<div class="turnbar">投票中 · 已投 ${votedN}/${alive.length}</div>
+        <div class="hint" style="margin-top:8px">${myVote ? ('你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）') : (dead ? '你已出局，不能投票' : '選出你認為是臥底的人')}</div>
+        ${(!dead && amPlayer && !myVote) ? `<div class="plist">${alive.filter(u => u !== me.username).map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
+    } else if (phase === 'runoff') {
+      const cand = st.runoff || [], rv = st.runoffVotes || {};
+      const voters = alive.filter(u => !cand.includes(u));
+      const votedN = voters.filter(u => rv[u]).length;
+      const iAmCand = cand.includes(me.username);
+      action = `<div class="turnbar" style="border-color:var(--gold);color:var(--gold)">平票！由 ${cand.map(u => escapeHtml(nameOf(r, u))).join(' 對 ')} 單獨再投一次</div>
+        <div class="hint" style="margin-top:8px">${iAmCand ? '你是平票的人，這一輪不能投票' : (rv[me.username] ? '你已經投了（等其他人）' : (dead ? '你已出局' : '投出你認為是臥底的那一位'))}</div>
+        ${(!iAmCand && !dead && amPlayer && !rv[me.username]) ? `<div class="plist">${cand.map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer;border-color:var(--gold)"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}
+        <div class="hint">已投 ${votedN}/${voters.length}</div>`;
+    } else if (phase === 'result') {
+      const out = st.lastOut;
+      action = `<div class="countdown" style="font-size:26px;color:${out ? 'var(--red)' : 'var(--gold)'}">${out ? escapeHtml(nameOf(r, out)) + ' 出局' : '平票，本輪無人出局'}</div>
+        <div class="hint">${out ? '身份暫不公開 · 再描述一輪，然後重新投票' : '再描述一輪，然後重新投票'}</div>
+        ${amPlayer ? `<button class="btn" data-act="ucRound">開始第 ${(Number(st.round) || 1) + 1} 輪描述</button>` : ''}`;
+    } else {
+      action = `<div class="hint">本局結束</div>`;
+    }
+    stage = `${myWord ? `<div class="hint" style="margin-bottom:6px">你的詞：<b style="color:var(--gold)">${escapeHtml(myWord)}</b></div>` : ''}
+      ${phase === 'play' ? `<div class="hint" style="margin-bottom:6px">第 ${Number(st.round) || 1} 輪 · 按座位順序，講完自動輪到下一位</div>` : ''}
+      ${action}
+      ${feedHtml}`;
   }
 
   appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
-   <div class="wrap">${bar}${stage}${phase === 'result' ? '' : `<div class="plist">${plist}</div>`}</div>`;
+   <div class="wrap">${bar}${stage}${phase === 'reveal' ? '' : `<div class="plist">${plist}</div>`}</div>`;
   const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
 
   const rb = appEl.querySelector('[data-act="ucReady"]');
@@ -1477,26 +1700,39 @@ function drawUndercover(r, g, bar, spec){
       try { await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'reveal' ? 'play' : undefined); } catch (e) {}
     }
   };
-  const nb = appEl.querySelector('[data-act="ucNext"]');
-  if (nb) nb.onclick = async () => { await ucSet('/state/descIdx', (st.descIdx || 0) + 1); };
-  const vb = appEl.querySelector('[data-act="ucToVote"]');
-  if (vb) vb.onclick = async () => { await ucSet('/state', Object.assign({}, st, { phase: 'vote', votes: {} })); };
   const rnd = appEl.querySelector('[data-act="ucRound"]');
-  if (rnd) rnd.onclick = async () => { await ucSet('/state', Object.assign({}, st, { phase: 'play', descIdx: 0, round: (st.round || 1) + 1, votes: {}, lastOut: null, tie: false })); };
+  if (rnd) rnd.onclick = ucNextRound;
   const np = appEl.querySelector('[data-act="ucNewPair"]');
   if (np) np.onclick = async () => {
     const words = (r.topic && r.topic.words) || [];
-    if (!words.length) return;
-    const pair = words[Math.floor(Math.random() * words.length)];
-    const names2 = playerNames(r);
-    const under = ucPickUnder(names2, r.seed || 1, Date.now() % 9973);
-    await ucSet('/state', Object.assign({}, st, { pair: pair, undercover: under, phase: 'reveal', ready: {}, eliminated: [], votes: {}, descIdx: 0, round: 1, revealed: false }));
+    if (words.length < 1) return;
+    // 兩個詞相同的組合一律跳過（否則會出現「全部人拿到同一個詞」）
+    const ok = words.filter(p => Array.isArray(p) && p[0] && p[1] && picNorm(p[0]) !== picNorm(p[1]));
+    if (!ok.length) return showNotice('沒有可用的題目');
+    const pair = ok[Math.floor(Math.random() * ok.length)];
+    const under = ucPickUnder(playerNames(r), r.seed || 1, Date.now() % 9973);
+    await ucSet('/state', Object.assign({}, st, { pair: pair, undercover: under, phase: 'reveal', ready: {}, eliminated: [], votes: {}, descs: null, descIdx: 0, round: 1, revealed: false, runoff: null, runoffVotes: null, voteResult: null }));
+    ucSeenResultAt = 0;
   };
-  appEl.querySelectorAll('[data-vote]').forEach(el => el.onclick = async () => {
-    if (st.phase !== 'vote') return;
-    await ucSet('/state/votes/' + me.username, el.dataset.vote);
-    setTimeout(ucTally, 250);
-  });
+  appEl.querySelectorAll('[data-vote]').forEach(el => el.onclick = () => ucCastVote(el.dataset.vote));
+
+  const gi = appEl.querySelector('#ucInput');
+  const gb = appEl.querySelector('#ucSend');
+  if (gi && gb) {
+    const send = async () => {
+      const v = gi.value.trim(); if (!v) return;
+      gb.disabled = true;
+      const ok = await ucSendDesc(v);
+      if (ok) gi.value = '';
+      else gb.disabled = false;
+    };
+    gb.onclick = send;
+    gi.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    if (myTurnDesc) setTimeout(() => { try { gi.focus(); } catch (e) {} }, 60);
+  }
+  const fd = appEl.querySelector('#ucFeed');
+  if (fd) fd.scrollTop = fd.scrollHeight;      // 新的在最下面，自動滾到底
+  ucShowResultModal();
 }
 function ucPickUnder(names, seed, salt){
   const rng = makeRng(((seed >>> 0) ^ ((salt || 0) * 2654435761)) >>> 0);
@@ -2431,6 +2667,197 @@ function drawDoushou(r, g, bar, spec) {
     if (dsSel && legal.some(([lc, lr]) => lc === c && lr === rr)) { await dsMove(dsSel, [c, rr]); return; }
     if (cell && cell.o === mySide) { dsSel = (dsSel && dsSel[0] === c && dsSel[1] === rr) ? null : [c, rr]; render(); }
     else { dsSel = null; render(); }
+  });
+}
+
+/* ══════════════════ 中國象棋（2 人）══════════════════
+   9 欄 × 10 列。棋子走法、蹩馬腿、塞象眼、炮翻山、過河兵、九宮、白臉將全部照規則；
+   被將軍又無子可解＝輸。局面一樣由「動作序列」重放得出。
+   o=0＝黑（上方）、o=1＝紅（下方，先走）；座位 0 執紅。
+*/
+const XQ_GLYPH = {
+  0: { K: '將', A: '士', B: '象', N: '馬', R: '車', C: '砲', P: '卒' },   // 黑
+  1: { K: '帥', A: '仕', B: '相', N: '傌', R: '俥', C: '炮', P: '兵' },   // 紅
+};
+const XQ_BACK = ['R', 'N', 'B', 'A', 'K', 'A', 'B', 'N', 'R'];
+const XQ_COLOR = { 0: '#cbd5e1', 1: '#f87171' };
+function xqStart() {
+  const b = new Array(90).fill(null);
+  for (let c = 0; c < 9; c++) { b[c] = { t: XQ_BACK[c], o: 0 }; b[81 + c] = { t: XQ_BACK[c], o: 1 }; }
+  b[2 * 9 + 1] = { t: 'C', o: 0 }; b[2 * 9 + 7] = { t: 'C', o: 0 };
+  b[7 * 9 + 1] = { t: 'C', o: 1 }; b[7 * 9 + 7] = { t: 'C', o: 1 };
+  for (const c of [0, 2, 4, 6, 8]) { b[3 * 9 + c] = { t: 'P', o: 0 }; b[6 * 9 + c] = { t: 'P', o: 1 }; }
+  return b;
+}
+function xqReplay(r) {
+  const b = xqStart();
+  for (const a of actionsOf(r)) {
+    if (!a || a.t !== 'mv') continue;
+    const f = Number(a.f), to = Number(a.to);
+    if (!Number.isInteger(f) || !Number.isInteger(to) || f < 0 || f > 89 || to < 0 || to > 89) continue;
+    if (!b[f]) continue;
+    b[to] = b[f]; b[f] = null;
+  }
+  return b;
+}
+function xqMoves(b, idx) {
+  const p = b[idx]; if (!p) return [];
+  const r = Math.floor(idx / 9), c = idx % 9, o = p.o, out = [];
+  const palR = o === 0 ? [0, 2] : [7, 9];
+  const add = (rr, cc) => { if (rr < 0 || rr > 9 || cc < 0 || cc > 8) return; const q = b[rr * 9 + cc]; if (q && q.o === o) return; out.push(rr * 9 + cc); };
+  if (p.t === 'K') {
+    for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < palR[0] || rr > palR[1] || cc < 3 || cc > 5) continue;
+      add(rr, cc);
+    }
+  } else if (p.t === 'A') {
+    for (const [dr, dc] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < palR[0] || rr > palR[1] || cc < 3 || cc > 5) continue;
+      add(rr, cc);
+    }
+  } else if (p.t === 'B') {
+    for (const [dr, dc] of [[2, 2], [2, -2], [-2, 2], [-2, -2]]) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr > 9 || cc < 0 || cc > 8) continue;
+      if (o === 0 && rr > 4) continue;                 // 象不能過河
+      if (o === 1 && rr < 5) continue;
+      if (b[(r + dr / 2) * 9 + (c + dc / 2)]) continue;  // 塞象眼
+      add(rr, cc);
+    }
+  } else if (p.t === 'N') {
+    // [deltaRow, deltaCol, 馬腿 row, 馬腿 col]
+    for (const [dr, dc, lr, lc] of [[2, 1, 1, 0], [2, -1, 1, 0], [-2, 1, -1, 0], [-2, -1, -1, 0], [1, 2, 0, 1], [-1, 2, 0, 1], [1, -2, 0, -1], [-1, -2, 0, -1]]) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr > 9 || cc < 0 || cc > 8) continue;
+      if (b[(r + lr) * 9 + (c + lc)]) continue;        // 蹩馬腿
+      add(rr, cc);
+    }
+  } else if (p.t === 'R') {
+    for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      let rr = r + dr, cc = c + dc;
+      while (rr >= 0 && rr <= 9 && cc >= 0 && cc <= 8) {
+        const q = b[rr * 9 + cc];
+        if (!q) out.push(rr * 9 + cc);
+        else { if (q.o !== o) out.push(rr * 9 + cc); break; }
+        rr += dr; cc += dc;
+      }
+    }
+  } else if (p.t === 'C') {
+    for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      let rr = r + dr, cc = c + dc, screen = false;
+      while (rr >= 0 && rr <= 9 && cc >= 0 && cc <= 8) {
+        const q = b[rr * 9 + cc];
+        if (!screen) { if (!q) out.push(rr * 9 + cc); else screen = true; }   // 空格可走，碰到第一個子當炮台
+        else if (q) { if (q.o !== o) out.push(rr * 9 + cc); break; }          // 隔一個子才能食
+        rr += dr; cc += dc;
+      }
+    }
+  } else if (p.t === 'P') {
+    const fwd = o === 0 ? 1 : -1;
+    add(r + fwd, c);
+    const crossed = o === 0 ? r >= 5 : r <= 4;          // 過河後可以左右走
+    if (crossed) { add(r, c - 1); add(r, c + 1); }
+  }
+  return out;
+}
+function xqGen(b, o) {
+  const out = [];
+  for (let i = 0; i < 90; i++) { const p = b[i]; if (!p || p.o !== o) continue; for (const j of xqMoves(b, i)) out.push([i, j]); }
+  return out;
+}
+function xqApply(b, f, t) { const nb = b.slice(); nb[t] = nb[f]; nb[f] = null; return nb; }
+/** 白臉將：兩將同一條線、中間無子 */
+function xqFacing(b) {
+  let k0 = -1, k1 = -1;
+  for (let i = 0; i < 90; i++) { const p = b[i]; if (p && p.t === 'K') { if (p.o === 0) k0 = i; else k1 = i; } }
+  if (k0 < 0 || k1 < 0) return false;
+  if (k0 % 9 !== k1 % 9) return false;
+  const c = k0 % 9, ra = Math.min(Math.floor(k0 / 9), Math.floor(k1 / 9)), rb = Math.max(Math.floor(k0 / 9), Math.floor(k1 / 9));
+  for (let r = ra + 1; r < rb; r++) if (b[r * 9 + c]) return false;
+  return true;
+}
+function xqInCheck(b, o) {
+  let gen = -1;
+  for (let i = 0; i < 90; i++) { const p = b[i]; if (p && p.t === 'K' && p.o === o) { gen = i; break; } }
+  if (gen < 0) return true;
+  for (const [, t] of xqGen(b, 1 - o)) if (t === gen) return true;
+  return xqFacing(b);
+}
+function xqLegal(b, o) {
+  const out = [];
+  for (const [f, t] of xqGen(b, o)) if (!xqInCheck(xqApply(b, f, t), o)) out.push([f, t]);
+  return out;
+}
+function xqTurnIdx(r) { return actionsOf(r).length % 2; }            // 0 → 座位 0（執紅，先走）
+function xqTurnSide(r) { return xqTurnIdx(r) === 0 ? 1 : 0; }        // 該誰走：1＝紅、0＝黑
+function xqPlayerOf(side, names) { return names[side === 1 ? 0 : 1] || ''; }
+function xqSideOfPlayer(i) { return i === 0 ? 1 : 0; }
+async function xqCheckEnd(r) {
+  if (!r || r.game !== 'xiangqi' || r.status !== 'playing') return;
+  const b = xqReplay(r);
+  const side = xqTurnSide(r);                       // 該他走的一方
+  // 象棋規矩：輪到你但無棋可走（被將死或困斃）＝你輸，由對方獲勝
+  if (xqLegal(b, side).length === 0) await finishGame(xqPlayerOf(1 - side, playerNames(r)));
+}
+async function xqMove(f, to) {
+  const r = curRoom;
+  if (!r || r.status !== 'playing' || r.game !== 'xiangqi') return;
+  const names = playerNames(r);
+  if (xqPlayerOf(xqTurnSide(r), names) !== me.username) return showNotice('還沒輪到你');
+  const b = xqReplay(r);
+  const cell = b[f];
+  if (!cell || cell.o !== xqSideOfPlayer(names.indexOf(me.username))) return showNotice('這不是你的棋子');
+  if (!xqLegal(b, cell.o).some(([lf, lt]) => lf === f && lt === to)) return showNotice('這一步不合規則（會送將或走法不對）');
+  xqSel = null;
+  await pushAction({ t: 'mv', f: f, to: to, p: me.username });
+}
+let xqSel = null;
+function drawXiangqi(r, g, bar, spec) {
+  const names = playerNames(r);
+  const b = xqReplay(r);
+  const turnSide = xqTurnSide(r);
+  const turnU = xqPlayerOf(turnSide, names);
+  const myTurn = (turnU === me.username) && !spec;
+  const mySide = xqSideOfPlayer(names.indexOf(me.username));
+  const legal = (xqSel !== null && myTurn) ? xqLegal(b, mySide).filter(([f]) => f === xqSel).map(([, t]) => t) : [];
+
+  const cells = [];
+  for (let i = 0; i < 90; i++) {
+    const p = b[i];
+    const cls = 'xqcell' + (xqSel === i ? ' xqsel' : '') + (legal.includes(i) ? ' xqmove' : '');
+    const glyph = p ? `<span class="xqg" style="color:${XQ_COLOR[p.o]};border-color:${XQ_COLOR[p.o]}">${XQ_GLYPH[p.o][p.t] || p.t}</span>` : '';
+    cells.push(`<div class="${cls}" data-xq="${i}">${glyph}</div>`);
+  }
+
+  const rows = names.map((u, i) => `<div class="pitem" style="${u === turnU ? 'border-color:var(--accent)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''} · ${xqSideOfPlayer(i) === 1 ? '紅方（下，先走）' : '黑方（上）'}</div>
+    </div>`).join('');
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="xqboard">${cells.join('')}</div>
+     <div class="hint">你執 <b style="color:${XQ_COLOR[mySide]}">${mySide === 1 ? '紅方' : '黑方'}</b> · 大子食細子 · 炮要隔一個子才食 · 馬有馬腿 · 象不過河 · 將帥不可對面</div>
+     ${myTurn ? `<div class="hint">${xqSel !== null ? '再點一下要走到哪一格' : '點自己的棋子開始走'}</div>` : ''}
+     <div class="plist">${rows}</div>
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+
+  appEl.querySelectorAll('[data-xq]').forEach(el => el.onclick = async () => {
+    if (!myTurn) return;
+    const i = Number(el.dataset.xq);
+    const p = b[i];
+    if (xqSel !== null && legal.includes(i)) { await xqMove(xqSel, i); return; }
+    if (xqSel === i) { xqSel = null; render(); return; }
+    if (p && p.o === mySide) {
+      const can = xqLegal(b, mySide).some(([f]) => f === i);
+      if (!can) { showNotice('這隻棋子現在沒有合法的走法'); return; }
+      xqSel = i; render(); return;
+    }
+    xqSel = null; render();
   });
 }
 
