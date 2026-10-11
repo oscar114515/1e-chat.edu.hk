@@ -439,6 +439,10 @@ function joinRoom(rid){
     // 第一次收到資料時就已經是「已結束」，而且我不是這場的玩家 → 我是遲到的人
     if(!prev && curRoom.status==='ended' && !(curRoom.players&&curRoom.players[me.username])) lateJoin=true;
     if(!lateJoin) await ensureMembership();     // 已結束的房間不要再把自己塞進去
+    // 人數已經夠了卻還沒開始倒數 → 由「任何一個在房間裡的人」補上。
+    // 只在 ensureMembership 裡觸發是不夠的：最後一位可能是別端（例如安卓）加進來的，
+    // 那樣兩邊都不會開始倒數，畫面就會一直卡在「人數 2/2 · 等待中」。
+    if(!lateJoin) maybeStartCountdown();
     await checkAbandon(curRoom);
     // 需要題目但還沒出好 → 後台補（不阻塞介面）
     if(curRoom && GAMES_NEED_TOPIC[curRoom.game] && curRoom.status!=='ended') ensureTopic(curRoom);
@@ -572,8 +576,12 @@ function renderRoom(){
   else if(r.status==='countdown'&&r.startAt){
     const left=Math.max(0,Math.ceil((r.startAt-Date.now())/1000));
     cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint">人數已到齊，倒數後自動開局</div>`;
+  } else if(pc>=(r.minP||2)&&!topicReady(r)){
+    // 人已經夠了但題目還沒好：不要把「還需要 0 人」這種鬼話給使用者看
+    cdHtml=`<div class="hint">人數已到齊，正在準備題目…</div>`;
   } else {
-    cdHtml=`<div class="hint">還需要 ${Math.max(0,(r.minP||2)-pc)} 人才能開局</div>`;
+    const need=Math.max(0,(r.minP||2)-pc);
+    cdHtml=`<div class="hint">${need>0?('還需要 '+need+' 人才能開局'):'人數已到齊，準備開局…'}</div>`;
   }
   const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="background:${safeColor(p.color,'#3b82f6')}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
   const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="background:#475569">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
