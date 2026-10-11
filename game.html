@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--text-main);font-family:-apple-system,Blink
 .countdown{text-align:center;font-size:44px;font-weight:800;color:var(--gold);margin:16px 0 4px;font-variant-numeric:tabular-nums}
 .hint{text-align:center;font-size:13px;color:var(--text-sub);margin-bottom:10px}
 .board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
-canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touch-action:manipulation}
+canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touch-action:none;-webkit-user-select:none;user-select:none}
 .side{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .turnbar{text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border)}
 .turnbar.mine{background:rgba(56,189,248,.14);border-color:var(--accent);color:var(--accent)}
@@ -231,18 +231,11 @@ async function doCreate(){
   const g=gameDef(pick.g);
   const rid=push(ref(db,'games')).key;
   const now=Date.now();
-  // 需要題目的遊戲：建房時就請 AI 出題（AI 失敗自動退回內置題庫）
-  let topic=null;
-  if(GAMES_NEED_TOPIC[g.k]){
-    showLoading('AI 正在出題（'+levelName(pick.level)+'）…');
-    const tn=g.k==='pictionary'?pick.p:4;   // 你畫我猜：每人當一次畫手，題目數＝人數
-    try{ topic=await aiMakeTopic(g.k,pick.level,tn); }catch(e){ topic=null; }
-    hideLoading();
-    if(!topic) topic={level:pick.level,words:ucFallbackPairs(pick.level,4),source:'fallback'};
-  }
+  // 先建房、發邀請（不卡 AI 出題）；題目由 ensureTopic 在後台生成
   const room={game:g.k,gameName:g.n,host:me.username,hostName:me.displayName,
     minP:pick.p,maxP:g.max,setMax:pick.p,allowSpectate:pick.spec,status:'waiting',
-    createdAt:now,startAt:null,turn:null,winner:null,state:{},topic:topic,
+    createdAt:now,startAt:null,turn:null,winner:null,state:{},topic:null,
+    topicLevel:(GAMES_NEED_TOPIC[g.k]?pick.level:null),
     players:{[me.username]:{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:0}},
     spectators:{}};
   await set(ref(db,'games/'+rid), room);
@@ -258,6 +251,36 @@ async function doCreate(){
   joinRoom(rid);
 }
 
+/* 需要題目的遊戲：任一玩家端在後台補題目（topicGenerating 搶鎖，只出一份） */
+async function ensureTopic(r){
+  if(!r || r.status==='ended') return;
+  const g=gameDef(r.game);
+  if(!GAMES_NEED_TOPIC[g.k]) return;
+  if(r.topic && r.topic.words && r.topic.words.length) return;
+  let res;
+  try{ res=await runTransaction(ref(db,'games/'+curRoomId+'/topicGenerating'), v=> v===true?undefined:true); }
+  catch(e){ return; }
+  if(!res.committed) return;   // 別的玩家正在出題
+  const lockRef=ref(db,'games/'+curRoomId+'/topicGenerating');
+  try{ onDisconnect(lockRef).remove(); }catch(e){}
+  const tn=g.k==='pictionary'?(r.setMax||r.maxP||2):4;
+  const lvl=r.topicLevel||'normal';
+  let topic=null;
+  try{ topic=await aiMakeTopic(g.k,lvl,tn); }catch(e){ topic=null; }
+  if(!topic || !topic.words || !topic.words.length){
+    topic={level:lvl, words:(g.k==='pictionary'?picFallbackWords(lvl,tn):ucFallbackPairs(lvl,tn)), source:'fallback'};
+  }
+  await update(ref(db,'games/'+curRoomId),{topic:topic, topicGenerating:null});
+  // 題目就緒後，若人數已夠就（重新）開始倒數
+  try{
+    const rr=(await get(ref(db,'games/'+curRoomId))).val();
+    if(rr && rr.status==='waiting'){
+      const pc=Object.keys(rr.players||{}).length;
+      if(pc>=(rr.minP||2)) await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
+    }
+  }catch(e){}
+}
+
 /* ===== 房間 ===== */
 function joinRoom(rid){
   curRoomId=rid; view='room'; try{window.__roomId=rid;}catch(e){}
@@ -267,6 +290,8 @@ function joinRoom(rid){
     curRoom=snap.val();
     await ensureMembership();
     await checkAbandon(curRoom);
+    // 需要題目但還沒出好 → 後台補（不阻塞介面）
+    if(curRoom && GAMES_NEED_TOPIC[curRoom.game] && curRoom.status!=='ended') ensureTopic(curRoom);
     render();
     // 對局一結束（分出勝負／有人退出／房主關房）→ 把聊天室那條邀請標成已完成
     if(curRoom) markInviteDone(curRoom);
@@ -351,6 +376,8 @@ async function markInviteDone(r){
 async function maybeStartCountdown(){
   const r=curRoom; if(!r) return;
   const pc=r.players?Object.keys(r.players).length:0;
+  // 需要題目的遊戲：題目還沒出好就不開始倒數
+  if(GAMES_NEED_TOPIC[r.game] && !(r.topic && r.topic.words && r.topic.words.length)) return;
   if(r.status==='waiting'&&pc>=(r.minP||2)){
     await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
   }
@@ -378,8 +405,12 @@ function renderRoom(){
   const specs=Object.entries(r.spectators||{});
   const pc=players.length;
   const isHost=r.host===me.username;
+  const topicReady=!(GAMES_NEED_TOPIC[r.game]) || (r.topic && r.topic.words && r.topic.words.length);
   let cdHtml='';
-  if(r.status==='countdown'&&r.startAt){
+  if(!topicReady){
+    cdHtml=`<div class="hint" style="color:var(--gold)">AI 題目尚未完成，請稍候…</div>`;
+  }
+  else if(r.status==='countdown'&&r.startAt){
     const left=Math.max(0,Math.ceil((r.startAt-Date.now())/1000));
     cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint">人數已到齊，倒數後自動開局</div>`;
   } else {
@@ -426,6 +457,11 @@ async function tryStartGame(){
   if(r.status!=='countdown')return;
   const pc=Object.keys(r.players||{}).length;
   if(pc<(r.minP||2)){ await update(ref(db,'games/'+id),{status:'waiting',startAt:null}); return; }
+  // 需要題目的遊戲：題目還沒出好就不開局（等 ensureTopic 補完後會再觸發倒數）
+  if(GAMES_NEED_TOPIC[r.game] && !(r.topic && r.topic.words && r.topic.words.length)){
+    await update(ref(db,'games/'+id),{status:'waiting',startAt:null});
+    return;
+  }
   // 事務搶鎖：countdown → playing，只允許一個客戶端開局
   let res;
   try{
@@ -1509,9 +1545,10 @@ function drawPictionary(r, g, bar, spec){
     const start = e => { drawing = true; curPts = [toCanvas(e)]; };
     const move = e => { if (!drawing) return; const p = toCanvas(e); curPts.push(p); picDrawStroke(cv, [curPts[curPts.length - 2], p], picColor, 1); };
     const end = async () => { if (!drawing) return; drawing = false; if (curPts.length) await push(ref(db, 'games/' + curRoomId + '/state/strokes'), { pts: curPts, color: picColor }); curPts = []; };
-    cv.addEventListener('pointerdown', start);
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} start(e); });
     cv.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', end);
+    cv.addEventListener('pointerup', end);
+    cv.addEventListener('pointercancel', end);
     cv.onclick = null;
     appEl.querySelectorAll('#picTools .pic-c').forEach(b => b.onclick = () => { picColor = b.dataset.c; b.parentElement.querySelectorAll('.pic-c').forEach(x => x.style.borderColor = 'transparent'); b.style.borderColor = '#fff'; });
     const clr = appEl.querySelector('#picClear');
