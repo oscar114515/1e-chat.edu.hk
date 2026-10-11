@@ -58,6 +58,54 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 .side{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .turnbar{text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border)}
 .turnbar.mine{background:rgba(56,189,248,.14);border-color:var(--accent);color:var(--accent)}
+
+/* 傳炸彈 */
+.inputrow{display:flex;gap:9px;margin:12px 0 6px}
+.inputrow input{flex:1;min-width:0;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:12px;color:var(--text-main);font-size:16px;padding:11px 13px;font-family:inherit;touch-action:manipulation}
+.inputrow input:focus{outline:none;border-color:var(--accent)}
+.inputrow .btn{width:auto;flex:none;padding:0 20px;margin:0}
+.bombcat{text-align:center;font-size:34px;font-weight:800;color:var(--gold);margin:6px 0 10px;word-break:break-all;letter-spacing:1px}
+.bombgauge{height:12px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-strong);overflow:hidden;margin:0 0 6px}
+.bombbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .12s linear}
+.bombgauge.danger .bombbar{background:linear-gradient(90deg,#f97316,var(--red))}
+.bombgauge.danger{animation:bombPulse .5s infinite alternate}
+@keyframes bombPulse{from{box-shadow:0 0 0 rgba(239,68,68,0)}to{box-shadow:0 0 14px rgba(239,68,68,.55)}}
+
+/* 劇本殺 */
+.smcase,.smcard{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin:10px 0}
+.smcard{border-color:var(--accent)}
+.smtag{font-size:11px;letter-spacing:2px;color:var(--text-sub)}
+.smname{font-size:19px;font-weight:800;margin:3px 0 6px}
+.smline{font-size:13px;color:var(--text-main);opacity:.9}
+.smsecret{font-size:13px;color:var(--gold);margin-top:8px;border-top:1px dashed var(--border-strong);padding-top:8px}
+.smculprit{font-size:13px;font-weight:700;color:var(--red);margin-top:8px}
+
+/* 康樂棋 */
+.klboard{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0}
+.klcell{position:relative;aspect-ratio:1;border-radius:10px;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.klcell .klnum{position:absolute;top:2px;left:5px;font-size:10px;color:var(--text-sub);opacity:.8}
+.klnum{font-variant-numeric:tabular-nums}
+.klcell .klsp{font-size:11px;font-weight:800;color:var(--text-main)}
+.klcell.klup{background:rgba(34,197,94,.16);border-color:rgba(34,197,94,.55)}
+.klcell.klup .klsp{color:var(--green)}
+.klcell.kldown{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.55)}
+.klcell.kldown .klsp{color:var(--red)}
+.klcell.klstart{border-color:var(--accent);background:rgba(56,189,248,.13)}
+.klcell.klend{border-color:var(--gold);background:rgba(251,191,36,.15)}
+.kltok{position:absolute;bottom:3px;left:0;right:0;display:flex;justify-content:center;gap:2px;flex-wrap:wrap}
+.kltok i{width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,.55)}
+
+/* 鬥獸棋 */
+.dsboard{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:10px auto;max-width:420px;aspect-ratio:7/9}
+.dscell{position:relative;border-radius:7px;background:#171b28;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dscell.dswater{background:rgba(37,99,235,.28);border-color:rgba(59,130,246,.5)}
+.dscell.dsden0{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.75)}
+.dscell.dsden1{background:rgba(244,63,94,.2);border-color:rgba(244,63,94,.75)}
+.dscell.dstrap0{background:rgba(56,189,248,.34);border-color:rgba(56,189,248,.9)}
+.dscell.dstrap1{background:rgba(244,63,94,.34);border-color:rgba(244,63,94,.9)}
+.dscell.dssel{outline:3px solid var(--gold);outline-offset:-3px}
+.dscell.dsmove::after{content:'';position:absolute;inset:0;border:2px dashed var(--gold);border-radius:7px;opacity:.85}
+.dsg{width:80%;height:80%;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:#0f1320}
 .dice{width:64px;height:64px;border-radius:14px;background:linear-gradient(145deg,#232838,#151926);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:11px;gap:3px;cursor:pointer}
 .dice:active{transform:scale(.94)}
 .dice.rolling{animation:shake .4s}
@@ -130,13 +178,13 @@ const GAMES=[
  {k:'chess',n:'國際象棋',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋'},
  {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍'},
  {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●'},
- {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:false,c:'#a855f7',ab:'獸'},
- {k:'konglok',n:'康樂棋',min:2,max:4,ok:false,c:'#14b8a6',ab:'康'},
+ {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:true,c:'#a855f7',ab:'獸'},
+ {k:'konglok',n:'康樂棋',min:2,max:4,ok:true,c:'#14b8a6',ab:'康'},
  {k:'monopoly',n:'大富翁',min:2,max:6,ok:false,c:'#10b981',ab:'$'},
  {k:'sanguosha',n:'三國殺',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺'},
  {k:'werewolf',n:'狼人殺',min:6,max:18,ok:false,c:'#6d28d9',ab:'狼'},
- {k:'bomb',n:'傳炸彈',min:2,max:10,ok:false,c:'#f97316',ab:'炸'},
- {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:false,c:'#0ea5e9',ab:'劇'},
+ {k:'bomb',n:'傳炸彈',min:2,max:10,ok:true,c:'#f97316',ab:'炸'},
+ {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:true,c:'#0ea5e9',ab:'劇'},
  {k:'pictionary',n:'你畫我猜',min:2,max:10,ok:true,c:'#eab308',ab:'畫'},
  {k:'undercover',n:'誰是臥底',min:3,max:12,ok:true,c:'#f472b6',ab:'臥'}
 ];
@@ -258,25 +306,45 @@ async function doCreate(){
   joinRoom(rid);
 }
 
+/* 這個房間的題目是否已備妥（各遊戲的題目結構不同，這裡統一判斷） */
+function topicReady(r){
+  if(!r) return false;
+  if(!GAMES_NEED_TOPIC[r.game]) return true;
+  const t=r.topic;
+  if(!t) return false;
+  if(r.game==='undercover'||r.game==='pictionary') return !!(t.words&&t.words.length);
+  if(r.game==='bomb') return !!(t.categories&&t.categories.length);
+  if(r.game==='scriptmurder') return !!(t.roles&&t.roles.length);
+  return true;
+}
+
 /* 需要題目的遊戲：任一玩家端在後台補題目（topicGenerating 搶鎖，只出一份） */
 async function ensureTopic(r){
   if(!r || r.status==='ended') return;
   const g=gameDef(r.game);
   if(!GAMES_NEED_TOPIC[g.k]) return;
-  if(r.topic && r.topic.words && r.topic.words.length) return;
+  if(topicReady(r)) return;
   let res;
   try{ res=await runTransaction(ref(db,'games/'+curRoomId+'/topicGenerating'), v=> v===true?undefined:true); }
   catch(e){ return; }
   if(!res.committed) return;   // 別的玩家正在出題
   const lockRef=ref(db,'games/'+curRoomId+'/topicGenerating');
   try{ onDisconnect(lockRef).remove(); }catch(e){}
-  const tn=g.k==='pictionary'?(r.setMax||r.maxP||2):4;
+  // 出題數量依遊戲而定：你畫我猜／劇本殺要看實際人數，傳炸彈固定一串類別
+  const pc=Object.keys(r.players||{}).length||(r.minP||2);
+  const tn=g.k==='pictionary'?Math.max(2,pc):(g.k==='scriptmurder'?Math.max(4,pc):6);
   const lvl=r.topicLevel||'normal';
   let topic=null;
   try{ topic=await aiMakeTopic(g.k,lvl,tn); }catch(e){ topic=null; }
-  if(!topic || !topic.words || !topic.words.length){
-    topic={level:lvl, words:(g.k==='pictionary'?picFallbackWords(lvl,tn):ucFallbackPairs(lvl,tn)), source:'fallback'};
+  if(!topic || !topicReady({game:g.k,topic:topic})){
+    // AI 失敗 → 用內置保底題材（各遊戲自己的 fallback）
+    const np=Math.max(4,pc);
+    if(g.k==='pictionary') topic={level:lvl,words:picFallbackWords(lvl,tn),source:'fallback'};
+    else if(g.k==='bomb') topic={level:lvl,categories:bombFallbackCategories(lvl,tn),source:'fallback'};
+    else if(g.k==='scriptmurder') topic=smFallbackCase(lvl,np);
+    else topic={level:lvl,words:ucFallbackPairs(lvl,tn),source:'fallback'};
   }
+  if(!topic) return;
   await update(ref(db,'games/'+curRoomId),{topic:topic, topicGenerating:null});
   // 題目就緒後，若人數已夠就（重新）開始倒數
   try{
@@ -308,6 +376,8 @@ function joinRoom(rid){
       else if(curRoom.game==='chess') chessCheckEnd(curRoom);
       else if(curRoom.game==='undercover'){ ucCheckReady(curRoom); ucTally(); }
       else if(curRoom.game==='pictionary') picCheckEndRound(curRoom);
+      else if(curRoom.game==='scriptmurder'){ smCheckReady(curRoom); smTally(); }
+      else if(curRoom.game==='doushou') doushouCheckEnd(curRoom);
     }
   });
 }
@@ -384,7 +454,7 @@ async function maybeStartCountdown(){
   const r=curRoom; if(!r) return;
   const pc=r.players?Object.keys(r.players).length:0;
   // 需要題目的遊戲：題目還沒出好就不開始倒數
-  if(GAMES_NEED_TOPIC[r.game] && !(r.topic && r.topic.words && r.topic.words.length)) return;
+  if(!topicReady(r)) return;
   if(r.status==='waiting'&&pc>=(r.minP||2)){
     await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
   }
@@ -412,9 +482,9 @@ function renderRoom(){
   const specs=Object.entries(r.spectators||{});
   const pc=players.length;
   const isHost=r.host===me.username;
-  const topicReady=!(GAMES_NEED_TOPIC[r.game]) || (r.topic && r.topic.words && r.topic.words.length);
+  const topicOk=topicReady(r);
   let cdHtml='';
-  if(!topicReady){
+  if(!topicOk){
     cdHtml=`<div class="hint" style="color:var(--gold)">AI 題目尚未完成，請稍候…</div>`;
   }
   else if(r.status==='countdown'&&r.startAt){
@@ -465,7 +535,7 @@ async function tryStartGame(){
   const pc=Object.keys(r.players||{}).length;
   if(pc<(r.minP||2)){ await update(ref(db,'games/'+id),{status:'waiting',startAt:null}); return; }
   // 需要題目的遊戲：題目還沒出好就不開局（等 ensureTopic 補完後會再觸發倒數）
-  if(GAMES_NEED_TOPIC[r.game] && !(r.topic && r.topic.words && r.topic.words.length)){
+  if(!topicReady(r)){
     await update(ref(db,'games/'+id),{status:'waiting',startAt:null});
     return;
   }
@@ -493,6 +563,7 @@ async function leaveRoom(){
     }catch(e){}
   }
   if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
+  if(bombTimer){clearInterval(bombTimer);bombTimer=null;}
   if(roomSub)roomSub(); roomSub=null; curRoom=null;curRoomId=null;view='lobby';render();
 }
 async function closeRoom(){
@@ -528,6 +599,36 @@ function initGameState(r, seed){
     state={phase:'reveal',pair:pair,undercover:ucPickUnder(names,seed,7),eliminated:[],votes:{},ready:{},descIdx:0,round:1,revealed:false};
     turn=null;
   }
+  else if(r.game==='bomb'){
+    // 題目是「類別」清單；開局由第一位玩家拿著炸彈開始倒數
+    const cats=(r.topic&&r.topic.categories&&r.topic.categories.length)?r.topic.categories:bombFallbackCategories('normal',6);
+    state={phase:'play',categories:cats,catIdx:0,category:cats[0],order:names,current:names[0],
+      deadline:Date.now()+20000,duration:20,used:[],out:[]};
+    turn=names[0];
+  }
+  else if(r.game==='scriptmurder'){
+    // 題目＝一宗案件：背景 + 每個角色一份公開資料與一個秘密
+    const cs=(r.topic&&r.topic.roles&&r.topic.roles.length)?r.topic:smFallbackCase('normal',names.length);
+    const rng=makeRng((seed>>>0)||1);
+    const deck=(cs.roles||[]).slice(0,names.length);
+    while(deck.length<names.length) deck.push({n:'旁觀同學',d:'你今晚也在現場。',s:'你什麼都沒看到，但你覺得有人在說謊。'});
+    for(let i=deck.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1))%deck.length; const t=deck[i];deck[i]=deck[j];deck[j]=t; }
+    const assigned={}; names.forEach((u,i)=>{assigned[u]=i;});
+    state={phase:'read',title:cs.title||'無名案件',scene:cs.scene||'',deck:deck,
+      culprit:names[Math.floor(rng()*names.length)%names.length],
+      ready:{},votes:{},tally:null,revealed:false};
+    turn=null;
+  }
+  else if(r.game==='konglok'){
+    // 純擲骰競速：位置由擲骰的端寫入，其餘端照讀
+    const pos={}; names.forEach(u=>pos[u]=0);
+    state={pos:pos,dice:0,turnIdx:0,lastJump:null,lastBy:null,rolling:false};
+    turn=names[0];
+  }
+  else if(r.game==='doushou'){
+    // 完全由動作序列重放，不預先寫任何局面
+    state={};turn=names[0];
+  }
   else if(r.game==='uno'||r.game==='chess'){
     // 交給第三方引擎：不預先產生任何盤面，開局只寫種子，各端重放動作
     state={};turn=null;
@@ -545,6 +646,8 @@ function renderGame(r,g){
     if(r.game==='uno') turnName=eng.currentPlayer?eng.currentPlayer.name:'';
     else if(r.game==='chess'){ const nm=playerNames(r); turnName=eng.turn()==='w'?nm[0]:nm[1]; }
   }
+  // 鬥獸棋不是引擎驅動，輪次由「已走幾步」推出來（r.turn 不會即時更新）
+  if(r.game==='doushou'){ const nm=playerNames(r); turnName=nm[actionsOf(r).length%2]||nm[0]; }
   const myTurn=(turnName===me.username)&&!spec;
   const bar=`<div class="turnbar ${myTurn?'mine':''}">${spec?'觀戰中':(myTurn?'輪到你了':escapeHtml(nameOf(r,turnName))+' 的回合')}</div>`;
   if(r.game==='tictactoe') drawTTT(r,g,bar,spec);
@@ -554,6 +657,10 @@ function renderGame(r,g){
   else if(r.game==='chess') drawChess(r,g,bar,spec);
   else if(r.game==='undercover') drawUndercover(r,g,bar,spec);
   else if(r.game==='pictionary') drawPictionary(r,g,bar,spec);
+  else if(r.game==='bomb') drawBomb(r,g,bar,spec);
+  else if(r.game==='scriptmurder') drawScriptMurder(r,g,bar,spec);
+  else if(r.game==='konglok') drawKonglok(r,g,bar,spec);
+  else if(r.game==='doushou') drawDoushou(r,g,bar,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
@@ -569,6 +676,30 @@ function renderEnded(r,g){
     appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap"><div class="countdown" style="font-size:30px">${w==='draw'?'平手':'恭喜獲勝！'}</div>
       <div class="plist">${rows}</div><button class="btn" data-act="home">回到大廳</button></div>`;
+    appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
+    return;
+  }
+  if(r.game==='scriptmurder'){
+    const st=r.state||{};
+    const deck=st.deck||[], culprit=st.culprit||'';
+    const detWin=w==='team:det';
+    const iAmCulprit=(me.username===culprit);
+    const iWon=detWin?!iAmCulprit:iAmCulprit;
+    const rows=playerNames(r).map((u,i)=>{
+      const role=deck[i]||{n:'角色'};
+      const isC=u===culprit;
+      const c=isC?'var(--red)':'var(--green)';
+      return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}<div class="hint" style="margin:2px 0 0">${escapeHtml(role.n||'')}</div></div><div class="pbadge" style="color:${c};border-color:${c}">${isC?'兇手':'清白'}</div></div>`;
+    }).join('');
+    const verdict=detWin?'兇手被揪出來了！':'兇手逃掉了…';
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結案</h1></div>
+      <div class="wrap">
+        <div class="countdown" style="font-size:28px;color:${iWon?'var(--green)':'var(--red)'}">${iWon?'你贏了！':'你輸了'}</div>
+        <div class="hint">${verdict} · 兇手是 ${escapeHtml(nameOf(r,culprit))}</div>
+        ${st.title?`<div class="hint">案件「${escapeHtml(st.title)}」</div>`:''}
+        <div class="plist">${rows}</div>
+        <button class="btn" data-act="home">回到大廳</button>
+      </div>`;
     appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
     return;
   }
@@ -617,10 +748,12 @@ function renderEnded(r,g){
     </div>`;
   appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
 }
-function backHome(){ if(roomSub)roomSub();roomSub=null;curRoom=null;view='lobby';render(); }
+function backHome(){ if(roomSub)roomSub();roomSub=null;curRoom=null;if(bombTimer){clearInterval(bombTimer);bombTimer=null;}view='lobby';render(); }
 
 /* ===== 勝負與戰績 ===== */
-async function finishGame(winner){
+// winners：團隊遊戲用（例如劇本殺），傳入「這一局算贏」的玩家陣列；
+// 不傳就沿用舊行為（winner 本人勝，'draw' 平手）。
+async function finishGame(winner, winners){
   const r=curRoom; if(!r||r.status==='ended')return;
   // 用 winner 當原子鎖：雙方同時判定勝利時，只有一方能寫入，另一方直接放棄
   // （否則戰績會被重複累加兩次）
@@ -634,11 +767,14 @@ async function finishGame(winner){
   if(!res.committed) return;                // 別人搶先結束了，不重複統計
   await update(ref(db,'games/'+curRoomId),{status:'ended',endedAt:Date.now()});
   const names=playerNames(r);
+  const winArr=(winners&&winners.length)?winners:null;
   for(const u of names){
+    const didWin=winArr?winArr.includes(u):(winner===u);
+    const isDraw=!winArr&&winner==='draw';
     try{
       await runTransaction(ref(db,'users/'+u+'/gameStats/'+r.game),c=>{
         c=c||{};const w=Number(c.win)||0,l=Number(c.lose)||0,p=Number(c.play)||0;
-        return {win:w+(winner===u?1:0),lose:l+(winner==='draw'?0:(winner===u?0:1)),play:p+1};
+        return {win:w+(didWin?1:0),lose:l+((didWin||isDraw)?0:1),play:p+1};
       });
     }catch(e){}
   }
@@ -1188,7 +1324,24 @@ async function aiMakeTopic(game, level, n){
     } catch (e) {}
     return { level: level, words: picFallbackWords(level, n), source: 'fallback' };
   }
-  // 之後：scriptmurder / bomb 在此加各自模板
+  // 傳炸彈：題目是一串「類別」
+  if (game === 'bomb') {
+    n = n || 6;
+    try {
+      const cats = await aiBombCategories(level, n);
+      if (cats) return { level: level, categories: cats, source: 'ai' };
+    } catch (e) {}
+    return { level: level, categories: bombFallbackCategories(level, n), source: 'fallback' };
+  }
+  // 劇本殺：題目是一整宗案件（背景 + 每個角色一份資料與秘密）
+  if (game === 'scriptmurder') {
+    const np = Math.max(4, Math.min(10, n || 4));
+    try {
+      const cs = await aiScriptCase(level, np);
+      if (cs) return cs;
+    } catch (e) {}
+    return smFallbackCase(level, np);
+  }
   return null;
 }
 
@@ -1629,6 +1782,656 @@ function drawPictionary(r, g, bar, spec){
     gb.onclick = doGuess;
     gi.addEventListener('keydown', e => { if (e.key === 'Enter') doGuess(); });
   }
+}
+
+/* ══════════════════ 傳炸彈（2–10 人）══════════════════
+   題目是「類別」（例如「水果」）。炸彈一路傳，輪到你時要在限時內講出一個
+   屬於該類別的答案，講過的不可以重複。時間到就爆在你手上 → 淘汰。
+   每淘汰一人就換一個類別、時間再縮短。最後剩下的一個人獲勝。
+   state: { phase, categories, catIdx, category, order, current, deadline, duration, used, out }
+*/
+const BOMB_FALLBACK = {
+  fun: ['卡通人物', '零食', '手搖飲料', '手機 App', '校服上的東西', '搞笑聲音'],
+  normal: ['水果', '交通工具', '動物', '城市', '職業', '樂器', '運動', '顏色'],
+  hard: ['三國人物', '化學元素', '開頭是「一」的成語', '香港街道', '世界首都', '數學名詞'],
+};
+function bombFallbackCategories(level, n) {
+  const pool = (BOMB_FALLBACK[level] || BOMB_FALLBACK.normal).slice();
+  const out = [];
+  for (let i = 0; i < (n || 6) && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  return out.length ? out : BOMB_FALLBACK.normal.slice();
+}
+async function aiBombCategories(level, n) {
+  const lv = TOPIC_LEVELS.find(x => x.k === level) || TOPIC_LEVELS[1];
+  const sys = '你是班級桌遊的出題員。不要推理、不要解釋，直接輸出 JSON 陣列。';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const usr = `直接輸出 JSON（不要任何其他文字）：為「傳炸彈」出 ${n} 個題目類別。`
+      + `玩法：炸彈輪流傳，輪到的人要在限時內講出一個屬於該類別的答案，講過不能重複。`
+      + `難度${lv.n}（${lv.d}）。類別要簡短（不超過 8 個字）、答案夠多、適合中學生。`
+      + `格式：["水果","交通工具"] 這樣的 ${n} 個類別`;
+    let txt = '';
+    try { txt = await callAI(sys, usr, 3000); } catch (e) { txt = ''; }
+    let j = extractJSON(txt);
+    if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
+    if (Array.isArray(j)) {
+      const cats = j.filter(x => typeof x === 'string' && x.trim()).slice(0, n).map(x => x.trim().slice(0, 12));
+      if (cats.length) return cats;
+    }
+  }
+  return null;
+}
+
+function bombState(r) { return (r && r.state) ? r.state : {}; }
+function bombAlive(r) {
+  const st = bombState(r), out = st.out || [];
+  return playerNames(r).filter(u => !out.includes(u));
+}
+/** 淘汰 victim 之後，依原本的座位順序找下一個還活著的人。 */
+function bombNextOf(r, victim) {
+  const st = bombState(r), names = playerNames(r);
+  const alive = names.filter(u => !(st.out || []).includes(u) && u !== victim);
+  if (!alive.length) return '';
+  const i = names.indexOf(victim);
+  for (let k = 1; k <= names.length; k++) {
+    const u = names[(i + k) % names.length];
+    if (alive.includes(u)) return u;
+  }
+  return alive[0];
+}
+async function bombAnswer(txt) {
+  const r = curRoom; if (!r || r.status !== 'playing' || r.game !== 'bomb') return false;
+  const st = bombState(r);
+  if (st.phase !== 'play') return false;
+  if (st.current !== me.username) { showNotice('現在不是你的回合'); return false; }
+  const v = String(txt || '').trim();
+  if (!v) { showNotice('要講一個答案才可以'); return false; }
+  if (picNorm(v) === picNorm(st.category)) { showNotice('不可以直接講出題目本身'); return false; }
+  if ((st.used || []).map(picNorm).includes(picNorm(v))) { showNotice('這個答案有人講過了'); return false; }
+  // 樂觀鎖：寫入前一刻再確認炸彈還在我手上，避免連點兩次重複推進
+  let cur;
+  try { cur = (await get(ref(db, 'games/' + curRoomId + '/state/current'))).val(); } catch (e) { return false; }
+  if (cur !== me.username) { showNotice('慢了一步，炸彈已經傳走了'); return false; }
+  const alive = bombAlive(r);
+  const i = alive.indexOf(me.username);
+  const next = alive.length ? alive[(i + 1) % alive.length] : '';
+  const dur = Math.max(6, Number(st.duration || 20) - 1);
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    current: next, deadline: Date.now() + dur * 1000, duration: dur,
+    used: (st.used || []).concat([v]),
+  });
+  await update(ref(db, 'games/' + curRoomId), { turn: next });
+  return true;
+}
+/** 時間到：把炸彈持有者淘汰。用 state/current 當鎖，多端同時觸發也只淘汰一次。 */
+async function bombExplode() {
+  const id = curRoomId; if (!id) return;
+  let r;
+  try { const s = await get(ref(db, 'games/' + id)); if (!s.exists()) return; r = s.val(); } catch (e) { return; }
+  if (!r || r.status !== 'playing' || r.game !== 'bomb') return;
+  const st = r.state || {};
+  if (st.phase !== 'play') return;
+  const victim = st.current;
+  if (!victim) return;
+  if (Date.now() < (Number(st.deadline) || 0) + 350) return;   // 時間還沒真的到
+  const next = bombNextOf(r, victim);
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + id + '/state/current'), c => c === victim ? (next || '#') : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;                                  // 別的端已經處理了
+  const out = (st.out || []).concat([victim]);
+  const alive = playerNames(r).filter(u => !out.includes(u));
+  if (alive.length <= 1) { await finishGame(alive.length === 1 ? alive[0] : 'draw'); return; }
+  const cats = (st.categories || []).filter(Boolean);
+  const catIdx = cats.length ? ((Number(st.catIdx) || 0) + 1) % cats.length : 0;
+  const dur = Math.max(5, Number(st.duration || 20) - 2);
+  await update(ref(db, 'games/' + id + '/state'), {
+    out: out, current: next, deadline: Date.now() + dur * 1000, duration: dur,
+    catIdx: catIdx, category: cats[catIdx] || st.category, used: [],
+  });
+  await update(ref(db, 'games/' + id), { turn: next });
+}
+let bombTimer = null;
+function startBombTicker() {
+  if (bombTimer) clearInterval(bombTimer);
+  bombTimer = setInterval(async () => {
+    if (!curRoom || curRoom.status !== 'playing' || curRoom.game !== 'bomb') { clearInterval(bombTimer); bombTimer = null; return; }
+    const st = curRoom.state || {};
+    if (st.phase !== 'play') return;
+    const total = (Number(st.duration) || 20) * 1000;
+    const left = Math.max(0, (Number(st.deadline) || 0) - Date.now());
+    const el = document.getElementById('bombLeft');
+    if (el) el.textContent = (left / 1000).toFixed(1);
+    const bar = document.getElementById('bombBar');
+    if (bar) bar.style.width = Math.max(0, Math.min(100, total ? (left / total) * 100 : 0)) + '%';
+    const wrap = document.getElementById('bombGauge');
+    if (wrap) wrap.classList.toggle('danger', left < 5000);
+    if (left <= 0) await bombExplode();
+  }, 100);
+}
+function drawBomb(r, g, bar, spec) {
+  const st = bombState(r), names = playerNames(r);
+  const amPlayer = !!r.players[me.username];
+  const out = st.out || [], alive = bombAlive(r);
+  const cur = st.current || '';
+  const myTurn = (cur === me.username) && !spec;
+  const cat = st.category || '？';
+  const used = st.used || [];
+  const src = (r.topic && r.topic.source === 'fallback') ? '（AI 無法連線，使用內置題目）' : '';
+
+  const plist = names.map(u => {
+    const dead = out.includes(u);
+    const isCur = u === cur;
+    return `<div class="pitem" style="${isCur ? 'border-color:var(--red)' : ''}${dead ? ';opacity:.45' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${dead ? ' · 淘汰' : ''}${isCur ? ' · 拿著炸彈' : ''}</div>
+      <div class="pbadge" style="${isCur ? 'color:var(--red);border-color:var(--red)' : ''}">${isCur ? '危險' : ''}</div>
+    </div>`;
+  }).join('');
+
+  const usedHtml = used.length
+    ? `<div class="hint" style="text-align:left;margin-top:10px">已講過（${used.length}）</div><div class="hint" style="text-align:left;color:var(--text-sub)">${escapeHtml(used.slice(-14).join('、'))}</div>`
+    : '';
+
+  let stage = '';
+  if (!amPlayer) {
+    stage = `<div class="hint">觀戰中 · 目前題目「${escapeHtml(cat)}」</div>`;
+  } else if (myTurn) {
+    stage = `<div class="turnbar mine">炸彈在你手上！快講一個「${escapeHtml(cat)}」</div>
+      <div class="inputrow"><input id="bombInput" placeholder="輸入你的答案…" autocomplete="off"><button class="btn" id="bombSend">送出</button></div>`;
+  } else {
+    stage = `<div class="turnbar">${escapeHtml(nameOf(r, cur))} 正在想…</div>
+      <div class="hint">輪到他的時候要講一個「${escapeHtml(cat)}」</div>`;
+  }
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="bombcat">${escapeHtml(cat)}</div>
+     <div class="bombgauge" id="bombGauge"><div class="bombbar" id="bombBar" style="width:100%"></div></div>
+     <div class="hint">剩餘 <b id="bombLeft">–</b> 秒 · 第 ${(Number(st.catIdx) || 0) + 1} 題 ${src}</div>
+     ${stage}
+     ${usedHtml}
+     <div class="plist">${plist}</div>
+     <div class="hint">淘汰 ${out.length} 人 · 存活 ${alive.length} 人</div>
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+
+  const send = async () => {
+    const gi = appEl.querySelector('#bombInput'); if (!gi) return;
+    const v = gi.value.trim(); if (!v) return;
+    const btn = appEl.querySelector('#bombSend');
+    if (btn) btn.disabled = true;
+    const ok = await bombAnswer(v);
+    // 被拒絕時要把按鈕放回來，不然使用者會以為卡死了（被拒絕不會觸發重新渲染）
+    if (ok) { gi.value = ''; }
+    else if (btn) { btn.disabled = false; try { gi.focus(); } catch (e) {} }
+  };
+  const gb = appEl.querySelector('#bombSend');
+  const gi = appEl.querySelector('#bombInput');
+  if (gb) gb.onclick = send;
+  if (gi) {
+    gi.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    if (myTurn) setTimeout(() => { try { gi.focus(); } catch (e) {} }, 60);
+  }
+  startBombTicker();
+}
+
+/* ══════════════════ 劇本殺（4–10 人）══════════════════
+   AI 寫一宗案件：背景 + 每個角色一份公開資料與一個秘密。
+   讀本 → 討論（在聊天室聊）→ 投票 → 揭曉。
+   投中兇手＝所有人（兇手以外）贏；投錯或平票＝兇手贏。
+*/
+const SM_FALLBACK = {
+  title: '圖書館的最後一頁',
+  scene: '晚自習結束後，圖書館三樓的燈突然被人關掉。館長被發現倒在三號書架旁，手裡握著一張被撕掉一半的借書卡。閉館鈴響之前，只有你們幾個還留在館內。',
+  roles: [
+    { n: '圖書館管理員', d: '你負責今晚的閉館工作，最後一個離開櫃檯。', s: '你偷偷把一本絕版書藏進了自己的袋裡，所以那段時間你不在櫃檯。' },
+    { n: '班會主席', d: '你留下來整理明天要用的班會材料。', s: '你和館長吵過架，因為他不肯讓你借用會議室。你當時說了一句「你會後悔」。' },
+    { n: '理科競賽生', d: '你在自習室刷題刷到很晚。', s: '你偷看了館長的電腦，發現他把你的競賽報名表丟了，你氣得摔了筆。' },
+    { n: '校工', d: '你今晚來檢查冷氣和水管。', s: '你欠了館長錢，他今天晚上又叫你還。你身上帶著一把螺絲刀。' },
+    { n: '轉校生', d: '你第一次來這間圖書館，路線都不太熟。', s: '你其實是來找一份關於自己轉學原因的檔案。' },
+    { n: '文學社社長', d: '你在角落寫小說，戴著耳機。', s: '你看到有人走進三號書架，但你看不清是誰。' },
+    { n: '情報社記者', d: '你帶著相機來拍「校園夜讀」專題。', s: '你拍到一張模糊的照片，上面的人手裡拿著東西。' },
+    { n: '圖書館義工', d: '你幫忙把還書車推回架上。', s: '你發現借書卡上的名字被人塗改過。' },
+    { n: '保安', d: '你負責巡查整棟樓，今晚只來得及走一遍。', s: '你在走廊撿到一枚鈕扣，隨手放進了口袋。' },
+    { n: '隔壁班同學', d: '你來借考試參考書。', s: '你和館長約了今晚見面，但他一直沒來。' },
+  ],
+};
+function smFallbackCase(level, n) {
+  const need = Math.max(4, Math.min(10, n || 4));
+  const roles = SM_FALLBACK.roles.slice(0, need).map(x => ({ n: x.n, d: x.d, s: x.s }));
+  while (roles.length < need) roles.push({ n: '同學 ' + (roles.length + 1), d: '你今晚也在圖書館。', s: '你什麼都沒看到，但你覺得有人在說謊。' });
+  return { level: level, title: SM_FALLBACK.title, scene: SM_FALLBACK.scene, roles: roles, source: 'fallback' };
+}
+async function aiScriptCase(level, n) {
+  const lv = TOPIC_LEVELS.find(x => x.k === level) || TOPIC_LEVELS[1];
+  n = Math.max(4, Math.min(10, n || 4));
+  const sys = '你是班級桌遊的劇本殺編劇。不要推理、不要解釋，直接輸出 JSON。';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const usr = `直接輸出 JSON（不要任何其他文字）：寫一宗適合中學生的劇本殺案件，繁體中文，不要血腥暴力。`
+      + `難度${lv.n}（${lv.d}）。需要剛好 ${n} 個角色。`
+      + `格式：{"title":"案件名（10 字內）","scene":"案件背景（120 字內，有人被害或東西被偷）","roles":[{"n":"角色名","d":"公開資料（40 字內）","s":"這個角色的秘密（40 字內）"}]}`
+      + `每個角色都要有動機，真相要靠討論與秘密的互相矛盾才查得出來。`;
+    let txt = '';
+    try { txt = await callAI(sys, usr, 4000); } catch (e) { txt = ''; }
+    let j = extractJSON(txt);
+    if ((!j || !j.roles) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
+    if (j && Array.isArray(j.roles) && j.roles.length) {
+      const roles = j.roles.filter(x => x && (x.n || x.name)).slice(0, n).map(x => ({
+        n: String(x.n || x.name || '角色').slice(0, 12),
+        d: String(x.d || x.desc || '').slice(0, 60),
+        s: String(x.s || x.secret || '').slice(0, 60),
+      }));
+      if (roles.length >= 4) {
+        return { level: level, title: String(j.title || '無名案件').slice(0, 20), scene: String(j.scene || '').slice(0, 200), roles: roles, source: 'ai' };
+      }
+    }
+  }
+  return null;
+}
+function smState(r) { return (r && r.state) ? r.state : {}; }
+/** 全員都按「我已閱讀」→ 自動進入討論（任一玩家的端都可以推進，用 phase 當鎖） */
+async function smCheckReady(r) {
+  if (!r || r.game !== 'scriptmurder' || r.status !== 'playing') return;
+  const st = smState(r);
+  if (st.phase !== 'read') return;
+  const names = playerNames(r), rd = st.ready || {};
+  if (!names.length || !names.every(u => rd[u])) return;
+  try { await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'read' ? 'discuss' : undefined); } catch (e) {}
+}
+async function smTally() {
+  const r = curRoom;
+  if (!r || r.status !== 'playing' || r.game !== 'scriptmurder') return;
+  const st = smState(r);
+  if (st.phase !== 'vote' || st.tally) return;
+  const names = playerNames(r);
+  const votes = st.votes || {};
+  const tally = {};
+  let voted = 0;
+  names.forEach(u => { const v = votes[u]; if (v && names.includes(v)) { tally[v] = (tally[v] || 0) + 1; voted++; } });
+  if (voted < names.length) return;                // 還有人沒投
+  let top = null, topN = 0, tie = false;
+  Object.entries(tally).forEach(([u, c]) => {
+    if (c > topN) { topN = c; top = u; tie = false; }
+    else if (c === topN) tie = true;
+  });
+  // tally 當鎖：只有第一個算出結果的端會寫入
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/tally'), c => (c === null || c === undefined || c === '') ? (tie ? 'tie' : (top || 'tie')) : undefined); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  const suspect = tie ? '' : (top || '');
+  const caught = !!suspect && suspect === st.culprit;
+  await update(ref(db, 'games/' + curRoomId + '/state'), { phase: 'result', revealed: true, tie: tie });
+  const winners = names.filter(u => caught ? (u !== st.culprit) : (u === st.culprit));
+  await finishGame(caught ? 'team:det' : 'team:cul', winners);
+}
+function drawScriptMurder(r, g, bar, spec) {
+  const st = smState(r), names = playerNames(r);
+  const amPlayer = !!r.players[me.username], isHost = r.host === me.username;
+  const phase = st.phase || 'read';
+  const deck = st.deck || [];
+  const myIdx = names.indexOf(me.username);
+  const myRole = (myIdx >= 0 && deck[myIdx]) ? deck[myIdx] : null;
+  const amCulprit = (st.culprit === me.username);
+  const ready = st.ready || {}, votes = st.votes || {};
+  const readyN = names.filter(u => ready[u]).length;
+  const votedN = names.filter(u => votes[u]).length;
+  const src = (r.topic && r.topic.source === 'fallback') ? '（AI 無法連線，使用內置案件）' : '';
+
+  const card = myRole
+    ? `<div class="smcard">
+         <div class="smtag">你的角色</div>
+         <div class="smname">${escapeHtml(myRole.n || '角色')}</div>
+         <div class="smline">${escapeHtml(myRole.d || '')}</div>
+         <div class="smsecret">秘密：${escapeHtml(myRole.s || '')}</div>
+         ${amCulprit ? `<div class="smculprit">你就是兇手。想辦法誤導其他人。</div>` : ''}
+       </div>`
+    : `<div class="hint">觀戰中，看不到角色卡</div>`;
+
+  const publicRows = names.map((u, i) => {
+    const role = deck[i] || {};
+    const voted = votes[u] ? '已投票' : (phase === 'vote' ? '' : '');
+    const isC = st.revealed && u === st.culprit;
+    return `<div class="pitem" style="${isC ? 'border-color:var(--red)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}
+        <div class="hint" style="margin:2px 0 0">${escapeHtml(role.n || '')}${role.d ? ' · ' + escapeHtml(role.d) : ''}</div>
+      </div>
+      <div class="pbadge" style="${isC ? 'color:var(--red);border-color:var(--red)' : ''}">${st.revealed ? (isC ? '兇手' : '清白') : voted}</div>
+    </div>`;
+  }).join('');
+
+  let stage = '';
+  if (phase === 'read') {
+    stage = amPlayer
+      ? `<button class="btn" data-act="smReady">${ready[me.username] ? '已閱讀（等其他人）' : '我已閱讀'}</button>
+         <div class="hint" style="margin-top:8px">已閱讀 ${readyN}/${names.length} · 難度 ${levelName(r.topic && r.topic.level)} ${src}</div>`
+      : `<div class="hint">觀戰中，等待玩家閱讀劇本</div>`;
+  } else if (phase === 'discuss') {
+    stage = `<div class="turnbar">討論中 · 到聊天室問其他人吧</div>
+      <div class="hint">想辦法從別人的說法裡找出矛盾，兇手就在你們之中</div>
+      ${isHost ? `<button class="btn" data-act="smToVote">進入投票</button>` : ''}`;
+  } else if (phase === 'vote') {
+    const myVote = votes[me.username];
+    stage = `<div class="turnbar">投票中 · 已投 ${votedN}/${names.length}</div>
+      <div class="hint" style="margin-top:8px">${myVote ? '你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）' : '選出你認為是兇手的人'}</div>
+      ${(!myVote && amPlayer) ? `<div class="plist">${names.filter(u => u !== me.username).map(u => `<div class="pitem" data-smvote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
+  } else {
+    stage = `<div class="hint">正在結案…</div>`;
+  }
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="smcase"><div class="smtag">案件</div><div class="smname">${escapeHtml(st.title || '無名案件')}</div>
+       <div class="smline">${escapeHtml(st.scene || '')}</div></div>
+     ${card}
+     ${stage}
+     ${phase === 'read' ? '' : `<div class="plist">${publicRows}</div>`}
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+
+  const rb = appEl.querySelector('[data-act="smReady"]');
+  if (rb) rb.onclick = async () => {
+    await update(ref(db, 'games/' + curRoomId + '/state/ready'), { [me.username]: true });
+    const fresh = (await get(ref(db, 'games/' + curRoomId))).val();
+    if (!fresh) return;
+    const ns = playerNames(fresh), rd = (fresh.state && fresh.state.ready) || {};
+    if (ns.every(u => rd[u])) {
+      try { await runTransaction(ref(db, 'games/' + curRoomId + '/state/phase'), p => p === 'read' ? 'discuss' : undefined); } catch (e) {}
+    }
+  };
+  const vb = appEl.querySelector('[data-act="smToVote"]');
+  if (vb) vb.onclick = async () => { await update(ref(db, 'games/' + curRoomId + '/state'), { phase: 'vote', votes: null }); };
+  appEl.querySelectorAll('[data-smvote]').forEach(el => el.onclick = async () => {
+    if (smState(curRoom).phase !== 'vote') return;
+    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [me.username]: el.dataset.smvote });
+    setTimeout(smTally, 300);
+  });
+}
+
+/* ══════════════════ 康樂棋（2–4 人）══════════════════
+   香港經典擲骰競速：一路擲骰往前走，踩到「好格」前進、「壞格」後退，
+   最先走到終點（第 52 格）的人贏。骰子由擲骰的端寫進 DB，其餘端照讀。
+*/
+const KL_N = 52;
+const KL_SPECIAL = { 5: 4, 9: -3, 13: 5, 18: -4, 22: 3, 27: -6, 31: 5, 36: -3, 40: 6, 44: -5, 47: 4, 49: -2 };
+function klState(r) { return (r && r.state) ? r.state : {}; }
+function klPos(r) { const s = klState(r).pos || {}; return s; }
+function klCurrent(r) {
+  const names = playerNames(r);
+  if (!names.length) return '';
+  const i = (Number(klState(r).turnIdx) || 0) % names.length;
+  return names[i];
+}
+async function klRoll() {
+  const r = curRoom;
+  if (!r || r.status !== 'playing' || r.game !== 'konglok') return;
+  if (klState(r).rolling) return;
+  if (klCurrent(r) !== me.username) return showNotice('還沒輪到你擲骰');
+  // rolling 當鎖，避免連點兩次擲出兩次
+  let res;
+  try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/rolling'), v => (v === true) ? undefined : true); }
+  catch (e) { return; }
+  if (!res.committed) return;
+  const st = klState(r);
+  const names = playerNames(r);
+  const pos = Object.assign({}, st.pos || {});
+  names.forEach(u => { if (typeof pos[u] !== 'number') pos[u] = 0; });
+  const dice = 1 + Math.floor(Math.random() * 6);
+  let np = Math.min(KL_N, (pos[me.username] || 0) + dice);
+  let jump = null;
+  const sp = KL_SPECIAL[np];
+  if (sp) { np = Math.max(0, Math.min(KL_N, np + sp)); jump = sp; }
+  pos[me.username] = np;
+  const finished = np >= KL_N;
+  await update(ref(db, 'games/' + curRoomId + '/state'), {
+    dice: dice, pos: pos, rolling: false, lastJump: jump, lastBy: me.username,
+    turnIdx: finished ? (Number(st.turnIdx) || 0) : ((Number(st.turnIdx) || 0) + 1) % names.length,
+  });
+  await update(ref(db, 'games/' + curRoomId), { turn: finished ? me.username : names[((Number(st.turnIdx) || 0) + 1) % names.length] });
+  if (finished) await finishGame(me.username);
+}
+/** 排列方式：7 欄、蛇形（S 形）走。回傳 index → [col,row] */
+function klCellPos(i) {
+  const COL = 7;
+  const row = Math.floor(i / COL);
+  const col = (row % 2 === 0) ? (i % COL) : (COL - 1 - (i % COL));
+  return [col, row];
+}
+function drawKonglok(r, g, bar, spec) {
+  const st = klState(r), names = playerNames(r);
+  const amPlayer = !!r.players[me.username];
+  const pos = klPos(r);
+  const cur = klCurrent(r);
+  const myTurn = (cur === me.username) && !spec;
+  const CELL = 44;
+
+  const cells = [];
+  for (let i = 0; i < KL_N; i++) {
+    const [col, row] = klCellPos(i);
+    const here = names.filter(u => (pos[u] || 0) === i + 1);
+    const sp = KL_SPECIAL[i + 1];
+    const cls = i === 0 ? 'klstart' : (i === KL_N - 1 ? 'klend' : (sp > 0 ? 'klup' : (sp < 0 ? 'kldown' : '')));
+    cells.push(`<div class="klcell ${cls}" style="grid-column:${col + 1};grid-row:${row + 1}" title="${i + 1}">
+      <span class="klnum">${i + 1}</span>
+      ${sp ? `<span class="klsp">${sp > 0 ? '+' + sp : sp}</span>` : ''}
+      <div class="kltok">${here.map(u => `<i style="background:${colorOf(r, u)}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</div>
+    </div>`);
+  }
+
+  const rows = names.map(u => {
+    const p = pos[u] || 0;
+    return `<div class="pitem" style="${u === cur ? 'border-color:var(--accent)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${u === cur ? ' · 輪到他' : ''}</div>
+      <div class="pbadge">第 ${p} 格</div>
+    </div>`;
+  }).join('');
+
+  const dj = st.lastJump;
+  const jumpMsg = (st.lastBy && dj) ? `<div class="hint">${escapeHtml(nameOf(r, st.lastBy))} 踩到${dj > 0 ? '加速格，前進 ' + dj : '陷阱格，後退 ' + (-dj)} 格</div>` : '';
+
+  let stage = '';
+  if (!amPlayer) stage = `<div class="hint">觀戰中 · 第 ${(Number(st.turnIdx) || 0) + 1} 位</div>`;
+  else if (myTurn) stage = `<div class="turnbar mine">輪到你擲骰</div>
+      <div class="side"><div class="dice${st.dice ? ' rolled' : ''}" id="klDice">${dicePips(Number(st.dice) || 0)}</div></div>
+      <button class="btn" id="klRoll">擲骰</button>`;
+  else stage = `<div class="turnbar">${escapeHtml(nameOf(r, cur))} 正在擲骰…</div>
+      <div class="side"><div class="dice" id="klDice">${dicePips(Number(st.dice) || 0)}</div></div>`;
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="klboard">${cells.join('')}</div>
+     ${jumpMsg}
+     <div class="hint">擲到幾就走幾格 · <span style="color:var(--green)">綠格加速</span> · <span style="color:var(--red)">紅格後退</span> · 先到第 ${KL_N} 格者勝</div>
+     ${stage}
+     <div class="plist">${rows}</div>
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+  const rb = appEl.querySelector('#klRoll');
+  if (rb) rb.onclick = async () => { rb.disabled = true; await klRoll(); };
+}
+
+/* ══════════════════ 鬥獸棋（2 人）══════════════════
+   7×9 棋盤：象獅虎豹狼狗貓鼠，大魚食細魚；老鼠可以食象、可以落水，
+   獅虎可以跳過河。入對方獸穴即勝，食光對方棋子亦勝。
+   局面完全由「動作序列」重放得出（不信任任何人寫的中間狀態）。
+*/
+const DS_RANK = { 鼠: 1, 貓: 2, 狗: 3, 狼: 4, 豹: 5, 虎: 6, 獅: 7, 象: 8 };
+const DS_GLYPH = { 鼠: '鼠', 貓: '貓', 狗: '狗', 狼: '狼', 豹: '豹', 虎: '虎', 獅: '獅', 象: '象' };
+const DS_W = 7, DS_H = 9;
+// 初始擺位：[欄, 列, 棋子]，列 0–2 屬上方玩家（names[0]），列 6–8 屬下方玩家
+const DS_SETUP = [
+  [0, 0, '獅'], [6, 0, '虎'],
+  [1, 1, '狗'], [5, 1, '貓'],
+  [0, 2, '鼠'], [2, 2, '豹'], [4, 2, '狼'], [6, 2, '象'],
+  [0, 6, '象'], [2, 6, '狼'], [4, 6, '豹'], [6, 6, '鼠'],
+  [1, 7, '貓'], [5, 7, '狗'],
+  [0, 8, '虎'], [6, 8, '獅'],
+];
+const DS_DEN = [[3, 0], [3, 8]];
+const DS_TRAP = { '2,0': 0, '4,0': 0, '3,1': 0, '2,8': 1, '4,8': 1, '3,7': 1 };
+function dsInWater(c, r) { return r >= 3 && r <= 5 && c >= 1 && c <= 5; }
+function dsKey(c, r) { return c + ',' + r; }
+function dsStart() {
+  const b = {};
+  DS_SETUP.forEach(([c, r, p]) => { b[dsKey(c, r)] = { p: p, o: r < 4 ? 0 : 1 }; });
+  return b;
+}
+function dsReplay(r) {
+  const b = dsStart();
+  for (const a of actionsOf(r)) {
+    if (!a || a.t !== 'mv') continue;
+    const f = a.f, to = a.to;
+    if (!Array.isArray(f) || !Array.isArray(to)) continue;
+    const cell = b[dsKey(f[0], f[1])];
+    if (!cell) continue;
+    delete b[dsKey(f[0], f[1])];
+    b[dsKey(to[0], to[1])] = cell;
+  }
+  return b;
+}
+function dsRank(b, c, r) {
+  const cell = b[dsKey(c, r)]; if (!cell) return 0;
+  let rk = DS_RANK[cell.p] || 0;
+  // 站在對方的陷阱裡，戰力視為 0（任誰都能吃）
+  const t = DS_TRAP[dsKey(c, r)];
+  if (t !== undefined && t !== cell.o) rk = 0;
+  return rk;
+}
+function dsCanTake(b, fc, fr, tc, tr) {
+  const a = b[dsKey(fc, fr)], d = b[dsKey(tc, tr)];
+  if (!d) return true;                                   // 空格
+  if (a.o === d.o) return false;                         // 自己人
+  const aw = dsInWater(fc, fr), dw = dsInWater(tc, tr);
+  if (aw !== dw && (a.p === '鼠' || d.p === '鼠')) return false;  // 水陸不相犯
+  if (a.p === '鼠' && d.p === '象') return true;         // 鼠食象
+  if (a.p === '象' && d.p === '鼠') return false;        // 象不能食鼠
+  const ar = dsRank(b, fc, fr), dr = dsRank(b, tc, tr);
+  return ar > dr;                                        // 一定要大過對方才食得到
+}
+function dsJumps(b, c, r) {
+  const cell = b[dsKey(c, r)];
+  if (!cell || (cell.p !== '獅' && cell.p !== '虎')) return [];
+  const out = [];
+  for (const dir of [-1, 1]) {
+    // 橫向跳河
+    let cc = c + dir, crossed = false, ok = true;
+    while (cc >= 0 && cc < DS_W && dsInWater(cc, r)) { crossed = true; if (b[dsKey(cc, r)]) { ok = false; break; } cc += dir; }
+    if (ok && crossed && cc >= 0 && cc < DS_W) out.push([cc, r]);
+    // 縱向跳河
+    let rr = r + dir, crossed2 = false, ok2 = true;
+    while (rr >= 0 && rr < DS_H && dsInWater(c, rr)) { crossed2 = true; if (b[dsKey(c, rr)]) { ok2 = false; break; } rr += dir; }
+    if (ok2 && crossed2 && rr >= 0 && rr < DS_H) out.push([c, rr]);
+  }
+  return out;
+}
+function dsMoves(b, c, r) {
+  const cell = b[dsKey(c, r)];
+  if (!cell) return [];
+  const o = cell.o, out = [];
+  const cand = [[c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1]].concat(dsJumps(b, c, r));
+  for (const [tc, tr] of cand) {
+    if (tc < 0 || tr < 0 || tc >= DS_W || tr >= DS_H) continue;
+    if (DS_DEN[o][0] === tc && DS_DEN[o][1] === tr) continue;      // 不能進自己的獸穴
+    const t = b[dsKey(tc, tr)];
+    if (t && t.o === o) continue;
+    if (dsInWater(tc, tr) && cell.p !== '鼠') continue;            // 只有鼠能落水
+    if (!dsCanTake(b, c, r, tc, tr)) continue;
+    out.push([tc, tr]);
+  }
+  return out;
+}
+let dsSel = null;   // [c,r]（本地選取，不進 DB）
+async function dsMove(f, to) {
+  const r = curRoom;
+  if (!r || r.status !== 'playing' || r.game !== 'doushou') return;
+  const names = playerNames(r);
+  const b = dsReplay(r);
+  const cell = b[dsKey(f[0], f[1])];
+  if (!cell || cell.o !== names.indexOf(me.username)) return showNotice('這不是你的棋子');
+  if (!dsMoves(b, f[0], f[1]).some(([c, rr]) => c === to[0] && rr === to[1])) return showNotice('這一步不可以走');
+  dsSel = null;
+  await pushAction({ t: 'mv', f: [f[0], f[1]], to: [to[0], to[1]], p: me.username });
+}
+async function doushouCheckEnd(r) {
+  if (!r || r.game !== 'doushou' || r.status !== 'playing') return;
+  const names = playerNames(r);
+  const b = dsReplay(r);
+  for (const k of Object.keys(b)) {
+    const [c, rr] = k.split(',').map(Number);
+    const cell = b[k];
+    if (c === DS_DEN[1 - cell.o][0] && rr === DS_DEN[1 - cell.o][1]) {
+      await finishGame(names[cell.o]);
+      return;
+    }
+  }
+  // 一方棋子被食光 → 另一方勝
+  const cnt = [0, 0];
+  Object.values(b).forEach(x => cnt[x.o]++);
+  if (!cnt[0]) { await finishGame(names[1]); return; }
+  if (!cnt[1]) { await finishGame(names[0]); return; }
+}
+function drawDoushou(r, g, bar, spec) {
+  const names = playerNames(r);
+  const b = dsReplay(r);
+  const acts = actionsOf(r).length;
+  const turnU = names[acts % 2] || names[0];
+  const myTurn = (turnU === me.username) && !spec;
+  const mySide = names.indexOf(me.username);
+  const legal = (dsSel && myTurn) ? dsMoves(b, dsSel[0], dsSel[1]) : [];
+
+  const cells = [];
+  for (let rr = 0; rr < DS_H; rr++) {
+    for (let c = 0; c < DS_W; c++) {
+      const k = dsKey(c, rr);
+      const cell = b[k];
+      const isWater = dsInWater(c, rr);
+      const isDen = (c === DS_DEN[0][0] && rr === DS_DEN[0][1]) || (c === DS_DEN[1][0] && rr === DS_DEN[1][1]);
+      const denO = (c === DS_DEN[0][0] && rr === DS_DEN[0][1]) ? 0 : ((c === DS_DEN[1][0] && rr === DS_DEN[1][1]) ? 1 : -1);
+      const trapO = DS_TRAP[k];
+      let cls = 'dscell';
+      if (isWater) cls += ' dswater';
+      if (isDen) cls += ' dsden' + denO;
+      if (trapO !== undefined) cls += ' dstrap' + trapO;
+      if (dsSel && dsSel[0] === c && dsSel[1] === rr) cls += ' dssel';
+      if (legal.some(([lc, lr]) => lc === c && lr === rr)) cls += ' dsmove';
+      const colr = cell ? safeColor(colorOf(r, names[cell.o]), '#3b82f6') : '';
+      const glyph = cell ? `<span class="dsg" style="color:${colr};border-color:${colr}">${DS_GLYPH[cell.p] || cell.p}</span>` : '';
+      cells.push(`<div class="${cls}" data-ds="${c},${rr}">${glyph}</div>`);
+    }
+  }
+
+  const rows = names.map((u, i) => {
+    const alive = Object.values(b).filter(x => x.o === i).length;
+    return `<div class="pitem" style="${u === turnU ? 'border-color:var(--accent)' : ''}">
+      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''} · ${i === 0 ? '藍方' : '紅方'}</div>
+      <div class="pbadge">${alive} 隻</div>
+    </div>`;
+  }).join('');
+
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+   <div class="wrap">
+     ${bar}
+     <div class="dsboard">${cells.join('')}</div>
+     <div class="hint">你執 <b style="color:${safeColor(colorOf(r, me.username), '#3b82f6')}">${mySide === 0 ? '藍方（上）' : (mySide === 1 ? '紅方（下）' : '觀戰')}</b> · 大食細 · 鼠食象 · 獅虎跳河 · 入對方獸穴即勝</div>
+     ${myTurn ? `<div class="hint">${dsSel ? '再點一下要走到哪一格' : '點自己的棋子開始走'}</div>` : ''}
+     <div class="plist">${rows}</div>
+   </div>`;
+  const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
+
+  appEl.querySelectorAll('[data-ds]').forEach(el => el.onclick = async () => {
+    if (!myTurn) return;
+    const [c, rr] = el.dataset.ds.split(',').map(Number);
+    const cell = b[dsKey(c, rr)];
+    if (dsSel && legal.some(([lc, lr]) => lc === c && lr === rr)) { await dsMove(dsSel, [c, rr]); return; }
+    if (cell && cell.o === mySide) { dsSel = (dsSel && dsSel[0] === c && dsSel[1] === rr) ? null : [c, rr]; render(); }
+    else { dsSel = null; render(); }
+  });
 }
 
 /* ===== 啟動 ===== */
