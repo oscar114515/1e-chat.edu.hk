@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CLz7bClzIyd7xzcRlrUevrbTEc9HR+X75lEIerfES4Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-eb/xYhbFH84XWhAy8CcsKGUktEjTiOPtNYFTK2qA/xo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.19</title>
+<title>班級聊天室 v1.20</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -49,9 +49,12 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #classStatus .online{color:#4ade80;font-weight:600}
 #searchBar{display:flex;gap:8px;padding:8px 12px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0;align-items:center}
 #searchInput{flex:1;padding:8px 12px;border-radius:18px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:inherit}
-#chatBox{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg-app)}
+#chatBox{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg-app);position:relative}
 #chatBox::-webkit-scrollbar{width:6px}
 #chatBox::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:3px}
+#scrollToBottomBtn{position:absolute;right:18px;bottom:18px;width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:20;transition:opacity .2s,transform .2s;opacity:0;pointer-events:none;transform:translateY(8px)}
+#scrollToBottomBtn.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+#scrollToBottomBtn:hover{transform:translateY(-2px)}
 .msg{max-width:75%;display:flex;gap:10px;align-items:flex-start;position:relative}
 .msg.me{align-self:flex-end;flex-direction:row-reverse}
 .avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;user-select:none;overflow:hidden;cursor:pointer}
@@ -171,7 +174,12 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .form-row{margin-bottom:14px}
 .form-row input[type=text],.form-row input[type=password],.form-row input[type=number],.form-row textarea,.form-row select{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit}
 .form-row textarea{resize:vertical;min-height:120px;line-height:1.5}
-.btn-primary,.btn-danger,.btn-warn,.btn-ok,.btn-ghost{width:100%;padding:12px;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
+.btn-primary,.btn-danger,.btn-warn,.btn-ok,.btn-ghost{width:100%;padding:12px;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:opacity .2s,transform .15s,filter .2s}
+.btn-primary:active,.btn-danger:active,.btn-warn:active,.btn-ok:active,.btn-ghost:active{transform:scale(.97)}
+.btn-primary:disabled,.btn-danger:disabled,.btn-warn:disabled,.btn-ok:disabled,.btn-ghost:disabled,.fb-btn:disabled{opacity:.6;cursor:not-allowed;filter:saturate(.6)}
+.btn-loading{position:relative;pointer-events:none}
+.btn-loading::after{content:'';display:inline-block;width:13px;height:13px;margin-left:8px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;vertical-align:-2px;animation:btnspin .7s linear infinite}
+@keyframes btnspin{to{transform:rotate(360deg)}}
 .btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb)}
 .btn-danger{background:linear-gradient(135deg,#dc2626,#b91c1c)}
 .btn-warn{background:linear-gradient(135deg,#ea580c,#c2410c)}
@@ -520,7 +528,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.19 正式版</div>
+    <div id="loginVersion">v1.20 正式版</div>
   </div>
 </div>
 
@@ -528,7 +536,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.19</span>
+      <span class="ver">v1.20</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -565,7 +573,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
     <input id="searchInput" placeholder="搜尋訊息...">
   </div>
 
-  <div id="chatBox"><div class="empty">載入訊息中...</div></div>
+  <div id="chatBox"><div class="empty">載入訊息中...</div><button id="scrollToBottomBtn" data-action="scrollToBottom" title="回到最新">↓</button></div>
 
   <div id="inputBar">
     <button id="micBtn">語音</button>
@@ -602,7 +610,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.19';
+const CURRENT_VERSION='v1.20';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -1032,6 +1040,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='dismissSystemNotice')return await dismissSystemNotice(arg);
     if(action==='adminSendSystemNotice')return await adminSendSystemNotice();
     if(action==='adminDeleteSystemNotice')return await adminDeleteSystemNotice(arg);
+    if(action==='scrollToBottom')return scrollToBottom();
   }catch(err){ console.error('Action error:',action,err);showNotif('操作失敗：'+(err.message||err)); }
 });
 
@@ -1039,6 +1048,7 @@ const fbToggle=$('feedbackToggle');
 if(fbToggle)fbToggle.addEventListener('click',()=>{ const box=$('feedbackBox'); if(box)box.classList.toggle('hidden'); });
 
 searchInput.addEventListener('input',()=>{ searchKeyword=searchInput.value.trim();render(); });
+chatBox.addEventListener('scroll',()=>{ updateScrollToBottomBtn(); });
 document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidden')){ if(!plusPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target))closePlus(); } });
 
 /* ===== 訂閱 ===== */
@@ -1254,6 +1264,7 @@ async function sendMessage(){
     await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,hasHtml:hasHtml,htmlCheckStatus:(hasHtml&&!isAdmin)?'checking':'ok',createdAt:Date.now(),deleted:false});
     await writeLog('send','發送訊息：'+text.slice(0,50));
     msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');hideMention();
+    scrollToBottom();
     if(hasHtml&&!isAdmin){
       checkHtmlMessage(msgId,text).catch(e=>console.error(e));
     }
@@ -1517,6 +1528,7 @@ function render(){
     return `<div class="msg ${isMe?'me':''}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${classTag}${roleTag} · ${time}${msgIdTag}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}<div class="msg-tools">${tools}</div></div></div>`;
   }).join('');
   if(atBottom&&!searchKeyword)chatBox.scrollTop=chatBox.scrollHeight;
+  updateScrollToBottomBtn();
   chatBox.querySelectorAll('[data-poll-opt]').forEach(el=>{
     el.onclick=(ev)=>{
       ev.stopPropagation();
@@ -1537,6 +1549,13 @@ function render(){
     };
   });
 }
+function isChatAtBottom(){ return chatBox.scrollHeight-chatBox.scrollTop-chatBox.clientHeight<80; }
+function updateScrollToBottomBtn(){
+  const btn=document.getElementById('scrollToBottomBtn');if(!btn)return;
+  if(isChatAtBottom()){ btn.classList.remove('show'); }
+  else{ btn.classList.add('show'); }
+}
+function scrollToBottom(){ chatBox.scrollTop=chatBox.scrollHeight; updateScrollToBottomBtn(); }
 let encState={};
 function renderEncryptedBody(m){
   const chars=Array.from(m.text||'');
@@ -1690,7 +1709,16 @@ async function adminDeleteAIMsg(msgId){ const snap=await get(query(ref(db,'messa
 async function restoreMsg(msgId){ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null,deletedBy:null}); }
 async function purgeMsg(msgId){ const snap=await get(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await remove(ref(db,'messages/'+key)); }
 async function appealMsg(noticeKey){ const reason=prompt('請填寫申訴理由：');if(!reason)return;await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{appealed:true,appealReason:reason,appealedAt:Date.now()});await push(ref(db,'requests'),{type:'appeal',noticeKey,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'});showNotif('已送出申訴');closePage(); }
-async function dismissSystemNotice(noticeKey){ await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{read:true}); }
+async function dismissSystemNotice(noticeKey){
+  if(!me)return;
+  await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{read:true});
+  // 立即從畫面移除這張卡片，並顯示已讀提示，讓使用者看得到反應
+  const card=document.querySelector(`.sn-card [data-action="dismissSystemNotice"][data-arg="${escAttr(noticeKey)}"]`)?.closest('.sn-card');
+  if(card){ card.style.transition='opacity .25s,transform .25s'; card.style.opacity='0'; card.style.transform='translateY(-6px)'; setTimeout(()=>card.remove(),250); }
+  showNotif('已讀');
+  // 重新整理通知列表（隱藏這張卡片以外的未讀小紅點）
+  updateGroupBadge();
+}
 
 /* ===== v1.10 位置全螢幕 ===== */
 function openLocationFullscreen(arg){
@@ -1941,7 +1969,7 @@ async function openProfilePage(username,isSelf){
   const avHTML=avatarHTML(u);
   if(isSelf){
     const heroHTML=`<div class="profile-hero" style="background:${bgColor};color:${textColor}"><div class="hero-avatar" style="background:${bgColor};color:${textColor}">${avHTML}</div><div class="hero-name">${escapeHtml(u.displayName||u.username)}</div><div class="hero-sub">${clsTag} · ${escapeHtml(u.username)}</div><div class="hero-badge">${roleLabel}</div></div>`;
-    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon">D</div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>`;
+    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon">A</div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon">T</div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon">V</div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon">D</div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>`;
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else {
     const light=lightenColor(bgColor,40);const dark=darkenColor(bgColor,20);
@@ -1990,15 +2018,21 @@ async function submitFeedback(){
     if(recent.length>=4){showNotif('一小時內最多 4 次，請稍後再試');return;}
     recent.push(Date.now());localStorage.setItem('fb_rate',JSON.stringify(recent));
   }
+  // loading 狀態：找到對應的送出按鈕，避免使用者重複點擊
+  const submitBtn=document.querySelector('[data-action="submitFeedback"]');
+  if(submitBtn){submitBtn.disabled=true;submitBtn.classList.add('btn-loading');submitBtn.dataset.orig=submitBtn.textContent;submitBtn.textContent='送出中...';}
   try{
     const aiRes=await callAI([{role:'system',content:'請判斷以下用戶反饋是否合理（不是無厘頭、不是亂碼、不是重複無意義字）。只回答 OK 或 NONSENSE。'},{role:'user',content:text}]);
     const c=(aiRes&&aiRes.content||'').trim().toUpperCase();
     if(c.includes('NONSENSE')){showNotif('反饋內容無效，已忽略');textEl.value='';return;}
+    const id='fb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    await set(ref(db,'feedbacks/'+id),{id,fromUser:isLogin?null:me.username,fromName:name,fromSeat:isLogin?null:me.seat,text,status:'pending',createdAt:Date.now()});
+    textEl.value='';if(nameEl)nameEl.value='';
+    showNotif('已送出反饋');
   }catch(e){}
-  const id='fb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-  await set(ref(db,'feedbacks/'+id),{id,fromUser:isLogin?null:me.username,fromName:name,fromSeat:isLogin?null:me.seat,text,status:'pending',createdAt:Date.now()});
-  textEl.value='';if(nameEl)nameEl.value='';
-  showNotif('已送出反饋');
+  finally{
+    if(submitBtn){submitBtn.disabled=false;submitBtn.classList.remove('btn-loading');submitBtn.textContent=submitBtn.dataset.orig||'送出';}
+  }
 }
 function toggleFeedbackBox(){ const box=$('feedbackBox'); if(box)box.classList.toggle('hidden'); }
 
@@ -2807,18 +2841,53 @@ async function submitAIPrivateMessage(){
   if(!me)return;
   const inp=document.getElementById('pcInput');if(!inp)return;
   const text=inp.value.trim();if(!text)return;
+  const sendBtn=document.querySelector('#privateChatScreen button[data-action="submitAIPrivateMessage"]');
   inp.value='';
+  if(sendBtn){sendBtn.disabled=true;sendBtn.classList.add('btn-loading');}
   try{
     const msgKey='aiPri_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     await set(ref(db,'aiPrivateChat/'+me.username+'/'+msgKey),{username:me.username,displayName:me.displayName,role:me.role,text,createdAt:Date.now()});
     const thinkKey='aiPri_think_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     await set(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{username:'ai',role:'ai',text:'',thinking:true,createdAt:Date.now()+1});
+    const isAdmin=me.role==='superadmin'||me.role==='admin';
     const recent=aiPrivateMsgs.slice(-30).map(m=>`${m.role==='ai'?'小喆AI':(m.displayName||m.username)}: ${m.text||''}`).join('\n');
-    const sys=`你是「小喆AI」，正在跟「${me.displayName}」單獨私人聊天。這段對話只有你們兩人看得到。溫柔、活潑，可以用 emoji。\n\n【最近對話】\n${recent||'（還沒開始）'}\n\n【用戶說】\n${text}`;
+    /* 私人聊天的長期記憶：跟公開頻道分開存，只屬於這個用戶。清瀏覽器也不影響，
+       因為都存在 Firebase。超過 200 則會自動修剪最舊的。 */
+    let memText='';
+    try{
+      const memSnap=await get(ref(db,'aiPrivateMemory/'+me.username+'/messages'));
+      const memVal=memSnap.exists()?memSnap.val():{};
+      const memList=Object.values(memVal).sort((a,b)=>(a.time||0)-(b.time||0)).slice(-200);
+      memText=memList.map(x=>`${x.from||'你'}: ${x.text||''}（AI 回：${x.aiReply||''}）`).join('\n');
+    }catch(e){}
+    /* ACTION 能力：管理員在私人聊天也能操作網站（跟公開頻道同一套指令）。 */
+    const capabilityBlock=isAdmin?`\n【你可以做的事】\n- 改變網站語言（用 [ACTION]{"cmd":"setLang","value":"zh-Hant|zh-Hans|en"}[/ACTION]）\n- 因為你是在跟管理員對話，你可以用 [ACTION] 指令操作網站：\n  - setTheme value=dark|light\n  - setLang value=zh-Hant|zh-Hans|en\n  - setColor target=username value=#rrggbb\n  - setName target=username value=新名稱\n  - setAvatar target=username value=emoji\n  - setPassword target=username value=新密碼\n  - ban target=username value=light|severe reason=原因\n  - unban target=username\n  - grantAdmin target=username\n  - revokeAdmin target=username\n  - deleteMsg target=訊息ID\n  - restoreMsg target=訊息ID\n  - purgeMsg target=訊息ID\n  - clearChat\n  - sendSystemNotice target=username|all title=標題 body=內容`:`\n【注意】你沒有操作網站的權限，絕對不要輸出任何 [ACTION] 指令。`;
+    const sys=`你是「小喆AI」，正在跟「${me.displayName}」單獨私人聊天。這段對話只有你們兩人看得到。溫柔、活潑，可以用 emoji。${capabilityBlock}\n\n【長期記憶】\n${memText||'（暫無）'}\n\n【最近對話】\n${recent||'（還沒開始）'}\n\n【用戶說】\n${text}`;
     const aiRes=await callAI([{role:'system',content:sys},{role:'user',content:text}]);
-    if(aiRes){await update(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{text:aiRes.content,thinking:false,reasoning:aiRes.reasoning||'',sponsor:true,createdAt:Date.now()});}
-    else{await update(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{text:'抱歉，我現在有點忙',thinking:false});}
+    let finalText='';
+    if(aiRes){
+      const content=aiRes.content||'';
+      const actionMatch=content.match(/\[ACTION\]([\s\S]*?)\[\/ACTION\]/);
+      let actionCmd=null;
+      if(actionMatch){ try{actionCmd=JSON.parse(actionMatch[1]);finalText=content.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/,'').trim();}catch(e){finalText=content;} }
+      if(!actionMatch)finalText=content.trim();
+      await update(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{text:finalText,thinking:false,reasoning:aiRes.reasoning||'',sponsor:true,createdAt:Date.now()});
+      if(actionCmd&&isAdmin){ showAIConfirm(actionCmd,me); }
+    }
+    else{await update(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{text:'抱歉，我現在有點忙',thinking:false});finalText='抱歉，我現在有點忙';}
+    /* 寫入私人長期記憶 */
+    try{ await push(ref(db,'aiPrivateMemory/'+me.username+'/messages'),{from:me.displayName||me.username,text,aiReply:finalText,time:Date.now()}); }catch(e){}
+    trimAIPrivateMemory().catch(()=>{});
   }catch(e){showNotif('送出失敗');}
+  finally{ if(sendBtn){sendBtn.disabled=false;sendBtn.classList.remove('btn-loading');} }
+}
+async function trimAIPrivateMemory(){
+  if(!me)return;
+  const snap=await get(ref(db,'aiPrivateMemory/'+me.username+'/messages'));if(!snap.exists())return;
+  const val=snap.val();const keys=Object.keys(val);
+  if(keys.length<=200)return;
+  const sorted=keys.map(k=>({k,time:(val[k]&&val[k].time)||0})).sort((a,b)=>a.time-b.time);
+  for(const x of sorted.slice(0,sorted.length-200)){ try{await remove(ref(db,'aiPrivateMemory/'+me.username+'/messages/'+x.k));}catch(e){} }
 }
 
 /* ===== 痕跡地圖（網頁版） =====
@@ -3071,6 +3140,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.20',date:'2026-10-11',changes:['AI 私人聊天現在有長期記憶：之前的對話即使清掉瀏覽器資料也還在，AI 也記得住更久以前講過的話','AI 私人聊天支援管理員操作：管理員在私人聊天裡叫 AI 改主題、改語言、發系統通知等，跟公開頻道一樣會先跳出確認','系統通知的「確定」按鈕現在按了會立刻有反應：卡片淡出消失並顯示「已讀」，不再像壞掉一樣沒動靜','反饋「送出」按鈕加了載入動畫：送出時按鈕會變灰並轉圈，不會再以為卡住或重複點','聊天室新增「回到最新」箭頭：往上翻看歷史時，右下角會出現一顆向下箭頭，一按就跳回最新訊息；自己送出訊息也會自動滾到底','反饋區的「送出反饋」與下方按鈕之間加了間距，不再擠在一起']},
 {ver:'v1.19',date:'2026-10-11',changes:['訊息編號改回原本的 msg_0001 格式（之前 v1.15 換成 Firebase 自動產生的鍵，鍵名變成 -Pxxxxxxxx 這種看不出順序的樣子）','改回原本格式的同時修好舊寫法的問題：取號改用原子操作，兩個人同時送出不會再拿到同一個編號、也就不會覆蓋掉對方的訊息']},
 {ver:'v1.18',date:'2026-10-10',changes:['修好後台分頁被擠掉的問題：分頁列原本是橫向捲動的，加了新分頁之後右邊的「群聊監看」被推出畫面，看起來像被換掉；現在改成自動換行，每一顆都一直在畫面上']},
 {ver:'v1.17',date:'2026-10-10',changes:['修好一個嚴重的顯示問題：v1.15 把訊息改用新的唯一鍵之後，鍵名的排序位置整個跑到前面，而「讀最近 300 則」在沒指定排序時是按鍵名排的 —— 結果新訊息全部落在視窗之外，自己送出的訊息在網頁上看不到（手機端因為是整包讀所以正常）','現在改成按訊息時間排序再取最近 300 則，不論鍵名長什麼樣子都不會漏']},
