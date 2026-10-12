@@ -1000,13 +1000,19 @@ function drawTTT(r,g,bar,spec){
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
   const names=playerNames(r);
   const myMark=names.indexOf(me.username)===0?'X':'O';
-  ctx.clearRect(0,0,330,330);ctx.strokeStyle='#333b52';ctx.lineWidth=3;
+  ctx.fillStyle='#d9b382';ctx.fillRect(0,0,330,330);
+  ctx.strokeStyle='#6b4f2a';ctx.lineWidth=3;
   for(let i=1;i<3;i++){ctx.beginPath();ctx.moveTo(i*110,12);ctx.lineTo(i*110,318);ctx.stroke();ctx.beginPath();ctx.moveTo(12,i*110);ctx.lineTo(318,i*110);ctx.stroke();}
-  ctx.lineWidth=7;ctx.lineCap='round';
+  ctx.lineCap='round';
   r.state.board.forEach((v,i)=>{ if(!v)return;const c=i%3,rw=Math.floor(i/3);const cx=c*110+55,cy=rw*110+55;
-    ctx.strokeStyle=colorOf(r,names[v==='X'?'0':'1']||names[0]);
-    if(v==='X'){ctx.beginPath();ctx.moveTo(cx-28,cy-28);ctx.lineTo(cx+28,cy+28);ctx.moveTo(cx+28,cy-28);ctx.lineTo(cx-28,cy+28);ctx.stroke();}
-    else{ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);ctx.stroke();}
+    // 棋子固定黑／白（先手黑、後手白），不用玩家個人顏色
+    if(v==='X'){
+      ctx.strokeStyle='#14181F';ctx.lineWidth=8;
+      ctx.beginPath();ctx.moveTo(cx-28,cy-28);ctx.lineTo(cx+28,cy+28);ctx.moveTo(cx+28,cy-28);ctx.lineTo(cx-28,cy+28);ctx.stroke();
+    }else{
+      ctx.lineWidth=10;ctx.strokeStyle='#3A2A16';ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);ctx.stroke();
+      ctx.lineWidth=6.5;ctx.strokeStyle='#F5F7FA';ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);ctx.stroke();
+    }
   });
   const hintEl=appEl.querySelector('#tttHint'); if(hintEl)hintEl.textContent='你執 '+(myMark==='X'?'○（先手）':'△（後手）');
   cv.onclick=e=>{ if(spec)return;const rect=cv.getBoundingClientRect();
@@ -1039,9 +1045,13 @@ function drawGomoku(r,g,bar,spec){
   const names=playerNames(r);
   for(let i=0;i<S;i++)for(let j=0;j<S;j++){const v=r.state.board[i*S+j];if(!v)continue;
     const x=PAD+j*C,y=PAD+i*C;ctx.beginPath();ctx.arc(x,y,C*0.42,0,Math.PI*2);
-    ctx.fillStyle=colorOf(r,names[v==='1'?'0':'1']||names[0]);ctx.fill();
+    // 棋子固定黑／白（先手黑、後手白），不用玩家個人顏色
+    const black=(v==='1');
+    ctx.fillStyle=black?'#14181F':'#F5F7FA';ctx.fill();
+    if(!black){ctx.strokeStyle='#3A2A16';ctx.lineWidth=1.4;ctx.stroke();}
   }
-  if(r.state.last){const i=r.state.last.i,j=r.state.last.j;ctx.beginPath();ctx.arc(PAD+j*C,PAD+i*C,C*0.12,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();}
+  if(r.state.last){const i=r.state.last.i,j=r.state.last.j;ctx.beginPath();ctx.arc(PAD+j*C,PAD+i*C,C*0.12,0,Math.PI*2);
+    ctx.fillStyle=(r.state.board[i*S+j]==='1')?'#F5F7FA':'#14181F';ctx.fill();}
   cv.onclick=e=>{if(spec)return;const rect=cv.getBoundingClientRect();
     const j=Math.round(((e.clientX-rect.left)*(W/rect.width)-PAD)/C);
     const i=Math.round(((e.clientY-rect.top)*(W/rect.height)-PAD)/C);
