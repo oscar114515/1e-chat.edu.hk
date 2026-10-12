@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-MZr0vXHn6m2nPYFeUmTX0ImiwU6OQYRYp4FhF62k/8A=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-54vEuoi6T93LpDBeGdqHnYx40z8E9YICrfS2BidKIow=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.21</title>
 <style>
@@ -622,7 +622,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.26';
+const CURRENT_VERSION='v1.27';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -3240,6 +3240,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.27',date:'2026-10-12',changes:['修好安卓版棋盤看不到的問題：安卓的五子棋以前**完全沒有畫格線**（整塊深色背景 + 飄著的圓點），看起來就是壞掉；現在格線與落點用同一條公式（第 i 格中心 = (i+0.5)/n），線與棋子天生對齊，不可能再出現「線和棋子分開」','棋子改用黑／白（先手黑、後手白），不再用玩家個人的 16 進制顏色：五子棋的黑白子、井字棋的深色 ✕ 與白圈 ○（白圈加深色描邊，木色棋盤上看得清楚）','新增兩端共用的「遊戲契約」：每款遊戲的棋盤型別、狀態機、事件、勝負規則只寫一份，兩端照同一份做，避免再出現「安卓跟網頁不一樣」','棋盤配色統一成木色棋盤 + 深色格線，兩端外觀一致','安卓版 1.7.3']},
 {ver:'v1.26',date:'2026-10-11',changes:['修好安卓版聊天室的進場位置：以前進入 App、重新整理或從別的頁面回到聊天室，畫面會停在最頂端最舊的那幾則訊息，要一直往下滑才看得到最新的；現在一進聊天室就直接停在最底部的最新訊息','同一個問題在私人群聊與 AI 對話也一起修好了','順帶改進：只有「本來就在看最新訊息」時才會跟著新訊息自動往下捲，正在往上翻舊訊息的時候不會被硬拉走','安卓版 1.7.2']},
 {ver:'v1.25',date:'2026-10-11',changes:['修好等待室卡住的問題：以前只有在「你自己加入的那一刻」才會開始倒數，如果最後一位是別端（另一支手機、安卓版、或直接寫進資料庫）加進來的，兩邊都不會開始倒數，畫面就會一直停在「人數 2/2 · 等待中」','現在改成只要人數已到齊、而且還沒有開始倒數，房間裡任何一個人都會自動把它推進倒數；倒數途中有人退出而取消，補齊人數後也會自己重新倒數','順手把文字改清楚：人數已到齊就顯示「人數已到齊，倒數後自動開局」，不會再出現「還需要 0 人才能開局」這種句子；題目還沒準備好時也會老實說「正在準備題目」','安卓版 1.7.1：同步這個修正']},
 {ver:'v1.24',date:'2026-10-11',changes:['安卓版小遊戲改用「原生介面」重寫（不再內嵌網頁）：大廳、開房、等待室、倒數、觀戰、對局、結算全部由安卓自己畫，讀寫的是同一份資料，跟網頁版互通','安卓版第一批原生支援 7 款：井字棋、五子棋、誰是臥底、傳炸彈、康樂棋、大富翁、狼人殺（其餘款式的原生介面會在後續版本一款一款補上）','新增「網址引導」：在網址後面加 ?game=遊戲代號 或 ?room=房間編號，打開就跟平常一樣走登入（能自動登入就自動登入、要打密碼就打密碼），登入完成後直接跳到那個小遊戲或那一間房間','每一間房間都有自己的網址（?room=<房號>），房間內與聊天室的對局邀請卡都有「複製房間連結 / 複製這間房間的連結」可以一鍵複製，傳給同學點開就能進同一間房','如果點進去時那局已經結束了（而且你不是當時的玩家）→ 顯示「你來遲了，對局已經結束」並說明最後是誰獲勝，不會再把你塞進已經打完的房間','房間已經被關閉或不存在 → 明確顯示「房間已不存在或已被關閉」，不會停在「載入中」','支援 ?game=<代號>：直接打開那一款遊戲的開房面板（例如 ?game=gomoku 直接彈出五子棋開房）','新增「狼人殺」（6–18 人）：狼人／預言家／村民三種角色，夜晚狼人選人殺、預言家查身分，天亮公布死者後輪流發言（像聊天、講完自動輪下一位），再投票放逐；票高者出局，平票則平票的人單獨再投；狼人全出局＝村民勝、狼人數量不少於其他人＝狼人勝','新增「大富翁」（2–6 人，簡化版）：28 格環形棋盤、買地收租、機會卡、稅金、經過起點收 200，付不出錢就破產出局，最後剩下的人獲勝']},
