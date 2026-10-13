@@ -260,6 +260,8 @@ let me=null;               // {username,displayName,color,avatar,role,cls,seat}
 let myStats={};
 let roomsSub=null, roomSub=null;
 let curRoom=null, curRoomId=null;
+// v1.31 我是從「邀請／房間連結」進來的嗎？（是的話退出要回去聊天室，不是回大廳）
+let cameFromInvite=false;
 let view='lobby';
 
 /* ===== 遊戲定義 ===== */
@@ -302,7 +304,7 @@ async function loadUser(){
   }catch(e){ renderNoUser(); return; }
   await loadStats();
   const rid=params.get('room');
-  if(rid){ joinRoom(rid); return; }
+  if(rid){ cameFromInvite=true; joinRoom(rid); return; }
   view='lobby'; render();
   // v1.24 網址引導：?game=<遊戲代號> → 直接打開那一款遊戲的開房面板
   const gk=(params.get('game')||'').trim().toLowerCase();
@@ -353,7 +355,7 @@ function renderLobby(){
       <div class="hint">選一款遊戲開房，邀請會自動發到聊天室；人數到齊自動開局</div>
       <div class="grid">${cards}</div>
     </div>`;
-  appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openCreate(el.dataset.g));
+  appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openGameRooms(el.dataset.g));
   const cb=appEl.querySelector('[data-act="close"]'); if(cb) cb.onclick=closeSelf;
 }
 function closeSelf(){
@@ -366,6 +368,78 @@ function closeSelf(){
 
 /* ===== 建房 ===== */
 let pick={g:null,p:2,spec:true,level:'normal'};
+/* ===== v1.31 點遊戲 → 先看現在有幾間房（房主、幾人／幾人），下面才是開房 ===== */
+let roomsWatch=null;
+function closeRoomsSheet(sheet){
+  try{ if(roomsWatch){roomsWatch();roomsWatch=null;} }catch(e){}
+  if(sheet&&sheet.remove)sheet.remove();
+}
+function openGameRooms(gk){
+  const g=gameDef(gk);
+  if(!g.ok){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
+  const sheet=document.createElement('div');sheet.className='sheet';
+  sheet.innerHTML=`<div class="inner">
+    <h3>${escapeHtml(g.n)}</h3>
+    <div class="desc" id="roomListHead">正在看現在有幾間房…</div>
+    <div id="roomList" style="max-height:44vh;overflow-y:auto;margin-bottom:6px"></div>
+    <button class="btn" id="goCreate">建立自己的房間</button>
+    <button class="btn ghost" id="closeRooms">取消</button>
+  </div>`;
+  document.body.appendChild(sheet);
+  const listEl=sheet.querySelector('#roomList'), headEl=sheet.querySelector('#roomListHead');
+  const paint=all=>{
+    const now=Date.now();
+    const rows=Object.entries(all||{})
+      .filter(([id,r])=>{
+        if(!r||r.game!==gk||r.status==='ended')return false;
+        if(Object.keys(r.players||{}).length===0)return false;          // 空房（房主退出後留下的）不要顯示
+        if(now-(r.createdAt||now)>6*3600*1000)return false;             // 超過 6 小時的舊房也不要
+        return true;
+      })
+      .sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+    if(!rows.length){
+      headEl.textContent='現在還沒有人開「'+g.n+'」';
+      listEl.innerHTML='<div class="empty" style="padding:14px">你可以開第一間</div>';
+      return;
+    }
+    headEl.textContent='現在有 '+rows.length+' 間房在等：';
+    listEl.innerHTML=rows.map(([id,r])=>{
+      const pc=Object.keys(r.players||{}).length;
+      const cap=r.setMax||r.maxP||r.minP||2;
+      const full=pc>=cap;
+      const playing=r.status==='playing';
+      const canSpec=playing&&r.allowSpectate!==false;
+      const canJoin=!playing&&!full;
+      const ok=canJoin||canSpec;
+      const action=playing?(canSpec?'觀戰':'已開始'):(full?'已滿':'加入');
+      const state=playing?'進行中':(r.status==='countdown'?'倒數中':'等待中');
+      const host=r.host||'';
+      const hcolor=(r.players&&r.players[host]&&r.players[host].color)||'#3b82f6';
+      return `<div class="pitem" style="margin-bottom:7px">
+        <div class="pav" style="${pavStyle(safeColor(hcolor))}">${avatarHTML({displayName:r.hostName||host})}</div>
+        <div class="pname" style="flex:1">${escapeHtml(r.hostName||host)} 的房間
+          <div class="hint" style="margin:2px 0 0;text-align:left">${pc}/${cap} 人 · ${state}${r.allowSpectate===false?' · 不可觀戰':''}</div>
+        </div>
+        <div class="pbadge" data-join="${escAttr(id)}" style="cursor:${ok?'pointer':'default'};${ok?'':'opacity:.45'}">${action}</div>
+      </div>`;
+    }).join('');
+  };
+  try{ if(roomsWatch)roomsWatch(); }catch(e){}
+  roomsWatch=onValue(ref(db,'games'),snap=>paint(snap.val()));
+  sheet.onclick=e=>{
+    if(e.target===sheet){ closeRoomsSheet(sheet); return; }
+    const j=e.target.closest('[data-join]');
+    if(j&&j.style.opacity!=='0.45'){
+      const id=j.dataset.join;
+      closeRoomsSheet(sheet);
+      cameFromInvite=false;   // 自己從清單找的房間 → 退出回大廳
+      joinRoom(id);
+    }
+  };
+  sheet.querySelector('#closeRooms').onclick=()=>closeRoomsSheet(sheet);
+  sheet.querySelector('#goCreate').onclick=()=>{ closeRoomsSheet(sheet); openCreate(gk); };
+}
+
 function openCreate(gk){
   const g=gameDef(gk);
   if(!g.ok){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
@@ -753,19 +827,34 @@ async function leaveRoom(){
   const rid=curRoomId;
   if(rid&&me){
     try{
-      const pr=ref(db,'games/'+rid+'/players/'+me.username);
-      const sr=ref(db,'games/'+rid+'/spectators/'+me.username);
-      try{ onDisconnect(pr).cancel(); }catch(e){}
-      try{ onDisconnect(sr).cancel(); }catch(e){}
-      await remove(pr); await remove(sr);
-      await cancelCountdownIfShort(rid);   // 我走了之後人不夠 → 立刻取消倒數
+      // v1.31 房主退出＝關閉房間。
+      // 以前房主退出只把自己從名單移除，房間還停在 waiting →
+      // 那條邀請會一直留在對話框、點進去只剩自己一個。
+      const isHost=!!(curRoom&&curRoom.host===me.username);
+      if(isHost){
+        await update(ref(db,'games/'+rid),{status:'ended',winner:'closed'});
+      }else{
+        const pr=ref(db,'games/'+rid+'/players/'+me.username);
+        const sr=ref(db,'games/'+rid+'/spectators/'+me.username);
+        try{ onDisconnect(pr).cancel(); }catch(e){}
+        try{ onDisconnect(sr).cancel(); }catch(e){}
+        await remove(pr); await remove(sr);
+        await cancelCountdownIfShort(rid);   // 我走了之後人不夠 → 立刻取消倒數
+      }
     }catch(e){}
   }
   if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
   if(bombTimer){clearInterval(bombTimer);bombTimer=null;}
   if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
   const wm=document.getElementById('wwModal'); if(wm) wm.remove();
-  if(roomSub)roomSub(); roomSub=null; curRoom=null;curRoomId=null;view='lobby';render();
+  if(roomSub)roomSub(); roomSub=null; curRoom=null;curRoomId=null;
+  // v1.31 從「邀請／房間連結」進來的，退出就回去聊天室；在大廳自己找房間進來的，才回大廳。
+  if(cameFromInvite){
+    cameFromInvite=false;
+    try{ parent.postMessage({type:'closeGames'},'*'); }catch(e){}
+    return;
+  }
+  view='lobby';render();
 }
 async function closeRoom(){
   if(!curRoomId)return;
@@ -1000,7 +1089,17 @@ function renderEnded(r,g){
     </div>`;
   appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
 }
-function backHome(){ if(roomSub)roomSub();roomSub=null;curRoom=null;if(bombTimer){clearInterval(bombTimer);bombTimer=null;}view='lobby';render(); }
+function backHome(){
+  // v1.31 從邀請／房間連結進來的：任何「回到大廳」都應該回到聊天室，
+  // 而不是把小遊戲大廳丟給對方看（他根本不是從那裡進來的）。
+  if(cameFromInvite){
+    cameFromInvite=false;
+    if(roomSub)roomSub();roomSub=null;curRoom=null;curRoomId=null;
+    try{ parent.postMessage({type:'closeGames'},'*'); }catch(e){}
+    return;
+  }
+  if(roomSub)roomSub();roomSub=null;curRoom=null;if(bombTimer){clearInterval(bombTimer);bombTimer=null;}view='lobby';render();
+}
 
 /* ===== 勝負與戰績 ===== */
 // winners：團隊遊戲用（例如劇本殺），傳入「這一局算贏」的玩家陣列；
