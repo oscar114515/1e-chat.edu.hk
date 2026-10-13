@@ -204,6 +204,49 @@ const appEl=$('#app');
 function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function escAttr(s){return escapeHtml(s);}
 function safeColor(v,fb){return /^#[0-9a-fA-F]{3,8}$/.test(v||'')?v:(/^[a-zA-Z]+$/.test(v||'')?v:fb);}
+/* ===== v1.28 對比處理 =====
+   棋子／頭像用玩家自己的顏色。用「對比度」判斷夠不夠分明（不是簡單的亮度差）：
+   對比度 < 2.5 就自動補一圈描邊（淺底描深、深底描淺），
+   頭像上的字也自動選黑或白。描邊用 box-shadow 畫，不會改變排版尺寸。 */
+const UI_CARD_BG='#151926';
+function lumOf(hex){
+  const c=String(hex||'').replace('#','').trim();
+  if(c.length!==6)return 0.5;
+  const f=i=>{const v=parseInt(c.substr(i,2),16)/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};
+  return 0.2126*f(0)+0.7152*f(2)+0.0722*f(4);
+}
+/** 目前卡片的底色（跟著主題走，不寫死） */
+function curCardBg(){
+  try{
+    const v=getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim();
+    if(/^#[0-9a-fA-F]{6}$/.test(v))return v;
+  }catch(e){}
+  return UI_CARD_BG;
+}
+/** WCAG 對比度（1 = 完全一樣，21 = 黑對白） */
+function contrastRatio(aHex,bHex){
+  const la=lumOf(aHex), lb=lumOf(bHex);
+  return (Math.max(la,lb)+0.05)/(Math.min(la,lb)+0.05);
+}
+/** 需要描邊就回傳描邊色，不需要回空字串 */
+function contrastStroke(fill,bg){
+  const b=bg||curCardBg();
+  if(contrastRatio(fill,b)>=2.5)return '';
+  return (lumOf(b)>0.5)?'#14181F':'#F5F7FA';
+}
+/** 玩家顏色的色塊（小圓點用） */
+function chipStyle(fill,bg){
+  const st=contrastStroke(fill,bg);
+  return 'background:'+fill+(st?(';box-shadow:0 0 0 2px '+st):'');
+}
+/** 頭像：底色 + 必要描邊 + 自動字色（不然白頭像配白字＝看不到） */
+function pavStyle(fill,bg){
+  const b=bg||curCardBg();
+  const st=contrastStroke(fill,b);
+  const txt=(lumOf(fill)>0.55)?'#14181F':'#FFFFFF';
+  return 'background:'+fill+(st?(';box-shadow:0 0 0 2px '+st):'')+';color:'+txt;
+}
+
 function avatarHTML(m){const a=String(m&&m.avatar||'');if(/^data:image\//.test(a))return `<img src="${escAttr(a)}">`;const t=escapeHtml((m&&(m.displayName||m.username)||'?').slice(0,3));return t;}
 let noticeTimer=null;
 function showNotice(txt,ms=1800){let el=document.getElementById('noteBox');if(!el){el=document.createElement('div');el.id='noteBox';el.className='notice';document.body.appendChild(el);}el.textContent=txt;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.remove(),ms);}
@@ -401,7 +444,9 @@ async function ensureTopic(r){
   try{ onDisconnect(lockRef).remove(); }catch(e){}
   // 出題數量依遊戲而定：你畫我猜／劇本殺要看實際人數，傳炸彈固定一串類別
   const pc=Object.keys(r.players||{}).length||(r.minP||2);
-  const tn=g.k==='pictionary'?Math.max(2,pc):(g.k==='scriptmurder'?Math.max(4,pc):6);
+  // 只出「夠用就好」的數量：吐的字越少回得越快。
+  // 誰是臥底每回合只用 1 組（給 2 組留一點變化）、傳炸彈 3 類、你畫我猜按人數折半、劇本殺必須一人一角。
+  const tn=g.k==='undercover'?2:(g.k==='bomb'?3:(g.k==='pictionary'?Math.max(2,Math.ceil(pc/2)):Math.max(4,pc)));
   const lvl=r.topicLevel||'normal';
   let topic=null;
   try{ topic=await aiMakeTopic(g.k,lvl,tn); }catch(e){ topic=null; }
@@ -443,6 +488,9 @@ function joinRoom(rid){
     // 只在 ensureMembership 裡觸發是不夠的：最後一位可能是別端（例如安卓）加進來的，
     // 那樣兩邊都不會開始倒數，畫面就會一直卡在「人數 2/2 · 等待中」。
     if(!lateJoin) maybeStartCountdown();
+    // 倒數已經到期、題目也好了（AI 剛出完）→ 立刻開局，不用再等一輪
+    if(!lateJoin && curRoom && curRoom.status==='countdown'
+       && (curRoom.startAt||0)<=Date.now() && topicReady(curRoom)) tryStartGame();
     await checkAbandon(curRoom);
     // 需要題目但還沒出好 → 後台補（不阻塞介面）
     if(curRoom && GAMES_NEED_TOPIC[curRoom.game] && curRoom.status!=='ended') ensureTopic(curRoom);
@@ -575,7 +623,12 @@ function renderRoom(){
   }
   else if(r.status==='countdown'&&r.startAt){
     const left=Math.max(0,Math.ceil((r.startAt-Date.now())/1000));
-    cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint">人數已到齊，倒數後自動開局</div>`;
+    if(left<=0&&!topicReady(r)){
+      // 倒數已經完了但題目還沒出好 → 老實說在等 AI（不要留一個 0 給人猜）
+      cdHtml=`<div class="countdown" id="cdNum">AI</div><div class="hint" id="cdHint">AI 出題中…請稍候（人數已到齊，題目一出好就自動開局）</div>`;
+    }else{
+      cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint" id="cdHint">人數已到齊，倒數後自動開局</div>`;
+    }
   } else if(pc>=(r.minP||2)&&!topicReady(r)){
     // 人已經夠了但題目還沒好：不要把「還需要 0 人」這種鬼話給使用者看
     cdHtml=`<div class="hint">人數已到齊，正在準備題目…</div>`;
@@ -583,8 +636,8 @@ function renderRoom(){
     const need=Math.max(0,(r.minP||2)-pc);
     cdHtml=`<div class="hint">${need>0?('還需要 '+need+' 人才能開局'):'人數已到齊，準備開局…'}</div>`;
   }
-  const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="background:${safeColor(p.color,'#3b82f6')}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
-  const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="background:#475569">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
+  const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
+  const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="${pavStyle('#475569')}">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
   appEl.innerHTML=`
     <div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)} · 房間</h1></div>
     <div class="wrap">
@@ -663,6 +716,13 @@ function startCountdownTicker(){
     if(left<=0){ clearInterval(cdTimer);cdTimer=null; tryStartGame(); }
   },250);
 }
+// 倒數完了但題目還沒出好：畫面要老實說「AI 出題中」，不要留一個 0 給人猜
+function markTopicWaiting(){
+  try{
+    const el=document.getElementById('cdNum'); if(el) el.textContent='AI';
+    const hint=document.getElementById('cdHint'); if(hint) hint.textContent='AI 出題中…請稍候（已到齊，題目一出好就自動開局）';
+  }catch(e){}
+}
 async function tryStartGame(){
   const id=curRoomId; if(!id)return;
   // 用最新資料判斷，而不是本地快取
@@ -675,11 +735,9 @@ async function tryStartGame(){
   if(r.status!=='countdown')return;
   const pc=Object.keys(r.players||{}).length;
   if(pc<(r.minP||2)){ await update(ref(db,'games/'+id),{status:'waiting',startAt:null}); return; }
-  // 需要題目的遊戲：題目還沒出好就不開局（等 ensureTopic 補完後會再觸發倒數）
-  if(!topicReady(r)){
-    await update(ref(db,'games/'+id),{status:'waiting',startAt:null});
-    return;
-  }
+  // 需要題目的遊戲：題目還沒出好就先不開局，但**不要退回 waiting** ——
+  // 留在倒數狀態、畫面顯示「AI 出題中…」，題目一出好就自動開局（下面有自動觸發）。
+  if(!topicReady(r)){ markTopicWaiting(); return; }
   // 事務搶鎖：countdown → playing，只允許一個客戶端開局
   let res;
   try{
@@ -844,7 +902,7 @@ function renderEnded(r,g){
     const rows=playerNames(r).sort((a,b)=>(scores[b]||0)-(scores[a]||0)).map(u=>{
       const mine=u===me.username;
       const isTop=playerNames(r).sort((a,b)=>(scores[b]||0)-(scores[a]||0))[0]===u;
-      return `<div class="pitem" style="${mine?'border-color:var(--accent)':''}"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${mine?'（你）':''}${isTop?' · 冠軍':''}</div><div class="pbadge" style="color:var(--gold);border-color:var(--gold)">${scores[u]||0} 分</div></div>`;
+      return `<div class="pitem" style="${mine?'border-color:var(--accent)':''}"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${mine?'（你）':''}${isTop?' · 冠軍':''}</div><div class="pbadge" style="color:var(--gold);border-color:var(--gold)">${scores[u]||0} 分</div></div>`;
     }).join('');
     appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap"><div class="countdown" style="font-size:30px">${w==='draw'?'平手':'恭喜獲勝！'}</div>
@@ -861,7 +919,7 @@ function renderEnded(r,g){
     const rows=playerNames(r).map(u=>{
       const isW=rl[u]==='wolf';
       const c=isW?'#f472b6':'var(--green)';
-      return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${WW_NAME[rl[u]]||'平民'}</div></div>`;
+      return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${WW_NAME[rl[u]]||'平民'}</div></div>`;
     }).join('');
     appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap">
@@ -883,7 +941,7 @@ function renderEnded(r,g){
       const role=deck[i]||{n:'角色'};
       const isC=u===culprit;
       const c=isC?'var(--red)':'var(--green)';
-      return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}<div class="hint" style="margin:2px 0 0">${escapeHtml(role.n||'')}</div></div><div class="pbadge" style="color:${c};border-color:${c}">${isC?'兇手':'清白'}</div></div>`;
+      return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}<div class="hint" style="margin:2px 0 0">${escapeHtml(role.n||'')}</div></div><div class="pbadge" style="color:${c};border-color:${c}">${isC?'兇手':'清白'}</div></div>`;
     }).join('');
     const verdict=detWin?'兇手被揪出來了！':'兇手逃掉了…';
     appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結案</h1></div>
@@ -907,7 +965,7 @@ function renderEnded(r,g){
       const isU=under.includes(u);
       const tag=isU?'臥底':'平民';
       const c=isU?'#f472b6':'var(--green)';
-      return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
+      return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
     }).join('');
     appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap">
@@ -931,7 +989,7 @@ function renderEnded(r,g){
   const rows=playerNames(r).map(u=>{
     const tag=(w===u)?'勝':(w==='draw'?'和':'負');
     const c=(w===u)?'var(--green)':(w==='draw'?'var(--gold)':'var(--red)');
-    return `<div class="pitem"><div class="pav" style="background:${colorOf(r,u)}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
+    return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
   }).join('');
   appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
     <div class="wrap">
@@ -1265,7 +1323,7 @@ function drawUno(r, g, bar, spec){
   const oppo = names.filter(u => u !== me.username).map(u => {
     const p = eng.getPlayer(u); const n = p ? p.hand.length : 0;
     const isCur = u === cur;
-    return `<div class="pitem" style="${isCur ? 'border-color:var(--accent)' : ''}"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}${isCur ? ' · 出牌中' : ''}</div><div class="pbadge">${n} 張</div></div>`;
+    return `<div class="pitem" style="${isCur ? 'border-color:var(--accent)' : ''}"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}${isCur ? ' · 出牌中' : ''}</div><div class="pbadge">${n} 張</div></div>`;
   }).join('');
 
   let handHtml = '<div class="empty">觀戰中</div>';
@@ -1353,8 +1411,8 @@ function drawChess(r, g, bar, spec){
      <div class="board-wrap"><canvas id="cv" width="${W}" height="${W}"></canvas>
      <div class="hint" id="chessHint"></div></div>
      <div class="plist">
-       <div class="pitem" style="${eng.turn() === 'w' ? 'border-color:var(--accent)' : ''}"><div class="pav" style="background:${colorOf(r, whiteU)}">${avatarHTML({ displayName: nameOf(r, whiteU) })}</div><div class="pname">${escapeHtml(nameOf(r, whiteU))}（白）</div><div class="pbadge">${eng.turn() === 'w' ? '行棋中' : ''}</div></div>
-       <div class="pitem" style="${eng.turn() === 'b' ? 'border-color:var(--accent)' : ''}"><div class="pav" style="background:${colorOf(r, blackU)}">${avatarHTML({ displayName: nameOf(r, blackU) })}</div><div class="pname">${escapeHtml(nameOf(r, blackU))}（黑）</div><div class="pbadge">${eng.turn() === 'b' ? '行棋中' : ''}</div></div>
+       <div class="pitem" style="${eng.turn() === 'w' ? 'border-color:var(--accent)' : ''}"><div class="pav" style="${pavStyle(colorOf(r, whiteU))}">${avatarHTML({ displayName: nameOf(r, whiteU) })}</div><div class="pname">${escapeHtml(nameOf(r, whiteU))}（白）</div><div class="pbadge">${eng.turn() === 'w' ? '行棋中' : ''}</div></div>
+       <div class="pitem" style="${eng.turn() === 'b' ? 'border-color:var(--accent)' : ''}"><div class="pav" style="${pavStyle(colorOf(r, blackU))}">${avatarHTML({ displayName: nameOf(r, blackU) })}</div><div class="pname">${escapeHtml(nameOf(r, blackU))}（黑）</div><div class="pbadge">${eng.turn() === 'b' ? '行棋中' : ''}</div></div>
      </div>
    </div>`;
 
@@ -1501,7 +1559,7 @@ async function aiUndercoverPairs(level, n, avoid){
       (avoid && avoid.length ? `避開：${avoid.join('、')}。` : '') +
       `格式：["詞A","詞B"] 這樣的 ${n} 組`;
     let txt = '';
-    try { txt = await callAI(sys, usr, 3000); } catch (e) { txt = ''; }
+    try { txt = await callAI(sys, usr, 1200); } catch (e) { txt = ''; }
     let j = extractJSON(txt);
     if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
     if (Array.isArray(j)) {
@@ -1529,7 +1587,7 @@ async function aiMakeTopic(game, level, n){
   if (game === 'undercover') {
     n = n || 4;
     try {
-      const words = await withTimeout(aiUndercoverPairs(level, n), 30000);
+      const words = await withTimeout(aiUndercoverPairs(level, n), 12000);
       if (words) return { level: level, words: words, source: 'ai' };
     } catch (e) {}
     return { level: level, words: ucFallbackPairs(level, n), source: 'fallback' };
@@ -1537,7 +1595,7 @@ async function aiMakeTopic(game, level, n){
   if (game === 'pictionary') {
     n = n || 3;
     try {
-      const words = await withTimeout(aiPictionaryWords(level, n), 30000);
+      const words = await withTimeout(aiPictionaryWords(level, n), 12000);
       if (words) return { level: level, words: words, source: 'ai' };
     } catch (e) {}
     return { level: level, words: picFallbackWords(level, n), source: 'fallback' };
@@ -1546,7 +1604,7 @@ async function aiMakeTopic(game, level, n){
   if (game === 'bomb') {
     n = n || 6;
     try {
-      const cats = await withTimeout(aiBombCategories(level, n), 30000);
+      const cats = await withTimeout(aiBombCategories(level, n), 12000);
       if (cats) return { level: level, categories: cats, source: 'ai' };
     } catch (e) {}
     return { level: level, categories: bombFallbackCategories(level, n), source: 'fallback' };
@@ -1555,7 +1613,7 @@ async function aiMakeTopic(game, level, n){
   if (game === 'scriptmurder') {
     const np = Math.max(4, Math.min(10, n || 4));
     try {
-      const cs = await withTimeout(aiScriptCase(level, np), 45000);
+      const cs = await withTimeout(aiScriptCase(level, np), 25000);
       if (cs) return cs;
     } catch (e) {}
     return smFallbackCase(level, np);
@@ -1739,7 +1797,7 @@ function ucShowResultModal(){
     const who = names.filter(v => voters[v] === u).map(v => escapeHtml(nameOf(r, v))).join('、') || '（沒人投他）';
     const out = vr.out === u;
     return `<div class="pitem" style="${out ? 'border-color:var(--red)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${out ? ' · 出局' : ''}
         <div class="hint" style="margin:2px 0 0;text-align:left">${who}</div></div>
       <div class="pbadge" style="${out ? 'color:var(--red);border-color:var(--red)' : ''}">${Number(tally[u]) || 0} 票</div>
@@ -1781,7 +1839,7 @@ function drawUndercover(r, g, bar, spec){
     const role = st.revealed ? (under.includes(u) ? '臥底' : '平民') : '';
     const rcStyle = st.revealed ? (under.includes(u) ? 'color:#f472b6;border-color:#f472b6' : 'color:var(--green);border-color:var(--green)') : '';
     return `<div class="pitem" style="${isCur ? 'border-color:var(--accent)' : ''}${isDead ? ';opacity:.45' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isDead ? ' · 已出局' : ''}${isCur ? ' · 描述中' : ''}</div>
       <div class="pbadge" style="${rcStyle}">${st.revealed ? role : (ready[u] ? '已準備' : '')}</div>
     </div>`;
@@ -1791,7 +1849,7 @@ function drawUndercover(r, g, bar, spec){
   const feed = ucDescList(r);
   const feedHtml = `<div class="ucfeed" id="ucFeed">${feed.length
     ? feed.map(x => `<div class="ucmsg">
-        <div class="pav" style="background:${colorOf(r, x.u)}">${avatarHTML({ displayName: nameOf(r, x.u) })}</div>
+        <div class="pav" style="${pavStyle(colorOf(r, x.u))}">${avatarHTML({ displayName: nameOf(r, x.u) })}</div>
         <div class="ucbody">
           <div class="ucmeta">${escapeHtml(nameOf(r, x.u))}${x.u === me.username ? '（你）' : ''} · 第 ${Number(x.r) || 1} 輪</div>
           <div class="uctext">${escapeHtml(x.t)}</div>
@@ -1820,7 +1878,7 @@ function drawUndercover(r, g, bar, spec){
       const votedN = alive.filter(u => votes[u]).length;
       action = `<div class="turnbar">投票中 · 已投 ${votedN}/${alive.length}</div>
         <div class="hint" style="margin-top:8px">${myVote ? ('你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）') : (dead ? '你已出局，不能投票' : '選出你認為是臥底的人')}</div>
-        ${(!dead && amPlayer && !myVote) ? `<div class="plist">${alive.filter(u => u !== me.username).map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
+        ${(!dead && amPlayer && !myVote) ? `<div class="plist">${alive.filter(u => u !== me.username).map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
     } else if (phase === 'runoff') {
       const cand = st.runoff || [], rv = st.runoffVotes || {};
       const voters = alive.filter(u => !cand.includes(u));
@@ -1828,7 +1886,7 @@ function drawUndercover(r, g, bar, spec){
       const iAmCand = cand.includes(me.username);
       action = `<div class="turnbar" style="border-color:var(--gold);color:var(--gold)">平票！由 ${cand.map(u => escapeHtml(nameOf(r, u))).join(' 對 ')} 單獨再投一次</div>
         <div class="hint" style="margin-top:8px">${iAmCand ? '你是平票的人，這一輪不能投票' : (rv[me.username] ? '你已經投了（等其他人）' : (dead ? '你已出局' : '投出你認為是臥底的那一位'))}</div>
-        ${(!iAmCand && !dead && amPlayer && !rv[me.username]) ? `<div class="plist">${cand.map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer;border-color:var(--gold)"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}
+        ${(!iAmCand && !dead && amPlayer && !rv[me.username]) ? `<div class="plist">${cand.map(u => `<div class="pitem" data-vote="${escAttr(u)}" style="cursor:pointer;border-color:var(--gold)"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}
         <div class="hint">已投 ${votedN}/${voters.length}</div>`;
     } else if (phase === 'result') {
       const out = st.lastOut;
@@ -1924,7 +1982,7 @@ async function aiPictionaryWords(level, n){
     const usr = `直接輸出 JSON 陣列（不要其他文字）：為「你畫我猜」出 ${n} 個詞，難度${lv.n}（${lv.d}）。` +
       `每個詞 1–6 個字、具體、能用簡單線條畫出來、不要太冷門。格式：["詞1","詞2", ...]`;
     let txt = '';
-    try { txt = await callAI(sys, usr, 1600); } catch (e) { txt = ''; }
+    try { txt = await callAI(sys, usr, 600); } catch (e) { txt = ''; }
     let j = extractJSON(txt);
     if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
     if (Array.isArray(j)) {
@@ -2092,7 +2150,7 @@ function drawPictionary(r, g, bar, spec){
   const guessedN = guessers.filter(u => guesses[u]).length;
   const W = 720, H = 720;
 
-  const scoreList = names.map(u => `<div class="pitem"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}${u === drawer ? ' · 畫手中' : ''}</div><div class="pbadge">${scores[u] || 0} 分</div></div>`).join('');
+  const scoreList = names.map(u => `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}${u === drawer ? ' · 畫手中' : ''}</div><div class="pbadge">${scores[u] || 0} 分</div></div>`).join('');
 
   let stage = '';
   if (phase === 'pick') {
@@ -2204,7 +2262,7 @@ async function aiBombCategories(level, n) {
       + `難度${lv.n}（${lv.d}）。類別要簡短（不超過 8 個字）、答案夠多、適合中學生。`
       + `格式：["水果","交通工具"] 這樣的 ${n} 個類別`;
     let txt = '';
-    try { txt = await callAI(sys, usr, 3000); } catch (e) { txt = ''; }
+    try { txt = await callAI(sys, usr, 1200); } catch (e) { txt = ''; }
     let j = extractJSON(txt);
     if (!Array.isArray(j) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
     if (Array.isArray(j)) {
@@ -2316,7 +2374,7 @@ function drawBomb(r, g, bar, spec) {
     const dead = out.includes(u);
     const isCur = u === cur;
     return `<div class="pitem" style="${isCur ? 'border-color:var(--red)' : ''}${dead ? ';opacity:.45' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${dead ? ' · 淘汰' : ''}${isCur ? ' · 拿著炸彈' : ''}</div>
       <div class="pbadge" style="${isCur ? 'color:var(--red);border-color:var(--red)' : ''}">${isCur ? '危險' : ''}</div>
     </div>`;
@@ -2407,7 +2465,7 @@ async function aiScriptCase(level, n) {
       + `格式：{"title":"案件名（10 字內）","scene":"案件背景（120 字內，有人被害或東西被偷）","roles":[{"n":"角色名","d":"公開資料（40 字內）","s":"這個角色的秘密（40 字內）"}]}`
       + `每個角色都要有動機，真相要靠討論與秘密的互相矛盾才查得出來。`;
     let txt = '';
-    try { txt = await callAI(sys, usr, 4000); } catch (e) { txt = ''; }
+    try { txt = await callAI(sys, usr, 2600); } catch (e) { txt = ''; }
     let j = extractJSON(txt);
     if ((!j || !j.roles) && window.__lastAI && window.__lastAI.reasoning) j = extractJSON(window.__lastAI.reasoning);
     if (j && Array.isArray(j.roles) && j.roles.length) {
@@ -2488,7 +2546,7 @@ function drawScriptMurder(r, g, bar, spec) {
     const voted = votes[u] ? '已投票' : (phase === 'vote' ? '' : '');
     const isC = st.revealed && u === st.culprit;
     return `<div class="pitem" style="${isC ? 'border-color:var(--red)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}
         <div class="hint" style="margin:2px 0 0">${escapeHtml(role.n || '')}${role.d ? ' · ' + escapeHtml(role.d) : ''}</div>
       </div>
@@ -2510,7 +2568,7 @@ function drawScriptMurder(r, g, bar, spec) {
     const myVote = votes[me.username];
     stage = `<div class="turnbar">投票中 · 已投 ${votedN}/${names.length}</div>
       <div class="hint" style="margin-top:8px">${myVote ? '你投給了 ' + escapeHtml(nameOf(r, myVote)) + '（等其他人）' : '選出你認為是兇手的人'}</div>
-      ${(!myVote && amPlayer) ? `<div class="plist">${names.filter(u => u !== me.username).map(u => `<div class="pitem" data-smvote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
+      ${(!myVote && amPlayer) ? `<div class="plist">${names.filter(u => u !== me.username).map(u => `<div class="pitem" data-smvote="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">投他</div></div>`).join('')}</div>` : ''}`;
   } else {
     stage = `<div class="hint">正在結案…</div>`;
   }
@@ -2611,14 +2669,14 @@ function drawKonglok(r, g, bar, spec) {
     cells.push(`<div class="klcell ${cls}" style="grid-column:${col + 1};grid-row:${row + 1}" title="${i + 1}">
       <span class="klnum">${i + 1}</span>
       ${sp ? `<span class="klsp">${sp > 0 ? '+' + sp : sp}</span>` : ''}
-      <div class="kltok">${here.map(u => `<i style="background:${colorOf(r, u)}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</div>
+      <div class="kltok">${here.map(u => `<i style="${chipStyle(colorOf(r, u))}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</div>
     </div>`);
   }
 
   const rows = names.map(u => {
     const p = pos[u] || 0;
     return `<div class="pitem" style="${u === cur ? 'border-color:var(--accent)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${u === cur ? ' · 輪到他' : ''}</div>
       <div class="pbadge">第 ${p} 格</div>
     </div>`;
@@ -2802,7 +2860,7 @@ function drawDoushou(r, g, bar, spec) {
   const rows = names.map((u, i) => {
     const alive = Object.values(b).filter(x => x.o === i).length;
     return `<div class="pitem" style="${u === turnU ? 'border-color:var(--accent)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''} · ${i === 0 ? '藍方' : '紅方'}</div>
       <div class="pbadge">${alive} 隻</div>
     </div>`;
@@ -2990,7 +3048,7 @@ function drawXiangqi(r, g, bar, spec) {
   }
 
   const rows = names.map((u, i) => `<div class="pitem" style="${u === turnU ? 'border-color:var(--accent)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''} · ${xqSideOfPlayer(i) === 1 ? '紅方（下，先走）' : '黑方（上）'}</div>
     </div>`).join('');
 
@@ -3271,7 +3329,7 @@ function wwShowVoteModal(){
     const who = names.filter(v => voters[v] === u).map(v => escapeHtml(nameOf(r, v))).join('、') || '（沒人投他）';
     const out = vr.out === u;
     return `<div class="pitem" style="${out ? 'border-color:var(--red)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${out ? ' · 被放逐' : ''}
         <div class="hint" style="margin:2px 0 0;text-align:left">${who}</div></div>
       <div class="pbadge" style="${out ? 'color:var(--red);border-color:var(--red)' : ''}">${Number(tally[u]) || 0} 票</div>
@@ -3314,7 +3372,7 @@ function drawWerewolf(r, g, bar, spec){
     const rc = st.revealed ? ((wwRoleOf(r, u) === 'wolf') ? 'color:#f472b6;border-color:#f472b6' : 'color:var(--green);border-color:var(--green)') : '';
     const showWolf = !st.revealed && isWolf && wwRoleOf(r, u) === 'wolf';
     return `<div class="pitem" style="${isDead ? 'opacity:.45' : ''}${(phase === 'discuss' && u === wwCurSpeaker(r)) ? ';border-color:var(--accent)' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isDead ? ' · 已出局' : ''}${(phase === 'discuss' && u === wwCurSpeaker(r)) ? ' · 發言中' : ''}</div>
       <div class="pbadge" style="${rc || (showWolf ? 'color:#f472b6;border-color:#f472b6' : '')}">${st.revealed ? role : (showWolf ? '同夥' : '')}</div>
     </div>`;
@@ -3324,7 +3382,7 @@ function drawWerewolf(r, g, bar, spec){
   const feed = wwDescList(r);
   const feedHtml = `<div class="ucfeed" id="wwFeed">${feed.length
     ? feed.map(x => `<div class="ucmsg">
-        <div class="pav" style="background:${colorOf(r, x.u)}">${avatarHTML({ displayName: nameOf(r, x.u) })}</div>
+        <div class="pav" style="${pavStyle(colorOf(r, x.u))}">${avatarHTML({ displayName: nameOf(r, x.u) })}</div>
         <div class="ucbody">
           <div class="ucmeta">${escapeHtml(nameOf(r, x.u))}${x.u === me.username ? '（你）' : ''} · 第 ${Number(x.r) || 1} 天</div>
           <div class="uctext">${escapeHtml(x.t)}</div>
@@ -3340,7 +3398,7 @@ function drawWerewolf(r, g, bar, spec){
        </div>`
     : `<div class="hint">觀戰中，看不到身分牌</div>`;
 
-  const listFor = (arr, cls) => `<div class="plist">${arr.map(u => `<div class="pitem" data-${cls}="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">選他</div></div>`).join('')}</div>`;
+  const listFor = (arr, cls) => `<div class="plist">${arr.map(u => `<div class="pitem" data-${cls}="${escAttr(u)}" style="cursor:pointer"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div><div class="pname">${escapeHtml(nameOf(r, u))}</div><div class="pbadge">選他</div></div>`).join('')}</div>`;
 
   let stage = '';
   if (phase === 'night') {
@@ -3595,14 +3653,14 @@ function drawMonopoly(r, g, bar, spec){
       <span class="mpname">${escapeHtml(cell.n)}</span>
       ${cell.price ? `<span class="mpprice">$${cell.price}</span>` : ''}
       ${ow ? `<span class="mpowner" style="color:${safeColor(colorOf(r, ow), '#3b82f6')}">${escapeHtml(nameOf(r, ow).slice(0, 3))}</span>` : ''}
-      <span class="mptok">${here.map(u => `<i style="background:${colorOf(r, u)}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</span>
+      <span class="mptok">${here.map(u => `<i style="${chipStyle(colorOf(r, u))}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</span>
     </div>`);
   }
 
   const rows = names.map(u => {
     const isOut = out.includes(u);
     return `<div class="pitem" style="${u === cur ? 'border-color:var(--accent)' : ''}${isOut ? ';opacity:.45' : ''}">
-      <div class="pav" style="background:${colorOf(r, u)}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
+      <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isOut ? ' · 破產' : ''}
         <div class="hint" style="margin:2px 0 0;text-align:left">第 ${pos[u] || 0} 格 · 持有 ${Object.keys(owner).filter(k => owner[k] === u).length} 塊地</div></div>
       <div class="pbadge" style="${(money[u] || 0) < 300 ? 'color:var(--red);border-color:var(--red)' : ''}">$${money[u] || 0}</div>
