@@ -619,22 +619,22 @@ function renderRoom(){
   const topicOk=topicReady(r);
   let cdHtml='';
   if(!topicOk){
-    cdHtml=`<div class="hint" style="color:var(--gold)">AI 題目尚未完成，請稍候…</div>`;
+    // 題目還沒出好。倒數已經到期就老實說「AI 出題中…」（題目一出好就自動開局）。
+    // 注意：這個分支要在最前面，不然後面的倒數分支永遠輪不到（之前就是這樣被蓋掉）。
+    const expired=r.status==='countdown'&&(r.startAt||0)<=Date.now();
+    const full=pc>=(r.minP||2);
+    if(expired){
+      cdHtml=`<div class="countdown" id="cdNum">AI</div><div class="hint" id="cdHint">AI 出題中…請稍候（人數已到齊，題目一出好就自動開局）</div>`;
+    }else{
+      cdHtml=`<div class="hint" id="cdHint" style="color:var(--gold)">${full?'人數已到齊，AI 出題中…':'人齊之後就會叫 AI 出題…'}</div>`;
+    }
   }
   else if(r.status==='countdown'&&r.startAt){
     const left=Math.max(0,Math.ceil((r.startAt-Date.now())/1000));
-    if(left<=0&&!topicReady(r)){
-      // 倒數已經完了但題目還沒出好 → 老實說在等 AI（不要留一個 0 給人猜）
-      cdHtml=`<div class="countdown" id="cdNum">AI</div><div class="hint" id="cdHint">AI 出題中…請稍候（人數已到齊，題目一出好就自動開局）</div>`;
-    }else{
-      cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint" id="cdHint">人數已到齊，倒數後自動開局</div>`;
-    }
-  } else if(pc>=(r.minP||2)&&!topicReady(r)){
-    // 人已經夠了但題目還沒好：不要把「還需要 0 人」這種鬼話給使用者看
-    cdHtml=`<div class="hint">人數已到齊，正在準備題目…</div>`;
+    cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint" id="cdHint">人數已到齊，倒數後自動開局</div>`;
   } else {
     const need=Math.max(0,(r.minP||2)-pc);
-    cdHtml=`<div class="hint">${need>0?('還需要 '+need+' 人才能開局'):'人數已到齊，準備開局…'}</div>`;
+    cdHtml=`<div class="hint" id="cdHint">${need>0?('還需要 '+need+' 人才能開局'):'人數已到齊，準備開局…'}</div>`;
   }
   const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
   const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="${pavStyle('#475569')}">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
