@@ -176,6 +176,69 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 .stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:9px 13px;font-size:13px}
 .stat b{color:var(--accent)}
+
+/* ═══════════════ v1.32 統一外觀 ═══════════════
+   深藍漸層面板 + 金色描邊 + 木色棋盤（跟那套 UI 同一個語言）。
+   只在最後覆蓋，不動任何遊戲邏輯，所以不會改壞玩法。 */
+:root{--gold2:#e2b04a;--panel1:#1a1a2e;--panel2:#16213e;--panel3:#0f3460;
+  --wood1:#8a5a32;--wood2:#d29a55;--wood3:#633b21;--woodLine:#6b4f2a}
+
+/* 面板與標題 */
+.wrap{background:linear-gradient(135deg,var(--panel1),var(--panel2) 55%,var(--panel3));
+  border:1px solid rgba(226,176,74,.28);border-radius:20px;box-shadow:0 10px 34px rgba(0,0,0,.5);
+  padding:16px;margin:10px 12px 18px}
+.topbar h1{color:var(--gold2);text-shadow:0 0 14px rgba(226,176,74,.45);letter-spacing:.5px}
+.turnbar{background:rgba(226,176,74,.10);border:1px solid rgba(226,176,74,.55);color:var(--gold2);
+  border-radius:14px;font-weight:800}
+.turnbar.mine{background:rgba(226,176,74,.22);border-color:var(--gold2);color:#fff8e6;
+  box-shadow:0 0 18px rgba(226,176,74,.35)}
+.hint{color:#a9b2c9}
+.countdown{color:var(--gold2);text-shadow:0 0 16px rgba(226,176,74,.5);font-weight:900}
+
+/* 玩家卡片：統一成同一種玻璃卡 */
+.pitem{background:rgba(255,255,255,.055);border:1px solid rgba(226,176,74,.22);border-radius:14px}
+.pname{color:var(--text-main)}
+.pbadge{border-color:rgba(226,176,74,.45);color:var(--gold2);background:rgba(226,176,74,.08)}
+.pav{box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+
+/* 木色棋盤容器：所有棋盤類共用 */
+.klboard,.mpboard,.dsboard,.bx,.xqboard{
+  background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3));
+  border:3px solid #4e2f16;border-radius:16px;box-shadow:inset 0 0 22px rgba(0,0,0,.45),0 8px 22px rgba(0,0,0,.45);
+  padding:9px}
+.klboard,.dsboard{gap:4px}
+.mpboard{gap:3px}
+
+/* 格子：透明底 + 金色描邊（讓木紋透出來） */
+.klcell,.mpcell,.xqg,.dsboard>*{background:rgba(255,255,255,.10)!important;
+  border:1px solid rgba(226,176,74,.55)!important;border-radius:9px}
+.klcell .klsp,.mpcell .mpname,.dsg,.xqg{color:#fff9ec}
+.klcell .klnum,.mpcell .mpnum,.mpcell .mpprice{color:rgba(255,255,255,.75)}
+
+/* 特殊格保留語意色，但改成半透明疊在木紋上 */
+.klcell.klup{background:rgba(34,197,94,.30)!important;border-color:rgba(34,197,94,.85)!important}
+.klcell.kldown{background:rgba(239,68,68,.30)!important;border-color:rgba(239,68,68,.85)!important}
+.klcell.klstart{background:rgba(56,189,248,.28)!important;border-color:rgba(56,189,248,.85)!important}
+.klcell.klend{background:rgba(226,176,74,.32)!important;border-color:var(--gold2)!important}
+.mpcell.mpgo{background:rgba(56,189,248,.30)!important;border-color:rgba(56,189,248,.85)!important}
+.mpcell.mpchance{background:rgba(226,176,74,.28)!important;border-color:rgba(226,176,74,.85)!important}
+.mpcell.mptax{background:rgba(239,68,68,.28)!important;border-color:rgba(239,68,68,.85)!important}
+.mpcell.mpjail,.mpcell.mppark{background:rgba(255,255,255,.18)!important}
+
+/* canvas 類棋盤（飛行棋／國際象棋／圍棋）：加木框與圓角 */
+canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3));border:3px solid #4e2f16;border-radius:16px;
+  box-shadow:inset 0 0 22px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.45);max-width:100%}
+
+/* 骰子、籌碼、卡片 */
+.dice{background:rgba(255,255,255,.10);border:2px solid var(--gold2);border-radius:12px;
+  color:var(--gold2);box-shadow:0 0 16px rgba(226,176,74,.3)}
+.chip,.cards>div,.deck-row>div{border-color:rgba(226,176,74,.5)!important}
+.klsp{color:#fff9ec}
+.kltok i,.mptok i{box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+
+/* 炸彈／你畫我猜／劇本殺 的區塊也統一 */
+.bombgauge{background:rgba(0,0,0,.35);border-color:rgba(226,176,74,.45)}
+.bombcat{color:var(--gold2)}
 </style>
 </head>
 <body>
