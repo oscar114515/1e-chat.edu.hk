@@ -278,6 +278,10 @@ canvas#cv{border:12px solid #a8753c!important;border-radius:16px!important}
   color:#5a3517;font-weight:900;letter-spacing:6px;font-size:12px;pointer-events:none;
   background:rgba(210,154,85,.94);border-top:1px solid rgba(99,59,33,.45);border-bottom:1px solid rgba(99,59,33,.45);
   padding:3px 0;border-radius:4px}
+
+/* v1.35 飛行棋：照參考站版面（整塊 SVG，無木框） */
+.fxqboard{width:100%;max-width:400px;background:#0a1d42;border-radius:16px;padding:6px;box-sizing:border-box}
+.fxqboard svg{display:block;width:100%;height:auto}
 </style>
 </head>
 <body>
@@ -1334,177 +1338,49 @@ async function gomokuMove(i,j){
 /* ===== 飛行棋 ===== */
 // 52 格環形（14×14 周長）+ 每色 6 格歸航道，起點在四角
 // v1.34 飛行棋：15×15 標準版型（取代原本 14×14「環=最外圈」的畫法）
-  // ===== 飛行棋幾何（15×15 ludo）=====
-function ringCells(){ // 52 格環，索引 0 = (6,1)；四條航道入口落在 11／24／37／50
-  const o=[];
-  for(let j=1;j<=5;j++)o.push([6,j]);          // 0-4   左臂上緣往右
-  for(let i=5;i>=0;i--)o.push([i,6]);          // 5-10  左臂外緣往上
-  o.push([0,7]);                               // 11    紅入口
-  for(let i=0;i<=5;i++)o.push([i,8]);          // 12-17 上臂右緣往下
-  for(let j=9;j<=14;j++)o.push([6,j]);         // 18-23 上臂下緣往右
-  o.push([7,14]);                              // 24    黃入口
-  for(let j=14;j>=9;j--)o.push([8,j]);         // 25-30 右臂上緣往左
-  for(let i=9;i<=14;i++)o.push([i,8]);         // 31-36 右臂外緣往下
-  o.push([14,7]);                              // 37    藍入口
-  for(let i=14;i>=9;i--)o.push([i,6]);         // 38-43 下臂右緣往上
-  for(let j=5;j>=0;j--)o.push([8,j]);          // 44-49 下臂左側往左
-  o.push([7,0]);                               // 50    綠入口
-  o.push([6,0]);                               // 51    綠起點前最後一格
-  return o;
+// ===== 飛行棋：版面與座標照 game.hullqin.cn/fxq 原樣移植（2026-10-13）=====
+
+const FXQ_DEFS="\n<defs>\n<radialGradient id=\"bps\"><stop offset=\"80%\" stop-color=\"#444444\" stop-opacity=\"0.33\"/><stop offset=\"87%\" stop-color=\"#333333\" stop-opacity=\"0.23\"/><stop offset=\"100%\" stop-color=\"#000000\" stop-opacity=\"0\"/></radialGradient>\n<g id=\"bp\"><circle r=\"6.1\" fill=\"url(#bps)\" stroke=\"none\"/><circle r=\"5\" cx=\"0\" cy=\"0\" fill=\"#f4ffed\" stroke-width=\"0.85\"/><circle r=\"4\" cx=\"0\" cy=\"0\" fill=\"#f4ffed\" stroke-width=\"0.34\"/><path d=\"M-0.23,-3.077L0.23,-3.077L0.92,2.46L-0.92,2.46Z\" stroke=\"none\"/><path d=\"M-0.69,-1.69V1.077L-2.308,2.461Z\" stroke=\"none\"/><path d=\"M0.69,-1.69V1.077L2.308,2.461Z\" stroke=\"none\"/></g>\n<use id=\"p-blue-0\" href=\"#bp\" fill=\"#0b75c1\" stroke=\"#0b75c1\"/>\n<use id=\"p-green-0\" href=\"#bp\" fill=\"#0ca80d\" stroke=\"#0ca80d\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-red-0\" href=\"#bp\" fill=\"#e43415\" stroke=\"#e43415\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-yellow-0\" href=\"#bp\" fill=\"#fed105\" stroke=\"#fed105\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-blue-1\" href=\"#p-blue-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-green-1\" href=\"#p-green-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-red-1\" href=\"#p-red-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-yellow-1\" href=\"#p-yellow-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-blue-2\" href=\"#p-blue-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-green-2\" href=\"#p-green-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-red-2\" href=\"#p-red-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-yellow-2\" href=\"#p-yellow-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-blue-3\" href=\"#p-blue-0\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-green-3\" href=\"#p-green-0\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-red-3\" href=\"#p-red-0\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-yellow-3\" href=\"#p-yellow-0\" transform=\"rotate(270,0,0)\"/>\n<g id=\"win\"><rect width=\"12\" height=\"6\" x=\"-6\" y=\"-3\" fill=\"#000\" fill-opacity=\"50%\"/><text fill=\"#fff\" font-size=\"4.2\" font-family=\"monospace\" font-weight=\"bold\" x=\"0\" y=\"0\" text-anchor=\"middle\" dominant-baseline=\"central\">Win</text></g>\n<rect id=\"j\" x=\"-3\" y=\"-33\" width=\"6\" height=\"66\" fill=\"#fff\" fill-opacity=\"40%\" stroke=\"#fff\" stroke-opacity=\"80%\" stroke-width=\"0.5\"/>\n<path id=\"ar\" d=\"M-2 -2.5L0 -0.5L2 -2.5M-2 0.5L0 2.5L2 0.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>\n<path id=\"ar2\" d=\"M2.5 80H-0.5V75l-1.8 1.8h3.6l-1.8 -1.8\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.4\" stroke-opacity=\"90%\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>\n<rect id=\"rv\" rx=\"2\" ry=\"2\" x=\"-5.8\" y=\"-7.8\" width=\"11.6\" height=\"15.6\"/>\n<rect id=\"rh\" rx=\"2\" ry=\"2\" x=\"-7.8\" y=\"-5.8\" width=\"15.6\" height=\"11.6\"/>\n<rect id=\"rv2\" rx=\"2\" ry=\"2\" x=\"-5.3\" y=\"-5.8\" width=\"10.6\" height=\"11.6\"/>\n<rect id=\"rh2\" rx=\"2\" ry=\"2\" x=\"-5.8\" y=\"-5.3\" width=\"11.6\" height=\"10.6\"/>\n<path id=\"des\" d=\"M0,0L-15,15H15Z\" stroke-width=\"0.4\" stroke=\"#0a1d42\"/>\n<path id=\"t3\" d=\"M-6.66 6.95A0.5 0.5 0 0 0 -6.31 7.8H5.8A2 2 0 0 0 7.8 5.8V-6.31A0.5 0.5 0 0 0 6.95 -6.66Z\"/>\n<path id=\"t7\" d=\"M6.66 -6.95A0.5 0.5 0 0 0 6.31 -7.8H-5.8A2 2 0 0 0 -7.8 -5.8V6.31A0.5 0.5 0 0 0 -6.95 6.66Z\"/>\n<path id=\"t1\" d=\"M6.66 6.95A0.5 0.5 0 0 1 6.31 7.8H-5.8A2 2 0 0 1 -7.8 5.8V-6.31A0.5 0.5 0 0 1 -6.95 -6.66Z\"/>\n<path id=\"t9\" d=\"M-6.66 -6.95A0.5 0.5 0 0 1 -6.31 -7.8H5.8A2 2 0 0 1 7.8 -5.8V6.31A0.5 0.5 0 0 1 6.95 6.66Z\"/>\n<circle id=\"c\" r=\"4\" fill=\"#fff\" fill-opacity=\"90%\"/>\n<g id=\"ori\"><rect width=\"30\" height=\"30\" x=\"-15\" y=\"-15\" rx=\"2\" ry=\"2\"/><circle r=\"5.2\" cx=\"6.2\" cy=\"6.2\" fill=\"#fff\" fill-opacity=\"50%\"/><circle r=\"5.2\" cx=\"-6.2\" cy=\"6.2\" fill=\"#fff\" fill-opacity=\"50%\"/><circle r=\"5.2\" cx=\"6.2\" cy=\"-6.2\" fill=\"#fff\" fill-opacity=\"50%\"/><circle r=\"5.2\" cx=\"-6.2\" cy=\"-6.2\" fill=\"#fff\" fill-opacity=\"50%\"/></g>\n<g id=\"first\"><path d=\"M-46 72.5H-51V85h17.5Z\" stroke-width=\"1\" stroke-linejoin=\"round\"/><text x=\"-46\" y=\"80\" fill=\"#fff\" font-size=\"7\" font-family=\"emoji\" text-anchor=\"middle\" dominant-baseline=\"central\">✈️</text></g>\n<radialGradient id=\"red\"><stop offset=\"0%\" stop-color=\"#ff5744\"/><stop offset=\"100%\" stop-color=\"#fb4a38\"/></radialGradient>\n<radialGradient id=\"green\"><stop offset=\"0%\" stop-color=\"#63e2a3\"/><stop offset=\"100%\" stop-color=\"#18de8d\"/></radialGradient>\n<radialGradient id=\"blue\"><stop offset=\"0%\" stop-color=\"#05c0ea\"/><stop offset=\"100%\" stop-color=\"#0fa3e3\"/></radialGradient>\n<radialGradient id=\"yellow\"><stop offset=\"0%\" stop-color=\"#fddc04\"/><stop offset=\"100%\" stop-color=\"#fecc08\"/></radialGradient>\n</defs>";
+
+const FXQ_CELLS=["href=\"#j\" x=\"42.5\" transform=\"rotate(90,0,0)\"","href=\"#j\" x=\"42.5\" transform=\"rotate(180,0,0)\"","href=\"#j\" x=\"42.5\" transform=\"rotate(270,0,0)\"","href=\"#ar\" x=\"42.5\" y=\"18\" stroke=\"url(#green)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" stroke=\"url(#green)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(90,0,0)\" stroke=\"url(#red)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(90,0,0)\" stroke=\"url(#red)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(180,0,0)\" stroke=\"url(#yellow)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(180,0,0)\" stroke=\"url(#yellow)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(270,0,0)\" stroke=\"url(#blue)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(270,0,0)\" stroke=\"url(#blue)\"","href=\"#rv\" x=\"0\" y=\"-78\" fill=\"url(#red)\"","href=\"#rv\" x=\"-12\" y=\"-78\" fill=\"url(#green)\"","href=\"#rv\" x=\"-24\" y=\"-78\" fill=\"url(#blue)\"","href=\"#rv\" x=\"12\" y=\"-78\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"24\" y=\"-78\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-38\" y=\"-64\" fill=\"url(#red)\"","href=\"#rh\" x=\"-38\" y=\"-52\" fill=\"url(#green)\"","href=\"#rh\" x=\"38\" y=\"-64\" fill=\"url(#red)\"","href=\"#rh\" x=\"38\" y=\"-52\" fill=\"url(#yellow)\"","href=\"#t3\" x=\"-38\" y=\"-78\" fill=\"url(#yellow)\"","href=\"#t1\" x=\"38\" y=\"-78\" fill=\"url(#green)\"","href=\"#t7\" x=\"38\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t3\" x=\"38\" y=\"-38\" fill=\"url(#green)\"","href=\"#t9\" x=\"-38\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t1\" x=\"-38\" y=\"-38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"0\" y=\"78\" fill=\"url(#blue)\"","href=\"#rv\" x=\"-12\" y=\"78\" fill=\"url(#green)\"","href=\"#rv\" x=\"-24\" y=\"78\" fill=\"url(#red)\"","href=\"#rv\" x=\"12\" y=\"78\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"24\" y=\"78\" fill=\"url(#red)\"","href=\"#rh\" x=\"-38\" y=\"64\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-38\" y=\"52\" fill=\"url(#green)\"","href=\"#rh\" x=\"38\" y=\"64\" fill=\"url(#blue)\"","href=\"#rh\" x=\"38\" y=\"52\" fill=\"url(#yellow)\"","href=\"#t9\" x=\"-38\" y=\"78\" fill=\"url(#yellow)\"","href=\"#t7\" x=\"38\" y=\"78\" fill=\"url(#green)\"","href=\"#rh\" x=\"-78\" y=\"0\" fill=\"url(#green)\"","href=\"#rh\" x=\"-78\" y=\"-12\" fill=\"url(#red)\"","href=\"#rh\" x=\"-78\" y=\"-24\" fill=\"url(#yellow)\"","href=\"#rh\" x=\"-78\" y=\"12\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-78\" y=\"24\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"-64\" y=\"38\" fill=\"url(#green)\"","href=\"#rv\" x=\"-52\" y=\"38\" fill=\"url(#blue)\"","href=\"#rv\" x=\"-64\" y=\"-38\" fill=\"url(#green)\"","href=\"#rv\" x=\"-52\" y=\"-38\" fill=\"url(#red)\"","href=\"#t3\" x=\"-78\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t9\" x=\"-78\" y=\"38\" fill=\"url(#red)\"","href=\"#rh\" x=\"78\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rh\" x=\"78\" y=\"-12\" fill=\"url(#red)\"","href=\"#rh\" x=\"78\" y=\"-24\" fill=\"url(#green)\"","href=\"#rh\" x=\"78\" y=\"12\" fill=\"url(#blue)\"","href=\"#rh\" x=\"78\" y=\"24\" fill=\"url(#green)\"","href=\"#rv\" x=\"64\" y=\"38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"52\" y=\"38\" fill=\"url(#blue)\"","href=\"#rv\" x=\"64\" y=\"-38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"52\" y=\"-38\" fill=\"url(#red)\"","href=\"#t1\" x=\"78\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t7\" x=\"78\" y=\"38\" fill=\"url(#red)\"","href=\"#t9\" x=\"38\" y=\"38\" fill=\"url(#green)\"","href=\"#t1\" x=\"38\" y=\"38\" fill=\"url(#red)\"","href=\"#t3\" x=\"-38\" y=\"38\" fill=\"url(#red)\"","href=\"#t7\" x=\"-38\" y=\"38\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"64.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"53.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"42.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"31.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"20.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#c\" x=\"42.5\"","href=\"#rv2\" x=\"-64.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-53.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-42.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-31.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-20.5\" y=\"0\" fill=\"url(#green)\"","href=\"#c\" x=\"-42.5\"","href=\"#rh2\" x=\"0\" y=\"64.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"53.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"42.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"31.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"20.5\" fill=\"url(#blue)\"","href=\"#c\" y=\"42.5\"","href=\"#rh2\" x=\"0\" y=\"-64.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-53.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-42.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-31.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-20.5\" fill=\"url(#red)\"","href=\"#c\" y=\"-42.5\"","href=\"#ar2\"","href=\"#ar2\" transform=\"rotate(90,0,0)\"","href=\"#ar2\" transform=\"rotate(180,0,0)\"","href=\"#ar2\" transform=\"rotate(270,0,0)\"","href=\"#des\" fill=\"url(#blue)\"","href=\"#des\" transform=\"rotate(90,0,0)\" fill=\"url(#green)\"","href=\"#des\" transform=\"rotate(180,0,0)\" fill=\"url(#red)\"","href=\"#des\" transform=\"rotate(270,0,0)\" fill=\"url(#yellow)\"","href=\"#ori\" x=\"-68\" y=\"68\" fill=\"url(#blue)\"","href=\"#ori\" x=\"-68\" y=\"-68\" fill=\"url(#green)\"","href=\"#ori\" x=\"68\" y=\"-68\" fill=\"url(#red)\"","href=\"#ori\" x=\"68\" y=\"68\" fill=\"url(#yellow)\"","href=\"#first\" fill=\"url(#blue)\" stroke=\"url(#blue)\"","href=\"#first\" transform=\"rotate(90,0,0)\" fill=\"url(#green)\" stroke=\"url(#green)\"","href=\"#first\" transform=\"rotate(180,0,0)\" fill=\"url(#red)\" stroke=\"url(#red)\"","href=\"#first\" transform=\"rotate(270,0,0)\" fill=\"url(#yellow)\" stroke=\"url(#yellow)\"","href=\"#win\" x=\"P\" y=\"b\"","href=\"#win\" x=\"J\" y=\"Q\""];
+
+const FXQ_X=[-74.2,-46,-34.5,-38,-38,-34.3,-41.7,-52,-64,-74.3,-78,-78,-78,-78,-78,-74.5,-64,-52,-41.7,-34.3,-38,-38,-34.3,-24,-12,0,12,24,34.5,38,38,34.3,41.7,52,64,74.3,78,78,78,78,78,74.5,64,52,41.7,34.3,38,38,34.3,24,12,0,0,0,0,0,0,0];
+
+const FXQ_Y=[61.8,80,74.5,64,52,41.7,34.3,38,38,34.3,24,12,0,-12,-24,-34.5,-38,-38,-34.3,-41.7,-52,-64,-74.3,-78,-78,-78,-78,-78,-74.5,-64,-52,-41.7,-34.3,-38,-38,-34.3,-24,-12,0,12,24,34.5,38,38,34.3,41.7,52,64,74.3,78,78,78,64.5,53.5,42.5,31.5,20.5,9.5];
+
+// 照參考站 x(planeIdx, step, rot)：step 0=基地、1..51 環、52..57 航道；rot=該玩家顏色索引
+function fxqPos(pi,step,rot){
+  var x,y;
+  if(!step||step>57){ x=[-6.2,6.2,-6.2,6.2][pi]-68; y=[-6.2,-6.2,6.2,6.2][pi]+68; }
+  else { x=FXQ_X[step]; y=FXQ_Y[step]; }
+  return rot===2?[-x,-y]:rot===1?[-y,x]:rot===3?[y,-x]:[x,y];
 }
-const RING=ringCells();
-const STCOLORS=['#fb4a38','#18de8d','#fed105','#0fa3e3'];   // 紅 綠 黃 藍（照參考站實測值）
-const STDARK  =['#e43415','#0ca80d','#fecc08','#0b75c1'];
-const STNAMES =['紅','綠','黃','藍'];
-// 各自起點：起點走 51 步 = 該色航道入口
-const START=[12,51,25,38];
-const LANE_ENTRY=[11,50,24,37];                              // 紅 綠 黃 藍 的航道入口索引
-// 航道（由外到內 6 格）
-const LANES=[
-  [[1,7],[2,7],[3,7],[4,7],[5,7]],                           // 紅：由上往下
-  [[7,1],[7,2],[7,3],[7,4],[7,5]],                           // 綠：由左往右
-  [[7,13],[7,12],[7,11],[7,10],[7,9]],                       // 黃：由右往左
-  [[13,7],[12,7],[11,7],[10,7],[9,7]],                       // 藍：由下往上
-];
-// 第 57 步＝完成：停在中央屬於自己的那塊三角
-const FINISH=[[6.55,7.5],[7.5,6.55],[7.5,8.45],[8.45,7.5]];
-const HOMES=[[0,12],[0,0],[12,12],[12,0]];                   // 機場 3×3 區塊左上角（列,欄）
-const STANGLE=[Math.PI,Math.PI/2,-Math.PI/2,0];              // 起點機頭方向（紅下／綠右／黃左／藍上）
-function planePos(pi,color,steps){
-  if(steps<0)return null;
-  if(steps<52){const idx=(START[color]+steps)%52;return RING[idx];}
-  if(steps>=57)return FINISH[color];
-  return LANES[color][steps-52];
-}
+// 我們的顏色索引(0紅1綠2黃3藍) → 參考站顏色索引(0藍1綠2紅3黃)
+const FXQ_COL=[2,1,3,0];
+const FXQ_NAME=['blue','green','red','yellow'];
+const STNAMES=['紅','綠','黃','藍'];
 
 function drawLudo(r,g,bar,spec){
-  const N=15,CSSW=420,dpr=Math.min(2,window.devicePixelRatio||1);
+  const cols=r.state.colors||{};
+  // 依參考站規則排棋子：step 0=基地、1..57 在跑道上，同格多顆稍微錯開
+  let planes='',at={};
+  Object.entries(r.state.planes||{}).forEach(([u,pl])=>{
+    const rc=FXQ_COL[cols[u]||0],nm=FXQ_NAME[rc];
+    pl.forEach((steps,pi)=>{
+      const st=steps<0?0:Math.min(steps+1,57);
+      const q=fxqPos(pi,st,rc);
+      const k=Math.round(q[0])+','+Math.round(q[1]);
+      const n=(at[k]=(at[k]||0)+1);
+      const dx=n>1?(n-1)*3.2:0, dy=n>1?(n-1)*1.9:0;
+      planes+=`<use href="#p-${nm}-${rc}" x="${q[0]+dx}" y="${q[1]+dy}"/>`;
+    });
+  });
+  const win=r.winner!==null&&r.winner!==undefined&&r.winner!==''?`<use href="#win"/>`:'';
   appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
-   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv"></canvas>
+   <div class="wrap"><div class="board-wrap">${bar}
+   <div class="fxqboard"><svg viewBox="-88,-92,176,184" xmlns="http://www.w3.org/2000/svg">${FXQ_DEFS}${FXQ_CELLS.map(a=>'<use '+a+'/>').join('')}${win}${planes}</svg></div>
    <div class="side" id="diceRow"></div>
    <div class="hint">擲到 6 才能起飛；踩到對手送回基地；4 架全到終點獲勝</div></div></div>`;
-  const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
-  cv.width=CSSW*dpr;cv.height=CSSW*dpr;cv.style.width=CSSW+'px';cv.style.height=CSSW+'px';
-  ctx.scale(dpr,dpr);
-  const U=CSSW/N,GAP=U*0.13,RD=U*0.24;
-  const X=c=>c*U,Y=rr=>rr*U;
-  const rr=(x,y,w,h,rad,fill,stroke,sw)=>{
-    const q=Math.min(rad,w/2,h/2);
-    ctx.beginPath();ctx.moveTo(x+q,y);ctx.arcTo(x+w,y,x+w,y+h,q);ctx.arcTo(x+w,y+h,x,y+h,q);
-    ctx.arcTo(x,y+h,x,y,q);ctx.arcTo(x,y,x+w,y,q);ctx.closePath();
-    if(fill){ctx.fillStyle=fill;ctx.fill();}
-    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1;ctx.stroke();}
-  };
-  const cellRect=(row,col,inset)=>{const i=(inset||0)+GAP/2;return [X(col)+i,Y(row)+i,U-GAP-2*(inset||0),U-GAP-2*(inset||0)];};
-  // 飛機圖示（機頭朝上，再旋轉）
-  const plane=(x,y,s,ang,fill,stroke)=>{
-    ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.scale(s,s);
-    ctx.beginPath();
-    ctx.moveTo(0,-1);ctx.lineTo(0.32,0.10);ctx.lineTo(1,0.60);ctx.lineTo(1,0.88);
-    ctx.lineTo(0.24,0.66);ctx.lineTo(0.16,1.02);ctx.lineTo(-0.16,1.02);ctx.lineTo(-0.24,0.66);
-    ctx.lineTo(-1,0.88);ctx.lineTo(-1,0.60);ctx.lineTo(-0.32,0.10);ctx.closePath();
-    if(fill){ctx.fillStyle=fill;ctx.fill();}
-    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=0.18;ctx.lineJoin='round';ctx.stroke();}
-    ctx.restore();
-  };
-  const chevron=(x,y,s,ang,color)=>{
-    ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.strokeStyle=color;ctx.lineWidth=U*0.10;
-    ctx.lineCap='round';ctx.lineJoin='round';
-    for(let k=-1;k<=1;k++){
-      ctx.beginPath();ctx.moveTo(-s, k*s*0.9-s*0.55);ctx.lineTo(0, k*s*0.9);ctx.lineTo(-s, k*s*0.9+s*0.55);ctx.stroke();
-    }
-    ctx.restore();
-  };
-
-  // 底板（深藍）+ 細格線
-  rr(0,0,CSSW,CSSW,U*0.32,'#0a1d42','rgba(255,255,255,.12)',1);
-  ctx.strokeStyle='rgba(255,255,255,.045)';ctx.lineWidth=1;
-  for(let i=1;i<N;i++){
-    ctx.beginPath();ctx.moveTo(X(i),0);ctx.lineTo(X(i),CSSW);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(0,Y(i));ctx.lineTo(CSSW,Y(i));ctx.stroke();
-  }
-
-  // 四角機場（3×3 區塊，內縮一點點）＋ 4 個停機位
-  const homeSlots=[];
-  HOMES.forEach(([hr,hc],ci)=>{
-    const pad=U*0.18;
-    rr(X(hc)+pad,Y(hr)+pad,U*3-pad*2,U*3-pad*2,U*0.52,STCOLORS[ci]);
-    const slots=[];
-    for(let k=0;k<4;k++){
-      const cx=X(hc)+U*(0.85+(k%2)*1.3), cy=Y(hr)+U*(0.85+Math.floor(k/2)*1.3);
-      slots.push([cx,cy]);
-      ctx.beginPath();ctx.arc(cx,cy,U*0.38,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,255,255,.45)';ctx.fill();
-    }
-    homeSlots.push(slots);
-  });
-
-  // 環格（裝飾色循環）＋ 航道入口格用航道顏色＋方向箭頭
-  RING.forEach(([rw,cl],i)=>{
-    const [x,y,w,h]=cellRect(rw,cl);
-    rr(x,y,w,h,RD,STCOLORS[i%4]);
-  });
-  LANE_ENTRY.forEach((idx,ci)=>{
-    const [rw,cl]=RING[idx],[x,y,w,h]=cellRect(rw,cl);
-    rr(x,y,w,h,RD,STCOLORS[ci]);
-    chevron(X(cl)+U/2,Y(rw)+U/2,U*0.17,STANGLE[ci],'rgba(255,255,255,.85)');
-  });
-
-  // 航道：6 格本色 + 灰帶雪佛龍 + 兩個白圈
-  LANES.forEach((cells,ci)=>{
-    cells.forEach(([rw,cl])=>{
-      const [x,y,w,h]=cellRect(rw,cl);
-      rr(x,y,w,h,RD,STCOLORS[ci]);
-    });
-    const a=cells[1],b=cells[3];
-    const x1=Math.min(X(a[1]),X(b[1]))+U*0.30,y1=Math.min(Y(a[0]),Y(b[0]))+U*0.30;
-    const x2=Math.max(X(a[1]),X(b[1]))+U*0.70,y2=Math.max(Y(a[0]),Y(b[0]))+U*0.70;
-    rr(x1,y1,x2-x1,y2-y1,U*0.05,'rgba(148,163,184,.42)');
-    const mid=[(X(cells[0][1])+X(cells[4][1]))/2+U/2,(Y(cells[0][0])+Y(cells[4][0]))/2+U/2];
-    chevron(mid[0],mid[1],U*0.19,STANGLE[ci],'rgba(255,255,255,.55)');
-    [cells[1],cells[3]].forEach(([rw,cl])=>{
-      ctx.beginPath();ctx.arc(X(cl)+U/2,Y(rw)+U/2,U*0.30,0,Math.PI*2);
-      ctx.fillStyle='#f4ffed';ctx.fill();
-      ctx.strokeStyle=STDARK[ci];ctx.lineWidth=U*0.05;ctx.stroke();
-    });
-  });
-
-  // 中央 3×3：四色三角（上紅／右黃／下藍／左綠）
-  const cx0=X(6),cy0=Y(6),cs=U*3,mid=[X(7.5),Y(7.5)];
-  const tri=(pts,col)=>{ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[1][0],pts[1][1]);
-    ctx.lineTo(pts[2][0],pts[2][1]);ctx.closePath();ctx.fillStyle=col;ctx.fill();
-    ctx.strokeStyle='rgba(10,29,66,.55)';ctx.lineWidth=U*0.05;ctx.stroke();};
-  tri([[cx0,cy0],[cx0+cs,cy0],mid],STCOLORS[0]);
-  tri([[cx0+cs,cy0],[cx0+cs,cy0+cs],mid],STCOLORS[2]);
-  tri([[cx0,cy0+cs],[cx0+cs,cy0+cs],mid],STCOLORS[3]);
-  tri([[cx0,cy0],[cx0,cy0+cs],mid],STCOLORS[1]);
-
-  // 起點格：該色底 + 白色飛機
-  START.forEach((si,ci)=>{
-    const [rw,cl]=RING[si],[x,y,w,h]=cellRect(rw,cl);
-    rr(x,y,w,h,RD,STCOLORS[ci]);
-    plane(X(cl)+U/2,Y(rw)+U/2,U*0.29,STANGLE[ci],'#ffffff','rgba(10,29,66,.55)');
-  });
-
-  // 棋子
-  Object.entries(r.state.planes||{}).forEach(([u,pl])=>{
-    const ci=r.state.colors?r.state.colors[u]:0;
-    pl.forEach((steps,pi)=>{
-      if(steps<0){
-        const s=homeSlots[ci]&&homeSlots[ci][pi];if(!s)return;
-        plane(s[0],s[1],U*0.30,STANGLE[ci],STDARK[ci],'rgba(255,255,255,.75)');
-        return;
-      }
-      const pos=planePos(pi,ci,steps);if(!pos)return;
-      const done=steps>=57;   // 完成：FINISH 已是「中心座標」，不能再加半格
-      const [rw,cl]=pos,x=done?X(cl):X(cl)+U/2,y=done?Y(rw):Y(rw)+U/2;
-      ctx.beginPath();ctx.arc(x,y,done?U*0.30:U*0.40,0,Math.PI*2);
-      ctx.fillStyle=STDARK[ci];ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=U*0.06;ctx.stroke();
-      plane(x,y,done?U*0.18:U*0.22,STANGLE[ci],'#ffffff');
-    });
-  });
-  // 骰子
   const myTurn=r.turn===me.username&&!spec;
   const d=r.state.dice||0;
   const dr=appEl.querySelector('#diceRow');
@@ -1514,7 +1390,7 @@ function drawLudo(r,g,bar,spec){
   if(myTurn&&r.state.rolled){
     const my=r.state.planes[me.username]||[];
     const btns=my.map((p,i)=>{
-      const can=canMove(r,i);return `<button class="chip" data-pi="${i}" style="${can?'border-color:#fbbf24;color:#fbbf24':''}">${STNAMES[r.state.colors[me.username]]}${i+1}：${p<0?'基地':(p>=57?'完成':p+'步')}</button>`;
+      const can=canMove(r,i);return `<button class="chip" data-pi="${i}" style="${can?'border-color:#fbbf24;color:#fbbf24':''}">${STNAMES[cols[me.username]]}${i+1}：${p<0?'基地':(p>=57?'完成':p+'步')}</button>`;
     }).join('');
     const bar2=document.createElement('div');bar2.className='side';bar2.innerHTML=btns;dr.appendChild(bar2);
     bar2.querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>ludoMove(+b.dataset.pi));
@@ -1550,10 +1426,13 @@ async function ludoMove(pi){
   planes[me.username]=pl;
   // 撞子：同一環格上的對手送回基地
   if(np<52){
-    const myIdx=(START[r.state.colors[me.username]]+np)%52;
+    const myRc=FXQ_COL[r.state.colors[me.username]||0];
+    const mp=fxqPos(pi,np+1,myRc);
     Object.entries(planes).forEach(([u,v])=>{ if(u===me.username)return;
-      v.forEach((p2,i2)=>{ if(p2<0||p2>=52)return;
-        if((START[r.state.colors[u]]+p2)%52===myIdx){ planes[u][i2]=-1; } });
+      const rc=FXQ_COL[r.state.colors[u]||0];
+      v.forEach((p2,i2)=>{ if(p2<0||p2>50)return;      // 只有跑道中段會被撞（照參考站，起點與終點前不撞）
+        const q=fxqPos(i2,p2+1,rc);
+        if(Math.abs(q[0]-mp[0])<0.01&&Math.abs(q[1]-mp[1])<0.01){ planes[u][i2]=-1; } });
     });
   }
   const names=playerNames(r);
