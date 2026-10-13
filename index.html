@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-aRoV4+IWFQSrfzlVbcptJSnsiOZtkKhemBVqRkzNle4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-WlKDNG+x4zei2gCuO7dTf6lWTH+FbBXLUdZUKTbZFFM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.32</title>
+<title>班級聊天室 v1.33</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -553,7 +553,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.32 正式版</div>
+    <div id="loginVersion">v1.33 正式版</div>
   </div>
 </div>
 
@@ -561,7 +561,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.32</span>
+      <span class="ver">v1.33</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -636,7 +636,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.32';
+const CURRENT_VERSION='v1.33';
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -3274,6 +3274,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.33',date:'2026-10-13',changes:['按桌遊棋盤規範整修有棋盤的幾款（有介面的社交類不變）：',康樂棋改成圓形跑道：52 格平均繞圓周、正上方第 1 格、金色外框，中間有康樂棋字樣（以前是方格盤）','五子棋與中國象棋的棋盤改用規範木色 #d29a55 與線色 #4d2d18，外框 12px 木框；中國象棋補上楚河漢界','修好一個看得出來但不容易發現的畫質問題：canvas 的 1px 格線畫在整數座標會跨在兩個像素之間，每條線被平均成 50% 混色（灰灰糊糊）；偏移 0.5px 讓線落在像素中心，格線現在是清晰的','國際象棋棋盤改成規範配色（淺格 #d8b27a／深格 #704d32）','大富翁中央改成規範的環形色帶（conic 環）＋金色外框','鬥獸棋的河（藍）、獸穴（紅實線）、陷阱（紅虛線）現在看得見了','飛行棋畫布改成木色系，環格加金邊，跟其他棋盤一致']},
 {ver:'v1.32',date:'2026-10-13',changes:['小遊戲外觀全部統一（14 款）：深藍漸層面板 + 金色標題描邊 + 木色棋盤，跟之前那套 UI 同一個語言；棋盤類（井字棋、五子棋、中國象棋、國際象棋、圍棋、飛行棋、康樂棋、大富翁、鬥獸棋）與圓桌／牌桌類（狼人殺、誰是臥底、傳炸彈、劇本殺、UNO、你畫我猜）現在看起來是同一套東西，不再是每款各寫一種長相','棋盤統一成木色（含格線與邊框），棋子固定黑／白；玩家顏色的棋子與頭像則自動補對比描邊','安卓版 1.8.2：房間標題與「輪到你」提示改成同一套金色，跟網頁一致']},
 {ver:'v1.31',date:'2026-10-13',changes:['修好「房主開完房退出，那條邀請一直留在對話框、點進去只剩自己一個」：現在房主離開＝直接關閉房間，邀請卡會自動變成已完成（變灰不可點）','修好「從邀請進去玩完想退出，卻被丟到小遊戲大廳」：從邀請／房間連結進來的，退出（或按回到大廳）都直接回聊天室','新增「房間列表」：點任何遊戲先看到現在有幾間房在等 —— 房主是誰、幾人／幾人、等待中／倒數中／進行中，未滿可以加入、進行中可觀戰、滿了顯示已滿；下面才是「建立自己的房間」。已沒人的空房與超過 6 小時的舊房不會顯示（就是以前房主退出留下的那些）','修好版本號顯示：標題與登入頁一直寫死在 v1.21，現在一律跟著最新版本自動更新','AI 出題加速：只要「夠用就好」的數量（誰是臥底 6 組詞→2 組、傳炸彈 6 類→3 類），逾時上限 30 秒→12 秒（劇本殺 45→25 秒）；實測出題 3～7 秒','倒數完但題目還沒出好時，畫面顯示「AI 出題中…請稍候（人數已到齊，題目一出好就自動開局）」，不再退回等待、也不會留一個 0 讓人猜；題目一出好就自動開局','安卓版 1.8.1：同步以上全部（房主退出關房、退出回聊天、房間列表、等 AI 出題的顯示）']},
 {ver:'v1.30',date:'2026-10-13',changes:['把「別人的主頁」那張 3D 翻轉卡片加回來（v1.20.1 改版時被換成了平平無奇的圓頭像）：點聊天室任何人的頭像進他的主頁，就會看到帶玻璃反光與五層圓球的立體卡片，滑過去會翻轉','3D 卡片上的五顆圓球會跟著對方的個人顏色走','順手修好原補丁裡三個小毛病：補上缺少的 hexA() 色彩透明度函式、CSS 選擇器 .plogo 打錯（應為 .p3logo，不改的話圓球不會有共用樣式）、以及 margin-top:12px3 這個無效值']},
