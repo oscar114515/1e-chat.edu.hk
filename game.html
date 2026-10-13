@@ -1333,58 +1333,175 @@ async function gomokuMove(i,j){
 
 /* ===== 飛行棋 ===== */
 // 52 格環形（14×14 周長）+ 每色 6 格歸航道，起點在四角
-function ringCells(){const N=14,out=[];for(let j=0;j<N;j++)out.push([0,j]);for(let i=1;i<N;i++)out.push([i,N-1]);for(let j=N-2;j>=0;j--)out.push([N-1,j]);for(let i=N-2;i>=1;i--)out.push([i,0]);return out;} // 4N-4=52
+// v1.34 飛行棋：15×15 標準版型（取代原本 14×14「環=最外圈」的畫法）
+  // ===== 飛行棋幾何（15×15 ludo）=====
+function ringCells(){ // 52 格環，索引 0 = (6,1)；四條航道入口落在 11／24／37／50
+  const o=[];
+  for(let j=1;j<=5;j++)o.push([6,j]);          // 0-4   左臂上緣往右
+  for(let i=5;i>=0;i--)o.push([i,6]);          // 5-10  左臂外緣往上
+  o.push([0,7]);                               // 11    紅入口
+  for(let i=0;i<=5;i++)o.push([i,8]);          // 12-17 上臂右緣往下
+  for(let j=9;j<=14;j++)o.push([6,j]);         // 18-23 上臂下緣往右
+  o.push([7,14]);                              // 24    黃入口
+  for(let j=14;j>=9;j--)o.push([8,j]);         // 25-30 右臂上緣往左
+  for(let i=9;i<=14;i++)o.push([i,8]);         // 31-36 右臂外緣往下
+  o.push([14,7]);                              // 37    藍入口
+  for(let i=14;i>=9;i--)o.push([i,6]);         // 38-43 下臂右緣往上
+  for(let j=5;j>=0;j--)o.push([8,j]);          // 44-49 下臂左側往左
+  o.push([7,0]);                               // 50    綠入口
+  o.push([6,0]);                               // 51    綠起點前最後一格
+  return o;
+}
 const RING=ringCells();
-const STCOLORS=['#ef4444','#22c55e','#eab308','#3b82f6'];
-const STNAMES=['紅','綠','黃','藍'];
-const START=[0,13,26,39];
-function planePos(pi,color,steps){ // steps: 0..57 (>51 進航道)
+const STCOLORS=['#fb4a38','#18de8d','#fed105','#0fa3e3'];   // 紅 綠 黃 藍（照參考站實測值）
+const STDARK  =['#e43415','#0ca80d','#fecc08','#0b75c1'];
+const STNAMES =['紅','綠','黃','藍'];
+// 各自起點：起點走 51 步 = 該色航道入口
+const START=[12,51,25,38];
+const LANE_ENTRY=[11,50,24,37];                              // 紅 綠 黃 藍 的航道入口索引
+// 航道（由外到內 6 格）
+const LANES=[
+  [[1,7],[2,7],[3,7],[4,7],[5,7]],                           // 紅：由上往下
+  [[7,1],[7,2],[7,3],[7,4],[7,5]],                           // 綠：由左往右
+  [[7,13],[7,12],[7,11],[7,10],[7,9]],                       // 黃：由右往左
+  [[13,7],[12,7],[11,7],[10,7],[9,7]],                       // 藍：由下往上
+];
+// 第 57 步＝完成：停在中央屬於自己的那塊三角
+const FINISH=[[6.55,7.5],[7.5,6.55],[7.5,8.45],[8.45,7.5]];
+const HOMES=[[0,12],[0,0],[12,12],[12,0]];                   // 機場 3×3 區塊左上角（列,欄）
+const STANGLE=[Math.PI,Math.PI/2,-Math.PI/2,0];              // 起點機頭方向（紅下／綠右／黃左／藍上）
+function planePos(pi,color,steps){
   if(steps<0)return null;
   if(steps<52){const idx=(START[color]+steps)%52;return RING[idx];}
-  const hm=steps-52; // 0..5 歸航道：由該角往中心
-  const corner=[ [0,0],[0,13],[13,13],[13,0] ][color];
-  const center=6.5;
-  const t=(hm+1)/7;
-  return [corner[0]+(center-corner[0])*t, corner[1]+(center-corner[1])*t];
+  if(steps>=57)return FINISH[color];
+  return LANES[color][steps-52];
 }
-let ludoSel=-1;
+
 function drawLudo(r,g,bar,spec){
-  const N=14,CELL=24,PAD=6,W=N*CELL+PAD*2;
+  const N=15,CSSW=420,dpr=Math.min(2,window.devicePixelRatio||1);
   appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
-   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="${W}" height="${W}"></canvas>
+   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv"></canvas>
    <div class="side" id="diceRow"></div>
    <div class="hint">擲到 6 才能起飛；踩到對手送回基地；4 架全到終點獲勝</div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
-  ctx.fillStyle='#633b21';ctx.fillRect(0,0,W,W);          // v1.33 深木外框
-  // 底色格
-  ctx.fillStyle='#d29a55';ctx.fillRect(PAD,PAD,N*CELL,N*CELL);   // v1.33 木色棋盤
-  // 環格
-  RING.forEach(([i,j])=>{
-    ctx.fillStyle='rgba(255,255,255,.14)';ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);
-    ctx.strokeStyle='rgba(226,176,74,.65)';ctx.lineWidth=1;ctx.strokeRect(PAD+j*CELL+2.5,PAD+i*CELL+2.5,CELL-5,CELL-5);
+  cv.width=CSSW*dpr;cv.height=CSSW*dpr;cv.style.width=CSSW+'px';cv.style.height=CSSW+'px';
+  ctx.scale(dpr,dpr);
+  const U=CSSW/N,GAP=U*0.13,RD=U*0.24;
+  const X=c=>c*U,Y=rr=>rr*U;
+  const rr=(x,y,w,h,rad,fill,stroke,sw)=>{
+    const q=Math.min(rad,w/2,h/2);
+    ctx.beginPath();ctx.moveTo(x+q,y);ctx.arcTo(x+w,y,x+w,y+h,q);ctx.arcTo(x+w,y+h,x,y+h,q);
+    ctx.arcTo(x,y+h,x,y,q);ctx.arcTo(x,y,x+w,y,q);ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1;ctx.stroke();}
+  };
+  const cellRect=(row,col,inset)=>{const i=(inset||0)+GAP/2;return [X(col)+i,Y(row)+i,U-GAP-2*(inset||0),U-GAP-2*(inset||0)];};
+  // 飛機圖示（機頭朝上，再旋轉）
+  const plane=(x,y,s,ang,fill,stroke)=>{
+    ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.scale(s,s);
+    ctx.beginPath();
+    ctx.moveTo(0,-1);ctx.lineTo(0.32,0.10);ctx.lineTo(1,0.60);ctx.lineTo(1,0.88);
+    ctx.lineTo(0.24,0.66);ctx.lineTo(0.16,1.02);ctx.lineTo(-0.16,1.02);ctx.lineTo(-0.24,0.66);
+    ctx.lineTo(-1,0.88);ctx.lineTo(-1,0.60);ctx.lineTo(-0.32,0.10);ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=0.18;ctx.lineJoin='round';ctx.stroke();}
+    ctx.restore();
+  };
+  const chevron=(x,y,s,ang,color)=>{
+    ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.strokeStyle=color;ctx.lineWidth=U*0.10;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    for(let k=-1;k<=1;k++){
+      ctx.beginPath();ctx.moveTo(-s, k*s*0.9-s*0.55);ctx.lineTo(0, k*s*0.9);ctx.lineTo(-s, k*s*0.9+s*0.55);ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  // 底板（深藍）+ 細格線
+  rr(0,0,CSSW,CSSW,U*0.32,'#0a1d42','rgba(255,255,255,.12)',1);
+  ctx.strokeStyle='rgba(255,255,255,.045)';ctx.lineWidth=1;
+  for(let i=1;i<N;i++){
+    ctx.beginPath();ctx.moveTo(X(i),0);ctx.lineTo(X(i),CSSW);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,Y(i));ctx.lineTo(CSSW,Y(i));ctx.stroke();
+  }
+
+  // 四角機場（3×3 區塊，內縮一點點）＋ 4 個停機位
+  const homeSlots=[];
+  HOMES.forEach(([hr,hc],ci)=>{
+    const pad=U*0.18;
+    rr(X(hc)+pad,Y(hr)+pad,U*3-pad*2,U*3-pad*2,U*0.52,STCOLORS[ci]);
+    const slots=[];
+    for(let k=0;k<4;k++){
+      const cx=X(hc)+U*(0.85+(k%2)*1.3), cy=Y(hr)+U*(0.85+Math.floor(k/2)*1.3);
+      slots.push([cx,cy]);
+      ctx.beginPath();ctx.arc(cx,cy,U*0.38,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.45)';ctx.fill();
+    }
+    homeSlots.push(slots);
   });
-  // 各色起點標色
-  Object.entries(r.state.colors||{}).forEach(([u,ci])=>{const [i,j]=RING[START[ci]];ctx.fillStyle=STCOLORS[ci];ctx.globalAlpha=.45;ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);ctx.globalAlpha=1;});
-  // 基地
-  const bases=[[0,0],[0,13],[13,13],[13,0]];
-  Object.entries(r.state.colors||{}).forEach(([u,ci])=>{
-    const [bi,bj]=bases[ci];
-    ctx.strokeStyle=STCOLORS[ci];ctx.lineWidth=3;
-    ctx.strokeRect(PAD+bj*CELL-CELL*0.6,PAD+bi*CELL-CELL*0.6,CELL*2.2,CELL*2.2);
-    (r.state.planes[u]||[]).forEach((p,pi)=>{
-      if(p>=0)return;
-      const ox=PAD+bj*CELL+ (pi%2)*CELL*0.9, oy=PAD+bi*CELL+Math.floor(pi/2)*CELL*0.9;
-      ctx.beginPath();ctx.arc(ox,oy,CELL*0.28,0,Math.PI*2);ctx.fillStyle=STCOLORS[ci];ctx.fill();
+
+  // 環格（裝飾色循環）＋ 航道入口格用航道顏色＋方向箭頭
+  RING.forEach(([rw,cl],i)=>{
+    const [x,y,w,h]=cellRect(rw,cl);
+    rr(x,y,w,h,RD,STCOLORS[i%4]);
+  });
+  LANE_ENTRY.forEach((idx,ci)=>{
+    const [rw,cl]=RING[idx],[x,y,w,h]=cellRect(rw,cl);
+    rr(x,y,w,h,RD,STCOLORS[ci]);
+    chevron(X(cl)+U/2,Y(rw)+U/2,U*0.17,STANGLE[ci],'rgba(255,255,255,.85)');
+  });
+
+  // 航道：6 格本色 + 灰帶雪佛龍 + 兩個白圈
+  LANES.forEach((cells,ci)=>{
+    cells.forEach(([rw,cl])=>{
+      const [x,y,w,h]=cellRect(rw,cl);
+      rr(x,y,w,h,RD,STCOLORS[ci]);
+    });
+    const a=cells[1],b=cells[3];
+    const x1=Math.min(X(a[1]),X(b[1]))+U*0.30,y1=Math.min(Y(a[0]),Y(b[0]))+U*0.30;
+    const x2=Math.max(X(a[1]),X(b[1]))+U*0.70,y2=Math.max(Y(a[0]),Y(b[0]))+U*0.70;
+    rr(x1,y1,x2-x1,y2-y1,U*0.05,'rgba(148,163,184,.42)');
+    const mid=[(X(cells[0][1])+X(cells[4][1]))/2+U/2,(Y(cells[0][0])+Y(cells[4][0]))/2+U/2];
+    chevron(mid[0],mid[1],U*0.19,STANGLE[ci],'rgba(255,255,255,.55)');
+    [cells[1],cells[3]].forEach(([rw,cl])=>{
+      ctx.beginPath();ctx.arc(X(cl)+U/2,Y(rw)+U/2,U*0.30,0,Math.PI*2);
+      ctx.fillStyle='#f4ffed';ctx.fill();
+      ctx.strokeStyle=STDARK[ci];ctx.lineWidth=U*0.05;ctx.stroke();
     });
   });
-  // 飛機
-  const names=playerNames(r);
+
+  // 中央 3×3：四色三角（上紅／右黃／下藍／左綠）
+  const cx0=X(6),cy0=Y(6),cs=U*3,mid=[X(7.5),Y(7.5)];
+  const tri=(pts,col)=>{ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[1][0],pts[1][1]);
+    ctx.lineTo(pts[2][0],pts[2][1]);ctx.closePath();ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle='rgba(10,29,66,.55)';ctx.lineWidth=U*0.05;ctx.stroke();};
+  tri([[cx0,cy0],[cx0+cs,cy0],mid],STCOLORS[0]);
+  tri([[cx0+cs,cy0],[cx0+cs,cy0+cs],mid],STCOLORS[2]);
+  tri([[cx0,cy0+cs],[cx0+cs,cy0+cs],mid],STCOLORS[3]);
+  tri([[cx0,cy0],[cx0,cy0+cs],mid],STCOLORS[1]);
+
+  // 起點格：該色底 + 白色飛機
+  START.forEach((si,ci)=>{
+    const [rw,cl]=RING[si],[x,y,w,h]=cellRect(rw,cl);
+    rr(x,y,w,h,RD,STCOLORS[ci]);
+    plane(X(cl)+U/2,Y(rw)+U/2,U*0.29,STANGLE[ci],'#ffffff','rgba(10,29,66,.55)');
+  });
+
+  // 棋子
   Object.entries(r.state.planes||{}).forEach(([u,pl])=>{
-    pl.forEach((steps,pi)=>{ if(steps<0)return;
-      const pos=planePos(pi,r.state.colors[u],steps);if(!pos)return;
-      const [i,j]=pos;const x=PAD+j*CELL+CELL/2,y=PAD+i*CELL+CELL/2;
-      ctx.beginPath();ctx.arc(x,y,CELL*0.36,0,Math.PI*2);ctx.fillStyle=STCOLORS[r.state.colors[u]];ctx.fill();
-      ctx.strokeStyle='#0b0d14';ctx.lineWidth=1.5;ctx.stroke();
+    const ci=r.state.colors?r.state.colors[u]:0;
+    pl.forEach((steps,pi)=>{
+      if(steps<0){
+        const s=homeSlots[ci]&&homeSlots[ci][pi];if(!s)return;
+        plane(s[0],s[1],U*0.30,STANGLE[ci],STDARK[ci],'rgba(255,255,255,.75)');
+        return;
+      }
+      const pos=planePos(pi,ci,steps);if(!pos)return;
+      const done=steps>=57;   // 完成：FINISH 已是「中心座標」，不能再加半格
+      const [rw,cl]=pos,x=done?X(cl):X(cl)+U/2,y=done?Y(rw):Y(rw)+U/2;
+      ctx.beginPath();ctx.arc(x,y,done?U*0.30:U*0.40,0,Math.PI*2);
+      ctx.fillStyle=STDARK[ci];ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=U*0.06;ctx.stroke();
+      plane(x,y,done?U*0.18:U*0.22,STANGLE[ci],'#ffffff');
     });
   });
   // 骰子
@@ -1403,6 +1520,7 @@ function drawLudo(r,g,bar,spec){
     bar2.querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>ludoMove(+b.dataset.pi));
   }
 }
+
 function dicePips(d){let h='';for(let i=0;i<9;i++)h+=`<div class="pip"></div>`;const map={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};const on=map[d]||[];h='';for(let i=0;i<9;i++)h+=`<div class="pip ${on.includes(i)?'on':''}"></div>`;return h;}
 function canMove(r,pi){
   const p=r.state.planes[me.username][pi];const d=r.state.dice;
