@@ -239,6 +239,45 @@ canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--
 /* 炸彈／你畫我猜／劇本殺 的區塊也統一 */
 .bombgauge{background:rgba(0,0,0,.35);border-color:rgba(226,176,74,.45)}
 .bombcat{color:var(--gold2)}
+
+/* ═══ v1.33 桌遊棋盤：照 UI 規範修 ═══ */
+/* 康樂棋：圓形跑道（52 格繞圓周） */
+.klring{position:relative;width:100%;max-width:430px;aspect-ratio:1;margin:12px auto;border-radius:50%;
+  background:radial-gradient(circle,#0f3460 0 26%,rgba(226,176,74,.20) 27% 56%,rgba(233,69,96,.14) 57% 100%);
+  border:12px solid var(--gold2);box-shadow:inset 0 0 34px rgba(0,0,0,.75),0 10px 30px rgba(0,0,0,.5)}
+.klring .klhub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:var(--gold2);font-weight:900;letter-spacing:3px;opacity:.8;font-size:15px}
+.klring .klcell{position:absolute;width:8.6%;aspect-ratio:1;transform:translate(-50%,-50%);
+  border-radius:50%!important;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.14)!important;border:1px solid rgba(226,176,74,.65)!important}
+.klring .klcell .klnum{position:static;font-size:7.5px;opacity:.9;color:#fff9ec}
+.klring .klcell .klsp{position:absolute;bottom:-2px;font-size:7px}
+.klring .klcell .kltok{position:absolute;left:0;right:0;bottom:-7px}
+.klring .klcell .kltok i{width:6px;height:6px}
+
+/* 大富翁：中央改成環形色帶（規範的 conic 環） */
+.mpboard{border:12px solid var(--gold2)!important;border-radius:20px!important;
+  background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3))!important}
+.mpcenter{background:conic-gradient(#e94560 0 10%,#4a90d9 0 20%,#e2b04a 0 30%,#52b788 0 40%,
+  #e94560 0 50%,#4a90d9 0 60%,#e2b04a 0 70%,#52b788 0 80%,#e94560 0 90%,#4a90d9 0)!important;
+  border:3px solid var(--gold2)!important;border-radius:16px!important;
+  box-shadow:inset 0 0 24px rgba(0,0,0,.75)!important}
+
+/* 鬥獸棋：河、獸穴、陷阱要看得見（規範：河藍、穴紅、陷阱紅虛線） */
+.dswater{background:rgba(74,144,217,.55)!important;border-color:rgba(74,144,217,.95)!important}
+.dsden0,.dsden1{background:rgba(233,69,96,.32)!important;border:3px solid #e94560!important;
+  box-shadow:inset 0 0 12px rgba(233,69,96,.7)!important}
+.dstrap0,.dstrap1{border:2px dashed #e94560!important;background:rgba(233,69,96,.10)!important}
+
+/* 棋盤外框加厚成規範的木框 */
+canvas#cv{border:12px solid #a8753c!important;border-radius:16px!important}
+
+/* v1.33 中國象棋：楚河漢界 */
+.xqboard{position:relative}
+.xqriver{position:absolute;left:5%;right:5%;top:50%;transform:translateY(-50%);text-align:center;
+  color:#5a3517;font-weight:900;letter-spacing:6px;font-size:12px;pointer-events:none;
+  background:rgba(210,154,85,.94);border-top:1px solid rgba(99,59,33,.45);border-bottom:1px solid rgba(99,59,33,.45);
+  padding:3px 0;border-radius:4px}
 </style>
 </head>
 <body>
@@ -1222,6 +1261,7 @@ function drawTTT(r,g,bar,spec){
   const myMark=names.indexOf(me.username)===0?'X':'O';
   ctx.fillStyle='#d9b382';ctx.fillRect(0,0,330,330);
   ctx.strokeStyle='#6b4f2a';ctx.lineWidth=3;
+  ctx.translate(0.5,0.5);   // 同上：讓線落在像素中心，不然會糊
   for(let i=1;i<3;i++){ctx.beginPath();ctx.moveTo(i*110,12);ctx.lineTo(i*110,318);ctx.stroke();ctx.beginPath();ctx.moveTo(12,i*110);ctx.lineTo(318,i*110);ctx.stroke();}
   ctx.lineCap='round';
   r.state.board.forEach((v,i)=>{ if(!v)return;const c=i%3,rw=Math.floor(i/3);const cx=c*110+55,cy=rw*110+55;
@@ -1258,8 +1298,11 @@ function drawGomoku(r,g,bar,spec){
    <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="${W}" height="${W}"></canvas>
    <div class="hint">五子連線者勝</div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
-  ctx.fillStyle='#d9b382';ctx.fillRect(0,0,W,W);
-  ctx.strokeStyle='#6b4f2a';ctx.lineWidth=1;
+  ctx.fillStyle='#d29a55';ctx.fillRect(0,0,W,W);          // v1.33 木色照規範
+  ctx.strokeStyle='#4d2d18';ctx.lineWidth=1;                // 線色照規範
+  // 1px 的線畫在整數座標會跨在兩個像素之間 → 每條線都被平均成 50% 混色（看起來糊）。
+  // 偏移 0.5px 讓線落在像素中心，格線才會清晰。
+  ctx.translate(0.5,0.5);
   for(let i=0;i<S;i++){ctx.beginPath();ctx.moveTo(PAD,PAD+i*C);ctx.lineTo(PAD+(S-1)*C,PAD+i*C);ctx.stroke();
     ctx.beginPath();ctx.moveTo(PAD+i*C,PAD);ctx.lineTo(PAD+i*C,PAD+(S-1)*C);ctx.stroke();}
   const names=playerNames(r);
@@ -1312,11 +1355,14 @@ function drawLudo(r,g,bar,spec){
    <div class="side" id="diceRow"></div>
    <div class="hint">擲到 6 才能起飛；踩到對手送回基地；4 架全到終點獲勝</div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
-  ctx.fillStyle='#0f1320';ctx.fillRect(0,0,W,W);
+  ctx.fillStyle='#633b21';ctx.fillRect(0,0,W,W);          // v1.33 深木外框
   // 底色格
-  ctx.fillStyle='#1c2130';ctx.fillRect(PAD,PAD,N*CELL,N*CELL);
+  ctx.fillStyle='#d29a55';ctx.fillRect(PAD,PAD,N*CELL,N*CELL);   // v1.33 木色棋盤
   // 環格
-  RING.forEach(([i,j])=>{ctx.fillStyle='#2a3145';ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);});
+  RING.forEach(([i,j])=>{
+    ctx.fillStyle='rgba(255,255,255,.14)';ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);
+    ctx.strokeStyle='rgba(226,176,74,.65)';ctx.lineWidth=1;ctx.strokeRect(PAD+j*CELL+2.5,PAD+i*CELL+2.5,CELL-5,CELL-5);
+  });
   // 各色起點標色
   Object.entries(r.state.colors||{}).forEach(([u,ci])=>{const [i,j]=RING[START[ci]];ctx.fillStyle=STCOLORS[ci];ctx.globalAlpha=.45;ctx.fillRect(PAD+j*CELL+2,PAD+i*CELL+2,CELL-4,CELL-4);ctx.globalAlpha=1;});
   // 基地
@@ -1582,7 +1628,7 @@ function drawChess(r, g, bar, spec){
   const legal = chessSel ? eng.moves({ square: chessSel, verbose: true }).map(m => m.to) : [];
   for (let rw = 0; rw < N; rw++) for (let cl = 0; cl < N; cl++) {
     const x = PAD + cl * CELL, y = PAD + rw * CELL;
-    ctx.fillStyle = ((rw + cl) % 2 === 0) ? '#e8dfcc' : '#8a6f52';
+    ctx.fillStyle = ((rw + cl) % 2 === 0) ? '#d8b27a' : '#704d32';   // v1.33 棋盤規範色
     ctx.fillRect(x, y, CELL, CELL);
     const sq = String.fromCharCode(97 + cl) + (8 - rw);
     if (legal.includes(sq)) { ctx.fillStyle = 'rgba(56,189,248,.45)'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + CELL / 2, CELL * 0.18, 0, Math.PI * 2); ctx.fill(); }
@@ -2822,13 +2868,17 @@ function drawKonglok(r, g, bar, spec) {
   const myTurn = (cur === me.username) && !spec;
   const CELL = 44;
 
+  // v1.33 圓形跑道：52 格平均繞圓周（跟棋盤規範的環形跑道一致）
   const cells = [];
+  const KL_R = 42.5;                       // 半徑（容器百分比）
   for (let i = 0; i < KL_N; i++) {
-    const [col, row] = klCellPos(i);
+    const ang = (-90 + 360 * i / KL_N) * Math.PI / 180;
+    const cx = (50 + KL_R * Math.cos(ang)).toFixed(3);
+    const cy = (50 + KL_R * Math.sin(ang)).toFixed(3);
     const here = names.filter(u => (pos[u] || 0) === i + 1);
     const sp = KL_SPECIAL[i + 1];
     const cls = i === 0 ? 'klstart' : (i === KL_N - 1 ? 'klend' : (sp > 0 ? 'klup' : (sp < 0 ? 'kldown' : '')));
-    cells.push(`<div class="klcell ${cls}" style="grid-column:${col + 1};grid-row:${row + 1}" title="${i + 1}">
+    cells.push(`<div class="klcell ${cls}" style="left:${cx}%;top:${cy}%" title="${i + 1}">
       <span class="klnum">${i + 1}</span>
       ${sp ? `<span class="klsp">${sp > 0 ? '+' + sp : sp}</span>` : ''}
       <div class="kltok">${here.map(u => `<i style="${chipStyle(colorOf(r, u))}" title="${escAttr(nameOf(r, u))}"></i>`).join('')}</div>
@@ -2858,7 +2908,7 @@ function drawKonglok(r, g, bar, spec) {
   appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
-     <div class="klboard">${cells.join('')}</div>
+     <div class="klring"><div class="klhub">康樂棋</div>${cells.join('')}</div>
      ${jumpMsg}
      <div class="hint">擲到幾就走幾格 · <span style="color:var(--green)">綠格加速</span> · <span style="color:var(--red)">紅格後退</span> · 先到第 ${KL_N} 格者勝</div>
      ${stage}
@@ -3217,7 +3267,7 @@ function drawXiangqi(r, g, bar, spec) {
   appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
-     <div class="xqboard">${cells.join('')}</div>
+     <div class="xqboard">${cells.join('')}<div class="xqriver">楚河　　漢界</div></div>
      <div class="hint">你執 <b style="color:${XQ_COLOR[mySide]}">${mySide === 1 ? '紅方' : '黑方'}</b> · 大子食細子 · 炮要隔一個子才食 · 馬有馬腿 · 象不過河 · 將帥不可對面</div>
      ${myTurn ? `<div class="hint">${xqSel !== null ? '再點一下要走到哪一格' : '點自己的棋子開始走'}</div>` : ''}
      <div class="plist">${rows}</div>
