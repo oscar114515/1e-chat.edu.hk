@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-54vEuoi6T93LpDBeGdqHnYx40z8E9YICrfS2BidKIow=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-ePtPf/BkAjdgjYLaBu2VVoqlRVdf/UemCxEKPi9ztvU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.21</title>
 <style>
@@ -196,6 +196,20 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .btn-warn{background:linear-gradient(135deg,#ea580c,#c2410c)}
 .btn-ok{background:linear-gradient(135deg,#16a34a,#15803d)}
 .btn-ghost{background:rgba(148,163,184,.15);color:var(--text-main)}
+.profile3dWrap{perspective:1000px;display:flex;justify-content:center;padding:24px 20px 0}
+.profile3dCard{width:290px;height:300px;border-radius:50px;transition:all .5s ease-in-out;transform-style:preserve-3d;box-shadow:rgba(0,0,0,0) 40px 50px 25px -40px,rgba(0,0,0,.2) 0 25px 25px -5px;position:relative}
+.profile3dCard .glass{transform-style:preserve-3d;position:absolute;inset:8px;border-radius:55px;border-top-right-radius:100%;background:linear-gradient(0deg,rgba(255,255,255,.349) 0%,rgba(255,255,255,.815) 100%);transform:translate3d(0,0,25px);border-left:1px solid white;border-bottom:1px solid white}
+.profile3dCard .p3content{padding:100px 60px 0 30px;transform:translate3d(0,0,26px);position:relative;z-index:5}
+.profile3dCard .p3content .p3title{display:block;font-weight:900;font-size:20px}
+.profile3dCard .p3content .p3text{display:block;font-size:14px;margin-top:12px}
+.profile3dCard .p3logo{position:absolute;right:0;top:0;transform-style:preserve-3d}
+.profile3dCard .p3logo .circle{display:block;position:absolute;aspect-ratio:1;border-radius:50%;top:0;right:0;box-shadow:rgba(100,100,111,.2) -10px 10px 20px 0;backdrop-filter:blur(5px)}
+.profile3dCard .p3logo .c1{width:170px;transform:translate3d(0,0,20px);top:8px;right:8px}
+.profile3dCard .p3logo .c2{width:140px;transform:translate3d(0,0,40px);top:10px;right:10px}
+.profile3dCard .p3logo .c3{width:110px;transform:translate3d(0,0,60px);top:17px;right:17px}
+.profile3dCard .p3logo .c4{width:80px;transform:translate3d(0,0,80px);top:23px;right:23px}
+.profile3dCard .p3logo .c5{width:50px;transform:translate3d(0,0,100px);top:30px;right:30px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.profile3dWrap:hover .profile3dCard{transform:rotate3d(1,1,0,30deg);box-shadow:rgba(0,0,0,.3) 30px 50px 25px -40px,rgba(0,0,0,.1) 0 25px 30px 0}
 .avatar-options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .av-opt{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:2px solid transparent;background:var(--bg-input)}
 .err{color:#f87171;font-size:12px;margin-top:6px;min-height:14px}
@@ -622,7 +636,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.27';
+const CURRENT_VERSION='v1.30';
 const ANDROID_APK_URL='https://oscar114515.github.io/1e-chat.edu.hk/apk/oscar-toolbox-latest.apk';
 const AI_KEY='ak_txnGh9EwAE2IWe0e7lJHKfghJbGwU';
 const AI_API='https://note3-prev-api.askdiandian.com/v1/chat/completions';
@@ -2074,10 +2088,18 @@ async function openProfilePage(username,isSelf){
   } else {
     const light=lightenColor(bgColor,40);const dark=darkenColor(bgColor,20);
     beginPage('profile:'+username);
-    pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)} 的主頁</div></div><div class="fp-body"><div style="padding:40px 20px;text-align:center"><div style="width:96px;height:96px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:#fff;background:${bgColor};overflow:hidden;border:4px solid rgba(255,255,255,.25)">${avHTML}</div><div style="font-size:24px;font-weight:700">${escapeHtml(u.displayName||u.username)}</div><div style="font-size:14px;color:var(--text-sub);margin-top:4px">${clsTag} · ${roleLabel}</div></div></div></div>`;
+    // v1.30 恢復 3D 翻轉卡片（v1.20.1 改版時被換成平平無奇的圓頭像）
+    pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)} 的主頁</div></div><div class="fp-body"><div class="profile3dWrap"><div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)"><div class="glass"></div><div class="p3content"><span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span><span class="p3text" style="color:${textColor};opacity:.85">${clsTag} · ${roleLabel}</span></div><div class="p3logo"><span class="circle c1" style="background:${hexA(bgColor,.2)}"></span><span class="circle c2" style="background:${hexA(bgColor,.2)}"></span><span class="circle c3" style="background:${hexA(bgColor,.2)}"></span><span class="circle c4" style="background:${hexA(bgColor,.2)}"></span><span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avHTML}</span></div></div></div><div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">這是別人的主頁</div></div></div>`;
   }
 }
 function pickTextColor(hex){ const h=String(hex).replace('#','');if(h.length!==6)return '#fff';const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);const lum=(0.299*r+0.587*g+0.114*b)/255;return lum>0.6?'#111':'#fff'; }
+/* v1.30 補：帶透明度的色值（3D 卡片的圓球用） */
+function hexA(hex,a){
+  const h=String(hex||'').replace('#','').trim();
+  if(h.length!==6)return 'rgba(59,130,246,'+(a==null?1:a)+')';
+  const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  return 'rgba('+r+','+g+','+b+','+(a==null?1:a)+')';
+}
 function lightenColor(hex,amt){ const h=String(hex).replace('#','');if(h.length!==6)return hex;let r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 function darkenColor(hex,amt){ const h=String(hex).replace('#','');if(h.length!==6)return hex;let r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);r=Math.max(0,r-amt);g=Math.max(0,g-amt);b=Math.max(0,b-amt);return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 async function saveDisplayName(){ const el=document.getElementById('editDisplayName');if(!el)return;const name=el.value.trim();if(!name)return;if(name.length>20)return;await update(ref(db,'users/'+me.username),{displayName:name});me.displayName=name;sessionStorage.setItem('chat_me',JSON.stringify(me));showNotif('已更新');setTimeout(()=>location.reload(),600); }
@@ -3240,6 +3262,9 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.30',date:'2026-10-13',changes:['把「別人的主頁」那張 3D 翻轉卡片加回來（v1.20.1 改版時被換成了平平無奇的圓頭像）：點聊天室任何人的頭像進他的主頁，就會看到帶玻璃反光與五層圓球的立體卡片，滑過去會翻轉','3D 卡片上的五顆圓球會跟著對方的個人顏色走','順手修好原補丁裡三個小毛病：補上缺少的 hexA() 色彩透明度函式、CSS 選擇器 .plogo 打錯（應為 .p3logo，不改的話圓球不會有共用樣式）、以及 margin-top:12px3 這個無效值']},
+{ver:'v1.29',date:'2026-10-13',changes:['AI 出題加速（以前等太久）：只要「夠用就好」的數量 —— 誰是臥底由 6 組詞減到 2 組、傳炸彈 6 類減到 3 類、你畫我猜按人數折半；輸出變短，回得就快','AI 的逾時上限縮短：一般題目 30 秒 → 12 秒，劇本殺 45 秒 → 25 秒；真的太久就直接用內置題庫開局，不再讓全班對著倒數乾等','倒數完但題目還沒出好時，畫面會老實顯示「AI 出題中…請稍候（人數已到齊，題目一出好就自動開局）」，不再退回等待狀態、也不會留一個 0 讓人猜','題目一出好就自動開局，不用再等下一輪倒數','棋子／頭像顏色自動對比處理：跟底色太接近（例如玩家選了白色放在深色卡片上）會自動補一圈對比色描邊 —— 淺底描深、深底描淺；頭像上的字也會自動選黑或白，不會再出現看不見的字','安卓版 1.8.0：同步以上全部（棋盤格線、黑白棋子、對比描邊、等 AI 出題的顯示）']},
+{ver:'v1.28',date:'2026-10-12',changes:['棋子顏色自動對比處理：保留玩家顏色的棋子與頭像（康樂棋、大富翁、狼人殺、投票名單…），如果那個顏色跟底色太接近（例如玩家選了白色，放在淺色卡片上就整個消失），會自動補一圈對比色描邊 —— 淺底描深、深底描淺，描邊用 box-shadow 畫，不會撐大排版','頭像上的字也會自動選黑或白，深色底配白字、淺色底配黑字，不會再出現看不見的字','安卓版同步同一套規則（頭像、色塊自動描邊與自動字色）','安卓版大廳不再虛報：只把真正做完原生介面的 4 款（井字棋、五子棋、誰是臥底、傳炸彈）標成可玩，其餘照實顯示「介面製作中」，不再點進去才發現不能用','安卓版 1.7.4']},
 {ver:'v1.27',date:'2026-10-12',changes:['修好安卓版棋盤看不到的問題：安卓的五子棋以前**完全沒有畫格線**（整塊深色背景 + 飄著的圓點），看起來就是壞掉；現在格線與落點用同一條公式（第 i 格中心 = (i+0.5)/n），線與棋子天生對齊，不可能再出現「線和棋子分開」','棋子改用黑／白（先手黑、後手白），不再用玩家個人的 16 進制顏色：五子棋的黑白子、井字棋的深色 ✕ 與白圈 ○（白圈加深色描邊，木色棋盤上看得清楚）','新增兩端共用的「遊戲契約」：每款遊戲的棋盤型別、狀態機、事件、勝負規則只寫一份，兩端照同一份做，避免再出現「安卓跟網頁不一樣」','棋盤配色統一成木色棋盤 + 深色格線，兩端外觀一致','安卓版 1.7.3']},
 {ver:'v1.26',date:'2026-10-11',changes:['修好安卓版聊天室的進場位置：以前進入 App、重新整理或從別的頁面回到聊天室，畫面會停在最頂端最舊的那幾則訊息，要一直往下滑才看得到最新的；現在一進聊天室就直接停在最底部的最新訊息','同一個問題在私人群聊與 AI 對話也一起修好了','順帶改進：只有「本來就在看最新訊息」時才會跟著新訊息自動往下捲，正在往上翻舊訊息的時候不會被硬拉走','安卓版 1.7.2']},
 {ver:'v1.25',date:'2026-10-11',changes:['修好等待室卡住的問題：以前只有在「你自己加入的那一刻」才會開始倒數，如果最後一位是別端（另一支手機、安卓版、或直接寫進資料庫）加進來的，兩邊都不會開始倒數，畫面就會一直停在「人數 2/2 · 等待中」','現在改成只要人數已到齊、而且還沒有開始倒數，房間裡任何一個人都會自動把它推進倒數；倒數途中有人退出而取消，補齊人數後也會自己重新倒數','順手把文字改清楚：人數已到齊就顯示「人數已到齊，倒數後自動開局」，不會再出現「還需要 0 人才能開局」這種句子；題目還沒準備好時也會老實說「正在準備題目」','安卓版 1.7.1：同步這個修正']},
