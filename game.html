@@ -282,9 +282,22 @@ canvas#cv{border:12px solid #a8753c!important;border-radius:16px!important}
 /* v1.35 飛行棋：照參考站版面（整塊 SVG，無木框） */
 .fxqboard{width:100%;max-width:400px;background:#0a1d42;border-radius:16px;padding:6px;box-sizing:border-box}
 .fxqboard svg{display:block;width:100%;height:auto}
+
+/* v1.35 圖標系統：內嵌 SVG，24×24、stroke 2、顏色跟著文字（來源風格 Reicon.dev／Lucide，MIT） */
+.ico{width:1.15em;height:1.15em;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}
+.ico-lg{width:1.5em;height:1.5em;vertical-align:-.3em}
+.wc-ico .ico{width:1.05em;height:1.05em;vertical-align:-.14em}
+.nav-icon .ico{width:1.25em;height:1.25em;vertical-align:0}
 </style>
 </head>
 <body>
+<svg id="icoSprite" width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
+  <symbol id="i-gomoku" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="16" r="3.2"/></symbol>
+</svg>
 <div id="app"></div>
 <script src="lib/uno-engine.js"></script>
 <script src="lib/opencc-t2cn.js"></script>
@@ -373,8 +386,8 @@ let view='lobby';
 /* ===== 遊戲定義 ===== */
 // min/max = 每款遊戲允許的人數範圍（房主在此範圍內設定）
 const GAMES=[
- {k:'tictactoe',n:'井字棋',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△'},
- {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○'},
+ {k:'tictactoe',n:'井字棋',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△',ic:'i-grid'},
+ {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○',ic:'i-gomoku'},
  {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛'},
  {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U'},
  {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:true,c:'#f59e0b',ab:'象'},
@@ -451,7 +464,7 @@ function renderLobby(){
     const rng=g.min===g.max?`${g.min} 人`:`${g.min}–${g.max} 人`;
     const rec=st.play?`<div class="gmeta">戰績 ${st.win||0} 勝 ${st.lose||0} 負</div>`:'';
     return `<div class="gcard ${g.ok?'on':'off'}" data-g="${g.k}">${tag}
-      <div class="gicon" style="background:${g.c}">${escapeHtml(g.ab)}</div>
+      <div class="gicon" style="background:${g.c}">${g.ic?`<svg class="ico ico-lg"><use href="#${g.ic}"/></svg>`:escapeHtml(g.ab)}</div>
       <div class="gname">${escapeHtml(g.n)}</div>
       <div class="gmeta">${rng}</div>${rec}</div>`;
   }).join('');
@@ -819,7 +832,7 @@ function renderRoom(){
   const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
   const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="${pavStyle('#475569')}">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
   appEl.innerHTML=`
-    <div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)} · 房間</h1></div>
+    <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 房間</h1></div>
     <div class="wrap">
       <div class="hint">房主：${escapeHtml(r.hostName||r.host)} · 人數 ${pc}/${r.setMax||r.maxP}${r.allowSpectate?' · 可觀戰':' · 不可觀戰'}</div>
       ${cdHtml}
@@ -844,7 +857,7 @@ function renderLateRoom(r,g){
     detail=(t==='uc')?'最後是臥底獲勝':(t==='wolf'?'最後是狼人獲勝':(t==='det'?'最後是好人一方獲勝':'最後是另一方獲勝'));
   }
   else if(w) detail=escapeHtml(nameOf(r,w))+' 最後獲勝';
-  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
     <div class="wrap">
       <div class="countdown" style="font-size:32px;color:var(--gold)">你來遲了</div>
       <div class="hint">對局已經結束${detail?'（'+detail+'）':''}</div>
@@ -1087,7 +1100,7 @@ function renderGame(r,g){
   else if(r.game==='xiangqi') drawXiangqi(r,g,bar,spec);
   else if(r.game==='werewolf') drawWerewolf(r,g,'',spec);
   else if(r.game==='monopoly') drawMonopoly(r,g,bar,spec);
-  else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
+  else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
 function renderEnded(r,g){
@@ -1099,7 +1112,7 @@ function renderEnded(r,g){
       const isTop=playerNames(r).sort((a,b)=>(scores[b]||0)-(scores[a]||0))[0]===u;
       return `<div class="pitem" style="${mine?'border-color:var(--accent)':''}"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${mine?'（你）':''}${isTop?' · 冠軍':''}</div><div class="pbadge" style="color:var(--gold);border-color:var(--gold)">${scores[u]||0} 分</div></div>`;
     }).join('');
-    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap"><div class="countdown" style="font-size:30px">${w==='draw'?'平手':'恭喜獲勝！'}</div>
       <div class="plist">${rows}</div><button class="btn" data-act="home">回到大廳</button></div>`;
     appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
@@ -1116,7 +1129,7 @@ function renderEnded(r,g){
       const c=isW?'#f472b6':'var(--green)';
       return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${WW_NAME[rl[u]]||'平民'}</div></div>`;
     }).join('');
-    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap">
         <div class="countdown" style="font-size:28px;color:${iWon?'var(--green)':'var(--red)'}">${iWon?'你贏了！':'你輸了'}</div>
         <div class="hint">${wolfWin?'狼人獲勝':'村民獲勝'} · 共進行 ${Number(st.night)||1} 夜</div>
@@ -1139,7 +1152,7 @@ function renderEnded(r,g){
       return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}<div class="hint" style="margin:2px 0 0">${escapeHtml(role.n||'')}</div></div><div class="pbadge" style="color:${c};border-color:${c}">${isC?'兇手':'清白'}</div></div>`;
     }).join('');
     const verdict=detWin?'兇手被揪出來了！':'兇手逃掉了…';
-    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結案</h1></div>
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 結案</h1></div>
       <div class="wrap">
         <div class="countdown" style="font-size:28px;color:${iWon?'var(--green)':'var(--red)'}">${iWon?'你贏了！':'你輸了'}</div>
         <div class="hint">${verdict} · 兇手是 ${escapeHtml(nameOf(r,culprit))}</div>
@@ -1162,7 +1175,7 @@ function renderEnded(r,g){
       const c=isU?'#f472b6':'var(--green)';
       return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
     }).join('');
-    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+    appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 結束</h1></div>
       <div class="wrap">
         <div class="countdown" style="font-size:30px;color:${iWon?'var(--green)':'var(--red)'}">${iWon?'你贏了！':'你輸了'}</div>
         <div class="hint">${big}${r.state&&r.state.pair?` · 題目「${escapeHtml(r.state.pair[0])}／${escapeHtml(r.state.pair[1])}」`:''}</div>
@@ -1186,7 +1199,7 @@ function renderEnded(r,g){
     const c=(w===u)?'var(--green)':(w==='draw'?'var(--gold)':'var(--red)');
     return `<div class="pitem"><div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({displayName:nameOf(r,u)})}</div><div class="pname">${escapeHtml(nameOf(r,u))}${u===me.username?'（你）':''}</div><div class="pbadge" style="color:${c};border-color:${c}">${tag}</div></div>`;
   }).join('');
-  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home">←</button><h1>${escapeHtml(g.n)} · 結束</h1></div>
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="home"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 結束</h1></div>
     <div class="wrap">
       <div class="countdown" style="font-size:32px;color:${col}">${big}</div>
       <div class="hint">${small}</div>
@@ -1257,9 +1270,9 @@ async function tryWinCheck(){
 /* ===== 井字棋 ===== */
 let tttCanvas=null;
 function drawTTT(r,g,bar,spec){
-  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="330" height="330"></canvas>
-   <div class="hint" id="tttHint">你執 ○</div></div></div>`;
+   <div class="hint" id="tttHint">你執 <svg class="ico"><use href="#i-gomoku"/></svg></div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
   const names=playerNames(r);
   const myMark=names.indexOf(me.username)===0?'X':'O';
@@ -1278,7 +1291,7 @@ function drawTTT(r,g,bar,spec){
       ctx.lineWidth=6.5;ctx.strokeStyle='#F5F7FA';ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);ctx.stroke();
     }
   });
-  const hintEl=appEl.querySelector('#tttHint'); if(hintEl)hintEl.textContent='你執 '+(myMark==='X'?'○（先手）':'△（後手）');
+  const hintEl=appEl.querySelector('#tttHint'); if(hintEl)hintEl.innerHTML='你執 <svg class="ico"><use href="#i-gomoku"/></svg>'+(myMark==='X'?'（先手）':'（後手）');
   cv.onclick=e=>{ if(spec)return;const rect=cv.getBoundingClientRect();
     const x=(e.clientX-rect.left)*(330/rect.width),y=(e.clientY-rect.top)*(330/rect.height);
     const c=Math.floor(x/110),rw=Math.floor(y/110);if(c<0||c>2||rw<0||rw>2)return;
@@ -1298,7 +1311,7 @@ async function tttMove(i){
 /* ===== 五子棋 ===== */
 function drawGomoku(r,g,bar,spec){
   const S=15,C=23,PAD=18,W=C*(S-1)+PAD*2; // 345
-  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="${W}" height="${W}"></canvas>
    <div class="hint">五子連線者勝</div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
@@ -1376,7 +1389,7 @@ function drawLudo(r,g,bar,spec){
     });
   });
   const win=r.winner!==null&&r.winner!==undefined&&r.winner!==''?`<use href="#win"/>`:'';
-  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap"><div class="board-wrap">${bar}
    <div class="fxqboard"><svg viewBox="-88,-92,176,184" xmlns="http://www.w3.org/2000/svg">${FXQ_DEFS}${FXQ_CELLS.map(a=>'<use '+a+'/>').join('')}${win}${planes}</svg></div>
    <div class="side" id="diceRow"></div>
@@ -1515,7 +1528,7 @@ async function unoAskColor(){
 }
 function drawUno(r, g, bar, spec){
   const eng = getEngine(r);
-  if (!eng) { appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">牌局載入中…</div>`; return; }
+  if (!eng) { appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">牌局載入中…</div>`; return; }
   const names = playerNames(r);
   const amPlayer = !!r.players[me.username];
   const cur = eng.currentPlayer ? eng.currentPlayer.name : '';
@@ -1541,7 +1554,7 @@ function drawUno(r, g, bar, spec){
     }).join('') || '<div class="empty">（沒有手牌）</div>';
   }
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="plist">${oppo}</div>
@@ -1601,7 +1614,7 @@ let chessSel = null;
 const CHESS_GLYPH = { p: '兵', n: '馬', b: '象', r: '車', q: '后', k: '王' };
 function drawChess(r, g, bar, spec){
   const eng = getEngine(r);
-  if (!eng) { appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">棋局載入中…</div>`; return; }
+  if (!eng) { appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">棋局載入中…</div>`; return; }
   const names = playerNames(r);
   const whiteU = names[0], blackU = names[1];
   const myColor = me.username === whiteU ? 'w' : (me.username === blackU ? 'b' : null);
@@ -1610,7 +1623,7 @@ function drawChess(r, g, bar, spec){
   const N = 8, CELL = 42, PAD = 6, W = N * CELL + PAD * 2;
   const board = eng.board();
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="board-wrap"><canvas id="cv" width="${W}" height="${W}"></canvas>
@@ -2107,7 +2120,7 @@ function drawUndercover(r, g, bar, spec){
       ${feedHtml}`;
   }
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">${bar}${stage}${phase === 'reveal' ? '' : `<div class="plist">${plist}</div>`}</div>`;
   const lb = appEl.querySelector('[data-act="leave"]'); if (lb) lb.onclick = leaveRoom;
 
@@ -2370,7 +2383,7 @@ function drawPictionary(r, g, bar, spec){
     const ccHtml = cc && cc.status ? (cc.status==='checking'
       ? `<div class="hint" style="color:var(--accent)">正在檢查是否作弊…</div>`
       : cc.status==='suspicious'
-        ? `<div class="hint" style="color:var(--red)">⚠ 檢測到疑似作弊：畫中出現文字${cc.detail?'（'+escapeHtml(cc.detail)+'）':''}</div>`
+        ? `<div class="hint" style="color:var(--red)"><svg class="ico"><use href="#i-alert"/></svg> 檢測到疑似作弊：畫中出現文字${cc.detail?'（'+escapeHtml(cc.detail)+'）':''}</div>`
         : `<div class="hint" style="color:var(--green)">已通過防作弊檢查</div>`) : '';
     const guessUI = (!amDrawer && amPlayer) ? `
       <div class="deck-row" style="margin-top:8px">
@@ -2383,7 +2396,7 @@ function drawPictionary(r, g, bar, spec){
   } else if (phase === 'roundEnd') {
     const cc2 = st.cheatCheck;
     const cc2Html = cc2 && cc2.status ? (cc2.status==='suspicious'
-      ? `<div class="hint" style="color:var(--red)">⚠ 檢測到疑似作弊：畫中出現文字${cc2.detail?'（'+escapeHtml(cc2.detail)+'）':''}</div>`
+      ? `<div class="hint" style="color:var(--red)"><svg class="ico"><use href="#i-alert"/></svg> 檢測到疑似作弊：畫中出現文字${cc2.detail?'（'+escapeHtml(cc2.detail)+'）':''}</div>`
       : cc2.status==='clean' ? `<div class="hint" style="color:var(--green)">防作弊檢查：通過</div>` : '') : '';
     stage = `<div class="countdown" style="font-size:26px;color:var(--accent)">答案是「${escapeHtml(st.word || '')}」</div>
       <div class="hint">${guessedN ? `有 ${guessedN} 人猜中` : '沒人猜中'}</div>
@@ -2393,7 +2406,7 @@ function drawPictionary(r, g, bar, spec){
     stage = `<div class="hint">本局結束</div>`;
   }
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="board-wrap">
@@ -2600,7 +2613,7 @@ function drawBomb(r, g, bar, spec) {
       <div class="hint">輪到他的時候要講一個「${escapeHtml(cat)}」</div>`;
   }
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="bombcat">${escapeHtml(cat)}</div>
@@ -2778,7 +2791,7 @@ function drawScriptMurder(r, g, bar, spec) {
     stage = `<div class="hint">正在結案…</div>`;
   }
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="smcase"><div class="smtag">案件</div><div class="smname">${escapeHtml(st.title || '無名案件')}</div>
@@ -2902,7 +2915,7 @@ function drawKonglok(r, g, bar, spec) {
   else stage = `<div class="turnbar">${escapeHtml(nameOf(r, cur))} 正在擲骰…</div>
       <div class="side"><div class="dice" id="klDice">${dicePips(Number(st.dice) || 0)}</div></div>`;
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="klring"><div class="klhub">康樂棋</div>${cells.join('')}</div>
@@ -3075,7 +3088,7 @@ function drawDoushou(r, g, bar, spec) {
     </div>`;
   }).join('');
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="dsboard">${cells.join('')}</div>
@@ -3261,7 +3274,7 @@ function drawXiangqi(r, g, bar, spec) {
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''} · ${xqSideOfPlayer(i) === 1 ? '紅方（下，先走）' : '黑方（上）'}</div>
     </div>`).join('');
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="xqboard">${cells.join('')}<div class="xqriver">楚河　　漢界</div></div>
@@ -3663,7 +3676,7 @@ function drawWerewolf(r, g, bar, spec){
     stage = `<div class="hint">本局結束</div>`;
   }
 
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${roleCard}
      ${phase === 'end' ? '' : stage}
@@ -3897,7 +3910,7 @@ function drawMonopoly(r, g, bar, spec){
   }
 
   const log = (st.log || []).slice(-8).reverse();
-  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave">←</button><h1>${escapeHtml(g.n)}</h1></div>
+  appEl.innerHTML = `<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap">
      ${bar}
      <div class="mpboard">${cells.join('')}
