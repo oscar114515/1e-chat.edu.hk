@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-nPy2A6d0XvKGKfOZTpJW2dFCp+4mPhkKSfLJODXlizU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-4Ox5bEj2VcFb23QemN+d8q56IpEXCcn6xexcuBZP6K0=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://staticmap.openstreetmap.de https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent:;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>班級聊天室 v1.34</title>
+<title>班級聊天室 v1.35</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
@@ -511,9 +511,39 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 #trailMapScreen .tm-info{position:absolute;left:12px;bottom:16px;max-width:60%;padding:8px 12px;border-radius:12px;background:rgba(24,27,35,.9);color:#c9d2de;font-size:12px;line-height:1.55;z-index:5;border:1px solid rgba(255,255,255,.1)}
 #trailMapScreen .tm-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:30px;color:#c9d2de;font-size:13.5px;z-index:6;pointer-events:none}
 #trailMapScreen .tm-empty b{font-size:15px;color:#fff}
+
+/* v1.35 圖標系統：內嵌 SVG，24×24、stroke 2、顏色跟著文字（來源風格 Reicon.dev／Lucide，MIT） */
+.ico{width:1.15em;height:1.15em;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}
+.ico-lg{width:1.5em;height:1.5em;vertical-align:-.3em}
+.wc-ico .ico{width:1.05em;height:1.05em;vertical-align:-.14em}
+.nav-icon .ico{width:1.25em;height:1.25em;vertical-align:0}
 </style>
 </head>
 <body>
+<svg id="icoSprite" width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3"/><path d="M14 2v4M8 10v4M16 18v4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
+  <symbol id="i-gomoku" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="16" r="3.2"/></symbol>
+  <symbol id="i-wx-thermo" viewBox="0 0 24 24"><path d="M14 4v10.5a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></symbol>
+  <symbol id="i-wx-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-wx-cloud-sun" viewBox="0 0 24 24"><path d="M12 2v2M4.9 4.9l1.4 1.4M20 12h2M19.1 4.9l-1.4 1.4"/><path d="M15.9 12.5A5 5 0 1 0 8 9"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></symbol>
+  <symbol id="i-wx-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/></symbol>
+  <symbol id="i-wx-drizzle" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M8 19v1M12 19v1M16 19v1"/></symbol>
+  <symbol id="i-wx-rain" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M8 17v4M16 17v4M12 19v4"/></symbol>
+  <symbol id="i-wx-fog" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 17H7M17 21H9"/></symbol>
+  <symbol id="i-wx-wind" viewBox="0 0 24 24"><path d="M12.8 19.6A2 2 0 1 0 14 16H2M17.5 8a2.5 2.5 0 1 1 2 4H2M9.8 4.4A2 2 0 1 1 11 8H2"/></symbol>
+  <symbol id="i-wx-storm" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m13 11-4 5h4l-3 4"/></symbol>
+</svg>
 
 <div id="loginScreen">
   <div id="loginCard">
@@ -553,7 +583,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
       <button class="fb-btn" data-action="submitFeedback">送出</button>
       <div class="err" id="fbErr"></div>
     </div>
-    <div id="loginVersion">v1.34 正式版</div>
+    <div id="loginVersion">v1.35 正式版</div>
   </div>
 </div>
 
@@ -561,7 +591,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   <header>
     <div class="title">班級聊天室</div>
     <div class="right">
-      <span class="ver">v1.34</span>
+      <span class="ver">v1.35</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
       <label class="bb8-toggle" style="--toggle-size:5px;margin:0 4px">
         <input class="bb8-toggle__checkbox" type="checkbox" id="themeToggleChat">
@@ -619,10 +649,10 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   </div>
 
   <div id="bottomNav">
-    <button class="nav-item" data-action="openMyProfile"><span class="nav-icon">👤</span><span>個人主頁</span></button>
-    <button class="nav-item" data-action="openGroupList"><span class="nav-icon">💬</span><span>群聊</span><span class="nav-badge hidden" id="navGroupBadge">0</span></button>
-    <button class="nav-item" data-action="openAIPrivate"><span class="nav-icon">🤖</span><span>AI 聊天</span></button>
-    <button class="nav-item hidden" id="navAdminBtn" data-action="openAdmin"><span class="nav-icon">⚙️</span><span>管理員</span><span class="nav-badge hidden" id="navAdminBadge">0</span></button>
+    <button class="nav-item" data-action="openMyProfile"><span class="nav-icon"><svg class="ico"><use href="#i-user"/></svg></span><span>個人主頁</span></button>
+    <button class="nav-item" data-action="openGroupList"><span class="nav-icon"><svg class="ico"><use href="#i-msg"/></svg></span><span>群聊</span><span class="nav-badge hidden" id="navGroupBadge">0</span></button>
+    <button class="nav-item" data-action="openAIPrivate"><span class="nav-icon"><svg class="ico"><use href="#i-bot"/></svg></span><span>AI 聊天</span></button>
+    <button class="nav-item hidden" id="navAdminBtn" data-action="openAdmin"><span class="nav-icon"><svg class="ico"><use href="#i-settings"/></svg></span><span>管理員</span><span class="nav-badge hidden" id="navAdminBadge">0</span></button>
   </div>
 </div>
 
@@ -636,7 +666,7 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, get,
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.34';
+const CURRENT_VERSION='v1.35';
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -657,11 +687,12 @@ const AI_NAME='小喆AI';
 const AI_COLOR='#66ccff';
 const AI_BIO_DEFAULT='我是小喆AI，班級聊天室的專屬助手。';
 const SYS_NOTICE_NAME='系統通知';
-const SYS_NOTICE_ICON='🔔';
+const CHECK_SVG='<svg class="ico"><use href="#i-check"/></svg>';
+const SYS_NOTICE_ICON='<svg class="ico"><use href="#i-bell"/></svg>';
 
 let versionChecking=false,versionMismatchShown=false;
 async function checkVersion(){ if(versionChecking||versionMismatchShown)return;versionChecking=true;try{const snap=await get(ref(db,'meta/version'));if(snap.exists()){const sv=String(snap.val()||'').trim();if(sv&&sv!==CURRENT_VERSION)showVersionModal(sv);}}catch(e){}finally{versionChecking=false;} }
-function showVersionModal(sv){ if(versionMismatchShown)return;versionMismatchShown=true;const old=document.getElementById('versionModal');if(old)old.remove();const m=document.createElement('div');m.id='versionModal';m.innerHTML=`<div class="vm-card"><h3>⚠ 你的網站不是最新版本</h3><p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p><p>最新版本：<b style="color:#4ade80">${sv}</b></p><div class="vm-btns"><button class="vm-go" id="vmGoBtn">前往新版本</button><button class="vm-exit" id="vmExitBtn">退出網站</button></div></div>`;document.body.appendChild(m);document.getElementById('vmGoBtn').onclick=goNewVersion;document.getElementById('vmExitBtn').onclick=()=>{try{window.close();}catch(e){}setTimeout(()=>{location.href='about:blank';},200);}; }
+function showVersionModal(sv){ if(versionMismatchShown)return;versionMismatchShown=true;const old=document.getElementById('versionModal');if(old)old.remove();const m=document.createElement('div');m.id='versionModal';m.innerHTML=`<div class="vm-card"><h3><svg class="ico ico-lg" style="color:#fbbf24"><use href="#i-alert"/></svg> 你的網站不是最新版本</h3><p>你的版本：<b style="color:#f87171">${CURRENT_VERSION}</b></p><p>最新版本：<b style="color:#4ade80">${sv}</b></p><div class="vm-btns"><button class="vm-go" id="vmGoBtn">前往新版本</button><button class="vm-exit" id="vmExitBtn">退出網站</button></div></div>`;document.body.appendChild(m);document.getElementById('vmGoBtn').onclick=goNewVersion;document.getElementById('vmExitBtn').onclick=()=>{try{window.close();}catch(e){}setTimeout(()=>{location.href='about:blank';},200);}; }
 
 /* ===== v1.10.4 前往新版本：先無參數重載，網址保持不變 ===== */
 function goNewVersion(){
@@ -1232,7 +1263,7 @@ async function openNoticeFullscreen(key,customList){
     ?`<button class="btn-primary" data-action="noticeEdit" data-arg="${escAttr(current._key)}" style="margin:0">編輯</button><button class="btn-warn" data-action="noticePin" data-arg="${escAttr(current._key)}" style="margin:0">${current.pinned?'取消置頂':'置頂'}</button><button class="btn-ghost" data-action="noticeLock" data-arg="${escAttr(current._key)}" style="margin:0">${current.locked?'解鎖':'加鎖'}</button><button class="btn-danger" data-action="noticeDelete" data-arg="${escAttr(current._key)}" style="margin:0">刪除</button>`
     :`<button class="btn-ghost" data-action="closePage" style="margin:0">關閉</button>`;
   beginPage('noticeFull');
-  pageRoot.innerHTML=`<div class="fullPage" id="noticeFullscreen"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">公告</div><div class="car-progress" id="nfProgress" style="padding:0;min-width:52px;text-align:right">1 / ${list.length}</div></div><div class="fp-body" style="display:flex;flex-direction:column"><div class="car-stage" id="nfStage">${cards}</div><div class="car-nav"><button data-action="noticeCarousel" data-arg="-1">‹</button><button data-action="noticeCarousel" data-arg="1">›</button></div></div><div class="car-actions">${actions}</div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage" id="noticeFullscreen"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">公告</div><div class="car-progress" id="nfProgress" style="padding:0;min-width:52px;text-align:right">1 / ${list.length}</div></div><div class="fp-body" style="display:flex;flex-direction:column"><div class="car-stage" id="nfStage">${cards}</div><div class="car-nav"><button data-action="noticeCarousel" data-arg="-1"><svg class="ico"><use href="#i-back"/></svg></button><button data-action="noticeCarousel" data-arg="1"><svg class="ico"><use href="#i-next"/></svg></button></div></div><div class="car-actions">${actions}</div></div>`;
   const stage=document.getElementById('nfStage');
   if(stage)stage.scrollTo({left:0,behavior:'auto'});
   const target=stage&&(stage.querySelector(`[data-key="${key}"]`)||stage.querySelector('.car-card'));
@@ -1271,7 +1302,7 @@ async function openNoticeCreate(){
   const isAdmin=me.role==='superadmin'||me.role==='admin';
   window._noticeImages=[];
   beginPage('noticeCreate');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${isAdmin?'發布公告':'申請公告'}</div></div><div class="fp-body"><div class="profile-content">${isAdmin?`<div class="section-title">HTML 模式</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> 使用 HTML 編輯</label></div>`:''}<div class="section-title">內容</div><div class="form-row"><textarea id="noticeText" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:120px"></textarea></div><div class="section-title">圖片（最多 5 張）</div><div class="avatar-options" id="imgList"></div><input type="file" id="noticeImgFile" accept="image/*" multiple><label class="upload-btn" for="noticeImgFile">選擇圖片</label><div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="或貼圖片網址"></div><div class="section-title">發布時間</div><div class="form-row"><select id="noticeWhen"><option value="now">立即</option><option value="3days">3 天後</option></select></div><button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">送出</button><div class="err" id="noticeErr"></div></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">${isAdmin?'發布公告':'申請公告'}</div></div><div class="fp-body"><div class="profile-content">${isAdmin?`<div class="section-title">HTML 模式</div><div class="form-row"><label><input type="checkbox" id="useHtml" style="width:auto;margin-right:8px"> 使用 HTML 編輯</label></div>`:''}<div class="section-title">內容</div><div class="form-row"><textarea id="noticeText" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:120px"></textarea></div><div class="section-title">圖片（最多 5 張）</div><div class="avatar-options" id="imgList"></div><input type="file" id="noticeImgFile" accept="image/*" multiple><label class="upload-btn" for="noticeImgFile">選擇圖片</label><div class="form-row" style="margin-top:10px"><input type="text" id="noticeImgUrl" placeholder="或貼圖片網址"></div><div class="section-title">發布時間</div><div class="form-row"><select id="noticeWhen"><option value="now">立即</option><option value="3days">3 天後</option></select></div><button class="btn-primary" data-action="submitNotice" data-arg="${isAdmin?'admin':'student'}">送出</button><div class="err" id="noticeErr"></div></div></div></div>`;
   const renderImgs=()=>{const box=document.getElementById('imgList');box.innerHTML=window._noticeImages.map((src,i)=>`<div class="av-opt" style="position:relative;overflow:hidden"><img src="${/^https?:/.test(src)?escapeHtml(src):src}" style="width:100%;height:100%;object-fit:cover"><button style="position:absolute;top:0;right:0;background:#dc2626;color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;cursor:pointer" data-imgidx="${i}">x</button></div>`).join('');box.querySelectorAll('button[data-imgidx]').forEach(b=>{b.onclick=e=>{e.stopPropagation();window._noticeImages.splice(+b.dataset.imgidx,1);renderImgs();};});};
   document.getElementById('noticeImgFile').addEventListener('change',async e=>{const files=Array.from(e.target.files).slice(0,5-window._noticeImages.length);for(const f of files){if(f.size>5*1024*1024)continue;try{const d=await compressImage(f,800,800,0.75);window._noticeImages.push(d);}catch(err){}}renderImgs();e.target.value='';});
   document.getElementById('noticeImgUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const url=e.target.value.trim();if(!url)return;if(window._noticeImages.length>=5)return;window._noticeImages.push(url);e.target.value='';renderImgs();}});
@@ -1674,7 +1705,7 @@ function renderEncryptedBody(m){
   const revealed=encState['_all_'+m.id];
   const shown=revealed?chars.map(c=>escapeHtml(c)).join(''):chars.map((c,i)=>i===idx?escapeHtml(c):'X').join('');
   const pct=total>1?Math.round((idx/(total-1))*100):100;
-  return `<div class="enc-msg"><div class="enc-display">${shown}</div><div class="enc-bar"><div style="width:${pct}%"></div></div><div class="enc-controls"><button data-action="encPrev" data-arg="${escAttr(m.id)}" ${(!revealed&&idx===0)||revealed?'disabled':''}>← 上一字</button><span class="enc-progress">${revealed?'全部':(idx+1)+' / '+total}</span><button data-action="encNext" data-arg="${escAttr(m.id)}" ${(!revealed&&idx>=total-1)||revealed?'disabled':''}>下一字 →</button><button data-action="encToggleAll" data-arg="${escAttr(m.id)}">${revealed?'遮罩':'看全部'}</button></div></div>`;
+  return `<div class="enc-msg"><div class="enc-display">${shown}</div><div class="enc-bar"><div style="width:${pct}%"></div></div><div class="enc-controls"><button data-action="encPrev" data-arg="${escAttr(m.id)}" ${(!revealed&&idx===0)||revealed?'disabled':''}><svg class="ico"><use href="#i-back"/></svg> 上一字</button><span class="enc-progress">${revealed?'全部':(idx+1)+' / '+total}</span><button data-action="encNext" data-arg="${escAttr(m.id)}" ${(!revealed&&idx>=total-1)||revealed?'disabled':''}>下一字 <svg class="ico"><use href="#i-next"/></svg></button><button data-action="encToggleAll" data-arg="${escAttr(m.id)}">${revealed?'遮罩':'看全部'}</button></div></div>`;
 }
 function encPrev(msgId){ const m=messages.find(x=>x.id===msgId);if(!m)return;if(!encState[msgId])encState[msgId]=0;encState['_all_'+msgId]=false;if(encState[msgId]>0){encState[msgId]--;render();} }
 function encNext(msgId){ const m=messages.find(x=>x.id===msgId);if(!m)return;const total=Array.from(m.text||'').length;if(!encState[msgId])encState[msgId]=0;encState['_all_'+msgId]=false;if(encState[msgId]<total-1){encState[msgId]++;render();} }
@@ -1839,7 +1870,7 @@ function openLocationFullscreen(arg){
   div.id='locationFull';
   div.classList.add('anim-in-page');
   div.style.cssText='position:fixed;inset:0;background:#000;z-index:999;display:flex;flex-direction:column';
-  div.innerHTML=`<div style="padding:12px;background:#1e293b;color:#fff;display:flex;align-items:center;gap:10px"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0">←</button><div style="flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lat)}, ${escapeHtml(lng)}</div><a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}" target="_blank" rel="noopener" style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:7px 12px;border-radius:8px;font-size:12.5px;flex-shrink:0">開大地圖</a></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0" loading="lazy"></iframe>`;
+  div.innerHTML=`<div style="padding:12px;background:#1e293b;color:#fff;display:flex;align-items:center;gap:10px"><button data-action="closeLocationFull" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0"><svg class="ico"><use href="#i-back"/></svg></button><div style="flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lat)}, ${escapeHtml(lng)}</div><a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}" target="_blank" rel="noopener" style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:7px 12px;border-radius:8px;font-size:12.5px;flex-shrink:0">開大地圖</a></div><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.01},${+lat-0.01},${+lng+0.01},${+lat+0.01}&layer=mapnik&marker=${lat},${lng}" style="flex:1;border:0" loading="lazy"></iframe>`;
   document.body.appendChild(div);
 }
 function closeLocationFull(){ const el=document.getElementById('locationFull');if(el)animOut(el,'anim-out-page',260); }
@@ -1875,7 +1906,7 @@ function renderPollCreatePage(){
   const d=window._pollDraft;if(!d)return;
   const isMulti=d.mode==='multi';
   const optRows=d.options.map((o,i)=>`<div class="form-row" style="display:flex;gap:8px;align-items:center"><input type="text" id="pollOpt_${i}" maxlength="50" value="${escapeHtml(o)}" placeholder="選項 ${i+1}" style="flex:1"><button style="background:#dc2626;color:#fff;border:none;border-radius:10px;width:40px;height:40px;cursor:pointer;flex-shrink:0" data-poll-remove="${i}">x</button></div>`).join('');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">建立投票</div></div><div class="fp-body"><div class="profile-content"><div class="section-title">投票名稱</div><div class="form-row"><input type="text" id="pollName" maxlength="50" value="${escapeHtml(d.name)}" placeholder="投票名稱"></div><div class="section-title">選項輸入方式</div><div class="ban-type-buttons"><button class="ban-type-btn ${d.optMode==='one'?'selected light':''}" data-poll-optmode="one">逐個輸入</button><button class="ban-type-btn ${d.optMode==='multi'?'selected light':''}" data-poll-optmode="multi">多行輸入</button></div><div class="section-title">選項</div>${d.optMode==='one'?`<div>${optRows}</div><button class="btn-ghost" id="pollAddBtn">+ 新增選項</button>`:`<div class="form-row"><textarea id="pollBulk" style="min-height:120px" placeholder="每行一個選項">${escapeHtml(d.options.join('\n'))}</textarea></div>`}<div class="section-title">模式</div><div class="ban-type-buttons"><button class="ban-type-btn ${d.mode==='single'?'selected light':''}" data-poll-mode="single">單選</button><button class="ban-type-btn ${d.mode==='multi'?'selected light':''}" data-poll-mode="multi">多選</button></div>${isMulti?`<div class="section-title">多選上限（留空為無限）</div><div class="form-row"><input type="text" id="pollMax" value="${escapeHtml(d.max)}" placeholder="無限"></div>`:''}<div class="section-title">截止時間（小時後）</div><div class="form-row"><input type="number" id="pollDuration" min="1" value="${escapeHtml(d.duration)}"></div><button class="btn-primary" data-action="submitPoll">建立投票</button><div class="err" id="pollErr"></div></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">建立投票</div></div><div class="fp-body"><div class="profile-content"><div class="section-title">投票名稱</div><div class="form-row"><input type="text" id="pollName" maxlength="50" value="${escapeHtml(d.name)}" placeholder="投票名稱"></div><div class="section-title">選項輸入方式</div><div class="ban-type-buttons"><button class="ban-type-btn ${d.optMode==='one'?'selected light':''}" data-poll-optmode="one">逐個輸入</button><button class="ban-type-btn ${d.optMode==='multi'?'selected light':''}" data-poll-optmode="multi">多行輸入</button></div><div class="section-title">選項</div>${d.optMode==='one'?`<div>${optRows}</div><button class="btn-ghost" id="pollAddBtn">+ 新增選項</button>`:`<div class="form-row"><textarea id="pollBulk" style="min-height:120px" placeholder="每行一個選項">${escapeHtml(d.options.join('\n'))}</textarea></div>`}<div class="section-title">模式</div><div class="ban-type-buttons"><button class="ban-type-btn ${d.mode==='single'?'selected light':''}" data-poll-mode="single">單選</button><button class="ban-type-btn ${d.mode==='multi'?'selected light':''}" data-poll-mode="multi">多選</button></div>${isMulti?`<div class="section-title">多選上限（留空為無限）</div><div class="form-row"><input type="text" id="pollMax" value="${escapeHtml(d.max)}" placeholder="無限"></div>`:''}<div class="section-title">截止時間（小時後）</div><div class="form-row"><input type="number" id="pollDuration" min="1" value="${escapeHtml(d.duration)}"></div><button class="btn-primary" data-action="submitPoll">建立投票</button><div class="err" id="pollErr"></div></div></div></div>`;
   const saveDraft=()=>{
     const n=document.getElementById('pollName');if(n)d.name=n.value;
     if(d.optMode==='one'){d.options=d.options.map((_,i)=>{const el=document.getElementById('pollOpt_'+i);return el?el.value:'';});}
@@ -1935,7 +1966,7 @@ function renderPollBody(m){
   const optsHTML=options.map((o,i)=>{
     const selected=Array.isArray(myVote)?myVote.includes(i):tempSel.includes(i);
     const cls='poll-opt'+(selected?' selected':'')+(canVote?'':' disabled');
-    const sym=isMulti?'<div class="poll-square">'+(selected?'✓':'')+'</div>':'<div class="poll-circle">'+(selected?'✓':'')+'</div>';
+    const sym=isMulti?'<div class="poll-square">'+(selected?CHECK_SVG:'')+'</div>':'<div class="poll-circle">'+(selected?CHECK_SVG:'')+'</div>';
     const pct=pctArr[i];
     const bar=showResult?`<div class="poll-fill" style="width:${pct}%"></div>`:'';
     const pctTag=showResult?`<div class="poll-pct">${pct}% · ${counts[i]}</div>`:'';
@@ -2080,7 +2111,7 @@ async function closePage(){
 }
 function openPage({title,bodyHTML,heroHTML,key}){
   beginPage(key||('page:'+title));
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`;
 }
 
 async function openProfilePage(username,isSelf){
@@ -2101,7 +2132,7 @@ async function openProfilePage(username,isSelf){
     const light=lightenColor(bgColor,40);const dark=darkenColor(bgColor,20);
     beginPage('profile:'+username);
     // v1.30 恢復 3D 翻轉卡片（v1.20.1 改版時被換成平平無奇的圓頭像）
-    pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">${escapeHtml(u.displayName||u.username)} 的主頁</div></div><div class="fp-body"><div class="profile3dWrap"><div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)"><div class="glass"></div><div class="p3content"><span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span><span class="p3text" style="color:${textColor};opacity:.85">${clsTag} · ${roleLabel}</span></div><div class="p3logo"><span class="circle c1" style="background:${hexA(bgColor,.2)}"></span><span class="circle c2" style="background:${hexA(bgColor,.2)}"></span><span class="circle c3" style="background:${hexA(bgColor,.2)}"></span><span class="circle c4" style="background:${hexA(bgColor,.2)}"></span><span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avHTML}</span></div></div></div><div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">這是別人的主頁</div></div></div>`;
+    pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">${escapeHtml(u.displayName||u.username)} 的主頁</div></div><div class="fp-body"><div class="profile3dWrap"><div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)"><div class="glass"></div><div class="p3content"><span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span><span class="p3text" style="color:${textColor};opacity:.85">${clsTag} · ${roleLabel}</span></div><div class="p3logo"><span class="circle c1" style="background:${hexA(bgColor,.2)}"></span><span class="circle c2" style="background:${hexA(bgColor,.2)}"></span><span class="circle c3" style="background:${hexA(bgColor,.2)}"></span><span class="circle c4" style="background:${hexA(bgColor,.2)}"></span><span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avHTML}</span></div></div></div><div class="profile-content" style="text-align:center;color:var(--text-sub);font-size:13px;padding-top:30px">這是別人的主頁</div></div></div>`;
   }
 }
 function pickTextColor(hex){ const h=String(hex).replace('#','');if(h.length!==6)return '#fff';const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);const lum=(0.299*r+0.587*g+0.114*b)/255;return lum>0.6?'#111':'#fff'; }
@@ -2297,7 +2328,7 @@ async function renderUsageTab(body){
   html+=`<div class="section-title">額度</div>`;
   html+=usageCard('儲存用量（整個資料庫）',
     `${fmtBytes(scan.total)} <span style="font-size:14px;color:var(--text-muted);font-weight:600">/ 1 GB</span>`,
-    `免費方案上限 1 GB${scan.failed.length?'　　⚠ 讀取失敗：'+scan.failed.join('、'):''}`,
+    `免費方案上限 1 GB${scan.failed.length?'　　<svg class="ico"><use href="#i-alert"/></svg> 讀取失敗：'+scan.failed.join('、'):''}`,
     storePct,
     `共 ${Object.keys(scan.sizes).length} 個節點`);
 
@@ -2544,7 +2575,7 @@ function openAdminPage(tab){
   const isSuper=me.role==='superadmin';
   const accountTab=isSuper?`<button class="tab ${tab==='accounts'?'active':''}" data-action="switchAdminTab" data-arg="accounts">帳號管理</button>`:'';
   beginPage('admin');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:#a78bfa">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button></div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
 async function renderAdminTab(tab){
@@ -2786,7 +2817,7 @@ async function openGroupList(){
   if(keys.length===0){bodyHTML=sysItem+`<div class="empty">還沒有其他群聊，點右上角「+ 建立群聊」</div>`;}
   else{bodyHTML=sysItem+keys.map(key=>{const g=myGroups[key];const memberCount=Object.keys(g.members||{}).length;const lastMsg=g.lastMsg||'（還沒有訊息）';return `<div class="group-item" data-action="openGroupChat" data-arg="${escAttr(key)}"><div class="gi-avatar">群</div><div class="gi-info"><div class="gi-name">${escapeHtml(key)}</div><div class="gi-sub">${memberCount} 人 · ${escapeHtml(String(lastMsg).slice(0,20))}</div></div></div>`;}).join('');}
   beginPage('groupList');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">我的群聊</div><button class="btn-primary" style="width:auto;padding:8px 14px;margin:0" data-action="openCreateGroup">+ 建立群聊</button></div><div class="fp-body">${bodyHTML}</div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">我的群聊</div><button class="btn-primary" style="width:auto;padding:8px 14px;margin:0" data-action="openCreateGroup">+ 建立群聊</button></div><div class="fp-body">${bodyHTML}</div></div>`;
 }
 async function openSystemNotice(){
   if(!me)return;
@@ -2803,7 +2834,7 @@ async function openSystemNotice(){
     }).join('');
   }
   beginPage('systemNotice');
-  pageRoot.innerHTML=`<div class="fullPage" id="systemNoticeOverlay"><div class="sn-header"><button class="sn-back" data-action="closePage">←</button><div class="sn-title">${SYS_NOTICE_ICON} ${SYS_NOTICE_NAME}</div></div><div class="sn-body">${bodyHTML}</div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage" id="systemNoticeOverlay"><div class="sn-header"><button class="sn-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="sn-title">${SYS_NOTICE_ICON} ${SYS_NOTICE_NAME}</div></div><div class="sn-body">${bodyHTML}</div></div>`;
 }
 async function adminSendSystemNotice(){ if(me.role!=='superadmin'&&me.role!=='admin')return; const target=prompt('發送給（all 或 username）：'); if(!target)return; const title=prompt('標題：'); if(!title)return; const body=prompt('內容：'); if(!body)return; const targets=target==='all'?Object.keys(allUsers).filter(u=>u!==AI_NAME):[target]; for(const t of targets){ await pushSystemNotice(t,{type:'admin_system',title,body,createdAt:Date.now(),read:false}); } showNotif('已發送'); }
 async function adminDeleteSystemNotice(key){ await remove(ref(db,'systemNotices/'+me.username+'/'+key)); showNotif('已刪除'); openSystemNotice(); }
@@ -2823,10 +2854,10 @@ function renderCreateGroupPage(){
       const sel=_groupDraft.selected[u.username];
       const av=avatarHTML(u);
       const color=safeColor((u.role==='superadmin'||u.role==='admin')?'#8b5cf6':u.color,'#3b82f6');
-      return `<div class="member-pick-item ${sel?'selected':''}" data-action="toggleMemberPick" data-arg="${escAttr(u.username)}"><div class="mp-avatar" style="background:${color}">${av}</div><div class="mp-info"><div class="mp-name">${escapeHtml(u.displayName||u.username)}</div><div class="mp-sub">${escapeHtml(u.class||'')} #${escapeHtml(u.seat||'')} · ${escapeHtml(u.username)}</div></div><div class="mp-check">${sel?'✓':''}</div></div>`;
+      return `<div class="member-pick-item ${sel?'selected':''}" data-action="toggleMemberPick" data-arg="${escAttr(u.username)}"><div class="mp-avatar" style="background:${color}">${av}</div><div class="mp-info"><div class="mp-name">${escapeHtml(u.displayName||u.username)}</div><div class="mp-sub">${escapeHtml(u.class||'')} #${escapeHtml(u.seat||'')} · ${escapeHtml(u.username)}</div></div><div class="mp-check">${sel?CHECK_SVG:''}</div></div>`;
     }).join('');
   });
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage">←</button><div class="fp-title">建立群聊</div></div><div class="fp-body" style="padding:0"><div style="padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border)"><input type="text" id="groupNameInput" placeholder="輸入群聊名稱（最多 50 字）" maxlength="50" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit"><div class="err" id="groupErr"></div><div style="margin-top:10px;font-size:12px;color:var(--text-sub)">選擇成員（已選 ${Object.keys(_groupDraft.selected).length} 人）</div><input type="text" id="memberSearchInput" placeholder="搜索成員..." style="width:100%;margin-top:8px;padding:9px 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:inherit"></div>${listHTML}<div style="height:80px"></div></div><div style="padding:10px 12px;background:var(--bg-card);border-top:1px solid var(--border)"><button class="btn-primary" style="margin:0;width:100%" data-action="submitCreateGroup">建立群聊</button></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">建立群聊</div></div><div class="fp-body" style="padding:0"><div style="padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border)"><input type="text" id="groupNameInput" placeholder="輸入群聊名稱（最多 50 字）" maxlength="50" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;outline:none;font-family:inherit"><div class="err" id="groupErr"></div><div style="margin-top:10px;font-size:12px;color:var(--text-sub)">選擇成員（已選 ${Object.keys(_groupDraft.selected).length} 人）</div><input type="text" id="memberSearchInput" placeholder="搜索成員..." style="width:100%;margin-top:8px;padding:9px 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:13px;outline:none;font-family:inherit"></div>${listHTML}<div style="height:80px"></div></div><div style="padding:10px 12px;background:var(--bg-card);border-top:1px solid var(--border)"><button class="btn-primary" style="margin:0;width:100%" data-action="submitCreateGroup">建立群聊</button></div></div>`;
   document.getElementById('memberSearchInput').value=_groupDraft.search;
   document.getElementById('memberSearchInput').addEventListener('input',e=>{_groupDraft.search=e.target.value;const n=document.getElementById('groupNameInput').value;renderCreateGroupPage();document.getElementById('groupNameInput').value=n;});
 }
@@ -2889,7 +2920,7 @@ function renderGroupChat(groupKey,g){
     const div=document.createElement('div');
     div.id='privateChatScreen';
     div.classList.add('anim-in-page');
-    div.innerHTML=`<div class="pc-header"><button class="pc-back" data-action="closePage">←</button><div style="flex:1;min-width:0"><div class="pc-title">${escapeHtml(groupKey)}</div><div class="pc-info">${memberCount} 人</div></div><button class="hbtn" data-action="leaveGroup" data-arg="${escAttr(groupKey)}">退出</button></div><div class="pc-body" id="pcBody">${msgsHTML}</div><div class="pc-input-bar"><input type="text" id="pcInput" placeholder="輸入訊息..." maxlength="5000"><button data-action="submitGroupMessage">送出</button></div>`;
+    div.innerHTML=`<div class="pc-header"><button class="pc-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div style="flex:1;min-width:0"><div class="pc-title">${escapeHtml(groupKey)}</div><div class="pc-info">${memberCount} 人</div></div><button class="hbtn" data-action="leaveGroup" data-arg="${escAttr(groupKey)}">退出</button></div><div class="pc-body" id="pcBody">${msgsHTML}</div><div class="pc-input-bar"><input type="text" id="pcInput" placeholder="輸入訊息..." maxlength="5000"><button data-action="submitGroupMessage">送出</button></div>`;
     document.body.appendChild(div);
     const inp=document.getElementById('pcInput');
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitGroupMessage();}});
@@ -2959,7 +2990,7 @@ function renderAIPrivate(){
     const div=document.createElement('div');
     div.id='privateChatScreen';
     div.classList.add('anim-in-page');
-    div.innerHTML=`<div class="pc-header"><button class="pc-back" data-action="closePage">←</button><div style="flex:1;min-width:0"><div class="pc-title">AI 私人聊天</div><div class="pc-info">只有你看到</div></div></div><div class="pc-body" id="pcBody">${msgsHTML}</div><div class="pc-input-bar"><input type="text" id="pcInput" placeholder="跟小喆AI聊天..." maxlength="5000"><button data-action="submitAIPrivateMessage">送出</button></div>`;
+    div.innerHTML=`<div class="pc-header"><button class="pc-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div style="flex:1;min-width:0"><div class="pc-title">AI 私人聊天</div><div class="pc-info">只有你看到</div></div></div><div class="pc-body" id="pcBody">${msgsHTML}</div><div class="pc-input-bar"><input type="text" id="pcInput" placeholder="跟小喆AI聊天..." maxlength="5000"><button data-action="submitAIPrivateMessage">送出</button></div>`;
     document.body.appendChild(div);
     const inp=document.getElementById('pcInput');
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitAIPrivateMessage();}});
@@ -3221,7 +3252,7 @@ async function openTrailMap(){
   const div=document.createElement('div');
   div.id='trailMapScreen';
   div.classList.add('anim-in-page');
-  div.innerHTML=`<div class="tm-header"><button class="tm-back" data-action="closeTrailMap">←</button><div class="tm-title">痕跡地圖</div><span id="tmCount" style="font-size:11.5px;color:var(--text-sub);flex-shrink:0"></span></div><div class="tm-body"><canvas id="tmTiles"></canvas><canvas id="tmFog"></canvas><canvas id="tmLine"></canvas><div class="tm-empty" id="tmEmpty" style="display:none"><b>還沒有痕跡</b><span>在安卓版 App 打開「痕跡地圖」開始記錄，走過的路就會出現在這裡</span></div><div class="tm-info" id="tmInfo">載入中…</div><div class="tm-actions"><button class="tm-btn" id="tmZoomIn">＋</button><button class="tm-btn" id="tmZoomOut">－</button><button class="tm-btn on" id="tmFogBtn" title="切換霧">霧</button><button class="tm-btn" id="tmFit" title="看全部">⤢</button></div></div>`;
+  div.innerHTML=`<div class="tm-header"><button class="tm-back" data-action="closeTrailMap"><svg class="ico"><use href="#i-back"/></svg></button><div class="tm-title">痕跡地圖</div><span id="tmCount" style="font-size:11.5px;color:var(--text-sub);flex-shrink:0"></span></div><div class="tm-body"><canvas id="tmTiles"></canvas><canvas id="tmFog"></canvas><canvas id="tmLine"></canvas><div class="tm-empty" id="tmEmpty" style="display:none"><b>還沒有痕跡</b><span>在安卓版 App 打開「痕跡地圖」開始記錄，走過的路就會出現在這裡</span></div><div class="tm-info" id="tmInfo">載入中…</div><div class="tm-actions"><button class="tm-btn" id="tmZoomIn">＋</button><button class="tm-btn" id="tmZoomOut">－</button><button class="tm-btn on" id="tmFogBtn" title="切換霧">霧</button><button class="tm-btn" id="tmFit" title="看全部">⤢</button></div></div>`;
   document.body.appendChild(div);
 
   tmState={points:[],centerLat:22.3193,centerLon:114.1694,zoom:12,fog:true,w:0,h:0,dpr:1};
@@ -3274,6 +3305,7 @@ function closeTrailMap(){
 
 /* ===== 版本 ===== */
 const VERSION_HISTORY=[
+{ver:'v1.35',date:'2026-10-14',changes:['圖標現代化：UI 上的 emoji 全部換成內嵌 SVG 線性圖標（24×24、2px 描邊、顏色跟著文字）','換掉的位置：側欄四顆（個人主頁／群聊／AI 聊天／管理員）、系統通知、全部返回鈕、公告輪播、加字遊戲上下一字','警告與已選勾選也換了；天氣由 9 款 emoji 改成 9 款線性圖標（颱風暴雨那類不會再每台手機長得不一樣）','小遊戲清單的井字棋／五子棋縮圖、井字棋提示、你畫我猜的作弊警告也一併換成圖標','圖標用 <symbol> + <use> 內嵌在頁面裡，不連 CDN、不裝字體，離線也能顯示；顏色用 currentColor，金色標題與紅色警示自動跟著變','頭像選項、訊息內容、棋盤上的棋子與註解文字裡的箭頭維持原樣（那些不是 UI 圖標）']},
 {ver:'v1.34',date:'2026-10-13',changes:['飛行棋整個重做成 15×15 標準版型（照參考站 game.hullqin.cn/fxq 的版面）：','- 52 格環繞十字跑道；四角各一個 3×3 機場（左上綠／右上紅／右下黃／左下藍），各 4 個停機位','- 四條 5 格航道（上紅往下／下藍往上／左綠往右／右黃往左）＋灰色雪佛龍指引＋白圈','- 第 52～56 步走航道，第 57 步＝進入中央屬於自己的那塊三角（完成）','- 中央改成四色三角（上紅／右黃／下藍／左綠），深藍底 #0a1d42，棋子改成飛機圖示','- 修好舊版「基地框畫到畫布外被裁掉」的老問題（以前看起來不像機場）','飛行棋規則一行沒改（仍是 52 步繞環＋6 步入終點、擲 6 起飛、踩子回基地、4 架全到獲勝）']},
 {ver:'v1.33',date:'2026-10-13',changes:['按桌遊棋盤規範整修有棋盤的幾款（有介面的社交類不變）：','康樂棋改成圓形跑道：52 格平均繞圓周、正上方第 1 格、金色外框，中間有康樂棋字樣（以前是方格盤）','五子棋與中國象棋的棋盤改用規範木色 #d29a55 與線色 #4d2d18，外框 12px 木框；中國象棋補上楚河漢界','修好一個看得出來但不容易發現的畫質問題：canvas 的 1px 格線畫在整數座標會跨在兩個像素之間，每條線被平均成 50% 混色（灰灰糊糊）；偏移 0.5px 讓線落在像素中心，格線現在是清晰的','國際象棋棋盤改成規範配色（淺格 #d8b27a／深格 #704d32）','大富翁中央改成規範的環形色帶（conic 環）＋金色外框','鬥獸棋的河（藍）、獸穴（紅實線）、陷阱（紅虛線）現在看得見了','飛行棋畫布改成木色系，環格加金邊，跟其他棋盤一致']},
 {ver:'v1.32',date:'2026-10-13',changes:['小遊戲外觀全部統一（14 款）：深藍漸層面板 + 金色標題描邊 + 木色棋盤，跟之前那套 UI 同一個語言；棋盤類（井字棋、五子棋、中國象棋、國際象棋、圍棋、飛行棋、康樂棋、大富翁、鬥獸棋）與圓桌／牌桌類（狼人殺、誰是臥底、傳炸彈、劇本殺、UNO、你畫我猜）現在看起來是同一套東西，不再是每款各寫一種長相','棋盤統一成木色（含格線與邊框），棋子固定黑／白；玩家顏色的棋子與頭像則自動補對比描邊','安卓版 1.8.2：房間標題與「輪到你」提示改成同一套金色，跟網頁一致']},
@@ -3345,19 +3377,19 @@ const WEATHER_TTL=10*60*1000;   // 天文台每 10 分鐘更新一次，照著�
 let _wxCache={at:0,data:null};
 let _wxTimer=null;
 
-/** 天文台 icon 代號 → emoji。代號是分段的，用區間對應就好。 */
+/** 天文台 icon 代號 → 圖標代號。代號是分段的，用區間對應就好。 */
 function wxIcon(code){
   const c=Number(code);
-  if(!c)return'🌡️';
-  if(c<=54)return'☀️';
-  if(c<=59)return'🌤️';
-  if(c<=64)return'🌦️';
-  if(c<=69)return'☁️';
-  if(c<=74)return'🌧️';
-  if(c<=79)return'🌫️';
-  if(c<=85)return'💨';
-  if(c<=99)return'⛈️';
-  return'🌤️';
+  if(!c)return'i-wx-thermo';
+  if(c<=54)return'i-wx-sun';
+  if(c<=59)return'i-wx-cloud-sun';
+  if(c<=64)return'i-wx-drizzle';
+  if(c<=69)return'i-wx-cloud';
+  if(c<=74)return'i-wx-rain';
+  if(c<=79)return'i-wx-fog';
+  if(c<=85)return'i-wx-wind';
+  if(c<=99)return'i-wx-storm';
+  return'i-wx-cloud-sun';
 }
 /** 從整包讀數挑一個代表值。優先香港天文台總部，沒有就取第一個測站。 */
 function wxPick(data){
@@ -3377,9 +3409,9 @@ function wxPick(data){
   return {temp:pick.value,place:pick.place,unit:pick.unit||'C',icon:iconArr[0]||null,hum:hum?hum.value:null,warn,upd};
 }
 function wxHTML(w){
-  let s=`<span class="wc-ico">${wxIcon(w.icon)}</span><span class="wc-temp">${w.temp}°${w.unit}</span>`;
+  let s=`<span class="wc-ico"><svg class="ico"><use href="#${wxIcon(w.icon)}"/></svg></span><span class="wc-temp">${w.temp}°${w.unit}</span>`;
   if(w.hum!=null)s+=`<span>${w.hum}%</span>`;
-  if(w.warn.length)s+=`<span class="wc-warn">⚠</span>`;
+  if(w.warn.length)s+=`<span class="wc-warn"><svg class="ico"><use href="#i-alert"/></svg></span>`;
   return s;
 }
 function wxTitle(w){
