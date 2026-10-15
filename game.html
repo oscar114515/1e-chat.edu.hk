@@ -6,6 +6,7 @@
 <title>小遊戲 · 班級聊天室</title>
 <style>
 :root{
+  --r-0:4px;--r-1:8px;--r-2:12px;--r-3:16px;--dur-1:120ms;--dur-2:200ms;--dur-3:280ms;--dur-4:480ms;--ease-out:cubic-bezier(.22,1,.36,1);--ease-inout:cubic-bezier(.4,0,.2,1);--warn-tx:#fca5a5;--ok-tx:#4ade80;--danger:#f87171;--pink-tx:#f472b6;--purple-tx:#a78bfa;--orange-tx:#fdba74;--white-warm:#fff9ec;
   --bg:#0b0d14;--bg-card:#151926;--bg-input:#1c2130;--border:#262c3d;--border-strong:#333b52;
   --text-main:#f2f4f9;--text-sub:#9aa2ba;--accent:#38bdf8;--accent2:#8b5cf6;--gold:#fbbf24;
   --red:#ef4444;--green:#22c55e;--blue:#3b82f6;--yellow:#eab308;
@@ -17,62 +18,62 @@ body{background:var(--bg);color:var(--text-main);font-family:-apple-system,Blink
 .hidden{display:none!important}
 .topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,13,20,.92);backdrop-filter:blur(12px);z-index:20}
 .topbar h1{font-size:17px;margin:0;font-weight:700;flex:1}
-.back-btn{background:var(--bg-card);border:1px solid var(--border-strong);color:var(--text-main);width:36px;height:36px;border-radius:11px;font-size:17px;cursor:pointer}
+.back-btn{background:var(--bg-card);border:1px solid var(--border-strong);color:var(--text-main);width:36px;height:36px;border-radius:var(--r-2);font-size:17px;cursor:pointer}
 .back-btn:active{transform:scale(.94)}
 .wrap{padding:16px;flex:1;overflow-y:auto}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.gcard{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;transition:transform .15s,border-color .15s;position:relative;overflow:hidden}
+.gcard{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-3);padding:14px;cursor:pointer;transition:transform var(--dur-1),border-color var(--dur-1);position:relative;overflow:hidden}
 .gcard:active{transform:scale(.97)}
 .gcard.on{border-color:var(--accent)}
 .gcard.off{opacity:.5}
 .gcard .gname{font-size:16px;font-weight:700;margin-bottom:4px}
 .gcard .gmeta{font-size:12px;color:var(--text-sub)}
-.gcard .gtag{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 7px;border-radius:7px;background:rgba(56,189,248,.18);color:var(--accent)}
+.gcard .gtag{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 7px;border-radius:var(--r-1);background:rgba(56,189,248,.18);color:var(--accent)}
 .gcard .gtag.soon{background:rgba(154,162,186,.15);color:var(--text-sub)}
-.gicon{width:40px;height:40px;border-radius:12px;margin-bottom:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#0b0d14}
+.gicon{width:40px;height:40px;border-radius:var(--r-2);margin-bottom:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#0b0d14}
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;z-index:60}
-.sheet .inner{background:var(--bg-card);width:100%;border-radius:20px 20px 0 0;padding:18px;max-height:88vh;overflow-y:auto;animation:up .25s cubic-bezier(.4,0,.2,1)}
+.sheet .inner{background:var(--bg-card);width:100%;border-radius:var(--r-3) var(--r-3) 0 0;padding:18px;max-height:88vh;overflow-y:auto;animation:up .25s cubic-bezier(.4,0,.2,1)}
 @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .sheet h3{margin:0 0 6px;font-size:17px}
 .sheet .desc{font-size:13px;color:var(--text-sub);margin-bottom:14px}
 .row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid var(--border)}
 .row .lbl{font-size:14px}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
-.seg button{background:var(--bg-input);border:1px solid var(--border-strong);color:var(--text-main);border-radius:10px;padding:7px 12px;font-size:14px;cursor:pointer;min-width:40px}
+.seg button{background:var(--bg-input);border:1px solid var(--border-strong);color:var(--text-main);border-radius:var(--r-1);padding:7px 12px;font-size:14px;cursor:pointer;min-width:40px}
 .seg button.sel{background:var(--accent);border-color:var(--accent);color:#0b0d14;font-weight:700}
-.btn{display:block;width:100%;border:none;border-radius:13px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;background:var(--accent);color:#0b0d14}
+.btn{display:block;width:100%;border:none;border-radius:var(--r-2);padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;background:var(--accent);color:#0b0d14}
 .btn.ghost{background:var(--bg-input);color:var(--text-main);border:1px solid var(--border-strong)}
 .btn.danger{background:var(--red);color:#fff}
 .btn:active{transform:scale(.98)}
 .btn[disabled]{opacity:.45;pointer-events:none}
 .plist{display:flex;flex-direction:column;gap:9px;margin:10px 0}
-.pitem{display:flex;align-items:center;gap:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:13px;padding:10px 12px}
+.pitem{display:flex;align-items:center;gap:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2);padding:10px 12px}
 .pav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden}
 .pav img{width:100%;height:100%;object-fit:cover}
 .pname{flex:1;font-size:14px}
-.pbadge{font-size:11px;color:var(--text-sub);border:1px solid var(--border-strong);border-radius:8px;padding:2px 7px}
+.pbadge{font-size:11px;color:var(--text-sub);border:1px solid var(--border-strong);border-radius:var(--r-1);padding:2px 7px}
 .countdown{text-align:center;font-size:44px;font-weight:800;color:var(--gold);margin:16px 0 4px;font-variant-numeric:tabular-nums}
 .hint{text-align:center;font-size:13px;color:var(--text-sub);margin-bottom:10px}
 .board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
-canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{background:#0f1320;border-radius:var(--r-2);border:1px solid var(--border);touch-action:none;-webkit-user-select:none;user-select:none}
 .side{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-.turnbar{text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border)}
+.turnbar{text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:var(--r-2);background:var(--bg-card);border:1px solid var(--border)}
 .turnbar.mine{background:rgba(56,189,248,.14);border-color:var(--accent);color:var(--accent)}
 
 /* 傳炸彈 */
 .inputrow{display:flex;gap:9px;margin:12px 0 6px}
-.inputrow input{flex:1;min-width:0;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:12px;color:var(--text-main);font-size:16px;padding:11px 13px;font-family:inherit;touch-action:manipulation}
+.inputrow input{flex:1;min-width:0;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:var(--r-2);color:var(--text-main);font-size:16px;padding:11px 13px;font-family:inherit;touch-action:manipulation}
 .inputrow input:focus{outline:none;border-color:var(--accent)}
 .inputrow .btn{width:auto;flex:none;padding:0 20px;margin:0}
 .bombcat{text-align:center;font-size:34px;font-weight:800;color:var(--gold);margin:6px 0 10px;word-break:break-all;letter-spacing:1px}
-.bombgauge{height:12px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-strong);overflow:hidden;margin:0 0 6px}
-.bombbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .12s linear}
+.bombgauge{height:12px;border-radius:var(--r-1);background:var(--bg-input);border:1px solid var(--border-strong);overflow:hidden;margin:0 0 6px}
+.bombbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));transition:width var(--dur-1) linear}
 .bombgauge.danger .bombbar{background:linear-gradient(90deg,#f97316,var(--red))}
 .bombgauge.danger{animation:bombPulse .5s infinite alternate}
 @keyframes bombPulse{from{box-shadow:0 0 0 rgba(239,68,68,0)}to{box-shadow:0 0 14px rgba(239,68,68,.55)}}
 
 /* 劇本殺 */
-.smcase,.smcard{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin:10px 0}
+.smcase,.smcard{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2);padding:13px 14px;margin:10px 0}
 .smcard{border-color:var(--accent)}
 .smtag{font-size:11px;letter-spacing:2px;color:var(--text-sub)}
 .smname{font-size:19px;font-weight:800;margin:3px 0 6px}
@@ -82,7 +83,7 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 
 /* 康樂棋 */
 .klboard{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0}
-.klcell{position:relative;aspect-ratio:1;border-radius:10px;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.klcell{position:relative;aspect-ratio:1;border-radius:var(--r-1);background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .klcell .klnum{position:absolute;top:2px;left:5px;font-size:10px;color:var(--text-sub);opacity:.8}
 .klnum{font-variant-numeric:tabular-nums}
 .klcell .klsp{font-size:11px;font-weight:800;color:var(--text-main)}
@@ -97,20 +98,20 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 
 /* 鬥獸棋 */
 .dsboard{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:10px auto;max-width:420px;aspect-ratio:7/9}
-.dscell{position:relative;border-radius:7px;background:#171b28;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dscell{position:relative;border-radius:var(--r-1);background:#171b28;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .dscell.dswater{background:rgba(37,99,235,.28);border-color:rgba(59,130,246,.5)}
 .dscell.dsden0{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.75)}
 .dscell.dsden1{background:rgba(244,63,94,.2);border-color:rgba(244,63,94,.75)}
 .dscell.dstrap0{background:rgba(56,189,248,.34);border-color:rgba(56,189,248,.9)}
 .dscell.dstrap1{background:rgba(244,63,94,.34);border-color:rgba(244,63,94,.9)}
 .dscell.dssel{outline:3px solid var(--gold);outline-offset:-3px}
-.dscell.dsmove::after{content:'';position:absolute;inset:0;border:2px dashed var(--gold);border-radius:7px;opacity:.85}
+.dscell.dsmove::after{content:'';position:absolute;inset:0;border:2px dashed var(--gold);border-radius:var(--r-1);opacity:.85}
 .dsg{width:80%;height:80%;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:#0f1320}
 
 /* 中國象棋 */
 .xqboard{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;margin:10px auto;max-width:420px;aspect-ratio:9/10;
-  background:#1b2233;border:1px solid var(--border-strong);border-radius:10px;padding:3px}
-.xqcell{position:relative;display:flex;align-items:center;justify-content:center;border-radius:5px;background:rgba(255,255,255,.03);cursor:pointer}
+  background:#1b2233;border:1px solid var(--border-strong);border-radius:var(--r-1);padding:3px}
+.xqcell{position:relative;display:flex;align-items:center;justify-content:center;border-radius:var(--r-0);background:rgba(255,255,255,.03);cursor:pointer}
 .xqcell.xqsel{background:rgba(251,191,36,.20);outline:2px solid var(--gold);outline-offset:-2px}
 .xqcell.xqmove::after{content:'';position:absolute;inset:14%;border:2px dashed var(--gold);border-radius:50%;opacity:.8}
 .xqg{width:86%;height:86%;border-radius:50%;border:1.5px solid;display:flex;align-items:center;justify-content:center;
@@ -118,20 +119,20 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 
 /* 誰是臥底：聊天式的描述紀錄 */
 .ucfeed{display:flex;flex-direction:column;gap:9px;max-height:38vh;min-height:110px;overflow-y:auto;
-  background:var(--bg-card);border:1px solid var(--border);border-radius:13px;padding:11px;margin:10px 0;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2);padding:11px;margin:10px 0;
   overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .ucmsg{display:flex;gap:9px;align-items:flex-start}
 .ucmsg .pav{width:30px;height:30px;flex:none;font-size:11px}
 .ucbody{flex:1;min-width:0}
 .ucmeta{font-size:10.5px;color:var(--text-sub);margin-bottom:2px}
 .uctext{font-size:13.5px;line-height:1.45;word-break:break-word;background:var(--bg-input);
-  border:1px solid var(--border-strong);border-radius:10px;padding:7px 10px}
+  border:1px solid var(--border-strong);border-radius:var(--r-1);padding:7px 10px}
 
 /* 投票結果彈框 */
 .ucmodal{position:fixed;inset:0;background:rgba(5,7,12,.72);display:flex;align-items:center;justify-content:center;
   z-index:120;padding:20px;animation:ucFade .18s ease}
 @keyframes ucFade{from{opacity:0}to{opacity:1}}
-.ucmodal-card{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:18px;padding:18px 16px;
+.ucmodal-card{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-3);padding:18px 16px;
   width:100%;max-width:400px;max-height:82vh;overflow-y:auto;animation:ucPop .2s ease}
 @keyframes ucPop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
 .ucmodal-card h3{margin:0;font-size:17px;text-align:center}
@@ -139,7 +140,7 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 /* 大富翁 */
 .mpboard{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:3px;margin:10px auto;
   max-width:430px;aspect-ratio:1}
-.mpcell{position:relative;border-radius:6px;background:#171b28;border:2px solid var(--border);
+.mpcell{position:relative;border-radius:var(--r-1);background:#171b28;border:2px solid var(--border);
   display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:1px}
 .mpcell .mpnum{position:absolute;top:1px;left:3px;font-size:8px;color:var(--text-sub);opacity:.75}
 .mpcell .mpname{font-size:9px;font-weight:700;line-height:1.05;text-align:center;word-break:keep-all}
@@ -153,28 +154,28 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 .mpcell.mpjail{background:rgba(148,163,184,.16);border-color:rgba(148,163,184,.5)}
 .mpcell.mppark{background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.45)}
 .mpcell.mppending{animation:bombPulse .5s infinite alternate}
-.mpcenter{grid-row:2/8;grid-column:2/8;border-radius:12px;background:rgba(13,17,32,.72);
+.mpcenter{grid-row:2/8;grid-column:2/8;border-radius:var(--r-2);background:rgba(13,17,32,.72);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;text-align:center}
 .mpcenter .mptitle{font-size:15px;font-weight:800;letter-spacing:3px;color:var(--text-sub)}
 .mpcenter .btn{width:auto;padding:9px 18px;margin:0}
 .mpcenter .inputrow{margin:0}
-.dice{width:64px;height:64px;border-radius:14px;background:linear-gradient(145deg,#232838,#151926);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:11px;gap:3px;cursor:pointer}
+.dice{width:64px;height:64px;border-radius:var(--r-2);background:linear-gradient(145deg,#232838,#151926);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:11px;gap:3px;cursor:pointer}
 .dice:active{transform:scale(.94)}
 .dice.rolling{animation:shake .4s}
 @keyframes shake{0%,100%{transform:none}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
 .pip{border-radius:50%;background:#3a4260}
 .pip.on{background:#fff}
 .cards{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;padding:8px 0}
-.uno{width:52px;height:78px;border-radius:9px;border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.uno{width:52px;height:78px;border-radius:var(--r-1);border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.4)}
 .uno.playable{outline:3px solid var(--gold);outline-offset:2px}
 .uno.r{background:#dc2626}.uno.g{background:#16a34a}.uno.b{background:#2563eb}.uno.y{background:#ca8a04}.uno.w{background:#1f2937}
 .uno.sm{width:34px;height:52px;font-size:14px;cursor:default}
 .deck-row{display:flex;gap:12px;align-items:center;justify-content:center}
-.notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,36,.96);border:1px solid var(--border-strong);border-radius:14px;padding:18px 24px;font-size:15px;z-index:99;text-align:center;max-width:80vw;pointer-events:none}
+.notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,36,.96);border:1px solid var(--border-strong);border-radius:var(--r-2);padding:18px 24px;font-size:15px;z-index:99;text-align:center;max-width:80vw;pointer-events:none}
 .empty{text-align:center;color:var(--text-sub);padding:50px 20px;font-size:14px}
-.chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-strong);margin:2px}
+.chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:var(--r-1);background:var(--bg-input);border:1px solid var(--border-strong);margin:2px}
 .stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:9px 13px;font-size:13px}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2);padding:9px 13px;font-size:13px}
 .stat b{color:var(--accent)}
 
 /* ═══════════════ v1.32 統一外觀 ═══════════════
@@ -185,18 +186,18 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 
 /* 面板與標題 */
 .wrap{background:linear-gradient(135deg,var(--panel1),var(--panel2) 55%,var(--panel3));
-  border:1px solid rgba(226,176,74,.28);border-radius:20px;box-shadow:0 10px 34px rgba(0,0,0,.5);
+  border:1px solid rgba(226,176,74,.28);border-radius:var(--r-3);box-shadow:0 10px 34px rgba(0,0,0,.5);
   padding:16px;margin:10px 12px 18px}
 .topbar h1{color:var(--gold2);text-shadow:0 0 14px rgba(226,176,74,.45);letter-spacing:.5px}
 .turnbar{background:rgba(226,176,74,.10);border:1px solid rgba(226,176,74,.55);color:var(--gold2);
-  border-radius:14px;font-weight:800}
-.turnbar.mine{background:rgba(226,176,74,.22);border-color:var(--gold2);color:#fff8e6;
+  border-radius:var(--r-2);font-weight:800}
+.turnbar.mine{background:rgba(226,176,74,.22);border-color:var(--gold2);color:var(--white-warm);
   box-shadow:0 0 18px rgba(226,176,74,.35)}
-.hint{color:#a9b2c9}
+.hint{color:var(--text-sub)}
 .countdown{color:var(--gold2);text-shadow:0 0 16px rgba(226,176,74,.5);font-weight:900}
 
 /* 玩家卡片：統一成同一種玻璃卡 */
-.pitem{background:rgba(255,255,255,.055);border:1px solid rgba(226,176,74,.22);border-radius:14px}
+.pitem{background:rgba(255,255,255,.055);border:1px solid rgba(226,176,74,.22);border-radius:var(--r-2)}
 .pname{color:var(--text-main)}
 .pbadge{border-color:rgba(226,176,74,.45);color:var(--gold2);background:rgba(226,176,74,.08)}
 .pav{box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
@@ -204,15 +205,15 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 /* 木色棋盤容器：所有棋盤類共用 */
 .klboard,.mpboard,.dsboard,.bx,.xqboard{
   background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3));
-  border:3px solid #4e2f16;border-radius:16px;box-shadow:inset 0 0 22px rgba(0,0,0,.45),0 8px 22px rgba(0,0,0,.45);
+  border:3px solid #4e2f16;border-radius:var(--r-3);box-shadow:inset 0 0 22px rgba(0,0,0,.45),0 8px 22px rgba(0,0,0,.45);
   padding:9px}
 .klboard,.dsboard{gap:4px}
 .mpboard{gap:3px}
 
 /* 格子：透明底 + 金色描邊（讓木紋透出來） */
 .klcell,.mpcell,.xqg,.dsboard>*{background:rgba(255,255,255,.10)!important;
-  border:1px solid rgba(226,176,74,.55)!important;border-radius:9px}
-.klcell .klsp,.mpcell .mpname,.dsg,.xqg{color:#fff9ec}
+  border:1px solid rgba(226,176,74,.55)!important;border-radius:var(--r-1)}
+.klcell .klsp,.mpcell .mpname,.dsg,.xqg{color:var(--white-warm)}
 .klcell .klnum,.mpcell .mpnum,.mpcell .mpprice{color:rgba(255,255,255,.75)}
 
 /* 特殊格保留語意色，但改成半透明疊在木紋上 */
@@ -226,14 +227,14 @@ canvas{background:#0f1320;border-radius:14px;border:1px solid var(--border);touc
 .mpcell.mpjail,.mpcell.mppark{background:rgba(255,255,255,.18)!important}
 
 /* canvas 類棋盤（飛行棋／國際象棋／圍棋）：加木框與圓角 */
-canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3));border:3px solid #4e2f16;border-radius:16px;
+canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3));border:3px solid #4e2f16;border-radius:var(--r-3);
   box-shadow:inset 0 0 22px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.45);max-width:100%}
 
 /* 骰子、籌碼、卡片 */
-.dice{background:rgba(255,255,255,.10);border:2px solid var(--gold2);border-radius:12px;
+.dice{background:rgba(255,255,255,.10);border:2px solid var(--gold2);border-radius:var(--r-2);
   color:var(--gold2);box-shadow:0 0 16px rgba(226,176,74,.3)}
 .chip,.cards>div,.deck-row>div{border-color:rgba(226,176,74,.5)!important}
-.klsp{color:#fff9ec}
+.klsp{color:var(--white-warm)}
 .kltok i,.mptok i{box-shadow:0 0 0 1px rgba(0,0,0,.45)}
 
 /* 炸彈／你畫我猜／劇本殺 的區塊也統一 */
@@ -250,17 +251,17 @@ canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--
 .klring .klcell{position:absolute;width:8.6%;aspect-ratio:1;transform:translate(-50%,-50%);
   border-radius:50%!important;display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.14)!important;border:1px solid rgba(226,176,74,.65)!important}
-.klring .klcell .klnum{position:static;font-size:7.5px;opacity:.9;color:#fff9ec}
+.klring .klcell .klnum{position:static;font-size:7.5px;opacity:.9;color:var(--white-warm)}
 .klring .klcell .klsp{position:absolute;bottom:-2px;font-size:7px}
 .klring .klcell .kltok{position:absolute;left:0;right:0;bottom:-7px}
 .klring .klcell .kltok i{width:6px;height:6px}
 
 /* 大富翁：中央改成環形色帶（規範的 conic 環） */
-.mpboard{border:12px solid var(--gold2)!important;border-radius:20px!important;
+.mpboard{border:12px solid var(--gold2)!important;border-radius:var(--r-3)!important;
   background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--wood3))!important}
 .mpcenter{background:conic-gradient(#e94560 0 10%,#4a90d9 0 20%,#e2b04a 0 30%,#52b788 0 40%,
   #e94560 0 50%,#4a90d9 0 60%,#e2b04a 0 70%,#52b788 0 80%,#e94560 0 90%,#4a90d9 0)!important;
-  border:3px solid var(--gold2)!important;border-radius:16px!important;
+  border:3px solid var(--gold2)!important;border-radius:var(--r-3)!important;
   box-shadow:inset 0 0 24px rgba(0,0,0,.75)!important}
 
 /* 鬥獸棋：河、獸穴、陷阱要看得見（規範：河藍、穴紅、陷阱紅虛線） */
@@ -270,17 +271,17 @@ canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--
 .dstrap0,.dstrap1{border:2px dashed #e94560!important;background:rgba(233,69,96,.10)!important}
 
 /* 棋盤外框加厚成規範的木框 */
-canvas#cv{border:12px solid #a8753c!important;border-radius:16px!important}
+canvas#cv{border:12px solid #a8753c!important;border-radius:var(--r-3)!important}
 
 /* v1.33 中國象棋：楚河漢界 */
 .xqboard{position:relative}
 .xqriver{position:absolute;left:5%;right:5%;top:50%;transform:translateY(-50%);text-align:center;
   color:#5a3517;font-weight:900;letter-spacing:6px;font-size:12px;pointer-events:none;
   background:rgba(210,154,85,.94);border-top:1px solid rgba(99,59,33,.45);border-bottom:1px solid rgba(99,59,33,.45);
-  padding:3px 0;border-radius:4px}
+  padding:3px 0;border-radius:var(--r-0)}
 
 /* v1.35 飛行棋：照參考站版面（整塊 SVG，無木框） */
-.fxqboard{width:100%;max-width:400px;background:#0a1d42;border-radius:16px;padding:6px;box-sizing:border-box}
+.fxqboard{width:100%;max-width:400px;background:#0a1d42;border-radius:var(--r-3);padding:6px;box-sizing:border-box}
 .fxqboard svg{display:block;width:100%;height:auto}
 
 /* v1.35 圖標系統：內嵌 SVG，24×24、stroke 2、顏色跟著文字（來源風格 Reicon.dev／Lucide，MIT） */
@@ -289,6 +290,53 @@ canvas#cv{border:12px solid #a8753c!important;border-radius:16px!important}
 .ico-lg{width:1.5em;height:1.5em;vertical-align:-.3em}
 .wc-ico .ico{width:1.05em;height:1.05em;vertical-align:-.14em}
 .nav-icon .ico{width:1.25em;height:1.25em;vertical-align:0}
+
+/* v1.36 可及性：尊重系統的「減少動態效果」設定（大廠硬性要求） */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* ═══════════════ v1.36 淺色模式 ═══════════════
+   以前小遊戲只有深色：聊天室切到淺色之後，打開小遊戲仍然是一整片黑（最明顯的就是
+   「選一款遊戲」那個卡片清單）。這是因為小遊戲是 iframe，主題沒有被帶進來。
+   現在外層用 ?theme= 帶主題進來，之後使用者再切換時用 postMessage 即時同步；
+   下面只覆蓋「介面」（底、卡、線、字），棋盤木色與黑白棋子照舊 —— 那是棋具不是介面，
+   換成淺色反而看不清。 */
+body.theme-light{
+  --bg:#f0f2f5;--bg-card:#ffffff;--bg-input:#f0f2f5;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15);
+  --text-main:#1c1e21;--text-sub:#65676b;--white-warm:#3a2a16;
+  --gold:#d99a06;--gold2:#b5750a;--panel1:#ffffff;--panel2:#f7f9fc;--panel3:#eaf1f9;
+  --danger:#dc2626;--ok-tx:#15803d;
+}
+body.theme-light .topbar{background:rgba(255,255,255,.92);border-bottom-color:rgba(0,0,0,.08)}
+body.theme-light .topbar h1{color:#b5750a;text-shadow:none}
+body.theme-light .wrap{background:linear-gradient(135deg,#ffffff,#f7f9fc 55%,#eaf1f9);
+  border-color:rgba(181,117,10,.26);box-shadow:0 8px 24px rgba(15,23,42,.10)}
+body.theme-light .gcard{background:#ffffff;border-color:rgba(0,0,0,.10)}
+body.theme-light .pitem{background:rgba(0,0,0,.035);border-color:rgba(181,117,10,.26)}
+body.theme-light .pbadge{background:rgba(181,117,10,.10);border-color:rgba(181,117,10,.45)}
+body.theme-light .turnbar{background:rgba(181,117,10,.10);border-color:rgba(181,117,10,.55);color:#8a5a06}
+body.theme-light .turnbar.mine{background:rgba(56,189,248,.16);border-color:var(--accent);color:#0369a1;box-shadow:none}
+body.theme-light .countdown{text-shadow:none}
+body.theme-light .dice{background:rgba(0,0,0,.04);border-color:rgba(181,117,10,.55);color:#8a5a06;box-shadow:none}
+body.theme-light .pip{background:#c7cbd4}
+body.theme-light .notice{background:rgba(255,255,255,.98);border-color:rgba(0,0,0,.15);color:var(--text-main);
+  box-shadow:0 10px 30px rgba(15,23,42,.18)}
+body.theme-light .ucmodal{background:rgba(15,23,42,.42)}
+body.theme-light .ucmodal-card{border-color:rgba(0,0,0,.12)}
+body.theme-light .sheet{background:rgba(15,23,42,.42)}
+body.theme-light .sheet .inner{box-shadow:0 -10px 30px rgba(15,23,42,.15)}
+body.theme-light .bombgauge{background:rgba(0,0,0,.10);border-color:rgba(181,117,10,.45)}
+body.theme-light .ucfeed{background:#fff}
+body.theme-light .uctext{background:#fff}
+body.theme-light .klring{box-shadow:inset 0 0 26px rgba(15,23,42,.25),0 10px 26px rgba(15,23,42,.18)}
+/* 康樂棋的圓形跑道底色本來就是深藍（棋具，維持原樣）→ 上面的字要跟著保持淺色 */
+body.theme-light .klring .klcell .klnum,body.theme-light .klring .klcell .klsp{color:#fff9ec}
+body.theme-light .klring .klhub{color:#ffd76a}
+body.theme-light .kltok i,body.theme-light .mptok i{box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+body.theme-light .pav{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+body.theme-light .seg button.sel{color:#fff}
 </style>
 </head>
 <body>
@@ -297,7 +345,7 @@ canvas#cv{border:12px solid #a8753c!important;border-radius:16px!important}
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
   <symbol id="i-gomoku" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="16" r="3.2"/></symbol>
-</svg>
+<symbol id="i-ludo" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol><symbol id="i-uno" viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 4.5A2 2 0 0 1 9 3h8a3 3 0 0 1 3 3v9a2 2 0 0 1-1.5 1.94"/></symbol><symbol id="i-xiangqi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M7.5 12h9"/><circle cx="12" cy="12" r="3.2"/></symbol><symbol id="i-chess" viewBox="0 0 24 24"><path d="M6 20h12M8 20l.8-3h6.4l.8 3"/><path d="M10 17v-3.6A4 4 0 0 1 8.6 10c0-1.6 1.2-2.6 1.6-3.4A2.4 2.4 0 0 1 12 4a2.4 2.4 0 0 1 1.8 2.6c.4.8 1.6 1.8 1.6 3.4A4 4 0 0 1 14 13.4V17"/></symbol><symbol id="i-go" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="15" cy="9" r="2.4" fill="currentColor"/></symbol><symbol id="i-checkers" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.3"/><circle cx="16" cy="8" r="3.3"/><circle cx="8" cy="16" r="3.3"/><circle cx="16" cy="16" r="3.3" fill="currentColor"/></symbol><symbol id="i-doushou" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="3.6" ry="3"/><path d="M8.8 13.4A2.6 2.6 0 1 1 6.6 9a2.5 2.5 0 0 1 2.6-3.6A2.5 2.5 0 0 1 12 3.4a2.5 2.5 0 0 1 2.8 2A2.5 2.5 0 0 1 17.4 9a2.6 2.6 0 1 1-2.2 4.4"/></symbol><symbol id="i-konglok" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><path d="M15.5 8.5h-7v7"/></symbol><symbol id="i-monopoly" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-sanguo" viewBox="0 0 24 24"><path d="M14.5 3.5 21 10l-3 3-6.5-6.5z"/><path d="M11.5 6.5 3 15v6h6l8.5-8.5"/><path d="M6 18h.01"/></symbol><symbol id="i-werewolf" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z"/><path d="M18.5 3.5 20 6l2.5.6-2 1.6.6 2.5-2.1-1.4"/></symbol><symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="11" cy="15" r="6"/><path d="M16.5 8.5 19 6M17.5 4.5 19 6l1.5-1.5"/><path d="M15.6 9.4a5.5 5.5 0 0 0-4-2.4"/></symbol><symbol id="i-script" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M4 6.5h15M8 10h7M8 14h5"/></symbol><symbol id="i-pictionary" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 2-4 2.5 2.5 0 0 1 2-4H19a2 2 0 0 0 2-2 9 9 0 0 0-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></symbol><symbol id="i-undercover" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6A2 2 0 0 0 12 14a2 2 0 0 0 1.4-.6"/><path d="M9.4 5.3A9 9 0 0 1 12 5c5 0 9 4.5 9 7a7 7 0 0 1-1.7 3.8"/><path d="M6.2 6.7C4 8.3 3 10.4 3 12c0 1.4 1 3 2.6 4.3"/></symbol></svg>
 <div id="app"></div>
 <script src="lib/uno-engine.js"></script>
 <script src="lib/opencc-t2cn.js"></script>
@@ -375,6 +423,12 @@ function fmtWin(w){return w||'？';}
 
 /* ===== 用戶 ===== */
 const params=new URLSearchParams(location.search);
+/* v1.36 淺色模式：小遊戲是 iframe，主題由外層聊天室帶進來。
+   ?theme=light 進來時直接套用；使用者在聊天室切換主題時，外層會再 postMessage 通知，
+   這裡即時跟著換，不必關掉小遊戲重開。 */
+function applyGameTheme(t){ document.body.classList.toggle('theme-light', t==='light'); }
+applyGameTheme(params.get('theme')==='light'?'light':'dark');
+window.addEventListener('message',e=>{ if(e.data&&e.data.type==='theme') applyGameTheme(e.data.theme); });
 let me=null;               // {username,displayName,color,avatar,role,cls,seat}
 let myStats={};
 let roomsSub=null, roomSub=null;
@@ -388,21 +442,21 @@ let view='lobby';
 const GAMES=[
  {k:'tictactoe',n:'井字棋',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△',ic:'i-grid'},
  {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○',ic:'i-gomoku'},
- {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛'},
- {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U'},
- {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:true,c:'#f59e0b',ab:'象'},
- {k:'chess',n:'國際象棋',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋'},
- {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍'},
- {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●'},
- {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:true,c:'#a855f7',ab:'獸'},
- {k:'konglok',n:'康樂棋',min:2,max:4,ok:true,c:'#14b8a6',ab:'康'},
- {k:'monopoly',n:'大富翁',min:2,max:6,ok:true,c:'#10b981',ab:'$'},
- {k:'sanguosha',n:'三國殺',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺'},
- {k:'werewolf',n:'狼人殺',min:6,max:18,ok:true,c:'#6d28d9',ab:'狼'},
- {k:'bomb',n:'傳炸彈',min:2,max:10,ok:true,c:'#f97316',ab:'炸'},
- {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:true,c:'#0ea5e9',ab:'劇'},
- {k:'pictionary',n:'你畫我猜',min:2,max:10,ok:true,c:'#eab308',ab:'畫'},
- {k:'undercover',n:'誰是臥底',min:3,max:12,ok:true,c:'#f472b6',ab:'臥'}
+ {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛',ic:'i-ludo'},
+ {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U',ic:'i-uno'},
+ {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:true,c:'#f59e0b',ab:'象',ic:'i-xiangqi'},
+ {k:'chess',n:'國際象棋',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋',ic:'i-chess'},
+ {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍',ic:'i-go'},
+ {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●',ic:'i-checkers'},
+ {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:true,c:'#a855f7',ab:'獸',ic:'i-doushou'},
+ {k:'konglok',n:'康樂棋',min:2,max:4,ok:true,c:'#14b8a6',ab:'康',ic:'i-konglok'},
+ {k:'monopoly',n:'大富翁',min:2,max:6,ok:true,c:'#10b981',ab:'$',ic:'i-monopoly'},
+ {k:'sanguosha',n:'三國殺',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺',ic:'i-sanguo'},
+ {k:'werewolf',n:'狼人殺',min:6,max:18,ok:true,c:'#6d28d9',ab:'狼',ic:'i-werewolf'},
+ {k:'bomb',n:'傳炸彈',min:2,max:10,ok:true,c:'#f97316',ab:'炸',ic:'i-bomb'},
+ {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:true,c:'#0ea5e9',ab:'劇',ic:'i-script'},
+ {k:'pictionary',n:'你畫我猜',min:2,max:10,ok:true,c:'#eab308',ab:'畫',ic:'i-pictionary'},
+ {k:'undercover',n:'誰是臥底',min:3,max:12,ok:true,c:'#f472b6',ab:'臥',ic:'i-undercover'}
 ];
 const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,min:2,max:2,ok:false,c:'#888',ab:'?'};
 
@@ -1251,15 +1305,22 @@ async function finishGame(winner, winners){
 }
 async function tryWinCheck(){
   const r=curRoom; if(!r||r.status!=='playing')return;
+  // v1.36 這兩個遊戲的棋盤存的不是「帳號」，是「棋子的代號」——
+  // 井字棋存 'X'/'O'、五子棋存 '1'/'2'。以前直接把代號當成贏家寫進 winner，
+  // 結果 winners 永遠不等於任何玩家的帳號 → 兩個人都被算成輸，兩邊都顯示「你輸了」。
+  // 現在一律換算回 playerNames() 裡真正的那個人（代號 0 = 先手 = names[0]）。
+  // 先手代號的來源就在 tttMove()/gomokuMove()：board[..] = r.turn===names[0] ? 先手代號 : 後手代號
+  const names=playerNames(r);
+  const byMark=(first,second,m)=>m===first?names[0]:(names[1]!==undefined?names[1]:names[0]);
   if(r.game==='tictactoe'){
     const b=r.state.board;const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    for(const [x,y,z] of L){ if(b[x]&&b[x]===b[y]&&b[y]===b[z]){ await finishGame(b[x]);return; } }
+    for(const [x,y,z] of L){ if(b[x]&&b[x]===b[y]&&b[y]===b[z]){ await finishGame(byMark('X','O',b[x]));return; } }
     if(b.every(c=>c)){ await finishGame('draw'); }
   } else if(r.game==='gomoku'){
     const b=r.state.board,N=15;const dirs=[[1,0],[0,1],[1,1],[1,-1]];
     for(let i=0;i<N;i++)for(let j=0;j<N;j++){const v=b[i*N+j];if(!v)continue;
       for(const [dx,dy] of dirs){let c=1;for(let k=1;k<5;k++){const ni=i+dx*k,nj=j+dy*k;if(ni<0||nj<0||ni>=N||nj>=N)break;if(b[ni*N+nj]!==v)break;c++;}
-        if(c>=5){ await finishGame(v);return; } } }
+        if(c>=5){ await finishGame(byMark('1','2',v));return; } } }
   } else if(r.game==='ludo'){
     for(const [u,pl] of Object.entries(r.state.planes)){ if(pl.every(p=>p>=57)){ await finishGame(u);return; } }
   } else if(r.game==='uno'){
@@ -1355,7 +1416,7 @@ async function gomokuMove(i,j){
 
 const FXQ_DEFS="\n<defs>\n<radialGradient id=\"bps\"><stop offset=\"80%\" stop-color=\"#444444\" stop-opacity=\"0.33\"/><stop offset=\"87%\" stop-color=\"#333333\" stop-opacity=\"0.23\"/><stop offset=\"100%\" stop-color=\"#000000\" stop-opacity=\"0\"/></radialGradient>\n<g id=\"bp\"><circle r=\"6.1\" fill=\"url(#bps)\" stroke=\"none\"/><circle r=\"5\" cx=\"0\" cy=\"0\" fill=\"#f4ffed\" stroke-width=\"0.85\"/><circle r=\"4\" cx=\"0\" cy=\"0\" fill=\"#f4ffed\" stroke-width=\"0.34\"/><path d=\"M-0.23,-3.077L0.23,-3.077L0.92,2.46L-0.92,2.46Z\" stroke=\"none\"/><path d=\"M-0.69,-1.69V1.077L-2.308,2.461Z\" stroke=\"none\"/><path d=\"M0.69,-1.69V1.077L2.308,2.461Z\" stroke=\"none\"/></g>\n<use id=\"p-blue-0\" href=\"#bp\" fill=\"#0b75c1\" stroke=\"#0b75c1\"/>\n<use id=\"p-green-0\" href=\"#bp\" fill=\"#0ca80d\" stroke=\"#0ca80d\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-red-0\" href=\"#bp\" fill=\"#e43415\" stroke=\"#e43415\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-yellow-0\" href=\"#bp\" fill=\"#fed105\" stroke=\"#fed105\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-blue-1\" href=\"#p-blue-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-green-1\" href=\"#p-green-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-red-1\" href=\"#p-red-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-yellow-1\" href=\"#p-yellow-0\" transform=\"rotate(90,0,0)\"/>\n<use id=\"p-blue-2\" href=\"#p-blue-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-green-2\" href=\"#p-green-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-red-2\" href=\"#p-red-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-yellow-2\" href=\"#p-yellow-0\" transform=\"rotate(180,0,0)\"/>\n<use id=\"p-blue-3\" href=\"#p-blue-0\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-green-3\" href=\"#p-green-0\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-red-3\" href=\"#p-red-0\" transform=\"rotate(270,0,0)\"/>\n<use id=\"p-yellow-3\" href=\"#p-yellow-0\" transform=\"rotate(270,0,0)\"/>\n<g id=\"win\"><rect width=\"12\" height=\"6\" x=\"-6\" y=\"-3\" fill=\"#000\" fill-opacity=\"50%\"/><text fill=\"#fff\" font-size=\"4.2\" font-family=\"monospace\" font-weight=\"bold\" x=\"0\" y=\"0\" text-anchor=\"middle\" dominant-baseline=\"central\">Win</text></g>\n<rect id=\"j\" x=\"-3\" y=\"-33\" width=\"6\" height=\"66\" fill=\"#fff\" fill-opacity=\"40%\" stroke=\"#fff\" stroke-opacity=\"80%\" stroke-width=\"0.5\"/>\n<path id=\"ar\" d=\"M-2 -2.5L0 -0.5L2 -2.5M-2 0.5L0 2.5L2 0.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>\n<path id=\"ar2\" d=\"M2.5 80H-0.5V75l-1.8 1.8h3.6l-1.8 -1.8\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.4\" stroke-opacity=\"90%\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>\n<rect id=\"rv\" rx=\"2\" ry=\"2\" x=\"-5.8\" y=\"-7.8\" width=\"11.6\" height=\"15.6\"/>\n<rect id=\"rh\" rx=\"2\" ry=\"2\" x=\"-7.8\" y=\"-5.8\" width=\"15.6\" height=\"11.6\"/>\n<rect id=\"rv2\" rx=\"2\" ry=\"2\" x=\"-5.3\" y=\"-5.8\" width=\"10.6\" height=\"11.6\"/>\n<rect id=\"rh2\" rx=\"2\" ry=\"2\" x=\"-5.8\" y=\"-5.3\" width=\"11.6\" height=\"10.6\"/>\n<path id=\"des\" d=\"M0,0L-15,15H15Z\" stroke-width=\"0.4\" stroke=\"#0a1d42\"/>\n<path id=\"t3\" d=\"M-6.66 6.95A0.5 0.5 0 0 0 -6.31 7.8H5.8A2 2 0 0 0 7.8 5.8V-6.31A0.5 0.5 0 0 0 6.95 -6.66Z\"/>\n<path id=\"t7\" d=\"M6.66 -6.95A0.5 0.5 0 0 0 6.31 -7.8H-5.8A2 2 0 0 0 -7.8 -5.8V6.31A0.5 0.5 0 0 0 -6.95 6.66Z\"/>\n<path id=\"t1\" d=\"M6.66 6.95A0.5 0.5 0 0 1 6.31 7.8H-5.8A2 2 0 0 1 -7.8 5.8V-6.31A0.5 0.5 0 0 1 -6.95 -6.66Z\"/>\n<path id=\"t9\" d=\"M-6.66 -6.95A0.5 0.5 0 0 1 -6.31 -7.8H5.8A2 2 0 0 1 7.8 -5.8V6.31A0.5 0.5 0 0 1 6.95 6.66Z\"/>\n<circle id=\"c\" r=\"4\" fill=\"#fff\" fill-opacity=\"90%\"/>\n<g id=\"ori\"><rect width=\"30\" height=\"30\" x=\"-15\" y=\"-15\" rx=\"2\" ry=\"2\"/><circle r=\"5.2\" cx=\"6.2\" cy=\"6.2\" fill=\"#fff\" fill-opacity=\"50%\"/><circle r=\"5.2\" cx=\"-6.2\" cy=\"6.2\" fill=\"#fff\" fill-opacity=\"50%\"/><circle r=\"5.2\" cx=\"6.2\" cy=\"-6.2\" fill=\"#fff\" fill-opacity=\"50%\"/><circle r=\"5.2\" cx=\"-6.2\" cy=\"-6.2\" fill=\"#fff\" fill-opacity=\"50%\"/></g>\n<g id=\"first\"><path d=\"M-46 72.5H-51V85h17.5Z\" stroke-width=\"1\" stroke-linejoin=\"round\"/><text x=\"-46\" y=\"80\" fill=\"#fff\" font-size=\"7\" font-family=\"emoji\" text-anchor=\"middle\" dominant-baseline=\"central\">✈️</text></g>\n<radialGradient id=\"red\"><stop offset=\"0%\" stop-color=\"#ff5744\"/><stop offset=\"100%\" stop-color=\"#fb4a38\"/></radialGradient>\n<radialGradient id=\"green\"><stop offset=\"0%\" stop-color=\"#63e2a3\"/><stop offset=\"100%\" stop-color=\"#18de8d\"/></radialGradient>\n<radialGradient id=\"blue\"><stop offset=\"0%\" stop-color=\"#05c0ea\"/><stop offset=\"100%\" stop-color=\"#0fa3e3\"/></radialGradient>\n<radialGradient id=\"yellow\"><stop offset=\"0%\" stop-color=\"#fddc04\"/><stop offset=\"100%\" stop-color=\"#fecc08\"/></radialGradient>\n</defs>";
 
-const FXQ_CELLS=["href=\"#j\" x=\"42.5\" transform=\"rotate(90,0,0)\"","href=\"#j\" x=\"42.5\" transform=\"rotate(180,0,0)\"","href=\"#j\" x=\"42.5\" transform=\"rotate(270,0,0)\"","href=\"#ar\" x=\"42.5\" y=\"18\" stroke=\"url(#green)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" stroke=\"url(#green)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(90,0,0)\" stroke=\"url(#red)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(90,0,0)\" stroke=\"url(#red)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(180,0,0)\" stroke=\"url(#yellow)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(180,0,0)\" stroke=\"url(#yellow)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(270,0,0)\" stroke=\"url(#blue)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(270,0,0)\" stroke=\"url(#blue)\"","href=\"#rv\" x=\"0\" y=\"-78\" fill=\"url(#red)\"","href=\"#rv\" x=\"-12\" y=\"-78\" fill=\"url(#green)\"","href=\"#rv\" x=\"-24\" y=\"-78\" fill=\"url(#blue)\"","href=\"#rv\" x=\"12\" y=\"-78\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"24\" y=\"-78\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-38\" y=\"-64\" fill=\"url(#red)\"","href=\"#rh\" x=\"-38\" y=\"-52\" fill=\"url(#green)\"","href=\"#rh\" x=\"38\" y=\"-64\" fill=\"url(#red)\"","href=\"#rh\" x=\"38\" y=\"-52\" fill=\"url(#yellow)\"","href=\"#t3\" x=\"-38\" y=\"-78\" fill=\"url(#yellow)\"","href=\"#t1\" x=\"38\" y=\"-78\" fill=\"url(#green)\"","href=\"#t7\" x=\"38\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t3\" x=\"38\" y=\"-38\" fill=\"url(#green)\"","href=\"#t9\" x=\"-38\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t1\" x=\"-38\" y=\"-38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"0\" y=\"78\" fill=\"url(#blue)\"","href=\"#rv\" x=\"-12\" y=\"78\" fill=\"url(#green)\"","href=\"#rv\" x=\"-24\" y=\"78\" fill=\"url(#red)\"","href=\"#rv\" x=\"12\" y=\"78\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"24\" y=\"78\" fill=\"url(#red)\"","href=\"#rh\" x=\"-38\" y=\"64\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-38\" y=\"52\" fill=\"url(#green)\"","href=\"#rh\" x=\"38\" y=\"64\" fill=\"url(#blue)\"","href=\"#rh\" x=\"38\" y=\"52\" fill=\"url(#yellow)\"","href=\"#t9\" x=\"-38\" y=\"78\" fill=\"url(#yellow)\"","href=\"#t7\" x=\"38\" y=\"78\" fill=\"url(#green)\"","href=\"#rh\" x=\"-78\" y=\"0\" fill=\"url(#green)\"","href=\"#rh\" x=\"-78\" y=\"-12\" fill=\"url(#red)\"","href=\"#rh\" x=\"-78\" y=\"-24\" fill=\"url(#yellow)\"","href=\"#rh\" x=\"-78\" y=\"12\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-78\" y=\"24\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"-64\" y=\"38\" fill=\"url(#green)\"","href=\"#rv\" x=\"-52\" y=\"38\" fill=\"url(#blue)\"","href=\"#rv\" x=\"-64\" y=\"-38\" fill=\"url(#green)\"","href=\"#rv\" x=\"-52\" y=\"-38\" fill=\"url(#red)\"","href=\"#t3\" x=\"-78\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t9\" x=\"-78\" y=\"38\" fill=\"url(#red)\"","href=\"#rh\" x=\"78\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rh\" x=\"78\" y=\"-12\" fill=\"url(#red)\"","href=\"#rh\" x=\"78\" y=\"-24\" fill=\"url(#green)\"","href=\"#rh\" x=\"78\" y=\"12\" fill=\"url(#blue)\"","href=\"#rh\" x=\"78\" y=\"24\" fill=\"url(#green)\"","href=\"#rv\" x=\"64\" y=\"38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"52\" y=\"38\" fill=\"url(#blue)\"","href=\"#rv\" x=\"64\" y=\"-38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"52\" y=\"-38\" fill=\"url(#red)\"","href=\"#t1\" x=\"78\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t7\" x=\"78\" y=\"38\" fill=\"url(#red)\"","href=\"#t9\" x=\"38\" y=\"38\" fill=\"url(#green)\"","href=\"#t1\" x=\"38\" y=\"38\" fill=\"url(#red)\"","href=\"#t3\" x=\"-38\" y=\"38\" fill=\"url(#red)\"","href=\"#t7\" x=\"-38\" y=\"38\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"64.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"53.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"42.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"31.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"20.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#c\" x=\"42.5\"","href=\"#rv2\" x=\"-64.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-53.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-42.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-31.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-20.5\" y=\"0\" fill=\"url(#green)\"","href=\"#c\" x=\"-42.5\"","href=\"#rh2\" x=\"0\" y=\"64.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"53.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"42.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"31.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"20.5\" fill=\"url(#blue)\"","href=\"#c\" y=\"42.5\"","href=\"#rh2\" x=\"0\" y=\"-64.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-53.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-42.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-31.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-20.5\" fill=\"url(#red)\"","href=\"#c\" y=\"-42.5\"","href=\"#ar2\"","href=\"#ar2\" transform=\"rotate(90,0,0)\"","href=\"#ar2\" transform=\"rotate(180,0,0)\"","href=\"#ar2\" transform=\"rotate(270,0,0)\"","href=\"#des\" fill=\"url(#blue)\"","href=\"#des\" transform=\"rotate(90,0,0)\" fill=\"url(#green)\"","href=\"#des\" transform=\"rotate(180,0,0)\" fill=\"url(#red)\"","href=\"#des\" transform=\"rotate(270,0,0)\" fill=\"url(#yellow)\"","href=\"#ori\" x=\"-68\" y=\"68\" fill=\"url(#blue)\"","href=\"#ori\" x=\"-68\" y=\"-68\" fill=\"url(#green)\"","href=\"#ori\" x=\"68\" y=\"-68\" fill=\"url(#red)\"","href=\"#ori\" x=\"68\" y=\"68\" fill=\"url(#yellow)\"","href=\"#first\" fill=\"url(#blue)\" stroke=\"url(#blue)\"","href=\"#first\" transform=\"rotate(90,0,0)\" fill=\"url(#green)\" stroke=\"url(#green)\"","href=\"#first\" transform=\"rotate(180,0,0)\" fill=\"url(#red)\" stroke=\"url(#red)\"","href=\"#first\" transform=\"rotate(270,0,0)\" fill=\"url(#yellow)\" stroke=\"url(#yellow)\"","href=\"#win\" x=\"P\" y=\"b\"","href=\"#win\" x=\"J\" y=\"Q\""];
+const FXQ_CELLS=["href=\"#j\" x=\"42.5\" transform=\"rotate(90,0,0)\"","href=\"#j\" x=\"42.5\" transform=\"rotate(180,0,0)\"","href=\"#j\" x=\"42.5\" transform=\"rotate(270,0,0)\"","href=\"#ar\" x=\"42.5\" y=\"18\" stroke=\"url(#green)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" stroke=\"url(#green)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(90,0,0)\" stroke=\"url(#red)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(90,0,0)\" stroke=\"url(#red)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(180,0,0)\" stroke=\"url(#yellow)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(180,0,0)\" stroke=\"url(#yellow)\"","href=\"#ar\" x=\"42.5\" y=\"18\" transform=\"rotate(270,0,0)\" stroke=\"url(#blue)\"","href=\"#ar\" x=\"42.5\" y=\"-18\" transform=\"rotate(270,0,0)\" stroke=\"url(#blue)\"","href=\"#rv\" x=\"0\" y=\"-78\" fill=\"url(#red)\"","href=\"#rv\" x=\"-12\" y=\"-78\" fill=\"url(#green)\"","href=\"#rv\" x=\"-24\" y=\"-78\" fill=\"url(#blue)\"","href=\"#rv\" x=\"12\" y=\"-78\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"24\" y=\"-78\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-38\" y=\"-64\" fill=\"url(#red)\"","href=\"#rh\" x=\"-38\" y=\"-52\" fill=\"url(#green)\"","href=\"#rh\" x=\"38\" y=\"-64\" fill=\"url(#red)\"","href=\"#rh\" x=\"38\" y=\"-52\" fill=\"url(#yellow)\"","href=\"#t3\" x=\"-38\" y=\"-78\" fill=\"url(#yellow)\"","href=\"#t1\" x=\"38\" y=\"-78\" fill=\"url(#green)\"","href=\"#t7\" x=\"38\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t3\" x=\"38\" y=\"-38\" fill=\"url(#green)\"","href=\"#t9\" x=\"-38\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t1\" x=\"-38\" y=\"-38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"0\" y=\"78\" fill=\"url(#blue)\"","href=\"#rv\" x=\"-12\" y=\"78\" fill=\"url(#green)\"","href=\"#rv\" x=\"-24\" y=\"78\" fill=\"url(#red)\"","href=\"#rv\" x=\"12\" y=\"78\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"24\" y=\"78\" fill=\"url(#red)\"","href=\"#rh\" x=\"-38\" y=\"64\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-38\" y=\"52\" fill=\"url(#green)\"","href=\"#rh\" x=\"38\" y=\"64\" fill=\"url(#blue)\"","href=\"#rh\" x=\"38\" y=\"52\" fill=\"url(#yellow)\"","href=\"#t9\" x=\"-38\" y=\"78\" fill=\"url(#yellow)\"","href=\"#t7\" x=\"38\" y=\"78\" fill=\"url(#green)\"","href=\"#rh\" x=\"-78\" y=\"0\" fill=\"url(#green)\"","href=\"#rh\" x=\"-78\" y=\"-12\" fill=\"url(#red)\"","href=\"#rh\" x=\"-78\" y=\"-24\" fill=\"url(#yellow)\"","href=\"#rh\" x=\"-78\" y=\"12\" fill=\"url(#blue)\"","href=\"#rh\" x=\"-78\" y=\"24\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"-64\" y=\"38\" fill=\"url(#green)\"","href=\"#rv\" x=\"-52\" y=\"38\" fill=\"url(#blue)\"","href=\"#rv\" x=\"-64\" y=\"-38\" fill=\"url(#green)\"","href=\"#rv\" x=\"-52\" y=\"-38\" fill=\"url(#red)\"","href=\"#t3\" x=\"-78\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t9\" x=\"-78\" y=\"38\" fill=\"url(#red)\"","href=\"#rh\" x=\"78\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rh\" x=\"78\" y=\"-12\" fill=\"url(#red)\"","href=\"#rh\" x=\"78\" y=\"-24\" fill=\"url(#green)\"","href=\"#rh\" x=\"78\" y=\"12\" fill=\"url(#blue)\"","href=\"#rh\" x=\"78\" y=\"24\" fill=\"url(#green)\"","href=\"#rv\" x=\"64\" y=\"38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"52\" y=\"38\" fill=\"url(#blue)\"","href=\"#rv\" x=\"64\" y=\"-38\" fill=\"url(#yellow)\"","href=\"#rv\" x=\"52\" y=\"-38\" fill=\"url(#red)\"","href=\"#t1\" x=\"78\" y=\"-38\" fill=\"url(#blue)\"","href=\"#t7\" x=\"78\" y=\"38\" fill=\"url(#red)\"","href=\"#t9\" x=\"38\" y=\"38\" fill=\"url(#green)\"","href=\"#t1\" x=\"38\" y=\"38\" fill=\"url(#red)\"","href=\"#t3\" x=\"-38\" y=\"38\" fill=\"url(#red)\"","href=\"#t7\" x=\"-38\" y=\"38\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"64.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"53.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"42.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"31.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#rv2\" x=\"20.5\" y=\"0\" fill=\"url(#yellow)\"","href=\"#c\" x=\"42.5\"","href=\"#rv2\" x=\"-64.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-53.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-42.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-31.5\" y=\"0\" fill=\"url(#green)\"","href=\"#rv2\" x=\"-20.5\" y=\"0\" fill=\"url(#green)\"","href=\"#c\" x=\"-42.5\"","href=\"#rh2\" x=\"0\" y=\"64.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"53.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"42.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"31.5\" fill=\"url(#blue)\"","href=\"#rh2\" x=\"0\" y=\"20.5\" fill=\"url(#blue)\"","href=\"#c\" y=\"42.5\"","href=\"#rh2\" x=\"0\" y=\"-64.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-53.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-42.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-31.5\" fill=\"url(#red)\"","href=\"#rh2\" x=\"0\" y=\"-20.5\" fill=\"url(#red)\"","href=\"#c\" y=\"-42.5\"","href=\"#ar2\"","href=\"#ar2\" transform=\"rotate(90,0,0)\"","href=\"#ar2\" transform=\"rotate(180,0,0)\"","href=\"#ar2\" transform=\"rotate(270,0,0)\"","href=\"#des\" fill=\"url(#blue)\"","href=\"#des\" transform=\"rotate(90,0,0)\" fill=\"url(#green)\"","href=\"#des\" transform=\"rotate(180,0,0)\" fill=\"url(#red)\"","href=\"#des\" transform=\"rotate(270,0,0)\" fill=\"url(#yellow)\"","href=\"#ori\" x=\"-68\" y=\"68\" fill=\"url(#blue)\"","href=\"#ori\" x=\"-68\" y=\"-68\" fill=\"url(#green)\"","href=\"#ori\" x=\"68\" y=\"-68\" fill=\"url(#red)\"","href=\"#ori\" x=\"68\" y=\"68\" fill=\"url(#yellow)\"","href=\"#first\" fill=\"url(#blue)\" stroke=\"url(#blue)\"","href=\"#first\" transform=\"rotate(90,0,0)\" fill=\"url(#green)\" stroke=\"url(#green)\"","href=\"#first\" transform=\"rotate(180,0,0)\" fill=\"url(#red)\" stroke=\"url(#red)\"","href=\"#first\" transform=\"rotate(270,0,0)\" fill=\"url(#yellow)\" stroke=\"url(#yellow)\""];
 
 const FXQ_X=[-74.2,-46,-34.5,-38,-38,-34.3,-41.7,-52,-64,-74.3,-78,-78,-78,-78,-78,-74.5,-64,-52,-41.7,-34.3,-38,-38,-34.3,-24,-12,0,12,24,34.5,38,38,34.3,41.7,52,64,74.3,78,78,78,78,78,74.5,64,52,41.7,34.3,38,38,34.3,24,12,0,0,0,0,0,0,0];
 
@@ -1403,7 +1464,7 @@ function drawLudo(r,g,bar,spec){
   if(myTurn&&r.state.rolled){
     const my=r.state.planes[me.username]||[];
     const btns=my.map((p,i)=>{
-      const can=canMove(r,i);return `<button class="chip" data-pi="${i}" style="${can?'border-color:#fbbf24;color:#fbbf24':''}">${STNAMES[cols[me.username]]}${i+1}：${p<0?'基地':(p>=57?'完成':p+'步')}</button>`;
+      const can=canMove(r,i);return `<button class="chip" data-pi="${i}" style="${can?'border-color:var(--gold);color:var(--gold)':''}">${STNAMES[cols[me.username]]}${i+1}：${p<0?'基地':(p>=57?'完成':p+'步')}</button>`;
     }).join('');
     const bar2=document.createElement('div');bar2.className='side';bar2.innerHTML=btns;dr.appendChild(bar2);
     bar2.querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>ludoMove(+b.dataset.pi));
@@ -2055,7 +2116,7 @@ function drawUndercover(r, g, bar, spec){
     const isDead = eliminated.includes(u);
     const isCur = phase === 'play' && u === curU;
     const role = st.revealed ? (under.includes(u) ? '臥底' : '平民') : '';
-    const rcStyle = st.revealed ? (under.includes(u) ? 'color:#f472b6;border-color:#f472b6' : 'color:var(--green);border-color:var(--green)') : '';
+    const rcStyle = st.revealed ? (under.includes(u) ? 'color:var(--pink-tx);border-color:var(--pink-tx)' : 'color:var(--green);border-color:var(--green)') : '';
     return `<div class="pitem" style="${isCur ? 'border-color:var(--accent)' : ''}${isDead ? ';opacity:.45' : ''}">
       <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isDead ? ' · 已出局' : ''}${isCur ? ' · 描述中' : ''}</div>
@@ -2387,7 +2448,7 @@ function drawPictionary(r, g, bar, spec){
         : `<div class="hint" style="color:var(--green)">已通過防作弊檢查</div>`) : '';
     const guessUI = (!amDrawer && amPlayer) ? `
       <div class="deck-row" style="margin-top:8px">
-        <input id="picInput" placeholder="輸入你猜的答案" style="flex:1;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:10px;padding:11px 13px;color:var(--text-main);font-size:15px">
+        <input id="picInput" placeholder="輸入你猜的答案" style="flex:1;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:var(--r-1);padding:11px 13px;color:var(--text-main);font-size:15px">
         <button class="btn" id="picGuessBtn" style="margin:0;width:auto;padding:11px 20px">猜</button>
       </div>` : '';
     stage = `${myWord}
@@ -3591,12 +3652,12 @@ function drawWerewolf(r, g, bar, spec){
   const plist = names.map(u => {
     const isDead = eliminated.includes(u);
     const role = st.revealed ? (WW_NAME[wwRoleOf(r, u)] || '') : '';
-    const rc = st.revealed ? ((wwRoleOf(r, u) === 'wolf') ? 'color:#f472b6;border-color:#f472b6' : 'color:var(--green);border-color:var(--green)') : '';
+    const rc = st.revealed ? ((wwRoleOf(r, u) === 'wolf') ? 'color:var(--pink-tx);border-color:var(--pink-tx)' : 'color:var(--green);border-color:var(--green)') : '';
     const showWolf = !st.revealed && isWolf && wwRoleOf(r, u) === 'wolf';
     return `<div class="pitem" style="${isDead ? 'opacity:.45' : ''}${(phase === 'discuss' && u === wwCurSpeaker(r)) ? ';border-color:var(--accent)' : ''}">
       <div class="pav" style="${pavStyle(colorOf(r, u))}">${avatarHTML({ displayName: nameOf(r, u) })}</div>
       <div class="pname">${escapeHtml(nameOf(r, u))}${u === me.username ? '（你）' : ''}${isDead ? ' · 已出局' : ''}${(phase === 'discuss' && u === wwCurSpeaker(r)) ? ' · 發言中' : ''}</div>
-      <div class="pbadge" style="${rc || (showWolf ? 'color:#f472b6;border-color:#f472b6' : '')}">${st.revealed ? role : (showWolf ? '同夥' : '')}</div>
+      <div class="pbadge" style="${rc || (showWolf ? 'color:var(--pink-tx);border-color:var(--pink-tx)' : '')}">${st.revealed ? role : (showWolf ? '同夥' : '')}</div>
     </div>`;
   }).join('');
 
@@ -3613,7 +3674,7 @@ function drawWerewolf(r, g, bar, spec){
     : '<div class="empty" style="padding:16px 6px">還沒有人發言</div>'}</div>`;
 
   const roleCard = amPlayer
-    ? `<div class="smcard" style="${isWolf ? 'border-color:#f472b6' : (isSeer ? 'border-color:var(--gold)' : '')}">
+    ? `<div class="smcard" style="${isWolf ? 'border-color:var(--pink-tx)' : (isSeer ? 'border-color:var(--gold)' : '')}">
          <div class="smtag">你的身分</div>
          <div class="smname" style="color:${isWolf ? '#f472b6' : (isSeer ? 'var(--gold)' : 'var(--text-main)')}">${WW_NAME[myRole] || '村民'}</div>
          <div class="smline">${isWolf ? `你和 ${wolves.filter(u => u !== me.username).map(u => escapeHtml(nameOf(r, u))).join('、') || '（沒有人）'} 是狼人，每晚一起選一個人殺。白天要裝成村民。` : (isSeer ? '每晚可以查一個人的身分。' : '你沒有特殊能力，靠推理找出狼人。')}</div>
@@ -3626,7 +3687,7 @@ function drawWerewolf(r, g, bar, spec){
   if (phase === 'night') {
     if (isWolf && !dead) {
       const myPick = (st.wolfPicks || {})[me.username];
-      stage = `<div class="turnbar" style="border-color:#f472b6;color:#f472b6">第 ${night} 夜 · 狼人請睜眼，選今晚要殺的人</div>
+      stage = `<div class="turnbar" style="border-color:var(--pink-tx);color:var(--pink-tx)">第 ${night} 夜 · 狼人請睜眼，選今晚要殺的人</div>
         <div class="hint" style="margin-top:8px">${myPick ? '你選了 ' + escapeHtml(nameOf(r, myPick)) + '（等其他狼人）' : '你們的目標要一致，選好就等其他人'}</div>
         ${!myPick ? listFor(alive.filter(u => !wolves.includes(u)), 'wwolf') : ''}
         <div class="hint">同夥：${wolves.filter(u => u !== me.username).map(u => escapeHtml(nameOf(r, u))).join('、') || '你是唯一的狼人'}</div>`;
