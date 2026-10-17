@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b6bcb">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23d32f2f'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round'%3E%3Crect x='5.5' y='4.5' width='13' height='10.5' rx='2.5'/%3E%3Cpath d='M5.5 9.6h13M9.5 4.5v5.1M14.5 4.5v5.1M8.6 15v2.4M15.4 15v2.4'/%3E%3C/g%3E%3C/svg%3E">
+<title>巴士到站時間 · 附近車站</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://data.etabus.gov.hk; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel2:#f6f8fc; --text:#0f172a; --muted:#66748c;
+  --line:#e6eaf2; --brand:#0b6bcb; --brand2:#0ea5e9; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 12px 32px -16px rgba(15,23,42,.24);
+  --dur:.22s; --ease:cubic-bezier(.22,.61,.36,1);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#070d18; --panel:#0f1727; --panel2:#0c1421; --text:#e8eefb; --muted:#8fa1bf;
+         --line:#1e2b41; --brand:#3f8fe0; --brand2:#38bdf8;
+         --shadow:0 1px 2px rgba(0,0,0,.5),0 14px 36px -18px rgba(0,0,0,.9); }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+h1{font-size:17px;margin:0;letter-spacing:.2px}
+::selection{background:color-mix(in srgb,var(--brand) 28%,transparent)}
+
+/* ═══ 頂欄 ═════════════════════════════════ */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 84%,transparent);
+  backdrop-filter:blur(16px) saturate(1.5);border-bottom:1px solid var(--line)}
+.top-in{max-width:760px;margin:0 auto;padding:12px 16px 11px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;flex:1}
+.logo{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(135deg,#d32f2f,#f0523c);
+  box-shadow:0 6px 18px -6px rgba(211,47,47,.75);
+  animation:pop .5s var(--ease) both}
+.logo svg{width:21px;height:21px;display:block}
+.tt{min-width:0}
+.tt p{margin:1px 0 0;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.rbtn{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);box-shadow:var(--shadow);
+  transition:transform var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.rbtn svg{width:17px;height:17px}
+.rbtn:active{transform:scale(.93)}
+.rbtn:hover{color:var(--brand);border-color:color-mix(in srgb,var(--brand) 45%,var(--line))}
+.rbtn.spin svg{animation:spin .8s linear infinite}
+.bar{height:2px;background:transparent;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));
+  border-radius:0 2px 2px 0}
+
+/* ═══ 主體 ═════════════════════════════════ */
+.wrap{max-width:760px;margin:0 auto;padding:14px 16px 48px}
+
+.list{display:flex;flex-direction:column;gap:12px}
+
+.stop{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow);animation:rise .46s var(--ease) both}
+/* 每 30 秒自動更新時不重播進場動畫，否則整頁會不停滑動 */
+.stop.noanim{animation:none}
+.stop-h{display:flex;align-items:baseline;gap:10px;padding:13px 15px 11px;
+  border-bottom:1px solid var(--line);background:
+  linear-gradient(180deg,color-mix(in srgb,var(--brand) 5%,transparent),transparent)}
+.stop-n{font-size:16px;font-weight:750;letter-spacing:.2px;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop-d{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.rt{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;
+  padding:11px 15px;border-top:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
+.rt:first-child{border-top:0}
+.no{min-width:52px;padding:4px 9px;border-radius:8px;text-align:center;font-weight:800;font-size:14px;
+  font-variant-numeric:tabular-nums;letter-spacing:.3px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--text)}
+.dest{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  min-width:0;padding-right:2px}
+.arrs{display:flex;gap:7px;justify-content:flex-end}
+.arr{display:inline-flex;align-items:baseline;gap:2px;padding:4px 9px;border-radius:9px;
+  background:var(--panel2);border:1px solid var(--line);font-variant-numeric:tabular-nums;
+  transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+.arr b{font-size:15px;font-weight:800;line-height:1}
+.arr i{font-size:10.5px;font-style:normal;color:var(--muted);font-weight:600}
+.arr.soon{background:color-mix(in srgb,#f59e0b 14%,transparent);
+  border-color:color-mix(in srgb,#f59e0b 42%,transparent)}
+.arr.soon b,.arr.soon i{color:#b45309}
+.arr.now{background:color-mix(in srgb,#ef4444 16%,transparent);
+  border-color:color-mix(in srgb,#ef4444 46%,transparent);animation:pulse 1.4s ease-in-out infinite}
+.arr.now b,.arr.now i{color:#dc2626}
+@media (prefers-color-scheme:dark){
+  .arr.soon b,.arr.soon i{color:#fbbf24}
+  .arr.now b,.arr.now i{color:#f87171}
+}
+.arr.tick{animation:tick .34s var(--ease)}
+.none{padding:15px;font-size:13.5px;color:var(--muted)}
+.more{padding:10px 15px 12px;font-size:12.5px;color:var(--muted);
+  border-top:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
+
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 18px;
+  text-align:center;color:var(--muted);font-size:14px;box-shadow:var(--shadow);animation:rise .4s var(--ease) both}
+.msg b{display:block;color:var(--text);font-size:15px;margin-bottom:5px}
+
+/* skeleton */
+.sk{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;
+  box-shadow:var(--shadow);margin-bottom:12px}
+.sk div{height:13px;border-radius:7px;margin:9px 0;
+  background:linear-gradient(90deg,var(--panel2) 25%,color-mix(in srgb,var(--line) 80%,transparent) 37%,var(--panel2) 63%);
+  background-size:400% 100%;animation:shine 1.35s ease-in-out infinite}
+.sk .h{height:18px;width:52%}
+.sk .r{width:100%}
+.sk .r.s2{width:74%}
+.sk .r.s3{width:88%}
+
+.foot{margin:18px 2px 0;font-size:12px;color:var(--muted);line-height:1.7}
+.foot b{font-weight:650;color:color-mix(in srgb,var(--text) 78%,var(--muted))}
+
+/* ═══ 定位失敗 ═════════════════════════════ */
+.gate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:22px;
+  background:radial-gradient(120% 72% at 50% 0%,color-mix(in srgb,var(--brand) 8%,var(--bg)),var(--bg) 60%);
+  animation:fade .3s var(--ease) both}
+.gate[hidden]{display:none}
+.gw{width:100%;max-width:400px}
+.gb{display:flex;align-items:center;gap:10px;margin:0 2px 13px;color:var(--muted);
+  font-size:13.5px;font-weight:700;letter-spacing:.3px;animation:rise .4s var(--ease) both}
+.glogo{width:29px;height:29px;flex:0 0 29px;border-radius:9px;
+  box-shadow:0 4px 12px -5px rgba(211,47,47,.7)}
+.glogo svg{width:16px;height:16px}
+.gc{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:22px;
+  padding:28px 24px 24px;text-align:center;box-shadow:0 24px 60px -28px rgba(15,23,42,.45);
+  animation:rise .5s .06s var(--ease) both}
+.gico{width:62px;height:62px;margin:0 auto 16px;border-radius:20px;display:grid;place-items:center;
+  color:#dc2626;background:color-mix(in srgb,#ef4444 13%,transparent)}
+.gico svg{width:29px;height:29px}
+.gc h2{margin:0 0 9px;font-size:17.5px;line-height:1.45;letter-spacing:.2px}
+.gc p{margin:0;font-size:13.5px;line-height:1.75;color:var(--muted)}
+.gc .out{margin-top:22px;width:100%;padding:13px;border-radius:13px;font-size:15px;font-weight:700;
+  color:#fff;background:linear-gradient(135deg,#475569,#334155);
+  box-shadow:0 10px 24px -12px rgba(51,65,85,.85);
+  transition:transform var(--dur) var(--ease),filter var(--dur) var(--ease)}
+.gc .out:active{transform:scale(.97);filter:brightness(1.06)}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shine{from{background-position:100% 0}to{background-position:-100% 0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.62}}
+@keyframes tick{0%{transform:scale(1)}45%{transform:scale(1.13)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+@media (max-width:420px){
+  .no{min-width:46px;font-size:13px;padding:3px 7px}
+  .dest{font-size:12.5px}
+  .arr b{font-size:14px}
+  .rt{gap:8px;padding:10px 12px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+        stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="12.5" rx="3"/>
+        <path d="M3.5 9.5h17M9 3.5v6M15 3.5v6"/><circle cx="7.6" cy="19" r="1.5"/>
+        <circle cx="16.4" cy="19" r="1.5"/></svg></span>
+      <div class="tt">
+        <h1>巴士到站時間</h1>
+        <p id="sub">正在取得你的位置…</p>
+      </div>
+    </div>
+    <button class="rbtn" id="btnRe" aria-label="重新整理">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 1 0-2.4 5.6"/>
+        <path d="M20 4.5v6h-6"/></svg>
+    </button>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+</header>
+
+<main class="wrap">
+  <div class="list" id="list"></div>
+  <p class="foot" id="foot"></p>
+</main>
+
+<div class="gate" id="gate" hidden>
+ <div class="gw">
+  <div class="gb">
+    <span class="logo glogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="12.5" rx="3"/>
+      <path d="M3.5 9.5h17M9 3.5v6M15 3.5v6"/><circle cx="7.6" cy="19" r="1.5"/>
+      <circle cx="16.4" cy="19" r="1.5"/></svg></span>
+    <span>巴士到站時間</span>
+  </div>
+  <div class="gc">
+    <div class="gico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+        stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/>
+        <path d="M4 3l17 18"/></svg>
+    </div>
+    <h2>由於無法調用定位<br>此工具無法使用</h2>
+    <p>附近有甚麼巴士站，要按你身處的位置才找得到。<br>請在瀏覽器的網站設定裡允許使用定位，然後再開一次這個工具。</p>
+    <button class="out" id="btnOut">退出</button>
+  </div>
+ </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var KMB = 'https://data.etabus.gov.hk/v1/transport/kmb';
+var CACHE_KEY = 'bus_stop_v1';
+var CACHE_TTL = 7 * 864e5;
+var REFRESH = 30000;
+var MAX_GROUPS = 4;      /* 最多顯示幾個站（同名站柱會合成一個） */
+var MAX_DIST = 1500;     /* 1500 米內一個站都找不到，就當附近沒有車站 */
+var MAX_ROWS = 20;       /* 每張卡最多列幾條路線 */
+var MERGE_M = 250;       /* 同名而相距 250 米內 → 當同一個站 */
+
+var S = { here:null, all:null, skew:0, timer:null, ticker:null, busy:false, last:0, stopped:false };
+
+function $(id){ return document.getElementById(id); }
+function esc(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+  });
+}
+
+/* ---------- 定位失敗：只剩「退出」一條路 ---------- */
+function fail(){
+  if(S.stopped) return;
+  S.stopped = true;
+  if(S.timer){ clearInterval(S.timer); S.timer = null; }
+  if(S.ticker){ clearInterval(S.ticker); S.ticker = null; }
+  $('gate').hidden = false;
+  $('list').innerHTML = '';
+  $('sub').textContent = '未取得定位權限';
+}
+
+function quit(){
+  try{ window.close(); }catch(e){}
+  setTimeout(function(){
+    try{ location.replace('index.html'); }catch(e){}
+  }, 220);
+}
+
+/* ---------- 距離 ---------- */
+function dist(a, b, c, d){
+  var R = 6371000, p = Math.PI / 180;
+  var dlat = p * (c - a), dlon = p * (d - b);
+  var h = Math.sin(dlat / 2) * Math.sin(dlat / 2)
+        + Math.cos(p * a) * Math.cos(p * c) * Math.sin(dlon / 2) * Math.sin(dlon / 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function walk(m){ return Math.max(1, Math.ceil(m / 72)); }
+function baseName(n){
+  return String(n || '').replace(/\s*[\(（][A-Z]{2}\d+[\)）]\s*$/, '');
+}
+
+/* ---------- 車站清單（七日快取，6775 個站約 470 KB） ---------- */
+function readCache(){
+  try{
+    var raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    var o = JSON.parse(raw);
+    if(!o || !o.t || !o.d || !o.d.length) return null;
+    if(Date.now() - o.t > CACHE_TTL) return null;
+    return o.d;
+  }catch(e){ return null; }
+}
+function writeCache(d){
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), d: d })); }catch(e){}
+}
+function loadStops(){
+  var c = readCache();
+  if(c) return Promise.resolve(c);
+  return fetch(KMB + '/stop', { cache:'no-store' }).then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(j){
+    var out = [];
+    (j.data || []).forEach(function(s){
+      var la = parseFloat(s.lat), ln = parseFloat(s.long);
+      if(!isFinite(la) || !isFinite(ln)) return;
+      out.push([ String(s.stop), String(s.name_tc || s.name_en || ''), la, ln ]);
+    });
+    if(!out.length) throw new Error('empty');
+    writeCache(out);
+    return out;
+  });
+}
+
+/* ---------- 到站資料 ---------- */
+function getEta(id){
+  return fetch(KMB + '/stop-eta/' + encodeURIComponent(id), { cache:'no-store' })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(j){ return j; });
+}
+
+function groupEta(j){
+  var skew = 0;
+  if(j && j.generated_timestamp){
+    var g = Date.parse(j.generated_timestamp);
+    if(isFinite(g)){
+      skew = g - Date.now();
+      if(skew > 120000) skew = 120000;
+      if(skew < -120000) skew = -120000;
+    }
+  }
+  var map = {}, order = [];
+  (j.data || []).forEach(function(it){
+    if(!it || !it.route) return;
+    var key = it.route + '|' + it.dir + '|' + it.service_type;
+    if(!map[key]){
+      map[key] = { route:String(it.route), dir:String(it.dir || ''),
+                   dest:String(it.dest_tc || it.dest_en || ''),
+                   etas:[], rmk:String(it.rmk_tc || '') };
+      order.push(key);
+    }
+    if(it.rmk_tc) map[key].rmk = String(it.rmk_tc);
+    if(!it.eta) return;
+    var t = Date.parse(it.eta);
+    if(isFinite(t)) map[key].etas.push(t);
+  });
+  var rows = order.map(function(k){
+    var r = map[k];
+    r.etas.sort(function(a, b){ return a - b; });
+    r.next = r.etas.length ? r.etas[0] : Infinity;
+    return r;
+  }).filter(function(r){ return r.etas.length > 0; });
+  rows.sort(function(a, b){ return a.next - b.next; });
+  return { skew:skew, rows:rows };
+}
+
+/* ---------- 到站文字 ---------- */
+function arrHTML(t){
+  var left = t - (Date.now() + S.skew);
+  var sec = left / 1000, cls = 'arr', body;
+  if(sec < 60){ cls += ' now'; body = '<b>即將</b><i>到站</i>'; }
+  else if(sec < 60 * 999){
+    var m = Math.max(1, Math.round(sec / 60));
+    if(m < 3) cls += ' soon';
+    body = '<b>' + m + '</b><i>分鐘</i>';
+  } else { body = '<b>—</b><i>分鐘</i>'; }
+  return '<span class="' + cls + '" data-t="' + t + '">' + body + '</span>';
+}
+
+function tickEta(){
+  var nodes = document.querySelectorAll('.arr[data-t]');
+  for(var i = 0; i < nodes.length; i++){
+    var el = nodes[i];
+    var t = parseInt(el.getAttribute('data-t'), 10);
+    if(!isFinite(t)) continue;
+    var html = arrHTML(t).replace(/^<span[^>]*>|<\/span>$/g, '');
+    if(el.getAttribute('data-h') === html) continue;
+    el.setAttribute('data-h', html);
+    el.innerHTML = html;
+    var left = (t - (Date.now() + S.skew)) / 1000;
+    el.className = 'arr' + (left < 60 ? ' now' : (left < 180 ? ' soon' : '')) + ' tick';
+  }
+}
+
+/* ---------- 畫面 ---------- */
+function skeleton(){
+  var h = '';
+  for(var i = 0; i < 3; i++){
+    h += '<div class="sk"><div class="h"></div><div class="r"></div><div class="r s2"></div>'
+       + '<div class="r s3"></div></div>';
+  }
+  $('list').innerHTML = h;
+}
+
+function renderNear(list, animate){
+  if(!list.length){
+    $('list').innerHTML = '<div class="msg"><b>附近沒有九巴車站</b>1.5 公里內都找不到，可能你在比較偏遠的地方。</div>';
+    $('sub').textContent = '範圍內沒有車站';
+    return;
+  }
+  var h = list.map(function(g, i){
+    var rows = g.rows || [];
+    var inner;
+    if(!rows.length){
+      inner = '<div class="none">暫無到站資料</div>';
+    } else {
+      var shown = rows.slice(0, MAX_ROWS);
+      inner = shown.map(function(r){
+        var arrs = r.etas.map(arrHTML).join('');
+        return '<div class="rt"><span class="no">' + esc(r.route) + '</span>'
+             + '<span class="dest">往 ' + esc(r.dest) + '</span>'
+             + '<span class="arrs">' + arrs + '</span></div>';
+      }).join('');
+      if(rows.length > shown.length){
+        inner += '<div class="more">另有 ' + (rows.length - shown.length) + ' 條路線未顯示</div>';
+      }
+    }
+    return '<section class="stop' + (animate ? '' : ' noanim') + '"'
+         + (animate ? ' style="animation-delay:' + (i * 55) + 'ms"' : '') + '>'
+         + '<div class="stop-h"><span class="stop-n">' + esc(g.name) + '</span>'
+         + '<span class="stop-d">' + Math.round(g.dist) + ' 米 · 步行 ' + walk(g.dist) + ' 分鐘</span></div>'
+         + inner + '</section>';
+  }).join('');
+  $('list').innerHTML = h;
+  tickEta();
+}
+
+function setSub(){
+  var cards = document.querySelectorAll('#list .stop');
+  if(!cards.length){ $('sub').textContent = '正在搜尋附近車站…'; return; }
+  var near = cards[0].querySelector('.stop-d');
+  $('sub').textContent = '附近 ' + cards.length + ' 個站'
+    + (near ? ' · 最近 ' + near.textContent.split(' 米')[0] + ' 米' : '');
+}
+
+function barRestart(){
+  var b = $('bar');
+  b.style.transition = 'none';
+  b.style.width = '0%';
+  void b.offsetWidth;
+  b.style.transition = 'width ' + REFRESH + 'ms linear';
+  b.style.width = '100%';
+}
+
+/* ---------- 主流程 ---------- */
+/* 同一條街通常有兩三個站柱（對頭方向各一個），逐個顯示就會出現三四張同名卡片，
+   路線又幾乎一樣。所以先按街名歸組（相距 250 米內算同一個站），再把各柱的路線合併。 */
+function nearbyGroups(){
+  var raw = [];
+  for(var i = 0; i < S.all.length; i++){
+    var s = S.all[i];
+    var d = dist(S.here.lat, S.here.lng, s[2], s[3]);
+    if(d <= MAX_DIST) raw.push({ id:s[0], name:s[1], dist:d, lat:s[2], lng:s[3] });
+  }
+  raw.sort(function(a, b){ return a.dist - b.dist; });
+  var groups = [], byName = {};
+  raw.forEach(function(s){
+    var key = baseName(s.name);
+    var arr = byName[key] || (byName[key] = []);
+    var g = null;
+    for(var j = 0; j < arr.length; j++){
+      if(dist(arr[j].lat, arr[j].lng, s.lat, s.lng) <= MERGE_M){ g = arr[j]; break; }
+    }
+    if(!g){
+      g = { name:key, dist:s.dist, lat:s.lat, lng:s.lng, ids:[], pools:[], rows:[] };
+      arr.push(g); groups.push(g);
+    }
+    if(g.ids.length < 3) g.ids.push(s.id);
+    if(s.dist < g.dist) g.dist = s.dist;
+  });
+  groups.sort(function(a, b){ return a.dist - b.dist; });
+  return groups.slice(0, MAX_GROUPS);
+}
+
+/* 合併各站柱的路線：同一個路線號＋同一個目的地只留一行，最多兩個到站時間。
+   40 秒內的兩個時間視為同一班車（同一輛車在兩個站柱都給出預報）。 */
+function mergeRows(pools){
+  var map = {}, order = [];
+  pools.forEach(function(rows){
+    rows.forEach(function(r){
+      var k = r.route + '|' + r.dest;
+      var t = map[k];
+      if(!t){ t = map[k] = { route:r.route, dest:r.dest, dir:r.dir, etas:[] }; order.push(k); }
+      for(var i = 0; i < r.etas.length; i++) t.etas.push(r.etas[i]);
+    });
+  });
+  var out = order.map(function(k){
+    var r = map[k];
+    r.etas.sort(function(a, b){ return a - b; });
+    var uniq = [];
+    for(var i = 0; i < r.etas.length; i++){
+      if(!uniq.length || r.etas[i] - uniq[uniq.length - 1] > 40000) uniq.push(r.etas[i]);
+    }
+    r.etas = uniq.slice(0, 2);
+    r.next = r.etas.length ? r.etas[0] : Infinity;
+    return r;
+  }).filter(function(r){ return r.etas.length > 0; });
+  out.sort(function(a, b){ return a.next - b.next; });
+  return out;
+}
+
+function refresh(showSkeleton){
+  if(S.stopped || S.busy) return;
+  S.busy = true;
+  $('btnRe').classList.add('spin');
+  if(showSkeleton) skeleton();
+
+  var groups = nearbyGroups();
+  if(!groups.length){
+    S.busy = false;
+    $('btnRe').classList.remove('spin');
+    renderNear([], false);
+    return;
+  }
+  var reqs = [];
+  groups.forEach(function(g){
+    g.ids.forEach(function(id){ reqs.push({ id:id, g:g }); });
+  });
+  Promise.all(reqs.map(function(q){
+    return getEta(q.id).then(function(j){ return { j:j, g:q.g }; })
+                       .catch(function(){ return { j:null, g:q.g }; });
+  })).then(function(res){
+    var skewSet = false;
+    res.forEach(function(x){
+      if(!x.j) return;
+      var gg = groupEta(x.j);
+      if(!skewSet){ S.skew = gg.skew; skewSet = true; }
+      x.g.pools.push(gg.rows);
+    });
+    groups.forEach(function(g){ g.rows = mergeRows(g.pools); });
+    renderNear(groups, !!showSkeleton);
+    setSub();
+    S.last = Date.now();
+    stamp();
+    S.busy = false;
+    $('btnRe').classList.remove('spin');
+    if(!S.timer) S.timer = setInterval(function(){ if(document.hidden) return; refresh(false); }, REFRESH);
+    barRestart();
+  }).catch(function(){
+    S.busy = false;
+    $('btnRe').classList.remove('spin');
+    $('list').innerHTML = '<div class="msg"><b>未能取得到站資料</b>請檢查網絡連線，然後按右上角重新整理。</div>';
+    $('sub').textContent = '連線失敗';
+  });
+}
+
+function stamp(){
+  if(!S.last) return;
+  var d = new Date(S.last);
+  var p = function(n){ return (n < 10 ? '0' : '') + n; };
+  $('foot').innerHTML = '<b>更新時間</b> ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
+    + ' · 每 30 秒自動更新<br><b>資料來源</b> 九巴／龍運開放數據（data.etabus.gov.hk）'
+    + ' · 現時只包含九巴及龍運路線<br><b>範圍</b> 自動顯示最近 4 個巴士站，不分方向<br><b>提醒</b> 到站時間由巴士公司估算，實際情況可能因路面狀況而有出入。';
+}
+
+function locate(){
+  if(!navigator.geolocation){ fail(); return; }
+  navigator.geolocation.getCurrentPosition(function(pos){
+    S.here = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+    $('sub').textContent = '正在搜尋附近車站…';
+    loadStops().then(function(all){
+      S.all = all;
+      refresh(true);
+    }).catch(function(){
+      $('list').innerHTML = '<div class="msg"><b>未能載入車站資料</b>請檢查網絡連線，然後按右上角重新整理。</div>';
+      $('sub').textContent = '連線失敗';
+    });
+  }, function(){ fail(); }, { enableHighAccuracy:true, timeout:15000, maximumAge:60000 });
+}
+
+/* ---------- 互動 ---------- */
+$('btnOut').addEventListener('click', quit);
+
+$('btnRe').addEventListener('click', function(){
+  if(S.busy) return;
+  if(!S.here){ locate(); return; }
+  refresh(false);
+});
+
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden) return;
+  if(S.stopped || !S.here) return;
+  if(Date.now() - S.last > 12000) refresh(false);
+});
+
+skeleton();
+locate();
+})();
+</script>
+</body>
+</html>
