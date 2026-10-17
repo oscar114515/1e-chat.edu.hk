@@ -240,6 +240,8 @@ input{font:inherit}
 .rtS{position:relative;height:6px;flex:1 1 0;min-width:0}
 .rtS:first-child{border-radius:3px 0 0 3px}
 .rtS:last-child{border-radius:0 3px 3px 0}
+.rtS.wk{background:repeating-linear-gradient(90deg,#9aa7bd 0 5px,transparent 5px 10px);border-radius:0}
+.cp.wk{color:#b45309;border-color:rgba(180,83,9,.35);background:rgba(180,83,9,.09)}
 .rtBar i.dt{position:absolute;top:50%;left:0;width:9px;height:9px;border-radius:50%;
   background:var(--cardbg);border:2.5px solid color-mix(in srgb,var(--text) 40%,transparent);
   box-sizing:border-box;transform:translate(-50%,-50%);z-index:2}
@@ -358,13 +360,18 @@ const SPD = { AEL:{s:62,l:78}, EAL:{s:36,l:62}, TCL:{s:46,l:72}, TML:{s:48,l:70}
               TKL:{s:34,l:46}, TWL:{s:43,l:53}, ISL:{s:32,l:40}, KTL:{s:38,l:46},
               SIL:{s:40,l:54}, DRL:{s:30,l:36} };
 const DWELL = 0.45, XFER = 3.6;
+/* 站外步行轉乘（要出閘再入閘）：港鐵有幾對不同名的站其實有行人通道直接連住。
+   圖裡面沒有這條邊的話，尖東去尖沙咀就會被迫坐車繞大圈（實測 16 分鐘、轉 2 次），
+   但實際上行過去只是幾分鐘。第三個數字是步行分鐘（已算埋出閘、入閘）。 */
+const WALK = [['ETS','TST',12], ['MKK','MOK',9], ['TWW','TSW',14], ['CEN','HOK',7]];
+/* 分鐘數對齊港鐵 App 的「步行 X 分鐘」：尖東↔尖沙咀 12、中環↔香港 7。 */
 const segTime = (line, dkm) => {
   const sp = SPD[line] || {s:38,l:48};
   const f = Math.min(1, Math.max(0, (dkm - 1.2) / 2.0));
   return dkm / (sp.s + (sp.l - sp.s) * f) * 60 + DWELL;
 };
 
-function makeGraph(stations, lines, speedOf, xferCost){
+function makeGraph(stations, lines, speedOf, xferCost, walks){
   const BY = {}; stations.forEach(s => BY[s.id] = s);
   const LINE = {}; lines.forEach(l => LINE[l.code] = l);
   const nodes = [], nidx = {}, adj = [];
@@ -395,6 +402,14 @@ function makeGraph(stations, lines, speedOf, xferCost){
     for (let i = 0; i < ls.length; i++)
       for (let j = i + 1; j < ls.length; j++)
         link(node(s.id, ls[i]), node(s.id, ls[j]), xferCost, null);
+  });
+  /* 站外步行：兩邊每一條綫的節點都連起來，成本＝步行分鐘 */
+  (walks || []).forEach(w => {
+    const A = BY[w[0]], B = BY[w[1]], m = +w[2];
+    if (!A || !B || !(m > 0)) return;
+    const la = (A.lines || []).filter(c => LINE[c]),
+          lb = (B.lines || []).filter(c => LINE[c]);
+    la.forEach(c1 => lb.forEach(c2 => link(node(A.id, c1), node(B.id, c2), m, 'WALK')));
   });
 
   function dij(starts, goals, banned){
@@ -429,20 +444,41 @@ function makeGraph(stations, lines, speedOf, xferCost){
     const path = []; for (let v = end; v !== -1; v = prev[v]) path.push(v);
     return {path: path.reverse(), minutes: d[end]};
   }
+  /* 步行表：'a|b' → 分鐘（雙向） */
+  const WMIN = {};
+  (walks || []).forEach(w => {
+    if (+w[2] > 0){ WMIN[w[0] + '|' + w[1]] = +w[2]; WMIN[w[1] + '|' + w[0]] = +w[2]; }
+  });
   function legsOf(path){
-    const legs = []; let cur = null;
+    const raw = []; let cur = null;
     for (const idx of path){
       const nd = nodes[idx];
-      if (!cur){ cur = {line: nd.lc, stops: [nd.sid]}; legs.push(cur); continue; }
+      if (!cur){ cur = {line: nd.lc, stops: [nd.sid]}; raw.push(cur); continue; }
       const last = cur.stops[cur.stops.length - 1];
       if (nd.lc === cur.line){ if (nd.sid !== last) cur.stops.push(nd.sid); }
       else { cur = {line: nd.lc, stops: [last]};
-             if (nd.sid !== last) cur.stops.push(nd.sid); legs.push(cur); }
+             if (nd.sid !== last) cur.stops.push(nd.sid); raw.push(cur); }
     }
-    return legs.filter(l => l.line && l.stops.length);
+    /* 上一段落車站 a、下一段卻在 b 上車，而 a／b 是步行相連的兩站
+       → 中間插一段「步行」，再把下一段開頭重複了的 a 拿走。
+       只有 1 個站的段落等於沒有坐車，直接丟掉（例如全程都只是行過去）。 */
+    const legs = [];
+    for (let i = 0; i < raw.length; i++){
+      const L = raw[i], N = raw[i + 1];
+      const a = L.stops[L.stops.length - 1];
+      const m = (N && N.stops.length > 1 && N.stops[0] === a && L.line && N.line)
+        ? (WMIN[a + '|' + N.stops[1]] || 0) : 0;
+      if (m){
+        if (L.stops.length > 1) legs.push(L);
+        legs.push({line: 'WALK', stops: [a, N.stops[1]], walk: m});
+        N.stops = N.stops.slice(1);
+      } else if (L.stops.length > 1) legs.push(L);
+    }
+    return legs;
   }
   const sigOf = legs => legs.map(l =>
-    l.line + '|' + l.stops[0] + '|' + l.stops[l.stops.length - 1]).join(';');
+    (l.line === 'WALK' ? 'W' + (l.walk || 0) : l.line) + '|' + l.stops[0]
+    + '|' + l.stops[l.stops.length - 1]).join(';');
 
   return {
     /* 回傳多條方案，已按時間排序；每條 {legs, minutes} */
@@ -500,7 +536,11 @@ const HR = (function(){
       const A = BY[a] || BY[+a], B = BY[b] || BY[+b];
       return Math.max(0.7, segTime(lc, Math.hypot(A.x - B.x, A.y - B.y) * KMU));
     },
-    XFER);
+    XFER,
+    WALK.map(w => {
+      const A = S.find(x => x.c === w[0]), B = S.find(x => x.c === w[1]);
+      return A && B ? [String(A.id), String(B.id), w[2]] : null;
+    }).filter(Boolean));
   const FIDX = {}; DB.fareIds.forEach((id, i) => FIDX[id] = i);
   const FN = DB.fareIds.length;
   return {
@@ -1058,11 +1098,14 @@ function routeTrack(r){
   const names = [legs[0].stops[0]].concat(legs.map(l => l.stops[l.stops.length - 1]));
   let head = '', bar = '';
   legs.forEach((l, i) => {
+    const wk = l.line === 'WALK';
     const L = M.lineOf(l.line) || {};
-    const nm = esc(L.name || l.line);
+    const nm = wk ? ('步行 ' + (l.walk || 0) + ' 分鐘') : esc(L.name || l.line);
     head += `<b data-p="${i / n * 100}">${esc(sn(names[i]))}</b>`;
-    bar += `<span class="rtS" style="flex:1 1 0;background:${col(L.color)}"`
-         + ` title="${nm}" aria-label="${nm}"><i class="dt"></i></span>`;
+    bar += wk
+      ? `<span class="rtS wk" style="flex:1 1 0" title="${nm}" aria-label="${nm}"><i class="dt"></i></span>`
+      : `<span class="rtS" style="flex:1 1 0;background:${col(L.color)}"`
+        + ` title="${nm}" aria-label="${nm}"><i class="dt"></i></span>`;
   });
   head += `<b data-p="100">${esc(sn(names[names.length - 1]))}</b>`;
   return `<div class="rtrack"><div class="rtNames">${head}</div>`
@@ -1107,14 +1150,19 @@ function fixLabels(scope){
 /* 一張路線卡 */
 function routeCard(r, i){
   const mins = Math.round(r.minutes);
-  const xf = Math.max(0, r.legs.length - 1);
-  const nStop = r.legs.reduce((n, l) => n + l.stops.length - 1, 0);
+  const rides = r.legs.filter(l => l.line !== 'WALK');
+  const wkMin = r.legs.filter(l => l.line === 'WALK')
+    .reduce((n, l) => n + (l.walk || 0), 0);
+  const xf = Math.max(0, rides.length - 1);
+  const nStop = rides.reduce((n, l) => n + l.stops.length - 1, 0);
+  /* 全程只是行過去 → 唔應該講「轉乘 0 次、0 個站」，直接講步行幾分鐘 */
+  const chips = rides.length
+    ? `<span class="cp">轉乘 <b>${xf}</b> 次</span><span class="cp"><b>${nStop}</b> 個站</span>`
+      + (wkMin ? `<span class="cp wk">步行轉乘 <b>${wkMin}</b> 分鐘</span>` : '')
+    : `<span class="cp wk">步行 <b>${wkMin}</b> 分鐘</span><span class="cp">無需轉乘</span>`;
   return `<div class="rcard${i === P.sel ? ' on' : ''}" data-ri="${i}">
     <div class="rcTop">
-      <div class="rcChips">
-        <span class="cp">轉乘 <b>${xf}</b> 次</span>
-        <span class="cp"><b>${nStop}</b> 個站</span>
-      </div>
+      <div class="rcChips">${chips}</div>
       <div class="rcTime"><span class="tw">~</span><b>${mins}</b><em>分鐘</em></div>
     </div>
     ${routeTrack(r)}
@@ -1142,7 +1190,9 @@ function render(){
     return;
   }
   showMsg('');
-  const f = M.fare(P.from, P.to);
+  /* 全程步行 = 一程車都唔使搭，唔應該照樣列車費（會令人以為要付錢） */
+  const ride = P.route ? P.route.legs.filter(l => l.line !== 'WALK') : [];
+  const f = ride.length ? M.fare(P.from, P.to) : null;
   let h = '';
   if (f){
     h += `<div class="fares">`;
@@ -1151,7 +1201,9 @@ function render(){
   }
   h += `<div class="rhead">建議路線<span>${P.routes.length} 條 · 時間由短至長</span></div>`;
   h += `<div class="rlist">${P.routes.map(routeCard).join('')}</div>`;
-  h += `<div class="note">車程為<b>估算值</b>，車費取自官方開放數據。<b>實際以港鐵公佈為準。</b></div>`;
+  h += ride.length
+    ? `<div class="note">車程為<b>估算值</b>，車費取自官方開放數據。<b>實際以港鐵公佈為準。</b></div>`
+    : `<div class="note">這兩站有行人通道直接連住，<b>行過去就得，毋須入閘</b>；以下只是步行時間估算。</div>`;
   const box = document.getElementById('res');
   box.innerHTML = h;
   card.style.display = '';
