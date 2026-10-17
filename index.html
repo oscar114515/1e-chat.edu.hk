@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tguTU05ON+6nARAiE3TV2XRY7ann4MN6TBcK/WISoVM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tU/8b9Ht9eGcUoX6LSRWgOecK0yV5PDx/LUOB64uJ9E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -166,6 +166,27 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .fullPage .fp-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
 .fullPage .fp-title{font-size:17px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fullPage .fp-body{flex:1;min-height:0;overflow-y:auto}
+
+/* ═══ v1.38.1 小工具用「頁內 iframe」打開，不是跳頁 ═══
+   以前用 window.open，手機上被攔就 fallback 去 location.href，整個聊天室被導走；
+   在某些內建瀏覽器／WebView 更會彈回個人主頁，而且每次按都再彈一次。
+   改成蓋一層 iframe：不導航、不開分頁、聊天室狀態完全唔會掉。 */
+.tool-frame{position:fixed;inset:0;z-index:300;background:var(--bg-app);display:flex;flex-direction:column;
+  height:100vh;height:100dvh;animation:tfIn .22s var(--ease-out)}
+@keyframes tfIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.tool-frame .tf-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-card);
+  border-bottom:1px solid var(--border);flex-shrink:0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.tool-frame .tf-back{background:rgba(148,163,184,.15);color:var(--text-main);border:none;width:38px;height:38px;
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-frame .tf-back:active{transform:scale(.94)}
+.tool-frame .tf-title{font-size:16px;font-weight:650;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tool-frame .tf-open{background:none;border:1px solid var(--border);color:var(--text-sub);border-radius:10px;
+  padding:7px 10px;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
+.tool-frame .tf-body{flex:1;min-height:0;position:relative;background:var(--bg-app)}
+.tool-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.tool-frame .tf-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--text-sub);font-size:13px;letter-spacing:.5px;pointer-events:none;transition:opacity .25s}
+.tool-frame.ready .tf-load{opacity:0}
 /* ═══ v1.12 進退場動畫 ═══
    安卓版每次離開畫面都有轉場，網頁版原本是「啪」一聲直接消失。
    這裡把所有會離開畫面的東西都補上動畫：頁面向右滑走、上一層從左邊推回來。 */
@@ -996,6 +1017,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
   <div id="bottomNav">
     <button class="nav-item" data-action="openMyProfile"><span class="nav-icon"><svg class="ico"><use href="#i-user"/></svg></span><span>個人主頁</span></button>
     <button class="nav-item" data-action="openGroupList"><span class="nav-icon"><svg class="ico"><use href="#i-msg"/></svg></span><span>群聊</span><span class="nav-badge hidden" id="navGroupBadge">0</span></button>
+    <button class="nav-item" data-action="openTools"><span class="nav-icon"><svg class="ico"><use href="#i-grid"/></svg></span><span>小工具</span></button>
     <button class="nav-item" data-action="openAIPrivate"><span class="nav-icon"><svg class="ico"><use href="#i-bot"/></svg></span><span>AI 聊天</span></button>
     <button class="nav-item hidden" id="navAdminBtn" data-action="openAdmin"><span class="nav-icon"><svg class="ico"><use href="#i-settings"/></svg></span><span>管理員</span><span class="nav-badge hidden" id="navAdminBadge">0</span></button>
   </div>
@@ -1012,7 +1034,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38';   // 一次部署只 +0.01；重要改動才進位到 v1.4x（見上方 VERSION_HISTORY 的規則）
+const CURRENT_VERSION='v1.38.1';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1311,9 +1333,9 @@ async function setTheme(n){ theme=n;applyTheme();localStorage.setItem('chat_them
 
 /* ===== v1.10 語言切換 ===== */
 const LANG_DICT={
-  'zh-Hant':{'班級聊天室':'班級聊天室','登入':'登入','登出':'登出','請輸入帳號與密碼':'請輸入帳號與密碼','帳號':'帳號','密碼':'密碼','送出':'送出','輸入訊息...':'輸入訊息...','搜尋訊息...':'搜尋訊息...','個人主頁':'個人主頁','群聊':'群聊','AI 聊天':'AI 聊天','管理員':'管理員','最新：':'最新：','置頂':'置頂','公告':'公告','問題反饋':'問題反饋','發送':'發送','語音':'語音','加密':'加密'},
-  'zh-Hans':{'班級聊天室':'班级聊天室','登入':'登录','登出':'登出','請輸入帳號與密碼':'请输入账号与密码','帳號':'账号','密碼':'密码','送出':'发送','輸入訊息...':'输入消息...','搜尋訊息...':'搜索消息...','個人主頁':'个人主页','群聊':'群聊','AI 聊天':'AI 聊天','管理員':'管理员','最新：':'最新：','置頂':'置顶','公告':'公告','問題反饋':'问题反馈','發送':'发送','語音':'语音','加密':'加密'},
-  'en':{'班級聊天室':'Class Chat','登入':'Login','登出':'Logout','請輸入帳號與密碼':'Enter username and password','帳號':'Username','密碼':'Password','送出':'Send','輸入訊息...':'Type a message...','搜尋訊息...':'Search messages...','個人主頁':'Profile','群聊':'Groups','AI 聊天':'AI Chat','管理員':'Admin','最新：':'Latest: ','置頂':'Pinned','公告':'Notice','問題反饋':'Feedback','發送':'Send','語音':'Voice','加密':'Encrypt'}
+  'zh-Hant':{'班級聊天室':'班級聊天室','登入':'登入','登出':'登出','請輸入帳號與密碼':'請輸入帳號與密碼','帳號':'帳號','密碼':'密碼','送出':'送出','輸入訊息...':'輸入訊息...','搜尋訊息...':'搜尋訊息...','個人主頁':'個人主頁','群聊':'群聊','小工具':'小工具','AI 聊天':'AI 聊天','管理員':'管理員','最新：':'最新：','置頂':'置頂','公告':'公告','問題反饋':'問題反饋','發送':'發送','語音':'語音','加密':'加密'},
+  'zh-Hans':{'班級聊天室':'班级聊天室','登入':'登录','登出':'登出','請輸入帳號與密碼':'请输入账号与密码','帳號':'账号','密碼':'密码','送出':'发送','輸入訊息...':'输入消息...','搜尋訊息...':'搜索消息...','個人主頁':'个人主页','群聊':'群聊','小工具':'小工具','AI 聊天':'AI 聊天','管理員':'管理员','最新：':'最新：','置頂':'置顶','公告':'公告','問題反饋':'问题反馈','發送':'发送','語音':'语音','加密':'加密'},
+  'en':{'班級聊天室':'Class Chat','登入':'Login','登出':'Logout','請輸入帳號與密碼':'Enter username and password','帳號':'Username','密碼':'Password','送出':'Send','輸入訊息...':'Type a message...','搜尋訊息...':'Search messages...','個人主頁':'Profile','群聊':'Groups','小工具':'Tools','AI 聊天':'AI Chat','管理員':'Admin','最新：':'Latest: ','置頂':'Pinned','公告':'Notice','問題反饋':'Feedback','發送':'Send','語音':'Voice','加密':'Encrypt'}
 };
 let lang=localStorage.getItem('chat_lang')||'zh-Hant';
 function t(key){ const d=LANG_DICT[lang]||LANG_DICT['zh-Hant'];return (d&&d[key])||key; }
@@ -3768,20 +3790,63 @@ function openToolsPage(){
     bodyHTML:'<div class="tools-wrap"><div class="tools-lead">跟聊天室無關、但上課或返學用得著的小工具都放在這裡。</div>'
       + (list.length ? ('<div class="tools-grid">' + cards + '</div>')
                      : '<div class="tools-empty">暫時沒有可用的小工具</div>')
-      + '<div class="tools-foot">工具會在另一個視窗打開，用完關掉就回到聊天室。</div></div>',
+      + '<div class="tools-foot">工具會直接在這裡打開，用完按左上角返回就回到這個清單。</div></div>',
     key:'tools'
   });
 }
-/* 開新視窗；如果環境不支援（例如安卓 WebView 沒有開多視窗），就同一頁跳過去。 */
+/* 開工具：用頁內 iframe，不跳頁、不開新視窗。
+   為甚麼要改（用戶回報「點工具會一直跳去個人主頁、退不出」）：
+     · 舊碼先試 window.open；手機瀏覽器／WebView 經常直接回傳 null（被攔）
+     · 於是 fallback 去 location.href = url，整個聊天室被導走
+     · 在部分內建瀏覽器或 Android WebView，這個導航會被當成外部跳轉，
+       結果彈回個人主頁；再按一次又是一樣，看起來就是「一直跳轉」
+   現在工具直接蓋在聊天室上面，關掉就回到原本的位置，全程沒有導航。 */
+let toolFrameEl=null;
+function closeToolFrame(){
+  if(!toolFrameEl) return;
+  try{ toolFrameEl.remove(); }catch(e){}
+  toolFrameEl=null;
+  document.body.style.removeProperty('overflow');
+}
+function openToolFrame(url,name){
+  if(!url) return;
+  closeToolFrame();
+  const el=document.createElement('div');
+  el.className='tool-frame';
+  el.id='toolFrame';
+  el.innerHTML='<div class="tf-bar">'
+    +'<button class="tf-back" type="button" aria-label="返回"><svg class="ico"><use href="#i-back"/></svg></button>'
+    +'<div class="tf-title">'+escapeHtml(name||'小工具')+'</div>'
+    +'<button class="tf-open" type="button">新視窗</button>'
+    +'</div>'
+    +'<div class="tf-body"><div class="tf-load">正在載入工具…</div>'
+    +'<iframe title="'+escAttr(name||'小工具')+'" src="'+escAttr(url)+'" '
+    +'allow="geolocation; fullscreen; clipboard-write" referrerpolicy="same-origin"></iframe></div>';
+  document.body.appendChild(el);
+  document.body.style.setProperty('overflow','hidden');
+  toolFrameEl=el;
+  const ifr=el.querySelector('iframe');
+  el.querySelector('.tf-back').addEventListener('click',closeToolFrame);
+  el.querySelector('.tf-open').addEventListener('click',function(){
+    /* 桌面想開另一個視窗就看這顆；被攔都無所謂，因為工具本身已經開著 */
+    try{ window.open(url,'_blank'); }catch(e){}
+  });
+  el.querySelector('.tf-load').textContent='正在載入 '+String(name||'工具')+'…';
+  try{
+    ifr.addEventListener('load',function(){ el.classList.add('ready'); });
+    /* 保險：4 秒後無論如何收埋「正在載入」，唔好一直卡住 */
+    setTimeout(function(){ el.classList.add('ready'); },4000);
+  }catch(e){}
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeToolFrame(); });
 document.addEventListener('click', function(e){
   const a = e.target && e.target.closest ? e.target.closest('[data-tool-link]') : null;
   if(!a) return;
   e.preventDefault();
   const url = a.getAttribute('href');
   if(!url) return;
-  let w = null;
-  try{ w = window.open(url, '_blank'); }catch(err){ w = null; }
-  if(!w){ try{ location.href = url; }catch(err2){} }
+  const tEl=a.querySelector('.tool-t');
+  openToolFrame(url, tEl?tEl.textContent.trim():'小工具');
 });
 
 /* ═══ v1.38 全班共享地圖 ═════════════════════════════════════════════
@@ -4169,7 +4234,7 @@ async function openProfilePage(username,isSelf,fromAdmin){
   const heroHTML=profileTopHTML(u);
   const amAdmin=me&&(me.role==='superadmin'||me.role==='admin');
   if(isSelf){
-    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">小工具</div><div class="about-item tool-entry" data-action="openTools"><div class="ai-left"><div class="ai-icon te"><svg class="ico"><use href="#i-grid"/></svg></div><div><div class="ai-title">小工具</div><div class="ai-sub">3 個工具</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
+    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else if(fromAdmin&&amAdmin){
     /* v1.37：管理員後台點進某人 → 跟一般個人主頁「同一個版面」，
@@ -5600,13 +5665,23 @@ function closeTrailMap(){
 }
 
 /* ===== 版本 ===== */
-/* ═══ 版本號規則（2026-10-15 用戶定）═══
-   一次部署「只動最後一個小數位」：v1.35 → v1.36，不要一次跳兩格。
-   只有「重要」的東西才進位到十分位（v1.36 → v1.40）。
-   重要＝新功能、修好會影響結果的 bug、影響全站顯示的改動；
-   不重要＝外觀、文案、小圖標、體驗微調 —— 那些一律只 +0.01。
-   所以下面一版就是一版，不要把同一次部署拆成 v1.36 + v1.36 兩條。 */
+/* ═══ 版本號規則（2026-10-17 用戶再次強調）═══
+   主版本＋次版本（v1.38）是「一個大版本」；
+   同一個大版本之內，每次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2 → v1.38.3…
+   ★ 不准自己把次版本 +1（v1.38 → v1.39）。
+     v1.39、v1.40 這種「大版本」只有兩種情況才可以開：
+       1) 用戶親自說「開一個新大版本」；或者
+       2) 整個站的架構級改動（例如換後端、換資料庫、整套 UI 重做）。
+   修 bug、加一個小功能、加一個頁面、改入口位置 —— 全部只是尾數 +1。
+   就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
+   所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.1',date:'2026-10-17',changes:[
+'【重要】修好「點小工具之後一路跳轉、退不出」：以前工具是用新視窗打開，手機上被攔就會改成同一頁跳過去，某些內建瀏覽器／App 內會把它當成外部跳轉，結果彈回個人主頁，再按又是一樣。現在工具直接蓋在聊天室上面打開，按左上角返回就回到小工具清單，全程不會離開聊天室，也不會掉原本的位置',
+'小工具入口搬到下面那條導覽列，跟「個人主頁、群聊、AI 聊天、管理員」放在一起；個人主頁裡面重複的那一個已經拿走，不會有兩個入口',
+'【重要】港鐵行程計算器：手機可以用兩隻手指張合放大縮小地圖（以前只有電腦滾輪可以），雙擊也可以放大；點車站之後「取消」換成「查看車站列車」，直接列出上行／下行月台的下一班車，只顯示「還有幾分鐘」或者「即將到站」，每 30 秒自動更新',
+'順手整理：大廳貪吃蛇改成正方形場地，貼近邊界 20 單位開始變紅、牆外最紅；場上只有真實玩家，見到幾條蛇就是幾個人',
+]},
 {ver:'v1.38',date:'2026-10-17',changes:[
 '【重要】修好手機版發出投票與位置時，卡片凸出訊息框右邊的問題：以前螢幕一窄，投票選項和位置縮圖就會被撞出去；現在不論螢幕幾窄，兩者都完整留在訊息裡面',
 '【重要】兩個地圖（個人位置、全班共享）改用雙指縮放：拿掉右下角的加減按鈕，用兩隻手指就可以連續放大縮小，而且縮放時手指下面那一點不會跑；拖動地圖時自己的位置標記會跟著地圖移動，不再像是釘在畫面正中飄來飄去',
