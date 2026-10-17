@@ -356,6 +356,30 @@ body.theme-light .seg button.sel{color:#fff}
 
 /* ══ v1.40 canvas 類遊戲的版面（大廳自由／單人）══ */
 .cstage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+/* 小恐龍：白底像素畫布，夜晚整塊反色（同 Chrome 一樣）。
+   畫面只有 4:1，手機直立時上下會留一大片空，所以加一層很淡的光暈，
+   令畫布看起來是「浮在舞台上」而不是貼在一片死黑中間。 */
+.dinowrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+  position:relative;padding:10px 12px max(10px,6vh) 12px}
+.dinowrap::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(58% 26% at 50% 47%,rgba(148,163,184,.24),transparent 74%)}
+/* 陰影一定要放在外層容器：夜晚是把 canvas 整個 invert，
+   陰影若掛在 canvas 身上會一齊被反色，變成一大圈白色光暈。 */
+.dinoscreen{position:relative;max-width:100%;border-radius:10px;overflow:hidden;
+  background:#f7f7f7;line-height:0;transition:background-color .9s ease;
+  box-shadow:0 0 0 1px rgba(255,255,255,.07),0 10px 34px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.28)}
+.dinoscreen.screen-night{background:#080808}
+.dinoscreen canvas{display:block;max-width:100%;background:#f7f7f7;border:0;
+  image-rendering:pixelated;transition:filter .9s ease}
+.dinoscreen canvas.dino-night{filter:invert(1)}
+.dinobar{display:flex;align-items:center;gap:10px;padding:6px 14px calc(14px + env(safe-area-inset-bottom,0px))}
+.dino-tip{font-size:11.5px;color:var(--text-sub);flex:1;text-align:center}
+.dino-pad{display:none;gap:8px}
+.dino-pad .dbtn{width:64px;height:50px;display:flex;align-items:center;justify-content:center;
+  border-radius:14px;background:rgba(148,163,184,.16);border:1px solid rgba(148,163,184,.45);
+  font-size:15px;font-weight:700;color:var(--text);user-select:none;-webkit-user-select:none;
+  touch-action:none;transition:transform .1s,background .15s}
+.dino-pad .dbtn.on{background:var(--accent);border-color:var(--accent);color:#0b0d14;transform:scale(.95)}
 .cwrap{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none}
 .cwrap canvas{display:block;width:100%;height:100%}
 .hudtop{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;z-index:3}
@@ -407,7 +431,7 @@ body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
   <symbol id="i-gomoku" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="16" r="3.2"/></symbol>
-<symbol id="i-ludo" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol><symbol id="i-uno" viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 4.5A2 2 0 0 1 9 3h8a3 3 0 0 1 3 3v9a2 2 0 0 1-1.5 1.94"/></symbol><symbol id="i-xiangqi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M7.5 12h9"/><circle cx="12" cy="12" r="3.2"/></symbol><symbol id="i-chess" viewBox="0 0 24 24"><path d="M6 20h12M8 20l.8-3h6.4l.8 3"/><path d="M10 17v-3.6A4 4 0 0 1 8.6 10c0-1.6 1.2-2.6 1.6-3.4A2.4 2.4 0 0 1 12 4a2.4 2.4 0 0 1 1.8 2.6c.4.8 1.6 1.8 1.6 3.4A4 4 0 0 1 14 13.4V17"/></symbol><symbol id="i-go" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="15" cy="9" r="2.4" fill="currentColor"/></symbol><symbol id="i-checkers" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.3"/><circle cx="16" cy="8" r="3.3"/><circle cx="8" cy="16" r="3.3"/><circle cx="16" cy="16" r="3.3" fill="currentColor"/></symbol><symbol id="i-doushou" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="3.6" ry="3"/><path d="M8.8 13.4A2.6 2.6 0 1 1 6.6 9a2.5 2.5 0 0 1 2.6-3.6A2.5 2.5 0 0 1 12 3.4a2.5 2.5 0 0 1 2.8 2A2.5 2.5 0 0 1 17.4 9a2.6 2.6 0 1 1-2.2 4.4"/></symbol><symbol id="i-konglok" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><path d="M15.5 8.5h-7v7"/></symbol><symbol id="i-monopoly" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-sanguo" viewBox="0 0 24 24"><path d="M14.5 3.5 21 10l-3 3-6.5-6.5z"/><path d="M11.5 6.5 3 15v6h6l8.5-8.5"/><path d="M6 18h.01"/></symbol><symbol id="i-werewolf" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z"/><path d="M18.5 3.5 20 6l2.5.6-2 1.6.6 2.5-2.1-1.4"/></symbol><symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="11" cy="15" r="6"/><path d="M16.5 8.5 19 6M17.5 4.5 19 6l1.5-1.5"/><path d="M15.6 9.4a5.5 5.5 0 0 0-4-2.4"/></symbol><symbol id="i-script" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M4 6.5h15M8 10h7M8 14h5"/></symbol><symbol id="i-pictionary" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 2-4 2.5 2.5 0 0 1 2-4H19a2 2 0 0 0 2-2 9 9 0 0 0-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></symbol><symbol id="i-undercover" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6A2 2 0 0 0 12 14a2 2 0 0 0 1.4-.6"/><path d="M9.4 5.3A9 9 0 0 1 12 5c5 0 9 4.5 9 7a7 7 0 0 1-1.7 3.8"/><path d="M6.2 6.7C4 8.3 3 10.4 3 12c0 1.4 1 3 2.6 4.3"/></symbol><symbol id="i-snake" viewBox="0 0 24 24"><path d="M5 17c-1.7 0-3-1.3-3-3s1.3-3 3-3h6a3 3 0 0 0 0-6H8"/><circle cx="17.5" cy="17" r="3.5"/><path d="M15.6 15.2h.01"/></symbol><symbol id="i-tetris" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h6M9 9v6M9 15h6"/><rect x="9" y="3" width="6" height="6" fill="currentColor" stroke="none"/><rect x="15" y="15" width="6" height="6" fill="currentColor" stroke="none"/></symbol><symbol id="i-2048" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 12h18M12 3v18"/></symbol><symbol id="i-breakout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><path d="M10 4v7M17 4v7M3 7.5h18"/><circle cx="12" cy="16" r="2.4"/><path d="M6 21h12"/></symbol><symbol id="i-mines" viewBox="0 0 24 24"><circle cx="12" cy="13" r="5.5"/><path d="M12 3v3M5 6l2 2M19 6l-2 2M4 13H1M23 13h-3M8.5 10.8h.01"/></symbol><symbol id="i-memory" viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/><path d="M7 12h.01M17 12h.01"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18 6 6 0 0 0 0-12 3 3 0 0 1 0-6"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M12 9v6M8 12h8M9 21l3-6 3 6"/></symbol><symbol id="i-race" viewBox="0 0 24 24"><path d="M4 15h16M6 15V9l5-3 5 3v6"/><circle cx="7.5" cy="18" r="2.5"/><circle cx="16.5" cy="18" r="2.5"/></symbol><symbol id="i-dot" viewBox="0 0 24 24"><circle cx="7" cy="7" r="2.2"/><circle cx="17" cy="9" r="2.2"/><circle cx="9" cy="17" r="2.2"/><circle cx="18" cy="17.5" r="1.6"/></symbol><symbol id="i-dodge" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 6l4 6-4 6M19 6l-4 6 4 6"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol><symbol id="i-king" viewBox="0 0 24 24"><path d="M4 18h16M5 18l-1.5-8 5 3.5L12 6l3.5 7.5 5-3.5L19 18"/></symbol><symbol id="i-spect" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></symbol></svg>
+<symbol id="i-ludo" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol><symbol id="i-uno" viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 4.5A2 2 0 0 1 9 3h8a3 3 0 0 1 3 3v9a2 2 0 0 1-1.5 1.94"/></symbol><symbol id="i-xiangqi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M7.5 12h9"/><circle cx="12" cy="12" r="3.2"/></symbol><symbol id="i-chess" viewBox="0 0 24 24"><path d="M6 20h12M8 20l.8-3h6.4l.8 3"/><path d="M10 17v-3.6A4 4 0 0 1 8.6 10c0-1.6 1.2-2.6 1.6-3.4A2.4 2.4 0 0 1 12 4a2.4 2.4 0 0 1 1.8 2.6c.4.8 1.6 1.8 1.6 3.4A4 4 0 0 1 14 13.4V17"/></symbol><symbol id="i-go" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="15" cy="9" r="2.4" fill="currentColor"/></symbol><symbol id="i-checkers" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.3"/><circle cx="16" cy="8" r="3.3"/><circle cx="8" cy="16" r="3.3"/><circle cx="16" cy="16" r="3.3" fill="currentColor"/></symbol><symbol id="i-doushou" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="3.6" ry="3"/><path d="M8.8 13.4A2.6 2.6 0 1 1 6.6 9a2.5 2.5 0 0 1 2.6-3.6A2.5 2.5 0 0 1 12 3.4a2.5 2.5 0 0 1 2.8 2A2.5 2.5 0 0 1 17.4 9a2.6 2.6 0 1 1-2.2 4.4"/></symbol><symbol id="i-konglok" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><path d="M15.5 8.5h-7v7"/></symbol><symbol id="i-monopoly" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-sanguo" viewBox="0 0 24 24"><path d="M14.5 3.5 21 10l-3 3-6.5-6.5z"/><path d="M11.5 6.5 3 15v6h6l8.5-8.5"/><path d="M6 18h.01"/></symbol><symbol id="i-werewolf" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z"/><path d="M18.5 3.5 20 6l2.5.6-2 1.6.6 2.5-2.1-1.4"/></symbol><symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="11" cy="15" r="6"/><path d="M16.5 8.5 19 6M17.5 4.5 19 6l1.5-1.5"/><path d="M15.6 9.4a5.5 5.5 0 0 0-4-2.4"/></symbol><symbol id="i-script" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M4 6.5h15M8 10h7M8 14h5"/></symbol><symbol id="i-pictionary" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 2-4 2.5 2.5 0 0 1 2-4H19a2 2 0 0 0 2-2 9 9 0 0 0-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></symbol><symbol id="i-undercover" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6A2 2 0 0 0 12 14a2 2 0 0 0 1.4-.6"/><path d="M9.4 5.3A9 9 0 0 1 12 5c5 0 9 4.5 9 7a7 7 0 0 1-1.7 3.8"/><path d="M6.2 6.7C4 8.3 3 10.4 3 12c0 1.4 1 3 2.6 4.3"/></symbol><symbol id="i-snake" viewBox="0 0 24 24"><path d="M5 17c-1.7 0-3-1.3-3-3s1.3-3 3-3h6a3 3 0 0 0 0-6H8"/><circle cx="17.5" cy="17" r="3.5"/><path d="M15.6 15.2h.01"/></symbol><symbol id="i-tetris" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h6M9 9v6M9 15h6"/><rect x="9" y="3" width="6" height="6" fill="currentColor" stroke="none"/><rect x="15" y="15" width="6" height="6" fill="currentColor" stroke="none"/></symbol><symbol id="i-2048" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 12h18M12 3v18"/></symbol><symbol id="i-breakout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><path d="M10 4v7M17 4v7M3 7.5h18"/><circle cx="12" cy="16" r="2.4"/><path d="M6 21h12"/></symbol><symbol id="i-mines" viewBox="0 0 24 24"><circle cx="12" cy="13" r="5.5"/><path d="M12 3v3M5 6l2 2M19 6l-2 2M4 13H1M23 13h-3M8.5 10.8h.01"/></symbol><symbol id="i-memory" viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/><path d="M7 12h.01M17 12h.01"/></symbol><symbol id="i-dino" viewBox="0 0 24 24"><path d="M4 20v-5.5h4V20"/><path d="M8 14.5V9.8c0-2 1.4-3.4 3.3-3.4h4.4c1.6 0 2.9 1 3.3 2.5"/><path d="M12 6.4V4.2c0-.9.7-1.6 1.6-1.6h2.6"/><circle cx="16.4" cy="9.2" r=".9" fill="currentColor" stroke="none"/><path d="M19 10.6h2.4"/><path d="M11.2 13.4h3"/><path d="M9 20h5"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18 6 6 0 0 0 0-12 3 3 0 0 1 0-6"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M12 9v6M8 12h8M9 21l3-6 3 6"/></symbol><symbol id="i-race" viewBox="0 0 24 24"><path d="M4 15h16M6 15V9l5-3 5 3v6"/><circle cx="7.5" cy="18" r="2.5"/><circle cx="16.5" cy="18" r="2.5"/></symbol><symbol id="i-dot" viewBox="0 0 24 24"><circle cx="7" cy="7" r="2.2"/><circle cx="17" cy="9" r="2.2"/><circle cx="9" cy="17" r="2.2"/><circle cx="18" cy="17.5" r="1.6"/></symbol><symbol id="i-dodge" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 6l4 6-4 6M19 6l-4 6 4 6"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol><symbol id="i-king" viewBox="0 0 24 24"><path d="M4 18h16M5 18l-1.5-8 5 3.5L12 6l3.5 7.5 5-3.5L19 18"/></symbol><symbol id="i-spect" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></symbol></svg>
 <div id="app"></div>
 <script src="lib/uno-engine.js"></script>
 <script src="lib/opencc-t2cn.js"></script>
@@ -559,7 +583,8 @@ const GAMES=[
  {k:'breakout',n:'打磚塊',cat:'solo',min:1,max:1,ok:false,c:'#22c55e',ab:'磚',ic:'i-breakout'},
  {k:'memory',n:'記憶配對',cat:'solo',min:1,max:1,ok:false,c:'#a855f7',ab:'記',ic:'i-memory'},
  {k:'mines',n:'踩地雷',cat:'solo',min:1,max:1,ok:false,c:'#94a3b8',ab:'雷',ic:'i-mines'},
- {k:'flappy',n:'像素小鳥',cat:'solo',min:1,max:1,ok:false,c:'#eab308',ab:'鳥'}
+ {k:'flappy',n:'像素小鳥',cat:'solo',min:1,max:1,ok:false,c:'#eab308',ab:'鳥'},
+ {k:'dino',n:'小恐龍',cat:'solo',min:1,max:1,ok:true,c:'#5b6470',ab:'龍',ic:'i-dino'}
 ];
 const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,cat:'multi',min:2,max:2,ok:false,c:'#888',ab:'?'};
 const CATS=[
@@ -1205,6 +1230,7 @@ async function leaveRoom(){
   if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
   const wm=document.getElementById('wwModal'); if(wm) wm.remove();
   if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
+  if(typeof dinoGame!=='undefined' && dinoGame){ try{ dinoGame.unmount(); }catch(e){} dinoGame=null; }
   if(rid&&me){
     try{
       // v1.31 房主退出＝關閉房間。
@@ -1295,6 +1321,7 @@ async function enterLobbyGame(gk){
   const g=gameDef(gk);
   if(!g.ok||!LOBBY_ENGINES[gk]){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
   if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
+  if(typeof dinoGame!=='undefined' && dinoGame){ try{ dinoGame.unmount(); }catch(e){} dinoGame=null; }
   if(lgame) await leaveLobbyGame(true);
   lobbyKey=gk; view='lobbygame'; cameFromInvite=false;
   lgame=LOBBY_ENGINES[gk]();
@@ -2223,6 +2250,429 @@ function createTetris(){
   };
 }
 
+/* ═══ 小恐龍（Chrome 離線小遊戲）═══════════════════════════════════════
+   版面、物理、精靈座標照 Chromium 的 offline.js（BSD 授權）：
+     · 畫布 600×150，地面線 y=127；小恐龍 44×47，蹲下 59×25
+     · 速度由 6 慢慢加到 13（+0.001/ms），重力 0.6／格，跳躍初速 −10
+     · 每 700 分轉一次夜晚：整塊畫面反色，同官方一樣
+   精靈圖以 data URL 內嵌，斷網都用得，不會有任何外部請求。 */
+const DINO_IMG = 'data:image/png;base64,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';
+const DINO = {
+  W: 600, H: 150, BOTTOM: 10, GROUND: 93, HORIZON_Y: 127,
+  TREX: { x: 848, y: 2, w: 44, h: 47, dw: 59, dh: 25 },
+  FRAMES: { wait: [44, 0], run: [88, 132], duck: [264, 323], crash: [220] },
+  SMALL: { x: 228, y: 2, w: 17, h: 35, yp: 105,
+           boxes: [[0, 7, 5, 27], [4, 0, 6, 34], [10, 4, 7, 14]] },
+  LARGE: { x: 332, y: 2, w: 25, h: 50, yp: 90,
+           boxes: [[0, 12, 7, 38], [8, 0, 7, 49], [13, 10, 10, 38]] },
+  PTERO: { x: 134, y: 2, w: 46, h: 40, yps: [100, 75, 50],
+           boxes: [[15, 15, 16, 5], [18, 21, 24, 6], [2, 14, 4, 3], [6, 10, 4, 7], [10, 8, 6, 9]] },
+  CLOUD: { x: 86, y: 2, w: 46, h: 14 },
+  RESTART: { x: 2, y: 2, w: 36, h: 32 },
+  OVER: { x: 655, y: 15, w: 191, h: 11 },
+  /* 這張精靈圖的數字是橫排：655 起，0-9 每個 10px，之後是 H、I */
+  DIGIT: { x: 655, y: 2, w: 10, h: 13 },
+  HORIZON: { x: 2, y: 54, w: 600, h: 12 },
+  BOX_RUN: [[22, 0, 17, 16], [1, 18, 30, 9], [10, 35, 14, 8], [1, 24, 29, 5], [5, 30, 21, 4], [9, 34, 15, 4]],
+  BOX_DUCK: [[1, 18, 55, 7]]
+};
+const DINO_BEST_KEY = 'dino_best';
+
+function createDino(){
+  let cv = null, ctx = null, raf = 0, mounted = false, img = null, imgOK = false;
+  let dead = false, started = false, paused = false, lastTs = 0;
+  let speed = 6, distance = 0, score = 0, best = 0, overTimer = 0;
+  let groundX = 0, spawnGap = 420, cloudTimer = 1400;
+  let t = { x: 50, y: DINO.GROUND, vy: 0, jumping: false, ducking: false,
+            frame: 0, ftimer: 0, status: 'waiting', speedDrop: false };
+  let obs = [], clouds = [], night = false;
+  let audio = null, muted = false;
+  /* 手機沒有空白鍵：開場提示、底部提示都要分開寫，不然手機用戶會一頭霧水。 */
+  const touchDevice = (typeof lobbyIsTouch === 'function') ? lobbyIsTouch() : false;
+
+  try { best = parseInt(localStorage.getItem(DINO_BEST_KEY) || '0', 10) || 0; } catch (e) { best = 0; }
+  try { muted = localStorage.getItem('dino_mute') === '1'; } catch (e) {}
+
+  function beep(freq, dur, type, vol){
+    if (muted) return;
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type || 'square'; o.frequency.value = freq;
+      g.gain.value = vol || 0.05;
+      o.connect(g); g.connect(audio.destination);
+      const now = audio.currentTime;
+      o.start(now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
+
+  function resize(){
+    if (!cv || !cv.parentNode) return;
+    /* 量「可用內容寬度」而不是外層外框：外層有 12px 左右 padding，
+       用外框寬度算出來的高度會偏大，canvas 再被 max-width:100% 壓窄，
+       像素圖就被拉高（本來 4:1 變成 3.7:1）。
+       canvas 外面多包一層 .dinoscreen（放陰影用），所以要找 .dinowrap 來量。 */
+    const boxEl = cv.closest('.dinowrap') || cv.parentNode;
+    const cs = getComputedStyle(boxEl);
+    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    const availW = Math.max(0, boxEl.clientWidth - padX);
+    const availH = Math.max(0, boxEl.clientHeight - padY);
+    let w = Math.max(220, availW || DINO.W);
+    let h = w * DINO.H / DINO.W;
+    if (availH && h > availH){ h = availH; w = h * DINO.W / DINO.H; }
+    cv.style.width = Math.round(w) + 'px';
+    cv.style.height = Math.round(h) + 'px';
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    ctx = cv.getContext('2d');
+    const k = w / DINO.W * dpr;
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    draw();
+  }
+
+  /* 夜晚：整塊 canvas 反色（同 Chrome 一樣）。
+     外層 .dinoscreen 的背景色要一齊轉黑，不然圓角邊緣會漏出一線淺色，
+     看起來就像畫布外面圍了一圈白邊。 */
+  function applyNight(){
+    if (!cv) return;
+    cv.classList.toggle('dino-night', night);
+    const sc = cv.closest('.dinoscreen');
+    if (sc) sc.classList.toggle('screen-night', night);
+  }
+
+  function reset(){
+    speed = 6; distance = 0; score = 0; overTimer = 0;
+    groundX = 0; spawnGap = 420; cloudTimer = 1400;
+    t = { x: 50, y: DINO.GROUND, vy: 0, jumping: false, ducking: false,
+          frame: 0, ftimer: 0, status: 'waiting', speedDrop: false };
+    obs = []; clouds = []; dead = false; started = false; night = false;
+    applyNight();
+  }
+
+  /* 翼龍要速度 8.5 以上才出現（同官方），仙人掌分大小、1–3 棵一組 */
+  function spawnObstacle(){
+    const roll = Math.random();
+    if (speed > 8.5 && roll < 0.22){
+      obs.push({ kind: 'ptero', w: DINO.PTERO.w, h: DINO.PTERO.h,
+                 y: DINO.PTERO.yps[Math.floor(Math.random() * DINO.PTERO.yps.length)],
+                 x: DINO.W + 20, frame: 0, ft: 0 });
+      spawnGap = Math.round(230 * (speed / 6) + 100 + Math.random() * 80);
+      return;
+    }
+    const big = roll > 0.58;
+    const cfg = big ? DINO.LARGE : DINO.SMALL;
+    const n = (speed > 5 && Math.random() < 0.5) ? (Math.random() < 0.35 ? 3 : 2) : 1;
+    obs.push({ kind: big ? 'large' : 'small', n: n, w: cfg.w * n, h: cfg.h, y: cfg.yp, x: DINO.W + 12 });
+    spawnGap = Math.round((cfg.w * n + 60) * (speed / 6) + 95 + Math.random() * 90);
+  }
+
+  function jump(){
+    if (dead) return;
+    if (!started){ started = true; t.status = 'running'; }
+    if (t.jumping) return;
+    t.ducking = false; t.jumping = true; t.vy = -10; t.speedDrop = false;
+    t.status = 'jumping'; t.frame = 0;
+    beep(520, 0.05, 'square', 0.025);
+  }
+
+  function duck(on){
+    if (dead) return;
+    if (on && t.jumping){ t.speedDrop = true; return; }
+    t.ducking = !!on;
+    if (!t.jumping) t.status = on ? 'ducking' : (started ? 'running' : 'waiting');
+  }
+
+  function hits(){
+    const tb = t.ducking ? DINO.BOX_DUCK : DINO.BOX_RUN;
+    for (const o of obs){
+      if (o.x > t.x + 60 || o.x + o.w < t.x) continue;
+      const boxes = o.kind === 'ptero' ? DINO.PTERO.boxes
+        : (o.kind === 'large' ? DINO.LARGE.boxes : DINO.SMALL.boxes);
+      const reps = o.kind === 'ptero' ? 1 : o.n;
+      const step = o.kind === 'large' ? DINO.LARGE.w : DINO.SMALL.w;
+      for (let r = 0; r < reps; r++){
+        const ox = o.x + r * step;
+        for (const a of tb)
+          for (const b of boxes)
+            if (t.x + a[0] < ox + b[0] + b[2] && t.x + a[0] + a[2] > ox + b[0] &&
+                t.y + a[1] < o.y + b[1] + b[3] && t.y + a[1] + a[3] > o.y + b[1]) return true;
+      }
+    }
+    return false;
+  }
+
+  function die(){
+    dead = true; t.status = 'crashed'; t.jumping = false; t.ducking = false;
+    beep(170, 0.18, 'square', 0.055);
+    if (score > best){
+      best = score;
+      try { localStorage.setItem(DINO_BEST_KEY, String(best)); } catch (e) {}
+      try {
+        if (typeof me !== 'undefined' && me && me.username && typeof update === 'function')
+          update(ref(db, 'users/' + me.username + '/gameStats/dino'), { best: best, at: Date.now() });
+      } catch (e) {}
+    }
+  }
+
+  function step(dt){
+    if (dead){ overTimer += dt; return; }
+    const f = Math.min(dt, 48) / (1000 / 60);
+    if (started){
+      if (speed < 13) speed = Math.min(13, speed + 0.001 * dt);
+      const px = speed * f;
+      distance += px;
+      score = Math.floor(distance * 0.025);
+      groundX = (groundX + px) % DINO.W;
+      const wantNight = Math.floor(score / 700) % 2 === 1;
+      if (wantNight !== night){ night = wantNight; applyNight(); }
+    }
+    if (t.jumping){
+      t.vy += 0.6 * f * (t.speedDrop ? 3 : 1);
+      t.y += t.vy * f;
+      if (t.y >= DINO.GROUND){
+        t.y = DINO.GROUND; t.vy = 0; t.jumping = false; t.speedDrop = false;
+        t.status = started ? 'running' : 'waiting';
+      }
+    }
+    if (t.ducking) t.y = DINO.GROUND + (DINO.TREX.h - DINO.TREX.dh);
+    else if (!t.jumping) t.y = DINO.GROUND;
+    t.ftimer += dt;
+    const per = t.status === 'ducking' ? 1000 / 8 : (started ? 1000 / 12 : 1000 / 3);
+    if (t.ftimer >= per){
+      t.ftimer = 0;
+      const seq = t.status === 'ducking' ? DINO.FRAMES.duck : started ? DINO.FRAMES.run : DINO.FRAMES.wait;
+      if (t.status !== 'crashed') t.frame = (t.frame + 1) % seq.length;
+    }
+    if (started){
+      spawnGap -= speed * f;
+      if (spawnGap <= 0) spawnObstacle();
+      for (const o of obs){
+        o.x -= speed * f;
+        if (o.kind === 'ptero'){ o.ft += dt; if (o.ft >= 1000 / 6){ o.ft = 0; o.frame = o.frame ? 0 : 1; } }
+      }
+      obs = obs.filter(o => o.x + o.w > -20);
+      if (hits()) die();
+    }
+    cloudTimer -= dt;
+    if (started && cloudTimer <= 0 && clouds.length < 6){
+      cloudTimer = 1400 + Math.random() * 2400;
+      clouds.push({ x: DINO.W + 10, y: 16 + Math.random() * 46, s: 0.55 + Math.random() * 0.5 });
+    }
+    for (const c of clouds) c.x -= (0.2 * speed + 0.18) * f * c.s;
+    clouds = clouds.filter(c => c.x + DINO.CLOUD.w > -10);
+  }
+
+  function digit(n, x, y){
+    ctx.drawImage(img, DINO.DIGIT.x + DINO.DIGIT.w * n, DINO.DIGIT.y,
+      DINO.DIGIT.w, DINO.DIGIT.h, x, y, DINO.DIGIT.w, DINO.DIGIT.h);
+  }
+  function drawNum(v, right, y){
+    const s = String(Math.max(0, Math.floor(v))).padStart(5, '0');
+    for (let i = 0; i < s.length; i++) digit(+s[i], right - s.length * 11 + i * 11, y);
+  }
+
+  function draw(){
+    if (!ctx || !imgOK) return;
+    ctx.clearRect(0, 0, DINO.W, DINO.H);
+    const gx = Math.round(-groundX);
+    ctx.drawImage(img, DINO.HORIZON.x, DINO.HORIZON.y, DINO.HORIZON.w, DINO.HORIZON.h,
+      gx, DINO.HORIZON_Y, DINO.HORIZON.w, DINO.HORIZON.h);
+    ctx.drawImage(img, DINO.HORIZON.x, DINO.HORIZON.y, DINO.HORIZON.w, DINO.HORIZON.h,
+      gx + DINO.W, DINO.HORIZON_Y, DINO.HORIZON.w, DINO.HORIZON.h);
+    for (const c of clouds)
+      ctx.drawImage(img, DINO.CLOUD.x, DINO.CLOUD.y, DINO.CLOUD.w, DINO.CLOUD.h,
+        Math.round(c.x), Math.round(c.y), DINO.CLOUD.w, DINO.CLOUD.h);
+    for (const o of obs){
+      if (o.kind === 'ptero'){
+        ctx.drawImage(img, DINO.PTERO.x + o.frame * DINO.PTERO.w, DINO.PTERO.y, DINO.PTERO.w, DINO.PTERO.h,
+          Math.round(o.x), Math.round(o.y), DINO.PTERO.w, DINO.PTERO.h);
+      } else {
+        const cfg = o.kind === 'large' ? DINO.LARGE : DINO.SMALL;
+        const sx = (cfg.w * o.n) * (0.5 * (o.n - 1)) + cfg.x;
+        ctx.drawImage(img, sx, cfg.y, cfg.w * o.n, cfg.h,
+          Math.round(o.x), Math.round(o.y), cfg.w * o.n, cfg.h);
+      }
+    }
+    const duck = t.ducking && t.status !== 'crashed';
+    const fx = duck ? DINO.FRAMES.duck[t.frame % 2]
+      : t.status === 'crashed' ? DINO.FRAMES.crash[0]
+      : t.jumping ? 0
+      : (started ? DINO.FRAMES.run : DINO.FRAMES.wait)[t.frame % 2];
+    ctx.drawImage(img, DINO.TREX.x + fx, DINO.TREX.y,
+      duck ? DINO.TREX.dw : DINO.TREX.w, DINO.TREX.h,
+      Math.round(t.x), Math.round(t.y), duck ? DINO.TREX.dw : DINO.TREX.w, DINO.TREX.h);
+    /* 分數（右上）：HI 最高分 ｜ 今局分數，逐格排好，唔會疊住 */
+    const NUMW = 5 * 11;
+    const scoreRight = DINO.W - 12;
+    drawNum(score, scoreRight, 12);
+    if (best > 0){
+      const gap = 14, hiW = 18;
+      const bestRight = scoreRight - NUMW - gap;
+      const hiLeft = bestRight - NUMW - 4 - hiW;
+      ctx.globalAlpha = 0.75;
+      ctx.drawImage(img, DINO.DIGIT.x + 100, DINO.DIGIT.y, hiW, 13, hiLeft, 12, hiW, 13);
+      ctx.globalAlpha = 1;
+      drawNum(best, bestRight, 12);
+    }
+    if (dead){
+      ctx.drawImage(img, DINO.OVER.x, DINO.OVER.y, DINO.OVER.w, DINO.OVER.h,
+        Math.round(DINO.W / 2 - DINO.OVER.w / 2), 40, DINO.OVER.w, DINO.OVER.h);
+      ctx.drawImage(img, DINO.RESTART.x, DINO.RESTART.y, DINO.RESTART.w, DINO.RESTART.h,
+        Math.round(DINO.W / 2 - DINO.RESTART.w / 2), 60, DINO.RESTART.w, DINO.RESTART.h);
+    } else if (!started){
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#535353';
+      ctx.font = '600 13px ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.textAlign = 'center';
+      /* 手機沒有空白鍵，就不要寫「按空白鍵」。 */
+      ctx.fillText(touchDevice ? '點一下畫面開始' : '按空白鍵或點一下畫面開始', DINO.W / 2, 42);
+      ctx.textAlign = 'left';
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function loop(ts){
+    if (!mounted) return;
+    const dt = lastTs ? Math.min(50, ts - lastTs) : 16;
+    lastTs = ts;
+    if (!paused) step(dt);
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function onKey(e){
+    const k = e.key;
+    if (k === ' ' || k === 'ArrowUp' || k === 'Enter' || k === 'w' || k === 'W'){
+      e.preventDefault();
+      if (dead) restart(); else jump();
+    } else if (k === 'ArrowDown' || k === 's' || k === 'S'){
+      e.preventDefault();
+      if (!dead) duck(true);
+    }
+  }
+  function onKeyUp(e){
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') duck(false);
+  }
+  /* 點畫面：上半＝跳，下半＝蹲（同官方手機版向下滑蹲下的意思） */
+  function onDown(e){
+    if (e.target && e.target.closest && e.target.closest('.dino-pad')) return;
+    if (dead){ restart(); return; }
+    const r = cv.getBoundingClientRect();
+    const y = (e.clientY - r.top) / Math.max(1, r.height);
+    if (y > 0.6) duck(true); else jump();
+  }
+  function onUp(){ if (t.ducking && !t.jumping) duck(false); }
+
+  function restart(){
+    reset(); started = true; t.status = 'running';
+    try { if (audio && audio.state === 'suspended') audio.resume(); } catch (e) {}
+  }
+
+  return {
+    mode: 'play',
+    get mounted(){ return mounted; },
+    mount(el){
+      cv = el; mounted = true; lastTs = 0;
+      img = new Image();
+      img.onload = () => { imgOK = true; reset(); resize(); };
+      img.src = DINO_IMG;
+      resize();
+      window.addEventListener('keydown', onKey);
+      window.addEventListener('keyup', onKeyUp);
+      window.addEventListener('resize', resize);
+      cv.addEventListener('pointerdown', onDown);
+      cv.addEventListener('pointerup', onUp);
+      cv.addEventListener('pointercancel', onUp);
+      cv.addEventListener('pointerleave', onUp);
+      raf = requestAnimationFrame(loop);
+    },
+    unmount(){
+      mounted = false;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('resize', resize);
+      cv = null; ctx = null;
+      try { if (audio) audio.close(); } catch (e) {}
+      audio = null;
+    },
+    jump, duck, restart,
+    debug(){
+      return { score: score, best: best, dead: dead, started: started, speed: +speed.toFixed(2),
+               x: Math.round(t.x), y: Math.round(t.y), jumping: t.jumping, ducking: t.ducking,
+               status: t.status, night: night, obs: obs.map(o => ({ k: o.kind, x: Math.round(o.x), y: Math.round(o.y), w: o.w })),
+               canvas: cv ? { w: cv.width, h: cv.height, css: cv.style.width + 'x' + cv.style.height } : null };
+    },
+    _spawnAt(kind, x, y){
+      if (kind === 'ptero') obs.push({ kind: 'ptero', w: DINO.PTERO.w, h: DINO.PTERO.h, y: y || 75, x: x, frame: 0, ft: 0 });
+      else { const cfg = kind === 'large' ? DINO.LARGE : DINO.SMALL;
+             obs.push({ kind: kind, n: 1, w: cfg.w, h: cfg.h, y: cfg.yp, x: x }); }
+    },
+    _setScore(v){ score = v; distance = v / 0.025; started = true; t.status = 'running'; }
+  };
+}
+
+let dinoGame = null, lastDinoTouchAt = 0;
+
+function renderDino(r, g, spec){
+  if (dinoGame && dinoGame.mounted){        /* 已經在玩就不要每次重設 */
+    return;
+  }
+  if (dinoGame){ try { dinoGame.unmount(); } catch (e) {} }
+  dinoGame = createDino();
+  appEl.innerHTML = `
+    <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button>
+      <h1>${escapeHtml(g.n)}</h1>
+      <span class="hint" style="margin:0;font-size:11.5px">${r.allowSpectate && !spec ? '其他人可以進來觀戰' : ''}</span></div>
+    <div class="cstage">
+      <div class="dinowrap"><div class="dinoscreen"><canvas id="dinoCv"></canvas></div></div>
+      <div class="dinobar">
+        <div class="dino-pad">
+          <div class="dbtn" data-d="duck">蹲</div>
+          <div class="dbtn" data-d="jump">跳</div>
+        </div>
+        <div class="dino-tip" id="dinoTip">空白鍵／↑ 跳 · ↓ 蹲</div>
+        <div class="padbtn" id="dinoAgain" style="width:58px;height:38px;font-size:12px;border-radius:12px">重來</div>
+      </div>
+    </div>`;
+  appEl.querySelectorAll('[data-act="leave"]').forEach(b => b.onclick = leaveRoom);
+  const cvEl = appEl.querySelector('#dinoCv');
+  dinoGame.mount(cvEl);
+  const bind = (sel, fn) => {
+    const el = appEl.querySelector(sel); if (!el) return;
+    el.addEventListener('pointerdown', e => { e.preventDefault(); el.classList.add('on'); fn(); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+      el.addEventListener(ev, () => el.classList.remove('on')));
+  };
+  bind('[data-d="jump"]', () => { const s = dinoGame.debug(); if (s.dead) dinoGame.restart(); else dinoGame.jump(); });
+  bind('[data-d="duck"]', () => dinoGame.duck(true));
+  const dk = appEl.querySelector('[data-d="duck"]');
+  if (dk) ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+    dk.addEventListener(ev, () => dinoGame.duck(false)));
+  const ag = appEl.querySelector('#dinoAgain');
+  if (ag) ag.onclick = () => dinoGame.restart();
+  /* 觸控裝置才顯示方向鍵；用真事件判斷，滑鼠用家就收起。
+     提示字同時換：手機沒有空白鍵，寫「空白鍵」只會令人困惑。 */
+  const setPad = on => {
+    const p = appEl.querySelector('.dino-pad'); if (p) p.style.display = on ? 'flex' : 'none';
+    const tp = appEl.querySelector('#dinoTip');
+    if (tp) tp.textContent = on ? '點畫面跳 · 下半部蹲' : '空白鍵／↑ 跳 · ↓ 蹲';
+  };
+  setPad(typeof lobbyIsTouch === 'function' ? lobbyIsTouch() : false);
+  cvEl.addEventListener('pointerdown', e => {
+    const pt = e.pointerType || '';
+    if (pt === 'touch' || pt === 'pen'){ lastDinoTouchAt = Date.now(); setPad(true); }
+    else if (pt === 'mouse' && Date.now() - lastDinoTouchAt > 900) setPad(false);
+  });
+  window.__dino = dinoGame;
+}
+
 function renderTetris(r,g,spec){
   const rid=curRoomId;
   if(spec){
@@ -2433,6 +2883,7 @@ function renderGame(r,g){
   else if(r.game==='werewolf') drawWerewolf(r,g,'',spec);
   else if(r.game==='monopoly') drawMonopoly(r,g,bar,spec);
   else if(r.game==='tetris') renderTetris(r,g,spec);
+  else if(r.game==='dino') renderDino(r,g,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
@@ -2543,6 +2994,7 @@ function renderEnded(r,g){
 }
 function backHome(){
   if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
+  if(typeof dinoGame!=='undefined' && dinoGame){ try{ dinoGame.unmount(); }catch(e){} dinoGame=null; }
   // v1.31 從邀請／房間連結進來的：任何「回到大廳」都應該回到聊天室，
   // 而不是把小遊戲大廳丟給對方看（他根本不是從那裡進來的）。
   if(cameFromInvite){
