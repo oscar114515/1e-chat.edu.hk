@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-5wsHWO+1ymEhdrVHoaQgLyBu2JJlnJnADxiwp/uQPxw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-ZDyAZbHdWNcRfTlsL3KL2eG0WC4XhNe1NdVtkjYWIUo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1034,7 +1034,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.3';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.4';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -5683,6 +5683,12 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.4',date:'2026-10-17',changes:[
+'新增一個小彩蛋：在任何看得見的輸入框（聊天框、登入帳號、搜尋、改名、投票選項……）輸入含有「秋葵」兩個字的內容並送出，畫面就會落一場秋葵雨；不管前後加了幾多字都算。彩蛋是全站同步的 —— 只要有一個人觸發，所有已開啟的聊天室、App 會一齊落，不用重新載入',
+'單機遊戲新增「小恐龍」：同 Google 瀏覽器斷網時彈出來那隻一模一樣，用官方原裝精靈圖重寫，全部圖片都內嵌在網頁裡，所以完全斷網都玩得到。空白鍵／向上鍵跳，向下鍵蹲（跳起途中按會加速落地），手機有「蹲／跳」兩顆大按鈕',
+'玩法跟官方一致：仙人掌分大小、一至三棵一組，跑得越遠出得越密、速度由 6 慢慢加到 13；跑快之後（大約 450 分）開始有翼龍，分三個高度飛過來，要跳或者蹲避開；每 700 分整塊畫面轉成夜晚配色，掉回 700 以下又會轉返日間；跳起途中按向下鍵會加速落地。最高分記在自己手機，同時寫入自己帳號的遊戲記錄，下次打開仍然記得',
+'順手把單機遊戲的「小恐龍」入口同圖示一齊補上，其他單機遊戲暫時仍然鎖住',
+]},
 {ver:'v1.38.3',date:'2026-10-17',changes:[
 '【重要】修好「部署完之後，聊天室裡的小工具仍然是舊版」：工具頁本身有十分鐘快取，聊天室那個 iframe 一直拿到舊檔，所以直接開 mtr.html 是新的、從聊天室進去卻是舊的。現在開工具（同小遊戲）會在網址加上目前版本號，每次部署之後都會即刻抓到新版',
 ]},
@@ -6322,6 +6328,223 @@ try{
     requestAnimationFrame(()=>{ _moRoot._q=0; markOff(); }); });
   _moRoot.observe(document.getElementById('pageRoot'),{childList:true,subtree:true});
 }catch(e){}
+/* ═══════════════════════════════════════════════════════════════════
+   彩蛋：秋葵雨
+   ── 在任何「畫面上見得到」的輸入框（聊天框、登入帳號、搜尋、改名、
+      投票選項、AI 聊天…只要是 <input> / <textarea>）輸入含有「秋葵」
+      兩個字的內容並送出（按 Enter，或者撳任何一粒掣），就會落一場
+      秋葵雨；同時寫入 Firebase meta/easterEgg/okra，所有已開啟的
+      客戶端會一齊落（跟遠端配置一樣是即時推送，不用重新載入）。
+   ── 前後加幾多字都無所謂，只要內容裡面有「秋葵」就觸發。
+   ── 動畫自己畫，不去載 CDN：CSP 只放行 'self' 與 gstatic，
+      jsdelivr 那個 canvas-confetti 會被直接擋住（會靜靜失敗）。
+   ═══════════════════════════════════════════════════════════════════ */
+const OKRA_PATH='meta/easterEgg/okra';
+let okraLayer=null,okraMyAt=0,okraLastFire=0,okraReady=false,okraAlive=0,okraStopFn=null;
+
+/* 中間夾了空格或零寬字元都當作有：「秋 葵」「秋​葵」 */
+function okraFind(text){
+  if(!text) return false;
+  const t=String(text).replace(/[\s\u200b\u200c\u200d\ufeff]/g,'');
+  return t.indexOf('秋葵')>=0;
+}
+
+function okraVisibleText(){
+  const els=document.querySelectorAll('input,textarea,[contenteditable="true"],[contenteditable=""]');
+  for(let i=0;i<els.length;i++){
+    const el=els[i];
+    const v=('value' in el&&typeof el.value==='string')?el.value:(el.textContent||'');
+    if(!v||!okraFind(v)) continue;                 /* 先驗字，免得為每個輸入框算樣式 */
+    const r=el.getBoundingClientRect();
+    if(r.width<4||r.height<4) continue;
+    const st=getComputedStyle(el);
+    if(st.display==='none'||st.visibility==='hidden'||st.opacity==='0') continue;
+    return true;
+  }
+  return false;
+}
+
+function okraRain(){
+  if(okraLayer) return;
+  const cv=document.createElement('canvas');
+  cv.id='okraLayer';
+  cv.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2147483000';
+  document.body.appendChild(cv);
+  okraLayer=cv;
+  const ctx=cv.getContext('2d');
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  let W=0,H=0;
+  function fit(){
+    W=window.innerWidth||document.documentElement.clientWidth||360;
+    H=window.innerHeight||document.documentElement.clientHeight||640;
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  fit();
+
+  const COLORS=['#4ade80','#22c55e','#166534','#a3e635'];
+  const EMJ=['🥒','🥒','🥒','🥬'];
+  const CAP=650;
+  const P=[];
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  /* emoji 預先畫成一張小圖，之後逐幀 drawImage，比每幀改 font 快很多 */
+  const sprites={};
+  function emo(ch,size){
+    const k=ch+size;
+    if(sprites[k]) return sprites[k];
+    const s=Math.ceil(size*1.5);
+    const c=document.createElement('canvas');
+    c.width=s;c.height=s;
+    const g=c.getContext('2d');
+    g.font=size+'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+    g.textAlign='center';g.textBaseline='middle';
+    g.fillText(ch,s/2,s/2);
+    sprites[k]=c;
+    return c;
+  }
+
+  function add(p){ if(P.length<CAP) P.push(p); }
+
+  function burst(cx,cy,n,deg,spread,vmin,vmax,emoRate){
+    for(let i=0;i<n;i++){
+      const a=(deg+rnd(-spread/2,spread/2))*Math.PI/180;
+      const v=rnd(vmin,vmax);
+      const isE=Math.random()<emoRate;
+      add({
+        x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,
+        g:isE?0.11:0.24,drag:0.988,
+        rot:rnd(0,6.283),vr:rnd(-0.22,0.22),
+        sz:isE?Math.round(rnd(20,30)):rnd(4,9),
+        col:isE?null:COLORS[(Math.random()*COLORS.length)|0],
+        em:isE?EMJ[(Math.random()*EMJ.length)|0]:null,
+        life:0,ttl:rnd(1900,3200)
+      });
+    }
+  }
+
+  burst(W/2,H*0.68,90,-90,100,14,26,0.18);   /* 中間先爆一次 */
+
+  let sideAcc=0,t0=0,last=0,raf=0;
+
+  function loop(ts){
+    if(!t0) t0=ts;
+    if(!last) last=ts;
+    const dt=Math.min(60,ts-last);last=ts;
+    const f=dt/16.67;
+    const elapsed=ts-t0;
+
+    if(elapsed<2600){
+      sideAcc+=dt;
+      while(sideAcc>90){
+        sideAcc-=90;
+        burst(-8,H*0.74,2,-52,44,16,24,0.22);      /* 左下角向上噴 */
+        burst(W+8,H*0.74,2,-128,44,16,24,0.22);    /* 右下角向上噴 */
+        add({                                       /* 再由天慢慢飄落 */
+          x:rnd(0,W),y:-40,vx:rnd(-0.7,0.7),vy:rnd(3,5.2),
+          g:0.02,drag:1,rot:rnd(0,6.283),vr:rnd(-0.08,0.08),
+          sz:Math.round(rnd(20,30)),col:null,
+          em:EMJ[(Math.random()*EMJ.length)|0],life:0,ttl:rnd(3400,4400)
+        });
+      }
+    }
+
+    ctx.clearRect(0,0,W,H);
+    for(let i=P.length-1;i>=0;i--){
+      const p=P[i];
+      p.life+=dt;
+      if(p.life>p.ttl||p.y>H+80){ P.splice(i,1);continue; }
+      p.vy+=p.g*f;
+      p.vx*=Math.pow(p.drag,f);
+      p.x+=p.vx*f;p.y+=p.vy*f;p.rot+=p.vr*f;
+      const k=1-Math.max(0,(p.life-p.ttl*0.65)/(p.ttl*0.35));
+      ctx.globalAlpha=Math.max(0,Math.min(1,k));
+      if(p.em){
+        const s=emo(p.em,p.sz);
+        ctx.save();
+        ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+        ctx.drawImage(s,-s.width/2,-s.height/2);
+        ctx.restore();
+      }else{
+        ctx.fillStyle=p.col;
+        ctx.save();
+        ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+        const w=p.sz,h=p.sz*0.62;               /* 幼長一條，似秋葵多過圓點 */
+        ctx.fillRect(-w/2,-h/2,w,h);
+        ctx.restore();
+      }
+    }
+    ctx.globalAlpha=1;
+    okraAlive=P.length;
+
+    if(elapsed>=2600&&P.length===0){ stop(); return; }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function stop(){
+    try{ cancelAnimationFrame(raf); }catch(e){}
+    raf=0;okraAlive=0;okraStopFn=null;
+    try{ cv.remove(); }catch(e){ try{ cv.parentNode&&cv.parentNode.removeChild(cv); }catch(_){} }
+    if(okraLayer===cv) okraLayer=null;
+  }
+
+  okraStopFn=stop;
+  raf=requestAnimationFrame(loop);
+}
+
+/* 切走分頁／鎖屏時瀏覽器會暫停動畫，粒子就會凍結在半空、圖層一直留住；
+   回來又會播一段幾秒前的舊動畫。彩蛋而已，切走就直接收掉。 */
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&okraStopFn){ try{ okraStopFn(); }catch(e){} }
+});
+
+const okraWhy=[];
+function okraTrigger(src){
+  const now=Date.now();
+  if(now-okraLastFire<900) return;   /* Enter 與「撳掣」會前後腳中，只算一次 */
+  okraWhy.push(src);if(okraWhy.length>10) okraWhy.shift();
+  okraLastFire=now;
+  okraRain();
+  try{
+    okraMyAt=now;
+    set(ref(db,OKRA_PATH),{at:now,by:(me&&me.username)||'',name:(me&&me.displayName)||''}).catch(()=>{});
+  }catch(e){}
+}
+
+/* 全部用 capture：要趕在程式清空輸入框之前讀到內容 */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||e.isComposing||e.keyCode===229) return;
+  const el=e.target;
+  if(!el||el.nodeType!==1) return;
+  const v=('value' in el&&typeof el.value==='string')?el.value:(el.isContentEditable?(el.textContent||''):'');
+  if(okraFind(v)) okraTrigger('key:'+(el.id||el.tagName));
+},true);
+
+document.addEventListener('submit',()=>{ if(okraVisibleText()) okraTrigger('submit'); },true);
+
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(!t||!t.closest) return;
+  const b=t.closest('button,[role="button"],.pi,.nav-item,.btn');
+  if(!b) return;
+  if(okraVisibleText()) okraTrigger('click:'+(b.dataset&&b.dataset.action||b.id||b.tagName));
+},true);
+
+try{
+  onValue(ref(db,OKRA_PATH),snap=>{
+    const v=snap.val();
+    const at=v&&+v.at?+v.at:0;
+    if(!okraReady){ okraReady=true; return; }   /* 開頁時只記住，不補播舊的 */
+    if(!at) return;
+    if(at===okraMyAt) return;                   /* 自己發的，本機剛剛已經播完 */
+    okraRain();
+  });
+}catch(e){}
+
+/* 測試用唯讀鉤子 */
+window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
+  state:()=>({layer:!!okraLayer,alive:okraAlive,ready:okraReady,myAt:okraMyAt,why:okraWhy.slice()})};
+
 initRemote();
 </script>
 </body>
