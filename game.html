@@ -337,6 +337,52 @@ body.theme-light .klring .klhub{color:#ffd76a}
 body.theme-light .kltok i,body.theme-light .mptok i{box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 body.theme-light .pav{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
 body.theme-light .seg button.sel{color:#fff}
+
+/* ══ v1.40 三種種類：種類切換列 ══ */
+.catbar{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto}
+.catbar button{flex:0 0 auto;background:var(--bg-input);border:1px solid var(--border-strong);color:var(--text-sub);
+  border-radius:999px;padding:8px 15px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.catbar button.sel{background:var(--accent);border-color:var(--accent);color:#0b0d14}
+.catbar button .cn{opacity:.75;font-weight:500;font-size:12px;margin-left:4px}
+.catdesc{font-size:12px;color:var(--text-sub);padding:0 16px 12px;line-height:1.65}
+.gcard .glive{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ok-tx);margin-top:5px}
+.gcard .glive i{width:6px;height:6px;border-radius:50%;background:var(--ok-tx);display:inline-block;animation:pulse 1.6s var(--ease-inout) infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+.gcard.playing{border-color:var(--gold);box-shadow:0 0 0 1px rgba(226,176,74,.35) inset}
+
+/* ══ v1.40 canvas 類遊戲的版面（大廳自由／單人）══ */
+.cstage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.cwrap{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none}
+.cwrap canvas{display:block;width:100%;height:100%}
+.hudtop{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;z-index:3}
+.hudcard{background:rgba(10,13,20,.72);backdrop-filter:blur(10px);border:1px solid var(--border-strong);border-radius:var(--r-2);padding:8px 11px}
+body.theme-light .hudcard{background:rgba(255,255,255,.82)}
+.lb{min-width:150px}
+.lb .lbt{font-size:10.5px;letter-spacing:.6px;color:var(--text-sub);margin-bottom:4px}
+.lb .lbrow{display:flex;align-items:center;gap:6px;font-size:12.5px;font-variant-numeric:tabular-nums;padding:1.5px 0}
+.lb .lbrow.me .lbn{color:var(--gold);font-weight:700}
+.lb .lbr{width:15px;text-align:right;color:var(--text-sub);font-size:11px}
+.lb .lbv{margin-left:auto;font-weight:700}
+.lb .lbd{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.stats{display:flex;gap:14px;font-variant-numeric:tabular-nums}
+.stats>div{text-align:center}
+.stats .sv{font-size:17px;font-weight:800}
+.stats .sl{font-size:10px;color:var(--text-sub);letter-spacing:.4px}
+.ctrls{position:absolute;left:0;right:0;bottom:0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center;z-index:3;pointer-events:none}
+.ctrls>*{pointer-events:auto}
+.padbtn{width:74px;height:74px;border-radius:50%;background:rgba(56,189,248,.18);border:1px solid rgba(56,189,248,.5);color:var(--accent);
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;cursor:pointer}
+.padbtn:active,.padbtn.on{background:var(--accent);color:#0b0d14;transform:scale(.95)}
+.kbd{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:8px}
+.kbd .k{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--text-main);user-select:none;-webkit-user-select:none;cursor:pointer}
+.kbd .k:active,.kbd .k.on{background:var(--accent);color:#0b0d14}
+.kbd .k.wide{grid-column:span 3;height:46px;font-size:14px;font-weight:700}
+.specbar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(10,13,20,.8);border:1px solid var(--gold);
+  border-radius:var(--r-2);padding:10px 18px;font-size:14px;color:var(--gold);font-weight:700;z-index:4;pointer-events:none}
+body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-color:#d5a12a}
+.deadmask{position:absolute;inset:0;background:rgba(6,8,13,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5;backdrop-filter:blur(3px)}
+.deadmask .big{font-size:30px;font-weight:900;letter-spacing:1px}
+.deadmask .sub{font-size:13px;color:var(--text-sub);text-align:center;line-height:1.7}
 </style>
 </head>
 <body>
@@ -345,7 +391,7 @@ body.theme-light .seg button.sel{color:#fff}
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
   <symbol id="i-gomoku" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="16" r="3.2"/></symbol>
-<symbol id="i-ludo" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol><symbol id="i-uno" viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 4.5A2 2 0 0 1 9 3h8a3 3 0 0 1 3 3v9a2 2 0 0 1-1.5 1.94"/></symbol><symbol id="i-xiangqi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M7.5 12h9"/><circle cx="12" cy="12" r="3.2"/></symbol><symbol id="i-chess" viewBox="0 0 24 24"><path d="M6 20h12M8 20l.8-3h6.4l.8 3"/><path d="M10 17v-3.6A4 4 0 0 1 8.6 10c0-1.6 1.2-2.6 1.6-3.4A2.4 2.4 0 0 1 12 4a2.4 2.4 0 0 1 1.8 2.6c.4.8 1.6 1.8 1.6 3.4A4 4 0 0 1 14 13.4V17"/></symbol><symbol id="i-go" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="15" cy="9" r="2.4" fill="currentColor"/></symbol><symbol id="i-checkers" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.3"/><circle cx="16" cy="8" r="3.3"/><circle cx="8" cy="16" r="3.3"/><circle cx="16" cy="16" r="3.3" fill="currentColor"/></symbol><symbol id="i-doushou" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="3.6" ry="3"/><path d="M8.8 13.4A2.6 2.6 0 1 1 6.6 9a2.5 2.5 0 0 1 2.6-3.6A2.5 2.5 0 0 1 12 3.4a2.5 2.5 0 0 1 2.8 2A2.5 2.5 0 0 1 17.4 9a2.6 2.6 0 1 1-2.2 4.4"/></symbol><symbol id="i-konglok" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><path d="M15.5 8.5h-7v7"/></symbol><symbol id="i-monopoly" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-sanguo" viewBox="0 0 24 24"><path d="M14.5 3.5 21 10l-3 3-6.5-6.5z"/><path d="M11.5 6.5 3 15v6h6l8.5-8.5"/><path d="M6 18h.01"/></symbol><symbol id="i-werewolf" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z"/><path d="M18.5 3.5 20 6l2.5.6-2 1.6.6 2.5-2.1-1.4"/></symbol><symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="11" cy="15" r="6"/><path d="M16.5 8.5 19 6M17.5 4.5 19 6l1.5-1.5"/><path d="M15.6 9.4a5.5 5.5 0 0 0-4-2.4"/></symbol><symbol id="i-script" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M4 6.5h15M8 10h7M8 14h5"/></symbol><symbol id="i-pictionary" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 2-4 2.5 2.5 0 0 1 2-4H19a2 2 0 0 0 2-2 9 9 0 0 0-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></symbol><symbol id="i-undercover" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6A2 2 0 0 0 12 14a2 2 0 0 0 1.4-.6"/><path d="M9.4 5.3A9 9 0 0 1 12 5c5 0 9 4.5 9 7a7 7 0 0 1-1.7 3.8"/><path d="M6.2 6.7C4 8.3 3 10.4 3 12c0 1.4 1 3 2.6 4.3"/></symbol></svg>
+<symbol id="i-ludo" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol><symbol id="i-uno" viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 4.5A2 2 0 0 1 9 3h8a3 3 0 0 1 3 3v9a2 2 0 0 1-1.5 1.94"/></symbol><symbol id="i-xiangqi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M7.5 12h9"/><circle cx="12" cy="12" r="3.2"/></symbol><symbol id="i-chess" viewBox="0 0 24 24"><path d="M6 20h12M8 20l.8-3h6.4l.8 3"/><path d="M10 17v-3.6A4 4 0 0 1 8.6 10c0-1.6 1.2-2.6 1.6-3.4A2.4 2.4 0 0 1 12 4a2.4 2.4 0 0 1 1.8 2.6c.4.8 1.6 1.8 1.6 3.4A4 4 0 0 1 14 13.4V17"/></symbol><symbol id="i-go" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="15" cy="9" r="2.4" fill="currentColor"/></symbol><symbol id="i-checkers" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.3"/><circle cx="16" cy="8" r="3.3"/><circle cx="8" cy="16" r="3.3"/><circle cx="16" cy="16" r="3.3" fill="currentColor"/></symbol><symbol id="i-doushou" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="3.6" ry="3"/><path d="M8.8 13.4A2.6 2.6 0 1 1 6.6 9a2.5 2.5 0 0 1 2.6-3.6A2.5 2.5 0 0 1 12 3.4a2.5 2.5 0 0 1 2.8 2A2.5 2.5 0 0 1 17.4 9a2.6 2.6 0 1 1-2.2 4.4"/></symbol><symbol id="i-konglok" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><path d="M15.5 8.5h-7v7"/></symbol><symbol id="i-monopoly" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-sanguo" viewBox="0 0 24 24"><path d="M14.5 3.5 21 10l-3 3-6.5-6.5z"/><path d="M11.5 6.5 3 15v6h6l8.5-8.5"/><path d="M6 18h.01"/></symbol><symbol id="i-werewolf" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z"/><path d="M18.5 3.5 20 6l2.5.6-2 1.6.6 2.5-2.1-1.4"/></symbol><symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="11" cy="15" r="6"/><path d="M16.5 8.5 19 6M17.5 4.5 19 6l1.5-1.5"/><path d="M15.6 9.4a5.5 5.5 0 0 0-4-2.4"/></symbol><symbol id="i-script" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M4 6.5h15M8 10h7M8 14h5"/></symbol><symbol id="i-pictionary" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 2-4 2.5 2.5 0 0 1 2-4H19a2 2 0 0 0 2-2 9 9 0 0 0-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></symbol><symbol id="i-undercover" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6A2 2 0 0 0 12 14a2 2 0 0 0 1.4-.6"/><path d="M9.4 5.3A9 9 0 0 1 12 5c5 0 9 4.5 9 7a7 7 0 0 1-1.7 3.8"/><path d="M6.2 6.7C4 8.3 3 10.4 3 12c0 1.4 1 3 2.6 4.3"/></symbol><symbol id="i-snake" viewBox="0 0 24 24"><path d="M5 17c-1.7 0-3-1.3-3-3s1.3-3 3-3h6a3 3 0 0 0 0-6H8"/><circle cx="17.5" cy="17" r="3.5"/><path d="M15.6 15.2h.01"/></symbol><symbol id="i-tetris" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h6M9 9v6M9 15h6"/><rect x="9" y="3" width="6" height="6" fill="currentColor" stroke="none"/><rect x="15" y="15" width="6" height="6" fill="currentColor" stroke="none"/></symbol><symbol id="i-2048" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 12h18M12 3v18"/></symbol><symbol id="i-breakout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><path d="M10 4v7M17 4v7M3 7.5h18"/><circle cx="12" cy="16" r="2.4"/><path d="M6 21h12"/></symbol><symbol id="i-mines" viewBox="0 0 24 24"><circle cx="12" cy="13" r="5.5"/><path d="M12 3v3M5 6l2 2M19 6l-2 2M4 13H1M23 13h-3M8.5 10.8h.01"/></symbol><symbol id="i-memory" viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/><path d="M7 12h.01M17 12h.01"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18 6 6 0 0 0 0-12 3 3 0 0 1 0-6"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M12 9v6M8 12h8M9 21l3-6 3 6"/></symbol><symbol id="i-race" viewBox="0 0 24 24"><path d="M4 15h16M6 15V9l5-3 5 3v6"/><circle cx="7.5" cy="18" r="2.5"/><circle cx="16.5" cy="18" r="2.5"/></symbol><symbol id="i-dot" viewBox="0 0 24 24"><circle cx="7" cy="7" r="2.2"/><circle cx="17" cy="9" r="2.2"/><circle cx="9" cy="17" r="2.2"/><circle cx="18" cy="17.5" r="1.6"/></symbol><symbol id="i-dodge" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 6l4 6-4 6M19 6l-4 6 4 6"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol><symbol id="i-king" viewBox="0 0 24 24"><path d="M4 18h16M5 18l-1.5-8 5 3.5L12 6l3.5 7.5 5-3.5L19 18"/></symbol><symbol id="i-spect" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></symbol></svg>
 <div id="app"></div>
 <script src="lib/uno-engine.js"></script>
 <script src="lib/opencc-t2cn.js"></script>
@@ -364,6 +410,19 @@ function toSimplified(s){
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
+
+/* ===== v1.40 伺服器時間 =====
+   所有「大家要看到同一個數字」的時間一律用伺服器時間，不要用本機 Date.now()。
+   實際踩到的問題：倒數的截止時刻 startAt 由 A 的時鐘寫入，B 卻用自己手機的時鐘去減，
+   兩支手機的系統時間差幾秒，A 就看到 15、B 看到 12；而且真正開局的時刻兩邊算出來也不同。
+   Firebase 的 .info/serverTimeOffset 會回「本機時鐘與伺服器的差值」，補上它就一致了。 */
+let serverOffset=0;
+try{
+  onValue(ref(db,'.info/serverTimeOffset'),s=>{ serverOffset=Number(s.val())||0; });
+}catch(e){}
+/** 目前的伺服器時間（毫秒）。跨端要比時間的都用這個。 */
+function sNow(){ return Date.now()+serverOffset; }
+const COUNTDOWN_MS=15000;      // 連線對戰：人數一夠就倒數這麼久
 
 /* ===== 工具 ===== */
 const $=s=>document.querySelector(s);
@@ -437,28 +496,64 @@ let curRoom=null, curRoomId=null;
 let cameFromInvite=false;
 let view='lobby';
 
-/* ===== 遊戲定義 ===== */
-// min/max = 每款遊戲允許的人數範圍（房主在此範圍內設定）
+/* ===== 遊戲定義 =====
+   三種種類（cat）：
+     multi  連線對戰 —— 房主開房，人數一夠就自動倒數 15 秒開局（人數不可由房主自選）
+     lobby  大廳自由 —— 全站共用同一個大廳，沒有房主、隨時進出，自己一個也能玩
+     solo   單人遊戲 —— 一個人玩，其他人點進來就是觀戰
+   連線對戰的 min 就是「開局所需人數」（＝該遊戲的最少人數），max 是房間上限：
+   倒數的 15 秒內仍然可以繼續進人，直到 max 為止。 */
 const GAMES=[
- {k:'tictactoe',n:'井字棋',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△',ic:'i-grid'},
- {k:'gomoku',n:'五子棋',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○',ic:'i-gomoku'},
- {k:'ludo',n:'飛行棋',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛',ic:'i-ludo'},
- {k:'uno',n:'UNO',min:2,max:6,ok:true,c:'#ef4444',ab:'U',ic:'i-uno'},
- {k:'xiangqi',n:'中國象棋',min:2,max:2,ok:true,c:'#f59e0b',ab:'象',ic:'i-xiangqi'},
- {k:'chess',n:'國際象棋',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋',ic:'i-chess'},
- {k:'go',n:'圍棋',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍',ic:'i-go'},
- {k:'checkers',n:'波子棋',min:2,max:6,ok:false,c:'#22c55e',ab:'●',ic:'i-checkers'},
- {k:'doushou',n:'鬥獸棋',min:2,max:2,ok:true,c:'#a855f7',ab:'獸',ic:'i-doushou'},
- {k:'konglok',n:'康樂棋',min:2,max:4,ok:true,c:'#14b8a6',ab:'康',ic:'i-konglok'},
- {k:'monopoly',n:'大富翁',min:2,max:6,ok:true,c:'#10b981',ab:'$',ic:'i-monopoly'},
- {k:'sanguosha',n:'三國殺',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺',ic:'i-sanguo'},
- {k:'werewolf',n:'狼人殺',min:6,max:18,ok:true,c:'#6d28d9',ab:'狼',ic:'i-werewolf'},
- {k:'bomb',n:'傳炸彈',min:2,max:10,ok:true,c:'#f97316',ab:'炸',ic:'i-bomb'},
- {k:'scriptmurder',n:'劇本殺',min:4,max:10,ok:true,c:'#0ea5e9',ab:'劇',ic:'i-script'},
- {k:'pictionary',n:'你畫我猜',min:2,max:10,ok:true,c:'#eab308',ab:'畫',ic:'i-pictionary'},
- {k:'undercover',n:'誰是臥底',min:3,max:12,ok:true,c:'#f472b6',ab:'臥',ic:'i-undercover'}
+ /* ── 連線對戰 ── */
+ {k:'tictactoe',n:'井字棋',cat:'multi',min:2,max:2,ok:true,c:'#8b5cf6',ab:'○△',ic:'i-grid'},
+ {k:'gomoku',n:'五子棋',cat:'multi',min:2,max:2,ok:true,c:'#38bdf8',ab:'○○',ic:'i-gomoku'},
+ {k:'ludo',n:'飛行棋',cat:'multi',min:2,max:4,ok:true,c:'#fbbf24',ab:'飛',ic:'i-ludo'},
+ {k:'uno',n:'UNO',cat:'multi',min:2,max:6,ok:true,c:'#ef4444',ab:'U',ic:'i-uno'},
+ {k:'xiangqi',n:'中國象棋',cat:'multi',min:2,max:2,ok:true,c:'#f59e0b',ab:'象',ic:'i-xiangqi'},
+ {k:'chess',n:'國際象棋',cat:'multi',min:2,max:2,ok:true,c:'#94a3b8',ab:'棋',ic:'i-chess'},
+ {k:'go',n:'圍棋',cat:'multi',min:2,max:2,ok:false,c:'#e5e7eb',ab:'圍',ic:'i-go'},
+ {k:'checkers',n:'波子棋',cat:'multi',min:2,max:6,ok:false,c:'#22c55e',ab:'●',ic:'i-checkers'},
+ {k:'doushou',n:'鬥獸棋',cat:'multi',min:2,max:2,ok:true,c:'#a855f7',ab:'獸',ic:'i-doushou'},
+ {k:'konglok',n:'康樂棋',cat:'multi',min:2,max:4,ok:true,c:'#14b8a6',ab:'康',ic:'i-konglok'},
+ {k:'monopoly',n:'大富翁',cat:'multi',min:2,max:6,ok:true,c:'#10b981',ab:'$',ic:'i-monopoly'},
+ {k:'sanguosha',n:'三國殺',cat:'multi',min:4,max:8,ok:false,c:'#b91c1c',ab:'殺',ic:'i-sanguo'},
+ {k:'werewolf',n:'狼人殺',cat:'multi',min:6,max:18,ok:true,c:'#6d28d9',ab:'狼',ic:'i-werewolf'},
+ {k:'bomb',n:'傳炸彈',cat:'multi',min:2,max:10,ok:true,c:'#f97316',ab:'炸',ic:'i-bomb'},
+ {k:'scriptmurder',n:'劇本殺',cat:'multi',min:4,max:10,ok:true,c:'#0ea5e9',ab:'劇',ic:'i-script'},
+ {k:'pictionary',n:'你畫我猜',cat:'multi',min:2,max:10,ok:true,c:'#eab308',ab:'畫',ic:'i-pictionary'},
+ {k:'undercover',n:'誰是臥底',cat:'multi',min:3,max:12,ok:true,c:'#f472b6',ab:'臥',ic:'i-undercover'},
+
+ /* ── 大廳自由（沒有房主，點進去就玩）── */
+ {k:'snake',n:'貪吃蛇',cat:'lobby',min:1,max:0,ok:true,c:'#22c55e',ab:'蛇',ic:'i-snake'},
+ {k:'agar',n:'球球大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#38bdf8',ab:'球',ic:'i-ball'},
+ {k:'tag',n:'鬼抓人',cat:'lobby',min:1,max:0,ok:false,c:'#f472b6',ab:'鬼',ic:'i-tag'},
+ {k:'dotrush',n:'搶豆競速',cat:'lobby',min:1,max:0,ok:false,c:'#fbbf24',ab:'豆',ic:'i-dot'},
+ {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:false,c:'#a855f7',ab:'彈',ic:'i-dodge'},
+ {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:false,c:'#ef4444',ab:'車',ic:'i-race'},
+ {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:false,c:'#f59e0b',ab:'王',ic:'i-king'},
+ {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
+ {k:'fish',n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚'},
+ {k:'bombzone',n:'炸彈人',cat:'lobby',min:1,max:0,ok:false,c:'#f97316',ab:'爆'},
+ {k:'sumo',n:'相撲推擠',cat:'lobby',min:1,max:0,ok:false,c:'#78716c',ab:'角'},
+ {k:'paint',n:'塗地大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#ec4899',ab:'色'},
+
+ /* ── 單人遊戲（一個人玩，其他人可觀戰）── */
+ {k:'tetris',n:'俄羅斯方塊',cat:'solo',min:1,max:1,ok:true,c:'#38bdf8',ab:'方',ic:'i-tetris'},
+ {k:'g2048',n:'2048',cat:'solo',min:1,max:1,ok:false,c:'#fbbf24',ab:'2048',ic:'i-2048'},
+ {k:'breakout',n:'打磚塊',cat:'solo',min:1,max:1,ok:false,c:'#22c55e',ab:'磚',ic:'i-breakout'},
+ {k:'memory',n:'記憶配對',cat:'solo',min:1,max:1,ok:false,c:'#a855f7',ab:'記',ic:'i-memory'},
+ {k:'mines',n:'踩地雷',cat:'solo',min:1,max:1,ok:false,c:'#94a3b8',ab:'雷',ic:'i-mines'},
+ {k:'flappy',n:'像素小鳥',cat:'solo',min:1,max:1,ok:false,c:'#eab308',ab:'鳥'}
 ];
-const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,min:2,max:2,ok:false,c:'#888',ab:'?'};
+const gameDef=k=>GAMES.find(g=>g.k===k)||{k,n:k,cat:'multi',min:2,max:2,ok:false,c:'#888',ab:'?'};
+const CATS=[
+  {k:'multi',n:'連線對戰',d:'開房等人，人數一夠就自動倒數 15 秒開局；倒數期間還有人可以進來'},
+  {k:'lobby',n:'大廳自由',d:'全站共用同一個大廳，沒有房主、不用等人；自己一個也能玩，隨時進出'},
+  {k:'solo',n:'單人遊戲',d:'一個人玩，開房直接開始不用等；其他人可以點進來觀戰'}
+];
+const catOf=k=>(gameDef(k).cat)||'multi';
+const isLobby=k=>catOf(k)==='lobby';
+const isSolo=k=>catOf(k)==='solo';
 
 /* ===== 載入用戶 ===== */
 async function loadUser(){
@@ -502,32 +597,68 @@ async function loadStats(){
 }
 
 /* ===== 大廳 ===== */
+let lobbyCat=(()=>{ try{ const v=localStorage.getItem('game_cat'); return (v==='lobby'||v==='solo')?v:'multi'; }catch(e){ return 'multi'; } })();
+let lobbyWatch=null, lobbyCounts={};
 function render(){
-  if(view!=='room'){
+  if(view!=='room'&&view!=='lobbygame'){
     const m=document.getElementById('ucModal'); if(m) m.remove();
     const w=document.getElementById('wwModal'); if(w) w.remove();
     if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
   }
+  if(lobbyWatch&&view!=='lobby'){ try{lobbyWatch();}catch(e){} lobbyWatch=null; }
   if(view==='lobby') return renderLobby();
+  if(view==='lobbygame') return renderLobbyGame();
   if(view==='room') return renderRoom();
 }
+/** 大廳卡片上的「幾人在玩」：只訂閱 lobbyPresence（都是幾十 bytes 的小節點），
+    千萬不要去訂閱 lobbyLive／lobbyFood，那裡面是每一幀的位置，一訂閱就是幾百 KB。 */
+function watchLobbyCounts(){
+  if(lobbyWatch) return;
+  try{ lobbyWatch=onValue(ref(db,'lobbyPresence'),snap=>{
+    const v=snap.val()||{};
+    const c={};
+    Object.keys(v).forEach(k=>{ c[k]=Object.keys((v[k]&&v[k].players)||{}).length; });
+    lobbyCounts=c;
+    if(view==='lobby'&&lobbyCat==='lobby') render();
+  }); }catch(e){}
+}
+function catMeta(g){
+  if(g.cat==='lobby') return '不限人數 · 隨時進出';
+  if(g.cat==='solo')  return '單人 · 其他人可觀戰';
+  return g.min===g.max?`${g.min} 人開局`:`滿 ${g.min} 人自動倒數 · 最多 ${g.max} 人`;
+}
 function renderLobby(){
-  const cards=GAMES.map(g=>{
+  watchLobbyCounts();
+  const list=GAMES.filter(g=>g.cat===lobbyCat);
+  const cards=list.map(g=>{
     const st=myStats[g.k]||{};
     const tag=g.ok?'<span class="gtag">可玩</span>':'<span class="gtag soon">即將推出</span>';
-    const rng=g.min===g.max?`${g.min} 人`:`${g.min}–${g.max} 人`;
     const rec=st.play?`<div class="gmeta">戰績 ${st.win||0} 勝 ${st.lose||0} 負</div>`:'';
-    return `<div class="gcard ${g.ok?'on':'off'}" data-g="${g.k}">${tag}
+    const n=lobbyCounts[g.k]||0;
+    const live=(g.cat==='lobby'&&n>0)?`<div class="glive"><i></i>${n} 人在玩</div>`:'';
+    const playing=(g.cat==='lobby'&&n>0)?' playing':'';
+    return `<div class="gcard ${g.ok?'on':'off'}${playing}" data-g="${g.k}">${tag}
       <div class="gicon" style="background:${g.c}">${g.ic?`<svg class="ico ico-lg"><use href="#${g.ic}"/></svg>`:escapeHtml(g.ab)}</div>
       <div class="gname">${escapeHtml(g.n)}</div>
-      <div class="gmeta">${rng}</div>${rec}</div>`;
+      <div class="gmeta">${catMeta(g)}</div>${live}${rec}</div>`;
+  }).join('');
+  const cat=CATS.find(c=>c.k===lobbyCat)||CATS[0];
+  const tabs=CATS.map(c=>{
+    const n=GAMES.filter(g=>g.cat===c.k).length;
+    return `<button data-cat="${c.k}" class="${c.k===lobbyCat?'sel':''}">${c.n}<span class="cn">${n}</span></button>`;
   }).join('');
   appEl.innerHTML=`
     <div class="topbar"><h1>小遊戲</h1><button class="back-btn" data-act="close">×</button></div>
-    <div class="wrap">
-      <div class="hint">選一款遊戲開房，邀請會自動發到聊天室；人數到齊自動開局</div>
+    <div class="catbar">${tabs}</div>
+    <div class="catdesc">${escapeHtml(cat.d)}</div>
+    <div class="wrap" style="padding-top:0">
       <div class="grid">${cards}</div>
     </div>`;
+  appEl.querySelectorAll('.catbar button').forEach(b=>b.onclick=()=>{
+    lobbyCat=b.dataset.cat;
+    try{ localStorage.setItem('game_cat',lobbyCat); }catch(e){}
+    renderLobby();
+  });
   appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openGameRooms(el.dataset.g));
   const cb=appEl.querySelector('[data-act="close"]'); if(cb) cb.onclick=closeSelf;
 }
@@ -550,12 +681,15 @@ function closeRoomsSheet(sheet){
 function openGameRooms(gk){
   const g=gameDef(gk);
   if(!g.ok){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
+  // v1.40 大廳自由：沒有「房間」這回事，點一下就直接進同一個大廳
+  if(isLobby(gk)){ enterLobbyGame(gk); return; }
+  const solo=isSolo(gk);
   const sheet=document.createElement('div');sheet.className='sheet';
   sheet.innerHTML=`<div class="inner">
     <h3>${escapeHtml(g.n)}</h3>
     <div class="desc" id="roomListHead">正在看現在有幾間房…</div>
     <div id="roomList" style="max-height:44vh;overflow-y:auto;margin-bottom:6px"></div>
-    <button class="btn" id="goCreate">建立自己的房間</button>
+    <button class="btn" id="goCreate">${solo?'開始新的一局':'建立自己的房間'}</button>
     <button class="btn ghost" id="closeRooms">取消</button>
   </div>`;
   document.body.appendChild(sheet);
@@ -565,6 +699,7 @@ function openGameRooms(gk){
     const rows=Object.entries(all||{})
       .filter(([id,r])=>{
         if(!r||r.game!==gk||r.status==='ended')return false;
+        if(r.private)return false;                                      // 私人房只給有連結的人看
         if(Object.keys(r.players||{}).length===0)return false;          // 空房（房主退出後留下的）不要顯示
         if(now-(r.createdAt||now)>6*3600*1000)return false;             // 超過 6 小時的舊房也不要
         return true;
@@ -572,10 +707,10 @@ function openGameRooms(gk){
       .sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
     if(!rows.length){
       headEl.textContent='現在還沒有人開「'+g.n+'」';
-      listEl.innerHTML='<div class="empty" style="padding:14px">你可以開第一間</div>';
+      listEl.innerHTML='<div class="empty" style="padding:14px">'+(solo?'你可以開第一局，其他人可以進來觀戰':'你可以開第一間')+'</div>';
       return;
     }
-    headEl.textContent='現在有 '+rows.length+' 間房在等：';
+    headEl.textContent=solo?('現在有 '+rows.length+' 局可以觀戰：'):('現在有 '+rows.length+' 間房在等：');
     listEl.innerHTML=rows.map(([id,r])=>{
       const pc=Object.keys(r.players||{}).length;
       const cap=r.setMax||r.maxP||r.minP||2;
@@ -584,14 +719,14 @@ function openGameRooms(gk){
       const canSpec=playing&&r.allowSpectate!==false;
       const canJoin=!playing&&!full;
       const ok=canJoin||canSpec;
-      const action=playing?(canSpec?'觀戰':'已開始'):(full?'已滿':'加入');
+      const action=solo?(canSpec?'觀戰':'進行中'):(playing?(canSpec?'觀戰':'已開始'):(full?'已滿':'加入'));
       const state=playing?'進行中':(r.status==='countdown'?'倒數中':'等待中');
       const host=r.host||'';
       const hcolor=(r.players&&r.players[host]&&r.players[host].color)||'#3b82f6';
       return `<div class="pitem" style="margin-bottom:7px">
         <div class="pav" style="${pavStyle(safeColor(hcolor))}">${avatarHTML({displayName:r.hostName||host})}</div>
-        <div class="pname" style="flex:1">${escapeHtml(r.hostName||host)} 的房間
-          <div class="hint" style="margin:2px 0 0;text-align:left">${pc}/${cap} 人 · ${state}${r.allowSpectate===false?' · 不可觀戰':''}</div>
+        <div class="pname" style="flex:1">${escapeHtml(r.hostName||host)} 的${solo?'對局':'房間'}
+          <div class="hint" style="margin:2px 0 0;text-align:left">${solo?(pc+' 人在玩 · 觀戰 '+Object.keys(r.spectators||{}).length+' 人'):(pc+'/'+cap+' 人')} · ${state}${r.allowSpectate===false?' · 不可觀戰':''}</div>
         </div>
         <div class="pbadge" data-join="${escAttr(id)}" style="cursor:${ok?'pointer':'default'};${ok?'':'opacity:.45'}">${action}</div>
       </div>`;
@@ -616,21 +751,32 @@ function openGameRooms(gk){
 function openCreate(gk){
   const g=gameDef(gk);
   if(!g.ok){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
-  pick={g:gk,p:g.min,spec:true,level:'normal'};
-  const cnt=[];for(let i=g.min;i<=g.max;i++)cnt.push(i);
+  if(isLobby(gk)){ enterLobbyGame(gk); return; }
+  const solo=isSolo(gk);
+  /* v1.40 房主不再自選人數。
+     以前有「玩家人數 2/3/4…」那一排，房主選 4 人就得等 4 個人，
+     結果 2 個人在裡面乾等。現在開局人數固定 = 這款遊戲的最少人數，
+     一達到就自動倒數 15 秒；倒數期間仍然可以繼續進人，最多到 g.max。 */
+  pick={g:gk,p:solo?1:g.min,spec:true,level:'normal',prv:false};
   const needTopic=!!GAMES_NEED_TOPIC[gk];
   const lvRow=needTopic?`<div class="row"><div class="lbl">題目難度<br><span style="font-size:11px;color:var(--text-sub)">由 AI 即時出題</span></div><div class="seg" id="segL">${TOPIC_LEVELS.map(l=>`<button data-l="${l.k}" class="${l.k==='normal'?'sel':''}">${l.n}</button>`).join('')}</div></div>`:'';
-  const inner=`<h3>開房：${escapeHtml(g.n)}</h3><div class="desc">設定人數與觀戰後，邀請會發到聊天室${needTopic?'；題目由 AI 即時生成，每次都不一樣':''}</div>
-    <div class="row"><div class="lbl">玩家人數</div><div class="seg" id="segP">${cnt.map(i=>`<button data-p="${i}" class="${i===pick.p?'sel':''}">${i}</button>`).join('')}</div></div>
+  const pRow=solo
+    ? `<div class="row"><div class="lbl">人數</div><div class="hint" style="margin:0;text-align:left">單人遊戲，開好就直接開始，不用等人</div></div>`
+    : `<div class="row"><div class="lbl">開局人數<br><span style="font-size:11px;color:var(--text-sub)">已固定</span></div><div class="hint" style="margin:0;text-align:left">滿 <b style="color:var(--gold)">${g.min}</b> 人自動倒數 15 秒；倒數中可以再進到 ${g.max} 人</div></div>`;
+  const prvRow=`<div class="row"><div class="lbl">公開房間<br><span style="font-size:11px;color:var(--text-sub)">不公開就只有拿到連結的人進得來</span></div><div class="seg" id="segV"><button data-v="0" class="sel">公開</button><button data-v="1">不公開</button></div></div>`;
+  const inner=`<h3>${solo?'開始：':'開房：'}${escapeHtml(g.n)}</h3><div class="desc">${solo?'開好就直接開始，其他人點這款遊戲就看得見你的對局，可以進來觀戰':'人數一夠就自動倒數 15 秒開局，邀請會發到聊天室'}${needTopic?'；題目由 AI 即時生成，每次都不一樣':''}</div>
+    ${pRow}
     ${lvRow}
+    ${prvRow}
     <div class="row"><div class="lbl">允許觀戰</div><div class="seg" id="segS"><button data-s="1" class="sel">允許</button><button data-s="0">不允許</button></div></div>
-    <button class="btn" id="doCreate">發出邀請並開房</button>
+    <button class="btn" id="doCreate">${solo?'直接開始':'發出邀請並開房'}</button>
     <button class="btn ghost" id="cancelCreate">取消</button>`;
   const sheet=document.createElement('div');sheet.className='sheet';sheet.innerHTML=`<div class="inner">${inner}</div>`;
   document.body.appendChild(sheet);
   sheet.onclick=e=>{if(e.target===sheet)sheet.remove();};
-  sheet.querySelector('#segP').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.p=+b.dataset.p;sheet.querySelectorAll('#segP button').forEach(x=>x.classList.toggle('sel',x===b));};
   sheet.querySelector('#segS').onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.spec=b.dataset.s==='1';sheet.querySelectorAll('#segS button').forEach(x=>x.classList.toggle('sel',x===b));};
+  const segV=sheet.querySelector('#segV');
+  if(segV) segV.onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.prv=b.dataset.v==='1';sheet.querySelectorAll('#segV button').forEach(x=>x.classList.toggle('sel',x===b));};
   const segL=sheet.querySelector('#segL');
   if(segL) segL.onclick=e=>{const b=e.target.closest('button');if(!b)return;pick.level=b.dataset.l;sheet.querySelectorAll('#segL button').forEach(x=>x.classList.toggle('sel',x===b));};
   sheet.querySelector('#doCreate').onclick=()=>{sheet.remove();doCreate();};
@@ -645,20 +791,32 @@ async function doCreate(){
   const g=gameDef(pick.g);
   const rid=push(ref(db,'games')).key;
   const now=Date.now();
+  const solo=isSolo(g.k);
   // 先建房、發邀請（不卡 AI 出題）；題目由 ensureTopic 在後台生成
-  const room={game:g.k,gameName:g.n,host:me.username,hostName:me.displayName,
-    minP:pick.p,maxP:g.max,setMax:pick.p,allowSpectate:pick.spec,status:'waiting',
+  // v1.40：minP 固定 = 該遊戲最少人數（房主不能改），setMax = 上限。
+  //        單人遊戲建房即開局（status:'playing'），不進等待／倒數。
+  const room={game:g.k,gameName:g.n,cat:g.cat||'multi',host:me.username,hostName:me.displayName,
+    minP:solo?1:g.min,maxP:g.max,setMax:g.max,allowSpectate:pick.spec,
+    private:pick.prv?true:null,solo:solo?true:null,
+    status:solo?'playing':'waiting',
     createdAt:now,startAt:null,turn:null,winner:null,state:{},topic:null,
     topicLevel:(GAMES_NEED_TOPIC[g.k]?pick.level:null),
     players:{[me.username]:{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:0}},
     spectators:{}};
+  if(solo){
+    // 單人：直接產生局面，不用倒數、不用等題目
+    const seed=Math.floor(Math.random()*2147483647);
+    const st=initGameState(room, seed);
+    room.seed=seed; room.startedAt=sNow(); room.turn=st.turn; room.state=st.state;
+  }
   await set(ref(db,'games/'+rid), room);
+  if(solo){ joinRoom(rid); return; }        // 單人遊戲不發邀請，免得每次玩都洗版
   // 發邀請訊息（走既有訊息系統：msg_ 編號 + createdAt 排序）
   let msgId='msg_'+now;
   try{ msgId=await nextMsgId(); }catch(e){}
   const invite={id:msgId,username:me.username,displayName:me.displayName,seat:me.seat,cls:me.cls,color:me.color,
     avatar:me.avatar,role:me.role,type:'game_invite',text:`邀請你玩 ${g.n}`,
-    game:g.k,gameName:g.n,roomId:rid,minP:pick.p,maxP:g.max,createdAt:now,deleted:false};
+    game:g.k,gameName:g.n,roomId:rid,minP:room.minP,maxP:g.max,createdAt:now,deleted:false};
   await set(ref(db,'messages/'+msgId),invite);
   // 記住邀請訊息編號：對局結束時要把這條訊息標成「已完成」，聊天室的加入按鈕才會消失
   await update(ref(db,'games/'+rid),{msgId:msgId});
@@ -710,10 +868,7 @@ async function ensureTopic(r){
   // 題目就緒後，若人數已夠就（重新）開始倒數
   try{
     const rr=(await get(ref(db,'games/'+curRoomId))).val();
-    if(rr && rr.status==='waiting'){
-      const pc=Object.keys(rr.players||{}).length;
-      if(pc>=(rr.minP||2)) await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
-    }
+    if(rr){ curRoom=rr; await maybeStartCountdown(); }
   }catch(e){}
 }
 
@@ -735,9 +890,14 @@ function joinRoom(rid){
     // 只在 ensureMembership 裡觸發是不夠的：最後一位可能是別端（例如安卓）加進來的，
     // 那樣兩邊都不會開始倒數，畫面就會一直卡在「人數 2/2 · 等待中」。
     if(!lateJoin) maybeStartCountdown();
+    // 修復：startAt 已經寫好了、status 卻還停在 waiting
+    //（前一個人在兩次寫入之間斷線，或離線寫入被排隊）→ 任何一個在房間裡的人接手補上。
+    if(!lateJoin && curRoom && curRoom.status==='waiting' && curRoom.startAt && !curRoom.solo){
+      update(ref(db,'games/'+curRoomId),{status:'countdown'}).catch(()=>{});
+    }
     // 倒數已經到期、題目也好了（AI 剛出完）→ 立刻開局，不用再等一輪
     if(!lateJoin && curRoom && curRoom.status==='countdown'
-       && (curRoom.startAt||0)<=Date.now() && topicReady(curRoom)) tryStartGame();
+       && (curRoom.startAt||0)<=sNow() && topicReady(curRoom)) tryStartGame();
     await checkAbandon(curRoom);
     // 需要題目但還沒出好 → 後台補（不阻塞介面）
     if(curRoom && GAMES_NEED_TOPIC[curRoom.game] && curRoom.status!=='ended') ensureTopic(curRoom);
@@ -832,12 +992,27 @@ async function markInviteDone(r){
 }
 async function maybeStartCountdown(){
   const r=curRoom; if(!r) return;
-  const pc=r.players?Object.keys(r.players).length:0;
+  if(r.solo) return;                          // 單人遊戲：建房就已經開局，沒有倒數
   // 需要題目的遊戲：題目還沒出好就不開始倒數
   if(!topicReady(r)) return;
-  if(r.status==='waiting'&&pc>=(r.minP||2)){
-    await update(ref(db,'games/'+curRoomId),{status:'countdown',startAt:Date.now()+15000});
-  }
+  // 已經在倒數／已經開局 → 絕對不重新計時（後來進來的人不會把時間拉回去）
+  if(r.status!=='waiting') return;
+  const pc=r.players?Object.keys(r.players).length:0;
+  if(pc<(r.minP||2)) return;
+  /* v1.40 倒數要「所有端看到同一個數字」而且「不會重新計時」：
+     startAt 用 transaction 寫，而且只有目前是空的時候才寫得進去。
+       (1) 之後再有人進來 → 交易不成立 → 直接 return，時間不會被拉回去；
+       (2) 好幾個人同時觸發 → 也只有一個人寫得成，不會你寫一次我寫一次；
+       (3) 截止時刻用「伺服器時間」算，兩支手機時鐘不同也看到同一個秒數。 */
+  let res;
+  try{
+    res=await runTransaction(ref(db,'games/'+curRoomId+'/startAt'), cur=>{
+      if(cur) return undefined;               // 已經有人在倒數了
+      return sNow()+COUNTDOWN_MS;
+    });
+  }catch(e){ return; }
+  if(!res.committed) return;
+  await update(ref(db,'games/'+curRoomId),{status:'countdown'});
 }
 /* 倒數期間若人數掉到最少人數以下 → 立即取消倒數（用最新資料，不看快取） */
 async function cancelCountdownIfShort(rid){
@@ -868,7 +1043,7 @@ function renderRoom(){
   if(!topicOk){
     // 題目還沒出好。倒數已經到期就老實說「AI 出題中…」（題目一出好就自動開局）。
     // 注意：這個分支要在最前面，不然後面的倒數分支永遠輪不到（之前就是這樣被蓋掉）。
-    const expired=r.status==='countdown'&&(r.startAt||0)<=Date.now();
+    const expired=r.status==='countdown'&&(r.startAt||0)<=sNow();
     const full=pc>=(r.minP||2);
     if(expired){
       cdHtml=`<div class="countdown" id="cdNum">AI</div><div class="hint" id="cdHint">AI 出題中…請稍候（人數已到齊，題目一出好就自動開局）</div>`;
@@ -877,18 +1052,20 @@ function renderRoom(){
     }
   }
   else if(r.status==='countdown'&&r.startAt){
-    const left=Math.max(0,Math.ceil((r.startAt-Date.now())/1000));
-    cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint" id="cdHint">人數已到齊，倒數後自動開局</div>`;
+    // 秒數一律用伺服器時間算，兩支手機（甚至 App 與網頁）看到的會是同一個數字
+    const left=Math.max(0,Math.ceil((r.startAt-sNow())/1000));
+    const room=Math.max(0,(r.setMax||r.maxP||0)-pc);
+    cdHtml=`<div class="countdown" id="cdNum">${left}</div><div class="hint" id="cdHint">人數已到齊，倒數後自動開局${room>0?('　（還有 '+room+' 個位，現在進來也來得及）'):''}</div>`;
   } else {
     const need=Math.max(0,(r.minP||2)-pc);
-    cdHtml=`<div class="hint" id="cdHint">${need>0?('還需要 '+need+' 人才能開局'):'人數已到齊，準備開局…'}</div>`;
+    cdHtml=`<div class="hint" id="cdHint">${need>0?('還需要 '+need+' 人才能開局（滿 '+(r.minP||2)+' 人自動倒數 15 秒）'):'人數已到齊，準備開局…'}</div>`;
   }
   const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
   const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="${pavStyle('#475569')}">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
   appEl.innerHTML=`
     <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 房間</h1></div>
     <div class="wrap">
-      <div class="hint">房主：${escapeHtml(r.hostName||r.host)} · 人數 ${pc}/${r.setMax||r.maxP}${r.allowSpectate?' · 可觀戰':' · 不可觀戰'}</div>
+      <div class="hint">房主：${escapeHtml(r.hostName||r.host)} · 人數 ${pc}/${r.setMax||r.maxP}（滿 ${r.minP||2} 人自動倒數）${r.allowSpectate?' · 可觀戰':' · 不可觀戰'}${r.private?' · 不公開':''}</div>
       ${cdHtml}
       <div class="plist">${plist}</div>${slist}
       ${isHost?`<button class="btn ghost" data-act="cancelRoom">關閉房間</button>`:''}
@@ -955,7 +1132,8 @@ function startCountdownTicker(){
   cdTimer=setInterval(async()=>{
     const el=document.getElementById('cdNum');
     if(!curRoom||curRoom.status!=='countdown'){ clearInterval(cdTimer);cdTimer=null;return; }
-    const left=Math.max(0,Math.ceil((curRoom.startAt-Date.now())/1000));
+    // 用伺服器時間，不然每支手機的秒數會不一樣
+    const left=Math.max(0,Math.ceil((curRoom.startAt-sNow())/1000));
     if(el)el.textContent=left;
     // 每 500ms 用最新資料复核人數，人不夠就取消倒數（不看快取，避免退房沒更新）
     cdCheck++;
@@ -994,16 +1172,28 @@ async function tryStartGame(){
   const seed=Math.floor(Math.random()*2147483647);
   const st=initGameState(r, seed);
   // 引擎驅動的遊戲（uno/chess）：只寫「隨機種子」，動作序列從空開始，各端重放得出同一局面
-  await update(ref(db,'games/'+id),{startedAt:Date.now(),turn:st.turn||null,winner:null,seed:seed,actions:null,state:(r.game==='uno'||r.game==='chess')?null:st.state,players:st.players});
+  await update(ref(db,'games/'+id),{startedAt:sNow(),turn:st.turn||null,winner:null,seed:seed,actions:null,state:(r.game==='uno'||r.game==='chess')?null:st.state,players:st.players});
 }
 async function leaveRoom(){
   const rid=curRoomId;
+  const isHost=!!(curRoom&&curRoom.host===me.username);   // curRoom 等一下會被清掉，先記下來
+  /* ★ 一定要「先斷訂閱、再退出」，順序顛倒就會退不掉。
+     以前是先把自己從名單刪掉，才呼叫 roomSub() 取消訂閱；可是刪掉之後，
+     伺服器會立刻推一份「我不在名單裡」的最新房間狀態過來，而訂閱還沒斷，
+     joinRoom 的回呼就跑 ensureMembership → 看到自己不是成員、房間又在進行中 →
+     依規則把自己重新加回 spectators。結果就是：退了等於沒退，
+     名單裡一直留著一個幽靈觀戰者（房間列表上也一直顯示「觀戰 1 人」）。 */
+  if(roomSub){ try{ roomSub(); }catch(e){} roomSub=null; }
+  if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
+  if(bombTimer){clearInterval(bombTimer);bombTimer=null;}
+  if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
+  const wm=document.getElementById('wwModal'); if(wm) wm.remove();
+  if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
   if(rid&&me){
     try{
       // v1.31 房主退出＝關閉房間。
       // 以前房主退出只把自己從名單移除，房間還停在 waiting →
       // 那條邀請會一直留在對話框、點進去只剩自己一個。
-      const isHost=!!(curRoom&&curRoom.host===me.username);
       if(isHost){
         await update(ref(db,'games/'+rid),{status:'ended',winner:'closed'});
       }else{
@@ -1016,11 +1206,7 @@ async function leaveRoom(){
       }
     }catch(e){}
   }
-  if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
-  if(bombTimer){clearInterval(bombTimer);bombTimer=null;}
-  if(wwDawnTimer){clearTimeout(wwDawnTimer);wwDawnTimer=null;}
-  const wm=document.getElementById('wwModal'); if(wm) wm.remove();
-  if(roomSub)roomSub(); roomSub=null; curRoom=null;curRoomId=null;
+  curRoom=null;curRoomId=null;
   // v1.31 從「邀請／房間連結」進來的，退出就回去聊天室；在大廳自己找房間進來的，才回大廳。
   if(cameFromInvite){
     cameFromInvite=false;
@@ -1033,6 +1219,1021 @@ async function closeRoom(){
   if(!curRoomId)return;
   await update(ref(db,'games/'+curRoomId),{status:'ended',winner:'closed'});
   showNotice('房間已關閉');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   v1.40 大廳自由（Lobby games）
+   ───────────────────────────────────────────────────────────────
+   和大廳外面那些「連線對戰」最大的分別：
+     * 沒有房主、沒有房間編號、沒有人數上限 —— 全站共用同一個大廳
+     * 點進去就玩，自己一個也能玩（沒有其他人時自動補 AI 對手）
+     * 隨時進出，你走了大廳還在，不會因為有人退出就結束
+
+   資料放在三個不同的節點，刻意分開，因為大小差好幾個數量級：
+     lobbyPresence/{gk}/players/{u}  幾十 bytes —— 大廳卡片上「幾人在玩」只訂閱這個
+     lobbyLive/{gk}/{u}              每一幀的位置 —— 只有進了大廳的人訂閱
+     lobbyFood/{gk}/{id}             共用可吃的東西 —— 同樣只有進了大廳的人訂閱
+   這是一個很重要的取捨：如果全部塞在同一個節點，光是站在大廳看卡片
+   就會一直收到每一幀的位置資料，流量會爆。
+
+   同步模型：「每一端只負責自己的角色」。我自己的蛇由我算，算出新位置就寫上去；
+   別人的蛇我只讀、不寫。碰撞用「我看到的那一份」判定，所以畫面上看到撞到就是撞到。
+   ═══════════════════════════════════════════════════════════════ */
+let lobbyKey=null;
+let lgame=null;
+let lobbyPresenceRef=null;
+
+/* ===== 共用工具 ===== */
+/** 多顆食物一次寫進去（multi-path update，一個請求搞定，比迴圈 push 省很多） */
+async function lobbyPushFood(gk, items){
+  if(!items||!items.length) return;
+  const upd={};
+  for(const it of items){
+    const k=push(ref(db,'lobbyFood/'+gk)).key;
+    upd[k]={x:Math.round(it.x),y:Math.round(it.y),r:it.r,g:it.g,c:it.c};
+  }
+  try{ await update(ref(db,'lobbyFood/'+gk),upd); }catch(e){}
+}
+/** 吃掉一顆：用 transaction 搶，只有一個人吃得到（不然兩端都會長大） */
+async function lobbyEatFood(gk, id){
+  try{
+    const res=await runTransaction(ref(db,'lobbyFood/'+gk+'/'+id), cur=> cur?null:undefined);
+    return !!res.committed;
+  }catch(e){ return false; }
+}
+async function lobbyJoinPresence(gk){
+  const r=ref(db,'lobbyPresence/'+gk+'/players/'+me.username);
+  lobbyPresenceRef=r;
+  try{ onDisconnect(r).remove(); }catch(e){}
+  try{ await set(r,{name:me.displayName,color:safeColor(me.color,'#22c55e'),at:sNow()}); }catch(e){}
+}
+async function lobbyLeavePresence(){
+  const gk=lobbyKey; if(!gk||!me) return;
+  try{ if(lobbyPresenceRef) onDisconnect(lobbyPresenceRef).cancel(); }catch(e){}
+  try{ await remove(ref(db,'lobbyPresence/'+gk+'/players/'+me.username)); }catch(e){}
+  try{ await remove(ref(db,'lobbyLive/'+gk+'/'+me.username)); }catch(e){}
+}
+
+/* ===== 進入／離開大廳 ===== */
+async function enterLobbyGame(gk){
+  const g=gameDef(gk);
+  if(!g.ok||!LOBBY_ENGINES[gk]){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
+  if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
+  if(lgame) await leaveLobbyGame(true);
+  lobbyKey=gk; view='lobbygame'; cameFromInvite=false;
+  lgame=LOBBY_ENGINES[gk]();
+  render();
+  await lobbyJoinPresence(gk);
+  await lgame.start();
+}
+async function leaveLobbyGame(silent){
+  const gk=lobbyKey;
+  if(lgame){ try{ await lgame.stop(); }catch(e){} lgame=null; }
+  if(gk&&me){ await lobbyLeavePresence(); }
+  lobbyKey=null;
+  if(!silent){ view='lobby'; render(); }
+}
+/** 大廳遊戲的畫面外殼（topbar + 畫布 + HUD）。已掛載就只更新數字，不要重建畫布。 */
+function renderLobbyGame(){
+  const g=gameDef(lobbyKey);
+  if(lgame&&lgame.mounted){ lgame.tickHud&&lgame.tickHud(); return; }
+  appEl.innerHTML=`
+    <div class="topbar"><button class="back-btn" data-act="lbLeave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1>
+      <span class="hint" style="margin:0;font-size:11.5px">大廳自由 · 沒有房主</span></div>
+    <div class="cstage">
+      <div class="cwrap" id="cwrap"><canvas id="cv"></canvas>
+        <div class="hudtop">
+          <div class="hudcard lb" id="lbCard"><div class="lbt">積分榜</div><div id="lbRows"></div></div>
+          <div class="hudcard stats" id="stCard"></div>
+        </div>
+        <div class="ctrls" id="ctrlBox"></div>
+        <div id="ovBox"></div>
+      </div>
+    </div>`;
+  const b=appEl.querySelector('[data-act="lbLeave"]'); if(b) b.onclick=()=>leaveLobbyGame();
+  if(lgame) lgame.mount(appEl.querySelector('#cv'));
+}
+
+/* ===== 遊戲清單 ===== */
+const LOBBY_ENGINES={ snake:createSnakeLobby };
+
+/* ═══════════════════════════════════════════════════════════════
+   貪吃蛇（大廳版）
+   蛇身沿著「頭走過的路徑」長出來，所以轉彎是連續的曲線，不是一格一格跳。
+   吃豆會變長；撞到別人的身體／撞牆就死，身體會散落成豆給人吃。
+   ═══════════════════════════════════════════════════════════════ */
+function createSnakeLobby(){
+  const R=1020;              // 競技場半徑（世界單位）
+  const R0=11;               // 蛇的半寬
+  const SEG=6;               // 每一節的長度
+  const SPEED=158;           // 基本速度（單位／秒）
+  const SPEED_BOOST=286;     // 加速時的速度
+  const TURN=3.5;            // 每秒最多轉幾弧度（限制轉向 → 不會瞬間折返）
+  const START_N=14;          // 出生長度
+  const NET_DELAY=130;       // 別人的畫面延遲（毫秒）：用插值讓 8Hz 的封包看起來是連續的
+  const FOOD_TARGET=200;     // 場上維持多少顆豆
+  const NBOTS=3;             // 只有自己一個人的時候，自動補幾條 AI 蛇
+
+  const chans=()=> 'hsl('+Math.round(Math.random()*360)+' 72% 58%)';
+
+  let cv=null, ctx=null, raf=0, running=false;
+  let stopLive=null, stopFood=null, stopPresence=null;
+  let food={};               // 目前場上的豆（我這端看到的最新一份）
+  let rivals={};             // 別人（含 AI）的狀態：{name,color,h:[樣本],n,dead,lastSeen,bot}
+  let my=null;               // 我自己的蛇
+  let myTrail=[];            // 我的頭部軌跡（本地全解析度，用 0.35 單位抽樣）
+  let best=0, killedBy='', deadUntil=0, deathAt=0;
+  let boosting=false, lastSample=0, lastFoodScan=0, lastBot=0;
+  let pointer={x:0,y:0,has:false};
+  let botHost='', bots={};
+  let hudRowsEl=null, hudCardEl=null, stCardEl=null, wrapEl=null;
+  let cw=0, ch=0;
+
+  /* ── 我的蛇 ── */
+  function spawn(){
+    const a=Math.random()*Math.PI*2, d=120+Math.random()*(R-260);
+    my={x:Math.cos(a)*d, y:Math.sin(a)*d, ang:a+Math.PI, n:START_N, alive:true};
+    myTrail=[{x:my.x,y:my.y}];
+    deadUntil=0; killedBy='';
+  }
+
+  /* ── 樣本進出 ── */
+  const TRAIL_STEP=0.7;      // 頭部軌跡每 0.7 世界單位記一點
+  function pushTrail(x,y){
+    const last=myTrail[0];
+    if(last){
+      const d=Math.hypot(x-last.x,y-last.y);
+      if(d<TRAIL_STEP) return;
+      // 太遠（例如重生）就整條清掉重來，免得畫出一條橫跨整個場地的線
+      if(d>400){ myTrail=[{x,y}]; return; }
+    }
+    myTrail.unshift({x,y});
+    const maxPts=Math.ceil((my.n*SEG)/TRAIL_STEP)+60;
+    if(myTrail.length>maxPts) myTrail.length=maxPts;
+  }
+  /**
+   * 從頭部軌跡沿著路徑往回取 n*SEG 的長度，順便抽稀到「大約每一節一個點」。
+   * 抽稀很重要：軌跡是每 0.7 單位一點，一條 100 節的蛇會有近千點，
+   * 全部丟進 quadraticCurveTo 會很慢；抽成每節一點既夠平滑又便宜。
+   */
+  function bodyFrom(pts,n){
+    const out=[];
+    let left=n*SEG;
+    out.push(pts[0]);
+    let acc=0;
+    const step=SEG*1.05;
+    for(let i=1;i<pts.length&&left>1e-6;i++){
+      const a=pts[i-1], b=pts[i];
+      const d=Math.hypot(b.x-a.x,b.y-a.y);
+      if(d<=1e-6) continue;
+      if(d>=left){
+        const t=left/d;
+        out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+        break;
+      }
+      left-=d; acc+=d;
+      if(acc>=step){ out.push(b); acc=0; }
+    }
+    return out;
+  }
+
+  /* ── 別人的頭：在兩筆樣本之間插值，畫面才會順 ── */
+  function rivalHead(r,renderT){
+    const h=r.h; if(!h||!h.length) return null;
+    const q=h[h.length-1];
+    if(h.length<2) return {x:q.x,y:q.y};
+    const p=h[h.length-2];
+    const span=Math.max(1,q.t-p.t);
+    let k=(renderT-p.t)/span;
+    if(!isFinite(k)) k=1;
+    k=Math.max(0,Math.min(1.3,k));       // 允許一點點外推，網路抖一下也不會卡住
+    return {x:p.x+(q.x-p.x)*k, y:p.y+(q.y-p.y)*k};
+  }
+  function rivalBody(r,renderT){
+    const head=rivalHead(r,renderT); if(!head) return [];
+    const pts=[head];
+    const h=r.h;
+    for(let i=h.length-1;i>=0;i--) pts.push(h[i]);
+    return bodyFrom(pts,r.n||START_N);
+  }
+
+  /* ── 死亡：身體散成豆 ── */
+  async function die(reason,byName){
+    if(!my||!my.alive) return;
+    my.alive=false; killedBy=byName||''; deathAt=sNow(); deadUntil=sNow()+2600;
+    best=Math.max(best,Math.round(my.n));
+    const body=bodyFrom(myTrail,my.n);
+    const items=[];
+    const step=Math.max(1,Math.floor(body.length/46));
+    for(let i=0;i<body.length&&items.length<60;i+=step){
+      const p=body[i];
+      items.push({x:p.x+(Math.random()-.5)*26,y:p.y+(Math.random()-.5)*26,r:5+Math.random()*3,g:1+Math.floor(Math.random()*3),c:0});
+    }
+    if(my.n>=25) items.push({x:my.x,y:my.y,r:9,g:6,c:0});     // 大蛇會掉一顆大的
+    await lobbyPushFood(lobbyKey,items);
+    // 記戰績（只加欄位，不動原本的 win/lose 結構）
+    try{
+      const st=myStats.snake||{};
+      await update(ref(db,'users/'+me.username+'/gameStats/snake'),{play:(st.play||0)+1,best:Math.max(st.best||0,best),at:sNow()});
+      myStats.snake=Object.assign({},st,{play:(st.play||0)+1,best:Math.max(st.best||0,best)});
+    }catch(e){}
+    showNotice(reason+(killedBy?('　被 '+killedBy+' 撞死'):''),2400);
+  }
+
+  /* ── 吃豆 ── */
+  async function tryEat(){
+    if(!my||!my.alive) return;
+    const ids=Object.keys(food);
+    for(const id of ids){
+      const f=food[id]; if(!f) continue;
+      if(Math.hypot(f.x-my.x,f.y-my.y) < R0+(f.r||6)){
+        const got=await lobbyEatFood(lobbyKey,id);
+        if(got){ my.n+=Math.max(1,f.g||1); if(my.n>2600) my.n=2600; }
+        delete food[id];
+      }
+    }
+  }
+
+  /* ── 碰撞 ── */
+  function heading(){ return {x:my.x+Math.cos(my.ang)*R0*1.6, y:my.y+Math.sin(my.ang)*R0*1.6}; }
+  function checkDeath(renderT){
+    if(!my||!my.alive) return;
+    const hd=heading();
+    if(Math.hypot(hd.x,hd.y)>R){ die('撞到結界了'); return; }
+    const keys=Object.keys(rivals);
+    for(const u of keys){
+      const r=rivals[u]; if(!r||r.dead) continue;
+      const rh=rivalHead(r,renderT); if(!rh) continue;
+      const dh=Math.hypot(rh.x-hd.x,rh.y-hd.y);
+      if(dh < R0*1.9){
+        // 頭對頭：大的贏（比較小的一方死，並把豆子留給對方）；一樣大就一起死
+        if((r.n||START_N)>my.n+1.5){ die('撞到 '+r.name, r.name); return; }
+        if(Math.abs((r.n||START_N)-my.n)<=1.5){ die('和 '+r.name+' 撞在一起', r.name); return; }
+        continue;
+      }
+      // 頭撞到對方身體
+      const body=rivalBody(r,renderT);
+      for(let i=2;i<body.length;i+=2){
+        if(Math.hypot(body[i].x-hd.x,body[i].y-hd.y) < R0*1.75){ die('撞到 '+r.name+' 的身體', r.name); return; }
+      }
+    }
+  }
+
+  /* ── AI 對手（只有自己一個人的時候才跑） ── */
+  function botsActive(){
+    const humans=Object.keys(rivals).filter(u=>!rivals[u].bot);
+    return humans.length===0 && botHost===me.username;
+  }
+  function botStep(name,dt,renderT){
+    let b=bots[name];
+    if(!b){ b=bots[name]={x:0,y:0,ang:0,n:18,dead:false,until:0,name:name,color:'#94a3b8'}; spawnBot(b); }
+    if(b.dead){ if(sNow()>=b.until) spawnBot(b); return b; }
+    // 目標：最近的豆；順便避開牆與別人的身體
+    let bestF=null,bd=1e9;
+    for(const id in food){
+      const f=food[id]; const d=Math.hypot(f.x-b.x,f.y-b.y);
+      if(d<bd){ bd=d; bestF=f; }
+    }
+    let want=b.ang;
+    if(bestF) want=Math.atan2(bestF.y-b.y,bestF.x-b.x);
+    // 避牆：太靠邊就轉回中心
+    const dist=Math.hypot(b.x,b.y);
+    if(dist>R*0.82) want=Math.atan2(-b.y,-b.x);
+    // 避蛇：前面一點有沒有別人的身體
+    const ax=b.x+Math.cos(b.ang)*70, ay=b.y+Math.sin(b.ang)*70;
+    for(const u in rivals){
+      const r=rivals[u]; if(!r||r.dead) continue;
+      const body=rivalBody(r,renderT);
+      for(let i=0;i<body.length;i+=3){
+        if(Math.hypot(body[i].x-ax,body[i].y-ay)<R0*2.6){
+          want=b.ang+(Math.random()<0.5?1:-1)*1.5; break;
+        }
+      }
+    }
+    let d=((want-b.ang+Math.PI*3)%(Math.PI*2))-Math.PI;
+    const mx=TURN*0.75*dt;
+    b.ang+=Math.max(-mx,Math.min(mx,d));
+    const sp=SPEED*0.86;
+    b.x+=Math.cos(b.ang)*sp*dt; b.y+=Math.sin(b.ang)*sp*dt;
+    if(Math.hypot(b.x,b.y)>R){ b.dead=true; b.until=sNow()+1800; }
+    if(b.n<40 && bestF && bd<R0+8) b.n+=1;
+    return b;
+  }
+  function spawnBot(b){
+    const a=Math.random()*Math.PI*2, d=200+Math.random()*(R-380);
+    b.x=Math.cos(a)*d; b.y=Math.sin(a)*d; b.ang=a+Math.PI; b.n=16+Math.floor(Math.random()*10); b.dead=false;
+  }
+
+  /* ── 網路 ── */
+  async function sample(){
+    if(!my||!me) return;
+    try{
+      await update(ref(db,'lobbyLive/'+lobbyKey+'/'+me.username),{
+        x:Math.round(my.x),y:Math.round(my.y),a:+my.ang.toFixed(2),
+        n:Math.round(my.n),d:my.alive?0:1,t:sNow(),b:boosting?1:0,
+        nm:me.displayName,c:safeColor(me.color,'#22c55e')
+      });
+    }catch(e){}
+    if(!botsActive()) return;
+    // AI 蛇也由我這端寫上去（別人看到的就是普通的蛇）
+    try{
+      const upd={};
+      for(const k in bots){
+        const b=bots[k];
+        upd['bot_'+me.username+'_'+k]={x:Math.round(b.x),y:Math.round(b.y),a:+b.ang.toFixed(2),
+          n:Math.round(b.n),d:b.dead?1:0,t:sNow(),b:0,nm:b.name,c:'#94a3b8'};
+      }
+      await update(ref(db,'lobbyLive/'+lobbyKey),upd);
+    }catch(e){}
+  }
+
+  /* ── 主迴圈 ── */
+  let lastT=0;
+  function loop(ts){
+    if(!running) return;
+    raf=requestAnimationFrame(loop);
+    if(document.hidden){ lastT=ts; return; }
+    const dt=Math.min(0.05,(ts-lastT)/1000||0); lastT=ts;
+    const now=sNow();
+    const renderT=now-NET_DELAY;
+    if(my&&my.alive){
+      // 轉向：往指標（或手機上按住的位置）轉，但每秒最多轉 TURN 弧度
+      if(pointer.has){
+        const want=Math.atan2(pointer.y-my.y,pointer.x-my.x);
+        let d=((want-my.ang+Math.PI*3)%(Math.PI*2))-Math.PI;
+        const mx=TURN*dt;
+        my.ang+=Math.max(-mx,Math.min(mx,d));
+      }
+      const sp=boosting?(SPEED_BOOST):SPEED;
+      my.x+=Math.cos(my.ang)*sp*dt;
+      my.y+=Math.sin(my.ang)*sp*dt;
+      if(boosting){
+        my.n-=5.2*dt;
+        if(my.n<11.5){ my.n=11.5; boosting=false; }
+        // 加速時沿路掉豆（別人可以吃）
+        if(Math.random()<dt*7){
+          lobbyPushFood(lobbyKey,[{x:my.x+(Math.random()-.5)*18,y:my.y+(Math.random()-.5)*18,r:5,g:1,c:0}]);
+        }
+      }
+      pushTrail(my.x,my.y);
+      best=Math.max(best,Math.round(my.n));
+      tryEat();
+      checkDeath(renderT);
+    } else if(my&&!my.alive){
+      if(now>=deadUntil){ spawn(); pushTrail(my.x,my.y); sample(); }
+    }
+    // AI
+    if(botsActive()){
+      const names=['小翠','阿墨','豆豆','灰灰','阿斑'];
+      for(let i=0;i<NBOTS;i++){
+        const nm=names[i]||('AI'+(i+1));
+        if(!bots[nm]) bots[nm]={name:nm,color:'#94a3b8',x:0,y:0,ang:0,n:16,dead:false,until:0};
+        botStep(nm,dt,renderT);
+      }
+    } else if(Object.keys(bots).length){
+      for(const k in bots) delete bots[k];
+    }
+    if(now-lastSample>125){ lastSample=now; sample(); }
+    if(now-lastFoodScan>1400){ lastFoodScan=now; keepFood(); }
+    draw(renderT,now);
+    tickHud(now);
+  }
+
+  /** 豆子數量維持住（誰都可以補；多補幾顆不影響遊戲） */
+  function keepFood(){
+    const have=Object.keys(food).length;
+    if(have>=FOOD_TARGET) return;
+    const add=Math.min(26,FOOD_TARGET-have);
+    const items=[];
+    for(let i=0;i<add;i++){
+      const a=Math.random()*Math.PI*2, d=Math.sqrt(Math.random())*(R-40);
+      items.push({x:Math.cos(a)*d,y:Math.sin(a)*d,r:5+Math.random()*3.5,g:1+(Math.random()<0.18?2:0)+(Math.random()<0.05?3:0),c:0});
+    }
+    lobbyPushFood(lobbyKey,items);
+  }
+
+  /* ── 畫圖 ── */
+  function resize(){
+    if(!cv) return;
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const rect=cv.parentElement.getBoundingClientRect();
+    cw=Math.max(1,Math.round(rect.width)); ch=Math.max(1,Math.round(rect.height));
+    cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineJoin='round'; ctx.lineCap='round';
+  }
+  function draw(renderT,now){
+    if(!ctx||!my) return;
+    const zoom=Math.max(0.52,Math.min(1.06,1.06-my.n/1400));
+    const cx=cw/2, cy=ch/2;
+    const toS=(x,y)=>({x:cx+(x-my.x)*zoom, y:cy+(y-my.y)*zoom});
+    ctx.clearRect(0,0,cw,ch);
+    // 背景：會跟著鏡頭移動的點陣（不是純色，滾動時看得出速度）
+    const gridStep=90*zoom, offX=((cx-my.x*zoom)%gridStep+gridStep)%gridStep;
+    const offY=((cy-my.y*zoom)%gridStep+gridStep)%gridStep;
+    ctx.fillStyle=document.body.classList.contains('theme-light')?'rgba(15,23,42,.13)':'rgba(255,255,255,.085)';
+    for(let x=offX-gridStep;x<cw+gridStep;x+=gridStep){
+      for(let y=offY-gridStep;y<ch+gridStep;y+=gridStep){
+        ctx.beginPath(); ctx.arc(x,y,1.15,0,6.284); ctx.fill();
+      }
+    }
+    // 結界
+    const c=toS(0,0), rp=R*zoom;
+    ctx.beginPath(); ctx.arc(c.x,c.y,rp,0,6.284);
+    ctx.strokeStyle='rgba(226,176,74,.42)'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.strokeStyle='rgba(226,176,74,.12)'; ctx.lineWidth=12; ctx.stroke();
+
+    // 豆
+    for(const id in food){
+      const f=food[id];
+      const p=toS(f.x,f.y); const rr=(f.r||6)*zoom;
+      if(p.x<-30||p.y<-30||p.x>cw+30||p.y>ch+30) continue;
+      const big=(f.g||1)>=3;
+      ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,6.284);
+      ctx.fillStyle=big?'#fbbf24':'#67e8f9';
+      ctx.fill();
+      if(big){ ctx.beginPath(); ctx.arc(p.x,p.y,rr*1.9,0,6.284); ctx.fillStyle='rgba(251,191,36,.18)'; ctx.fill(); }
+    }
+
+    // 別人的蛇（先畫遠的，我的畫在最上面）
+    const order=Object.keys(rivals).sort((a,b)=>(rivals[a].n||0)-(rivals[b].n||0));
+    for(const u of order){
+      const r=rivals[u]; if(!r||r.dead) continue;
+      const body=rivalBody(r,renderT); if(body.length<2) continue;
+      drawSnake(body.map(p=>toS(p.x,p.y)), r.color||'#94a3b8', zoom);
+    }
+    // 我的
+    if(my&&my.alive){
+      const body=bodyFrom(myTrail,my.n).map(p=>toS(p.x,p.y));
+      drawSnake(body, safeColor(me.color,'#22c55e'), zoom);
+    }
+    // 死亡遮罩
+    if(my&&!my.alive){
+      const left=Math.max(0,Math.ceil((deadUntil-now)/1000));
+      const el=document.getElementById('ovBox');
+      if(el&&!el.dataset.on){ el.dataset.on='1';
+        el.innerHTML=`<div class="deadmask"><div class="big">撞死了</div><div class="sub">${escapeHtml(killedBy?('被 '+killedBy+' 結束'):'')}<br>本局最長 ${best}<br>${left} 秒後在原地復活</div></div>`; }
+      const e2=document.getElementById('ovBox');
+      if(e2&&e2.dataset.on&&e2.querySelector('.sub')) e2.querySelector('.sub').innerHTML=`${escapeHtml(killedBy?('被 '+killedBy+' 結束'):'')}<br>本局最長 ${best}<br>${left} 秒後復活`;
+    } else {
+      const el=document.getElementById('ovBox'); if(el&&el.dataset.on){ el.innerHTML=''; delete el.dataset.on; }
+    }
+  }
+  /** 畫一條蛇：外描邊 → 主體 → 內亮線 → 頭（眼睛） */
+  function drawSnake(pts, color, zoom){
+    if(pts.length<2) return;
+    const r=R0*zoom;
+    const path=()=>{
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<pts.length-1;i++){
+        const mx=(pts[i].x+pts[i+1].x)/2, myy=(pts[i].y+pts[i+1].y)/2;
+        ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,myy);
+      }
+      const last=pts[pts.length-1];
+      ctx.lineTo(last.x,last.y);
+    };
+    path(); ctx.strokeStyle='rgba(0,0,0,.34)'; ctx.lineWidth=r*2+3.4; ctx.stroke();
+    path(); ctx.strokeStyle=color; ctx.lineWidth=r*2; ctx.stroke();
+    path(); ctx.strokeStyle='rgba(255,255,255,.20)'; ctx.lineWidth=r*0.62; ctx.stroke();
+    // 頭
+    const h=pts[0];
+    const ang=Math.atan2(pts[0].y-pts[1].y, pts[0].x-pts[1].x);
+    ctx.save(); ctx.translate(h.x,h.y); ctx.rotate(ang);
+    ctx.beginPath(); ctx.arc(0,0,r*1.06,0,6.284); ctx.fillStyle=color; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,r*1.06,0,6.284); ctx.strokeStyle='rgba(0,0,0,.3)'; ctx.lineWidth=1.6; ctx.stroke();
+    const ex=r*0.46, ey=r*0.44, er=Math.max(1.5,r*0.32);
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(ex,ey,er,0,6.284); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex,-ey,er,0,6.284); ctx.fill();
+    ctx.fillStyle='#111827';
+    ctx.beginPath(); ctx.arc(ex+er*0.35,ey,er*0.52,0,6.284); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex+er*0.35,-ey,er*0.52,0,6.284); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ── HUD ── */
+  function tickHud(now){
+    if(!hudRowsEl) return;
+    const rows=[];
+    if(my) rows.push({me:true,name:'你',n:Math.round(my.n),color:safeColor(me.color,'#22c55e'),alive:my.alive});
+    for(const u in rivals){ const r=rivals[u]; if(r) rows.push({me:false,name:r.nm||u,n:Math.round(r.n||0),color:r.color||'#94a3b8',alive:!r.dead}); }
+    rows.sort((a,b)=>b.n-a.n);
+    const top=rows.slice(0,6);
+    hudRowsEl.innerHTML=top.map((x,i)=>`<div class="lbrow ${x.me?'me':''}"><span class="lbr">${i+1}</span><span class="lbd" style="background:${safeColor(x.color,'#94a3b8')}"></span><span class="lbn">${escapeHtml(x.name)}${x.alive?'':''}</span><span class="lbv">${x.n}</span></div>`).join('')||'<div class="lbrow">還沒有人</div>';
+    hudCardEl.style.opacity='';
+    const mine=rows.findIndex(x=>x.me);
+    if(stCardEl){
+      stCardEl.innerHTML=`
+        <div><div class="sv">${my?Math.round(my.n):0}</div><div class="sl">長度</div></div>
+        <div><div class="sv">${best}</div><div class="sl">本局最長</div></div>
+        <div><div class="sv">${mine>=0?(mine+1):'-'}</div><div class="sl">排名</div></div>`;
+    }
+  }
+
+  /* ── 掛載 / 卸載 ── */
+  return {
+    mounted:false,
+    async start(){
+      spawn();
+      keepFood();          // 場上沒豆就補（第一個進來的人負責）
+      // 訂閱：別的蛇
+      stopLive=onValue(ref(db,'lobbyLive/'+lobbyKey),snap=>{
+        const v=snap.val()||{};
+        const seen={};
+        for(const u in v){
+          if(u===me.username) continue;
+          const s=v[u]||{};
+          const isBot=u.indexOf('bot_')===0;
+          const r=rivals[u]||(rivals[u]={h:[],n:0,name:u,color:'#94a3b8',nm:s.nm||u,bot:isBot,dead:false});
+          r.nm=s.nm||r.nm; r.color=safeColor(s.c,r.color); r.dead=!!s.d;
+          r.n=Number(s.n)||0;                       // 長度一定要讀進來，否則積分榜永遠是 0
+          r.lastSeen=Date.now();
+          const t=Number(s.t)||0;
+          const last=r.h[r.h.length-1];
+          if(!last||t>last.t) r.h.push({x:Number(s.x)||0,y:Number(s.y)||0,t:t});
+          if(r.h.length>420) r.h.splice(0,r.h.length-420);
+          seen[u]=1;
+        }
+        for(const u in rivals){ if(!seen[u]&&Date.now()-(rivals[u].lastSeen||0)>9000) delete rivals[u]; }
+      });
+      stopFood=onValue(ref(db,'lobbyFood/'+lobbyKey),snap=>{ food=snap.val()||{}; });
+      // AI 主辦：沒有其他真人、而且我的帳號最小（避免兩個人都以為自己是主辦）
+      try{
+        const snap=await get(ref(db,'lobbyPresence/'+lobbyKey+'/players'));
+        const names=Object.keys(snap.val()||{});
+        botHost=(names.length?names.slice().sort():[me.username])[0];
+      }catch(e){ botHost=me.username; }
+      stopPresence=onValue(ref(db,'lobbyPresence/'+lobbyKey+'/players'),snap=>{
+        const names=Object.keys(snap.val()||{});
+        botHost=(names.length?names.slice().sort():[me.username])[0];
+      });
+      sample();
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      this.mounted=true;
+      resize();
+      window.addEventListener('resize',resize);
+      hudRowsEl=appEl.querySelector('#lbRows'); hudCardEl=appEl.querySelector('#lbCard'); stCardEl=appEl.querySelector('#stCard');
+      wrapEl=appEl.querySelector('#cwrap');
+      // 控制：手指／滑鼠指到哪就往哪轉（手機按住即可）；空白鍵或右邊按鈕加速
+      const setP=(ev)=>{
+        const rect=wrapEl.getBoundingClientRect();
+        const t=ev.touches&&ev.touches[0]?ev.touches[0]:ev;
+        const sx=t.clientX-rect.left, sy=t.clientY-rect.top;
+        const zoom=Math.max(0.52,Math.min(1.06,1.06-(my?my.n:14)/1400));
+        pointer.x=my.x+(sx-rect.width/2)/zoom;
+        pointer.y=my.y+(sy-rect.height/2)/zoom;
+        pointer.has=true;
+        if(ev.cancelable) ev.preventDefault();
+      };
+      wrapEl.addEventListener('pointerdown',setP,{passive:false});
+      wrapEl.addEventListener('pointermove',e=>{ if(e.buttons||e.pointerType==='mouse') setP(e); },{passive:false});
+      wrapEl.addEventListener('touchstart',setP,{passive:false});
+      wrapEl.addEventListener('touchmove',setP,{passive:false});
+      const ctl=appEl.querySelector('#ctrlBox');
+      ctl.innerHTML=`<div style="flex:1"></div>
+        <div class="padbtn" id="btnBoost">加速<br>衝刺</div>`;
+      const bb=appEl.querySelector('#btnBoost');
+      const on=()=>{boosting=true;bb.classList.add('on');};
+      const off=()=>{boosting=false;bb.classList.remove('on');};
+      bb.addEventListener('pointerdown',on); bb.addEventListener('pointerup',off);
+      bb.addEventListener('pointerleave',off); bb.addEventListener('pointercancel',off);
+      const kd=e=>{ if(e.code==='Space'||e.key===' '){ e.preventDefault(); on(); } };
+      const ku=e=>{ if(e.code==='Space'||e.key===' ') off(); };
+      window.addEventListener('keydown',kd);
+      window.addEventListener('keyup',ku);
+      this._offKey=()=>{
+        window.removeEventListener('keydown',kd);
+        window.removeEventListener('keyup',ku);
+        window.removeEventListener('resize',resize);
+      };
+      running=true; lastT=performance.now();
+      raf=requestAnimationFrame(loop);
+    },
+    tickHud(){ tickHud(sNow()); },
+    async stop(){
+      running=false; this.mounted=false;
+      if(raf) cancelAnimationFrame(raf); raf=0;
+      if(this._offKey){ try{ this._offKey(); }catch(e){} this._offKey=null; }
+      if(stopLive){ try{stopLive();}catch(e){} stopLive=null; }
+      if(stopFood){ try{stopFood();}catch(e){} stopFood=null; }
+      if(stopPresence){ try{stopPresence();}catch(e){} stopPresence=null; }
+      try{
+        await remove(ref(db,'lobbyLive/'+lobbyKey+'/'+me.username));
+      }catch(e){}
+      // 我是 AI 主辦 → 把我代寫的那幾條 AI 蛇一起刪掉，別人不會看到鬼影
+      if(me&&botHost===me.username){
+        const keys=Object.keys(bots);
+        if(keys.length){
+          const upd={};
+          for(const k of keys) upd['bot_'+me.username+'_'+k]=null;
+          try{ await update(ref(db,'lobbyLive/'+lobbyKey),upd); }catch(e){}
+        }
+      }
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   v1.40 單人遊戲：俄羅斯方塊（可觀戰）
+   ───────────────────────────────────────────────────────────────
+   和大廳自由的分別：這一種有「房間」，只是房間裡只有一個人。
+   建房後 status 直接是 playing（不用等 15 秒），其他人點進來就是觀戰。
+
+   同步方式：玩的人自己算（本地是真的），
+     每 4Hz 只寫「正在掉的那一塊」（很小的封包），
+     方塊卡住（lock）時才寫整張盤面。
+   觀戰的人只讀不寫。這樣玩的人完全不會被網路牽著走（手感不會因網路變差），
+   觀戰的畫面也夠順（4Hz 加上棋盤變化）。
+   ═══════════════════════════════════════════════════════════════ */
+const TET_W=10, TET_H=20;
+const TET_SHAPES=[
+  {k:'I',n:4,c:'#38bdf8',b:[[0,1],[1,1],[2,1],[3,1]]},
+  {k:'J',n:3,c:'#3b82f6',b:[[0,0],[0,1],[1,1],[2,1]]},
+  {k:'L',n:3,c:'#f97316',b:[[2,0],[0,1],[1,1],[2,1]]},
+  {k:'O',n:2,c:'#fbbf24',b:[[0,0],[1,0],[0,1],[1,1]]},
+  {k:'S',n:3,c:'#22c55e',b:[[1,0],[2,0],[0,1],[1,1]]},
+  {k:'T',n:3,c:'#a855f7',b:[[1,0],[0,1],[1,1],[2,1]]},
+  {k:'Z',n:3,c:'#ef4444',b:[[0,0],[1,0],[1,1],[2,1]]}
+];
+function tetCells(ti,rot){
+  const sh=TET_SHAPES[ti], n=sh.n, out=[];
+  const r=((rot%4)+4)%4;
+  for(const [x,y] of sh.b){
+    let px=x, py=y;
+    for(let i=0;i<r;i++){ const nx=n-1-py, ny=px; px=nx; py=ny; }
+    out.push([px,py]);
+  }
+  return out;
+}
+function tetBoardFromStr(s){
+  const a=new Array(TET_W*TET_H).fill('');
+  const str=String(s||'');
+  for(let i=0;i<Math.min(str.length,TET_W*TET_H);i++){ const ch=str[i]; if(ch&&ch!=='.') a[i]=ch; }
+  return a;
+}
+function tetBoardToStr(a){
+  let s='';
+  for(let i=0;i<TET_W*TET_H;i++) s+=(a[i]||'.');
+  return s;
+}
+let tet=null;      // 目前掛著的俄羅斯方塊實例（同時間只會有一個）
+
+function createTetris(){
+  let local=null, specMode=false, rid=null, specData=null;
+  let cv=null, ctx=null, raf=0, mounted=false, running=false;
+  let gravityAcc=0, dropInt=800, softDrop=false;
+  let keyHandler=null, onResize=null, lastWrite=0;
+  let paintedAt=0;
+
+  function bag(){
+    const b=[0,1,2,3,4,5,6];
+    for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=b[i];b[i]=b[j];b[j]=t; }
+    return b;
+  }
+  let bagQ=[];
+  function nextType(){ if(!bagQ.length) bagQ=bag(); return bagQ.pop(); }
+  function newLocal(){
+    return {board:new Array(TET_W*TET_H).fill(''), ti:nextType(), rot:0, x:3, y:-1,
+      nx:nextType(), score:0, lines:0, level:1, over:false, paused:false};
+  }
+  function landed(){ return {board:local.board, ti:local.ti, rot:local.rot, x:local.x, y:local.y}; }
+  function fits(ti,rot,x,y,board){
+    for(const [cx,cy] of tetCells(ti,rot)){
+      const gx=x+cx, gy=y+cy;
+      if(gx<0||gx>=TET_W||gy>=TET_H) return false;
+      if(gy>=0&&board[gy*TET_W+gx]) return false;
+    }
+    return true;
+  }
+  function spawn(){
+    local.ti=local.nx; local.nx=nextType();
+    local.rot=0; local.x=(TET_W - TET_SHAPES[local.ti].n)/2|0; local.y=-1;
+    if(!fits(local.ti,0,local.x,local.y,local.board)){
+      // 出生就撞到 → 遊戲結束
+      local.over=true; over();
+      return false;
+    }
+    return true;
+  }
+  function lock(){
+    const cells=tetCells(local.ti,local.rot);
+    let top=TET_H;
+    for(const [cx,cy] of cells){
+      const gx=local.x+cx, gy=local.y+cy;
+      if(gy>=0&&gy<TET_H&&gx>=0&&gx<TET_W) local.board[gy*TET_W+gx]=TET_SHAPES[local.ti].k;
+      if(gy<top) top=gy;
+    }
+    // 消行
+    let cleared=0;
+    for(let y=TET_H-1;y>=0;y--){
+      let full=true;
+      for(let x=0;x<TET_W;x++) if(!local.board[y*TET_W+x]){ full=false; break; }
+      if(full){
+        for(let yy=y;yy>0;yy--) for(let x=0;x<TET_W;x++) local.board[yy*TET_W+x]=local.board[(yy-1)*TET_W+x];
+        for(let x=0;x<TET_W;x++) local.board[x]='';
+        cleared++; y++;
+      }
+    }
+    if(cleared){
+      local.lines+=cleared;
+      local.score+=[0,100,300,500,800][cleared]*local.level;
+      local.level=1+Math.floor(local.lines/10);
+      dropInt=Math.max(90,800-(local.level-1)*72);
+      showNotice(['','單消 +'+(100*local.level),'雙消 +'+(300*local.level),'三消 +'+(500*local.level),'四消！+'+(800*local.level)][cleared],1200);
+    }
+    spawn();
+    writeState(true);
+  }
+  async function writeState(full){
+    if(!rid||!local) return;
+    const st=local;
+    try{
+      if(full){
+        await update(ref(db,'games/'+rid+'/state'),{
+          b:tetBoardToStr(st.board), nx:TET_SHAPES[st.nx].k, sc:st.score, ln:st.lines, lv:st.level, ov:!!st.over,
+          p:{ti:st.ti,rot:st.rot,x:st.x,y:st.y,t:sNow()}, hb:sNow(), by:me.username, byName:me.displayName
+        });
+      }else{
+        await update(ref(db,'games/'+rid+'/state/p'),{ti:st.ti,rot:st.rot,x:st.x,y:st.y,t:sNow()});
+      }
+    }catch(e){}
+  }
+  async function over(){
+    try{
+      const st=myStats.tetris||{};
+      const best=Math.max(st.best||0,local.score);
+      await update(ref(db,'users/'+me.username+'/gameStats/tetris'),{play:(st.play||0)+1,best:best,lines:Math.max(st.lines||0,local.lines),at:sNow()});
+      myStats.tetris=Object.assign({},st,{play:(st.play||0)+1,best:best,lines:Math.max(st.lines||0,local.lines)});
+    }catch(e){}
+    writeState(true);
+    paint();
+  }
+
+  /* ── 控制 ── */
+  function move(dx){ if(local.over)return; if(fits(local.ti,local.rot,local.x+dx,local.y,local.board)){ local.x+=dx; paint(); writeState(false);} }
+  function rotate(){
+    if(local.over)return;
+    const nr=(local.rot+1)%4;
+    for(const k of [0,-1,1,-2,2]){
+      if(fits(local.ti,nr,local.x+k,local.y,local.board)){ local.rot=nr; local.x+=k; paint(); writeState(false); return; }
+    }
+  }
+  function softDropStep(){
+    if(local.over)return;
+    if(fits(local.ti,local.rot,local.x,local.y+1,local.board)){ local.y++; local.score+=1; paint(); writeState(false); }
+    else lock();
+  }
+  function hardDrop(){
+    if(local.over)return;
+    let n=0;
+    while(fits(local.ti,local.rot,local.x,local.y+1,local.board)){ local.y++; n++; }
+    local.score+=n*2;
+    lock();
+  }
+  function restart(){
+    local=newLocal();
+    if(!spawn()) return;
+    writeState(true);
+    paint();
+  }
+
+  /* ── 畫面 ── */
+  function resize(){
+    if(!cv) return;
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const rect=cv.parentElement.getBoundingClientRect();
+    const w=Math.max(1,Math.round(rect.width)), h=Math.max(1,Math.round(rect.height));
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w,h};
+  }
+  /** 玩家與觀戰者共用的繪圖：把 board / 正在掉的那一塊畫出來 */
+  function paint(){
+    if(!ctx||!cv) return;
+    const sv=specMode?specData:null;
+    const board=specMode?(sv&&sv.board):(local&&local.board);
+    const cur=specMode?((sv&&sv.cur)||null):(local&&!local.over?{ti:local.ti,rot:local.rot,x:local.x,y:local.y}:null);
+    const over=specMode?!!(sv&&sv.over):!!(local&&local.over);
+    if(!board) return;
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const W=cv.width/dpr, H=cv.height/dpr;
+    ctx.clearRect(0,0,W,H);
+    const pad=8;
+    const cs=Math.min((W-pad*2)/TET_W,(H-pad*2)/TET_H);
+    const bw=cs*TET_W, bh=cs*TET_H;
+    const ox=(W-bw)/2, oy=(H-bh)/2;
+    // 底板
+    ctx.fillStyle='rgba(255,255,255,.035)';
+    ctx.fillRect(ox,oy,bw,bh);
+    ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
+    for(let x=1;x<TET_W;x++){ ctx.beginPath(); ctx.moveTo(ox+x*cs,oy); ctx.lineTo(ox+x*cs,oy+bh); ctx.stroke(); }
+    for(let y=1;y<TET_H;y++){ ctx.beginPath(); ctx.moveTo(ox,oy+y*cs); ctx.lineTo(ox+bw,oy+y*cs); ctx.stroke(); }
+    ctx.strokeStyle='rgba(226,176,74,.4)'; ctx.lineWidth=1.5; ctx.strokeRect(ox,oy,bw,bh);
+    const colorOf=k=>{ const s=TET_SHAPES.find(z=>z.k===k); return s?s.c:'#888'; };
+    const cell=(gx,gy,fill,alpha)=>{
+      if(gy<0) return;
+      const x=ox+gx*cs, y=oy+gy*cs;
+      ctx.globalAlpha=alpha==null?1:alpha;
+      ctx.fillStyle=fill;
+      ctx.fillRect(x+1,y+1,cs-2,cs-2);
+      ctx.fillStyle='rgba(255,255,255,.28)';
+      ctx.fillRect(x+1,y+1,cs-2,Math.max(1,cs*0.14));
+      ctx.globalAlpha=1;
+    };
+    for(let i=0;i<TET_W*TET_H;i++){
+      const k=board[i];
+      if(k) cell(i%TET_W,(i/TET_W)|0, colorOf(k));
+    }
+    if(cur&&!over){
+      // 影子（落點提示）
+      let gy=cur.y;
+      while(fits(cur.ti,cur.rot,cur.x,gy+1,board)) gy++;
+      for(const [cx,cy] of tetCells(cur.ti,cur.rot)) cell(cur.x+cx,gy+cy,colorOf(TET_SHAPES[cur.ti].k),0.22);
+      for(const [cx,cy] of tetCells(cur.ti,cur.rot)) cell(cur.x+cx,cur.y+cy,colorOf(TET_SHAPES[cur.ti].k));
+    }
+    if(over){
+      ctx.fillStyle='rgba(6,8,13,.7)'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#fca5a5'; ctx.font='700 '+Math.round(Math.min(W,H)*0.075)+'px system-ui,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('遊戲結束',W/2,H/2);
+    }
+  }
+  function hud(){
+    const el=appEl.querySelector('#tetHud'); if(!el) return;
+    const src=specMode?specData:local; if(!src) return;
+    const sc=Number(src.score)||0;
+    const ln=Number(src.lines)||0;
+    const lv=Number(src.level)||1;
+    const nx=specMode?src.next:src.nx;
+    el.innerHTML=`
+      <div class="hudcard stats" style="gap:12px">
+        <div><div class="sv">${sc}</div><div class="sl">分數</div></div>
+        <div><div class="sv">${ln}</div><div class="sl">行數</div></div>
+        <div><div class="sv">${lv}</div><div class="sl">等級</div></div>
+        <div><div class="sv" style="color:${nx?colorOfX(nx):'#888'}">${nx||'-'}</div><div class="sl">下一個</div></div>
+      </div>`;
+  }
+  function colorOfX(k){ const s=TET_SHAPES.find(z=>z.k===k); return s?s.c:'#888'; }
+
+  function loop(ts){
+    if(!running) return;
+    raf=requestAnimationFrame(loop);
+    if(specMode||document.hidden||!local||local.over) return;
+    const dt=Math.min(120,ts-lastT||0); lastT=ts;
+    gravityAcc+=dt;
+    const gi=softDrop?Math.min(dropInt,60):dropInt;
+    if(gravityAcc>=gi){ gravityAcc=0; softDropStep(); }
+    if(sNow()-lastWrite>250){ lastWrite=sNow(); writeState(false); }
+  }
+  let lastT=0;
+
+  return {
+    get mounted(){ return mounted; },
+    play(ridIn){
+      rid=ridIn; specMode=false;
+      local=newLocal(); spawn();
+      return this;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d'); mounted=true;
+      resize();                       // 一定要先量一次，不然畫布還是預設的 300×150
+      lastT=performance.now();
+      keyHandler=e=>{
+        if(e.key==='ArrowLeft'){ e.preventDefault(); move(-1); }
+        else if(e.key==='ArrowRight'){ e.preventDefault(); move(1); }
+        else if(e.key==='ArrowDown'){ e.preventDefault(); softDropStep(); }
+        else if(e.key==='ArrowUp'||e.key==='x'||e.key==='X'){ e.preventDefault(); rotate(); }
+        else if(e.key===' '){ e.preventDefault(); hardDrop(); }
+      };
+      window.addEventListener('keydown',keyHandler);
+      onResize=()=>{ resize(); paint(); };
+      window.addEventListener('resize',onResize);
+      if(!specMode){
+        setTimeout(()=>{ paint(); hud(); writeState(true); },30);
+        running=true; raf=requestAnimationFrame(loop);
+      }else{
+        setTimeout(()=>{ paint(); hud(); },30);
+      }
+    },
+    unmount(){
+      mounted=false;
+      if(raf) cancelAnimationFrame(raf); raf=0;
+      running=false;
+      if(keyHandler){ window.removeEventListener('keydown',keyHandler); keyHandler=null; }
+      if(onResize){ window.removeEventListener('resize',onResize); onResize=null; }
+      cv=null; ctx=null;
+    },
+    /* 觀戰者：把收到的 state 轉成畫面要的形狀 */
+    setSpec(state){
+      const p=state&&state.p||{};
+      specMode=true;                      // 讓 mount() 知道自己是觀戰者，不要啟動遊戲迴圈
+      specData={
+        board:tetBoardFromStr(state&&state.b),
+        cur:(p&&p.ti!=null)?{ti:p.ti|0,rot:p.rot|0,x:p.x|0,y:p.y|0}:null,
+        score:Number(state&&state.sc)||0, lines:Number(state&&state.ln)||0,
+        level:Number(state&&state.lv)||1, next:state&&state.nx, over:!!(state&&state.ov)
+      };
+      paint(); hud();
+    },
+    paint, hud,
+    self:{
+      move,rotate,hardDrop,softDropStep,restart,
+      setSoft:(v)=>{ softDrop=v; },
+      get over(){ return local?local.over:true; }
+    }
+  };
+}
+
+function renderTetris(r,g,spec){
+  const rid=curRoomId;
+  if(spec){
+    if(!tet||!tet.mounted||tet.mode!=='spec'){
+      if(tet) tet.unmount();
+      tet=createTetris(); tet.mode='spec';
+      appEl.innerHTML=`
+        <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button>
+          <h1>${escapeHtml(g.n)}</h1><span class="hint" style="margin:0;font-size:12px">觀戰中</span></div>
+        <div class="cstage">
+          <div style="padding:10px 14px 4px" id="tetHud"></div>
+          <div class="cwrap"><canvas id="tetCv"></canvas>
+            <div class="specbar">觀戰中 · ${escapeHtml(r.hostName||r.host)} 正在玩</div>
+          </div>
+          <div style="padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:10px">
+            <button class="btn ghost" style="margin:0" data-act="leave">離開</button>
+          </div>
+        </div>`;
+      const lb=appEl.querySelectorAll('[data-act="leave"]'); lb.forEach(b=>b.onclick=leaveRoom);
+      tet.setSpec(r.state||{});                 // 必須先讓它進入觀戰模式
+      tet.mount(appEl.querySelector('#tetCv'));
+    }
+    tet.setSpec(r.state||{});
+    return;
+  }
+  // 自己是玩家
+  if(!tet||!tet.mounted||tet.mode!=='play'){
+    if(tet) tet.unmount();
+    tet=createTetris(); tet.mode='play';
+    tet.play(rid);
+    appEl.innerHTML=`
+      <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button>
+        <h1>${escapeHtml(g.n)}</h1>
+        <span class="hint" style="margin:0;font-size:11.5px">${r.allowSpectate?'其他人可以進來觀戰':''}</span></div>
+      <div class="cstage">
+        <div style="padding:10px 14px 4px" id="tetHud"></div>
+        <div class="cwrap"><canvas id="tetCv"></canvas>
+          <div id="tetOver"></div>
+        </div>
+        <div style="padding:8px 14px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;justify-content:center">
+          <div class="kbd" style="grid-template-columns:repeat(3,52px);grid-template-rows:52px 52px">
+            <div class="k" data-k="rl">↺</div><div class="k" data-k="up" style="opacity:.45">·</div><div class="k" data-k="rr">↻</div>
+            <div class="k" data-k="l">←</div><div class="k" data-k="d">↓</div><div class="k" data-k="r">→</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="padbtn" id="tetDrop" style="width:66px;height:66px;font-size:12px">落下</div>
+            <div class="padbtn" id="tetAgain" style="width:66px;height:40px;font-size:12px;border-radius:12px">重來</div>
+          </div>
+        </div>
+      </div>`;
+    const lb=appEl.querySelectorAll('[data-act="leave"]'); lb.forEach(b=>b.onclick=leaveRoom);
+    const kb=appEl.querySelector('.kbd');
+    const bind=(sel,fn)=>{
+      const el=appEl.querySelector(sel); if(!el) return;
+      const on=e=>{ e.preventDefault(); el.classList.add('on'); fn(); };
+      const off=()=>el.classList.remove('on');
+      el.addEventListener('pointerdown',on); el.addEventListener('pointerup',off);
+      el.addEventListener('pointerleave',off); el.addEventListener('pointercancel',off);
+    };
+    bind('[data-k="l"]',()=>tet.self.move(-1));
+    bind('[data-k="r"]',()=>tet.self.move(1));
+    bind('[data-k="up"]',()=>tet.self.softDropStep());
+    bind('[data-k="rl"]',()=>{ for(let i=0;i<3;i++) tet.self.rotate(); });
+    bind('[data-k="rr"]',()=>tet.self.rotate());
+    bind('#tetDrop',()=>tet.self.hardDrop());
+    bind('#tetAgain',()=>tet.self.restart());
+    // 按住 ↓ 連續落下
+    const dEl=appEl.querySelector('[data-k="d"]');
+    if(dEl){
+      let hold=null;
+      const start=e=>{ e.preventDefault(); dEl.classList.add('on'); tet.self.setSoft(true);
+        hold=setInterval(()=>tet.self.softDropStep(),70); };
+      const end=()=>{ dEl.classList.remove('on'); tet.self.setSoft(false); if(hold){clearInterval(hold);hold=null;} };
+      dEl.addEventListener('pointerdown',start); dEl.addEventListener('pointerup',end);
+      dEl.addEventListener('pointerleave',end); dEl.addEventListener('pointercancel',end);
+    }
+    tet.mount(appEl.querySelector('#tetCv'));
+  } else {
+    // 重複進來（每次 Firebase 更新都會走這條）→ 只重畫
+    tet.paint && tet.paint();
+  }
+  if(tet&&tet.hud) tet.hud();
+  // 結束提示
+  const ovEl=appEl.querySelector('#tetOver');
+  if(ovEl&&tet&&tet.self&&tet.self.over){
+    if(!ovEl.dataset.on){ ovEl.dataset.on='1';
+      ovEl.innerHTML=`<div class="deadmask"><div class="big">遊戲結束</div><div class="sub">按「重來」再玩一局<br>其他人現在可以進來觀戰</div></div>`; }
+  } else if(ovEl&&ovEl.dataset.on){ ovEl.innerHTML=''; delete ovEl.dataset.on; }
 }
 
 /* ===== 遊戲邏輯入口 ===== */
@@ -1154,6 +2355,7 @@ function renderGame(r,g){
   else if(r.game==='xiangqi') drawXiangqi(r,g,bar,spec);
   else if(r.game==='werewolf') drawWerewolf(r,g,'',spec);
   else if(r.game==='monopoly') drawMonopoly(r,g,bar,spec);
+  else if(r.game==='tetris') renderTetris(r,g,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
 }
@@ -1263,6 +2465,7 @@ function renderEnded(r,g){
   appEl.querySelectorAll('[data-act="home"]').forEach(b=>b.onclick=backHome);
 }
 function backHome(){
+  if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
   // v1.31 從邀請／房間連結進來的：任何「回到大廳」都應該回到聊天室，
   // 而不是把小遊戲大廳丟給對方看（他根本不是從那裡進來的）。
   if(cameFromInvite){
