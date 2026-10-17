@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-YTW0GqGTurMaMoCa5sc774w5QA4WGhyEZZCQbojmtTc=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-5wsHWO+1ymEhdrVHoaQgLyBu2JJlnJnADxiwp/uQPxw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1034,7 +1034,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.2';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.3';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -3408,7 +3408,8 @@ function openGames(roomId,gameKey){
   if(ov)ov.remove();
   ov=document.createElement('div');
   ov.id='gamesOverlay';
-  let url='game.html?u='+encodeURIComponent(me.username)+'&theme='+encodeURIComponent(theme==='light'?'light':'dark');
+  let url='game.html?u='+encodeURIComponent(me.username)+'&theme='+encodeURIComponent(theme==='light'?'light':'dark')
+    +'&v='+encodeURIComponent(CURRENT_VERSION||'');
   if(roomId)url+='&room='+encodeURIComponent(roomId);
   if(gameKey)url+='&game='+encodeURIComponent(gameKey);
   ov.innerHTML=`<iframe id="gamesFrame" src="${escAttr(url)}" allow="clipboard-write"></iframe>`;
@@ -3802,6 +3803,12 @@ function openToolsPage(){
        結果彈回個人主頁；再按一次又是一樣，看起來就是「一直跳轉」
    現在工具直接蓋在聊天室上面，關掉就回到原本的位置，全程沒有導航。 */
 let toolFrameEl=null;
+/* 工具頁加上版本參數：GitHub Pages 的 HTML 有 10 分鐘快取，不加這個的話
+   部署完之後，聊天室裡的 iframe 仍然會拿到舊版（用戶實際就是撞到這個）。 */
+function toolVerURL(url){
+  if(!url) return url;
+  return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(CURRENT_VERSION || '');
+}
 function closeToolFrame(){
   if(!toolFrameEl) return;
   try{ toolFrameEl.remove(); }catch(e){}
@@ -3820,7 +3827,7 @@ function openToolFrame(url,name){
     +'<button class="tf-open" type="button">新視窗</button>'
     +'</div>'
     +'<div class="tf-body"><div class="tf-load">正在載入工具…</div>'
-    +'<iframe title="'+escAttr(name||'小工具')+'" src="'+escAttr(url)+'" '
+    +'<iframe title="'+escAttr(name||'小工具')+'" src="'+escAttr(toolVerURL(url))+'" '
     +'allow="geolocation; fullscreen; clipboard-write" referrerpolicy="same-origin"></iframe></div>';
   document.body.appendChild(el);
   document.body.style.setProperty('overflow','hidden');
@@ -3829,7 +3836,7 @@ function openToolFrame(url,name){
   el.querySelector('.tf-back').addEventListener('click',closeToolFrame);
   el.querySelector('.tf-open').addEventListener('click',function(){
     /* 桌面想開另一個視窗就看這顆；被攔都無所謂，因為工具本身已經開著 */
-    try{ window.open(url,'_blank'); }catch(e){}
+    try{ window.open(toolVerURL(url),'_blank'); }catch(e){}
   });
   el.querySelector('.tf-load').textContent='正在載入 '+String(name||'工具')+'…';
   try{
@@ -5676,6 +5683,9 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.3',date:'2026-10-17',changes:[
+'【重要】修好「部署完之後，聊天室裡的小工具仍然是舊版」：工具頁本身有十分鐘快取，聊天室那個 iframe 一直拿到舊檔，所以直接開 mtr.html 是新的、從聊天室進去卻是舊的。現在開工具（同小遊戲）會在網址加上目前版本號，每次部署之後都會即刻抓到新版',
+]},
 {ver:'v1.38.2',date:'2026-10-17',changes:[
 '港鐵行程計算器加入「站外步行轉乘」：尖東↔尖沙咀、旺角東↔旺角、荃灣西↔荃灣、中環↔香港這幾對站其實有行人通道直接連住，以前只懂計坐車，尖東去尖沙咀會叫你坐 16 分鐘、轉兩次車；現在第一條就是「步行 12 分鐘・無需轉乘」，同港鐵官方 App 一致',
 '全程步行的話不再顯示車費（行過去毋須入閘，免得顯示一個唔使付的價錢），並改為一句說明兩站有通道相連',
