@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tU/8b9Ht9eGcUoX6LSRWgOecK0yV5PDx/LUOB64uJ9E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-YTW0GqGTurMaMoCa5sc774w5QA4WGhyEZZCQbojmtTc=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1034,7 +1034,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.1';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.2';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -5676,6 +5676,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.2',date:'2026-10-17',changes:[
+'港鐵行程計算器加入「站外步行轉乘」：尖東↔尖沙咀、旺角東↔旺角、荃灣西↔荃灣、中環↔香港這幾對站其實有行人通道直接連住，以前只懂計坐車，尖東去尖沙咀會叫你坐 16 分鐘、轉兩次車；現在第一條就是「步行 12 分鐘・無需轉乘」，同港鐵官方 App 一致',
+'全程步行的話不再顯示車費（行過去毋須入閘，免得顯示一個唔使付的價錢），並改為一句說明兩站有通道相連',
+]},
 {ver:'v1.38.1',date:'2026-10-17',changes:[
 '【重要】修好「點小工具之後一路跳轉、退不出」：以前工具是用新視窗打開，手機上被攔就會改成同一頁跳過去，某些內建瀏覽器／App 內會把它當成外部跳轉，結果彈回個人主頁，再按又是一樣。現在工具直接蓋在聊天室上面打開，按左上角返回就回到小工具清單，全程不會離開聊天室，也不會掉原本的位置',
 '小工具入口搬到下面那條導覽列，跟「個人主頁、群聊、AI 聊天、管理員」放在一起；個人主頁裡面重複的那一個已經拿走，不會有兩個入口',
