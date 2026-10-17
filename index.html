@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Waahzpu97tpK6rQ5xNd+XGHnnEgGYiuuwZ2BVUEjiRM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tguTU05ON+6nARAiE3TV2XRY7ann4MN6TBcK/WISoVM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -85,8 +85,11 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .bubble .voice-msg .vp>div{height:100%;width:0;background:#fff;transition:width var(--dur-1)}
 .bubble .voice-msg .vd{width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0}
 .bubble .voice-msg.played .vd{display:none}
-.bubble .loc-msg{cursor:pointer;max-width:240px}
-.bubble .loc-msg .lm-map{position:relative;width:220px;height:150px;border-radius:var(--r-1);overflow:hidden;background:#222;margin-bottom:6px}
+.bubble .loc-msg{cursor:pointer;max-width:100%}
+.bubble .loc-msg .lm-map{position:relative;width:220px;max-width:100%;aspect-ratio:220/150;height:auto;
+  border-radius:var(--r-1);overflow:hidden;background:#222;margin-bottom:6px}
+/* 圖磚層固定 220×150 並置中：卡片窄過 220 都只是左右裁邊，正中央仍然是發送位置 */
+.bubble .loc-msg .lm-in{position:absolute;left:50%;top:50%;width:220px;height:150px;transform:translate(-50%,-50%)}
 .bubble .loc-msg .lm-map .lm-t{position:absolute;width:256px;height:256px;max-width:none;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .bubble .loc-msg .lm-pin{position:absolute;left:50%;top:50%;width:15px;height:15px;margin:-8px 0 0 -8px;border-radius:50%;background:#3b82f6;border:2.5px solid #fff;box-sizing:border-box;box-shadow:0 0 0 1px rgba(15,23,42,.22),0 4px 10px rgba(15,23,42,.35)}
 .bubble .loc-msg .lm-label{font-size:12px;display:flex;align-items:center;gap:4px}
@@ -510,7 +513,7 @@ input[type=file]{display:none}
 #noticeFullscreen .car-nav button{background:rgba(148,163,184,.18);color:var(--text-main);border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;font-family:inherit}
 #noticeFullscreen .car-nav button:hover{background:rgba(148,163,184,.35)}
 /* ===== v1.10 投票 ===== */
-.poll-box{min-width:240px;max-width:100%;display:flex;flex-direction:column;gap:10px}
+.poll-box{min-width:min(240px,100%);max-width:100%;display:flex;flex-direction:column;gap:10px}
 .poll-title{font-size:16px;font-weight:700;line-height:1.4;word-break:break-word}
 .poll-options{display:flex;flex-direction:column;gap:8px}
 .poll-opt{position:relative;display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r-1);background:rgba(255,255,255,.12);cursor:pointer;overflow:hidden;user-select:none;transition:background var(--dur-2) ease}
@@ -780,19 +783,14 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
   background:#dfe6ec;touch-action:none;cursor:grab}
 .lf-stage:active{cursor:grabbing}
 .lf-canvas{display:block;position:absolute;left:0;top:0}
-.lf-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  pointer-events:none;display:grid;place-items:center}
+.lf-pin{position:absolute;left:0;top:0;transform:translate(-50%,-50%);
+  pointer-events:none;display:grid;place-items:center;transition:opacity .2s}
 .lf-pin i{display:block;width:17px;height:17px;border-radius:50%;background:#3b82f6;
   border:3px solid #fff;box-sizing:border-box;
   box-shadow:0 0 0 1px rgba(15,23,42,.2),0 6px 16px rgba(59,130,246,.45)}
 .lf-pin::before{content:'';position:absolute;width:44px;height:44px;border-radius:50%;
   background:rgba(59,130,246,.16);animation:lfPulse 2.4s var(--ease-inout) infinite}
 @keyframes lfPulse{0%,100%{transform:scale(.72);opacity:.55}50%{transform:scale(1);opacity:.12}}
-.lf-zoom{position:absolute;right:12px;bottom:40px;display:flex;flex-direction:column;gap:9px}
-.lf-zoom button{width:40px;height:40px;border:none;border-radius:50%;cursor:pointer;
-  background:#16203a;color:#fff;font-size:19px;line-height:1;font-family:inherit;
-  box-shadow:0 4px 16px rgba(15,23,42,.3);transition:transform var(--dur-1)}
-.lf-zoom button:active{transform:scale(.92)}
 .lf-attr{position:absolute;right:8px;bottom:8px;font-size:10px;color:#475569;
   background:rgba(255,255,255,.75);padding:1px 6px;border-radius:5px;pointer-events:none}
 
@@ -888,7 +886,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
   <symbol id="i-wx-fog" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 17H7M17 21H9"/></symbol>
   <symbol id="i-wx-wind" viewBox="0 0 24 24"><path d="M12.8 19.6A2 2 0 1 0 14 16H2M17.5 8a2.5 2.5 0 1 1 2 4H2M9.8 4.4A2 2 0 1 1 11 8H2"/></symbol>
   <symbol id="i-wx-storm" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m13 11-4 5h4l-3 4"/></symbol>
-<symbol id="i-voice" viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 5.6a4.4 4.4 0 0 0-6.3 0L12 6.3l-.7-.7A4.4 4.4 0 0 0 5 11.9l7 7 7-7a4.4 4.4 0 0 0 0-6.3z"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol><symbol id="i-score" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6 13.4 11l3.6.3-2.7 2.4.8 3.6L12 15.5l-3.1 1.8.8-3.6L7 11.3 10.6 11z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m16 10 4.6-2.6A1 1 0 0 1 22 8.3v7.4a1 1 0 0 1-1.4.9L16 14"/><rect x="2" y="6" width="14" height="12" rx="2.5"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="9" r="1.8"/><path d="m4 17 5-5 4.5 4.5L16 14l4 4"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></symbol><symbol id="i-poll" viewBox="0 0 24 24"><path d="M6 20V10M12 20V4M18 20v-7"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a9 9 0 0 1 0 12"/></symbol><symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M6.7 5h10.6a4 4 0 0 1 4 3.6c.1.8.2 2 .2 2.4a5 5 0 0 1-5 5c-1 0-1.5-.5-2-1l-1.5-1.5h-2L9.5 15c-.5.5-1 1-2 1a5 5 0 0 1-5-5c0-.4.1-1.6.2-2.4A4 4 0 0 1 6.7 5z"/><path d="M6 11h4M8 9v4M15 11h.01M17.5 13h.01"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M15.5 3.5A5.5 5.5 0 0 1 21 9M15 7a2.5 2.5 0 0 1 2.5 2.5"/><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 5.5 5.5L16 12l4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 3.5 5.2 2 2 0 0 1 5.5 3z"/></symbol><!-- v1.37 視訊通話用的圖標 --><symbol id="i-mic-off" viewBox="0 0 24 24"><path d="M15 9.3V5a3 3 0 0 0-5.7-1.4"/><path d="M9 9v3a3 3 0 0 0 5.1 2.1"/><path d="M5 11a7 7 0 0 0 11.1 4.8"/><path d="M19 11a7 7 0 0 1-.5 2.6"/><path d="M12 18v3"/><path d="m3 3 18 18"/></symbol><symbol id="i-video-off" viewBox="0 0 24 24"><path d="m16 10 4.6-2.6A1 1 0 0 1 22 8.3v7.4a1 1 0 0 1-1.4.9L16 14"/><path d="M14 6H4.5A2.5 2.5 0 0 0 2 8.5v7A2.5 2.5 0 0 0 4.5 18H14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/><path d="m3 3 18 18"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 20h7M12 17v3"/></symbol><symbol id="i-flip" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M3 21v-5h5M21 3v5h-5"/></symbol><symbol id="i-hangup" viewBox="0 0 24 24"><path d="M12 9c-2.6 0-5 .4-7.2 1.2-.9.3-1.5 1.1-1.5 2v1.6c0 .8.7 1.5 1.5 1.4l3-.4c.7-.1 1.2-.7 1.2-1.4v-1.2c1.9-.5 4-.5 6 0v1.2c0 .7.5 1.3 1.2 1.4l3 .4c.8.1 1.5-.6 1.5-1.4v-1.6c0-.9-.6-1.7-1.5-2C17 9.4 14.6 9 12 9z"/></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><path d="M15.2 3.5a5.6 5.6 0 0 0-5 8.1L4 17.8 6.2 20l6.2-6.2a5.6 5.6 0 0 0 6.9-7.3l-3 3-2.4-.6-.6-2.4z"/></symbol><symbol id="i-train" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="14" rx="3.5"/><rect x="8" y="6" width="3.4" height="3.4" rx="1"/><rect x="12.6" y="6" width="3.4" height="3.4" rx="1"/><path d="M5 12.6h14M8.2 21l1.7-4.5M15.8 21l-1.7-4.5"/></symbol></svg>
+<symbol id="i-voice" viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 5.6a4.4 4.4 0 0 0-6.3 0L12 6.3l-.7-.7A4.4 4.4 0 0 0 5 11.9l7 7 7-7a4.4 4.4 0 0 0 0-6.3z"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol><symbol id="i-score" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6 13.4 11l3.6.3-2.7 2.4.8 3.6L12 15.5l-3.1 1.8.8-3.6L7 11.3 10.6 11z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m16 10 4.6-2.6A1 1 0 0 1 22 8.3v7.4a1 1 0 0 1-1.4.9L16 14"/><rect x="2" y="6" width="14" height="12" rx="2.5"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="9" r="1.8"/><path d="m4 17 5-5 4.5 4.5L16 14l4 4"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></symbol><symbol id="i-poll" viewBox="0 0 24 24"><path d="M6 20V10M12 20V4M18 20v-7"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a9 9 0 0 1 0 12"/></symbol><symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M6.7 5h10.6a4 4 0 0 1 4 3.6c.1.8.2 2 .2 2.4a5 5 0 0 1-5 5c-1 0-1.5-.5-2-1l-1.5-1.5h-2L9.5 15c-.5.5-1 1-2 1a5 5 0 0 1-5-5c0-.4.1-1.6.2-2.4A4 4 0 0 1 6.7 5z"/><path d="M6 11h4M8 9v4M15 11h.01M17.5 13h.01"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M15.5 3.5A5.5 5.5 0 0 1 21 9M15 7a2.5 2.5 0 0 1 2.5 2.5"/><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 5.5 5.5L16 12l4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 3.5 5.2 2 2 0 0 1 5.5 3z"/></symbol><!-- v1.37 視訊通話用的圖標 --><symbol id="i-mic-off" viewBox="0 0 24 24"><path d="M15 9.3V5a3 3 0 0 0-5.7-1.4"/><path d="M9 9v3a3 3 0 0 0 5.1 2.1"/><path d="M5 11a7 7 0 0 0 11.1 4.8"/><path d="M19 11a7 7 0 0 1-.5 2.6"/><path d="M12 18v3"/><path d="m3 3 18 18"/></symbol><symbol id="i-video-off" viewBox="0 0 24 24"><path d="m16 10 4.6-2.6A1 1 0 0 1 22 8.3v7.4a1 1 0 0 1-1.4.9L16 14"/><path d="M14 6H4.5A2.5 2.5 0 0 0 2 8.5v7A2.5 2.5 0 0 0 4.5 18H14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/><path d="m3 3 18 18"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 20h7M12 17v3"/></symbol><symbol id="i-flip" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M3 21v-5h5M21 3v5h-5"/></symbol><symbol id="i-hangup" viewBox="0 0 24 24"><path d="M12 9c-2.6 0-5 .4-7.2 1.2-.9.3-1.5 1.1-1.5 2v1.6c0 .8.7 1.5 1.5 1.4l3-.4c.7-.1 1.2-.7 1.2-1.4v-1.2c1.9-.5 4-.5 6 0v1.2c0 .7.5 1.3 1.2 1.4l3 .4c.8.1 1.5-.6 1.5-1.4v-1.6c0-.9-.6-1.7-1.5-2C17 9.4 14.6 9 12 9z"/></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><path d="M15.2 3.5a5.6 5.6 0 0 0-5 8.1L4 17.8 6.2 20l6.2-6.2a5.6 5.6 0 0 0 6.9-7.3l-3 3-2.4-.6-.6-2.4z"/></symbol><symbol id="i-train" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="14" rx="3.5"/><rect x="8" y="6" width="3.4" height="3.4" rx="1"/><rect x="12.6" y="6" width="3.4" height="3.4" rx="1"/><path d="M5 12.6h14M8.2 21l1.7-4.5M15.8 21l-1.7-4.5"/></symbol><symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="13" rx="3"/><path d="M4 9.8h16M9.6 3.5v6.3M14.4 3.5v6.3M7.6 16.5V19M16.4 16.5V19"/></symbol></svg>
 
 <div id="loginScreen">
   <div id="loginCard">
@@ -990,7 +988,6 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
     <div class="pi" data-action="openPollCreate"><div class="pic"><svg class="ico"><use href="#i-poll"/></svg></div><div class="pit">投票</div></div>
     <div class="pi" data-action="openNoticeCreate"><div class="pic"><svg class="ico"><use href="#i-megaphone"/></svg></div><div class="pit">公告</div></div>
     <div class="pi" data-action="openGames"><div class="pic"><svg class="ico"><use href="#i-gamepad"/></svg></div><div class="pit">小遊戲</div></div>
-    <div class="pi" data-action="pickAIImage"><div class="pic"><svg class="ico"><use href="#i-image"/></svg></div><div class="pit">給 AI 看圖</div></div>
       <div class="pi" data-action="callClass"><span class="mt-tag">維護中</span><div class="pic"><svg class="ico"><use href="#i-video"/></svg></div><div class="pit">視訊通話</div></div>
     </div>
   </div>
@@ -1015,7 +1012,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.37';   // 一次部署只 +0.01；重要改動才進位到 v1.4x（見上方 VERSION_HISTORY 的規則）
+const CURRENT_VERSION='v1.38';   // 一次部署只 +0.01；重要改動才進位到 v1.4x（見上方 VERSION_HISTORY 的規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1440,8 +1437,8 @@ document.addEventListener('click',async(e)=>{
     if(action==='logout')return await handleLogout();
     if(action==='openTools')return openToolsPage();
     if(action==='openLiveMap')return openLiveMap();
-    if(action==='openMyProfile')return await openProfilePage(me.username,true);
-    if(action==='openUserProfile')return await openProfilePage(arg,arg===me.username);
+    if(action==='openMyProfile'){ await openProfilePage(me.username,true); return syncToolEntrySub(); }
+    if(action==='openUserProfile'){ await openProfilePage(arg,arg===me.username); return syncToolEntrySub(); }
     if(action==='openAdmin')return openAdminPage('users');
     if(action==='closePage')return closePage();
     if(action==='switchAdminTab')return renderAdminTab(arg);
@@ -1512,8 +1509,6 @@ document.addEventListener('click',async(e)=>{
     if(action==='openGroupNoticeEdit')return openGroupNoticeEdit();
     if(action==='submitGroupNotice')return await submitGroupNotice();
     if(action==='clearGroupNotice')return await clearGroupNotice();
-    /* v1.37 AI 收圖 */
-    if(action==='pickAIImage')return pickAIImage();
     if(action==='pickAIPrivateImage')return pickAIPrivateImage();
     if(action==='clearAIPrivateImage')return clearAIPrivateImage();
     if(action==='viewAIPrivateImage')return viewImage(arg);
@@ -1522,10 +1517,8 @@ document.addEventListener('click',async(e)=>{
     if(action==='openAdminGroupChat')return await openAdminGroupChat(arg);
     if(action==='playVoice')return playVoice(arg);
     if(action==='openLocation')return openLocationFullscreen(arg);
-    if(action==='locZoom')return locZoom(Number(arg)||0);
     if(action==='closeLiveMap')return closeLiveMap();
     if(action==='liveMode')return liveSetMode(arg);
-    if(action==='liveZoom')return liveZoom(Number(arg)||0);
     if(action==='closeLocationFull')return closeLocationFull();
     if(action==='openPollCreate')return openPollCreate();
     if(action==='openGames')return openGames(arg||'');
@@ -2019,57 +2012,9 @@ ${me.displayName}: ${text}`;
   }catch(e){ console.error('AI error',e); if(thinkingKey){try{await update(ref(db,'messages/'+thinkingKey),{text:'抱歉，我現在有點忙',thinking:false});}catch(e2){}} }
   finally{aiBusy=false;}
 }
-/* ═══ v1.37 讓小喆AI「看得到圖片」═══
-   用戶要求：「新增小節：AI 可以發送圖片給他看，私人和公共聊天室都可以。」
-   做法：這支 API（dots3-note-prev）支援 OpenAI 的 image_url 多模態格式
-   （game.html 的「你畫我猜」防作弊早就用它了），所以只要把 content 由字串
-   改成 [{type:'text'},{type:'image_url'}] 陣列，AI 就真的看得到畫面內容。
-   公共聊天室：+ 面板 →「給 AI 看圖」→ 圖片會以訊息形式貼出來，AI 跟著回一張訊息。
-   私人聊天：輸入列左邊的圖片按鈕 → 圖片只給 AI 看，不會貼到公共頻道。 */
-function pickAIImage(){
-  closePlus();
-  if(!me){showNotif('請先登入');return;}
-  if(me.banned&&me.banned.type==='light'){showNotif('你目前被限制發言');return;}
-  const inp=document.getElementById('globalAIImgInput');if(!inp)return;
-  inp.onchange=async e=>{
-    const f=e.target.files[0];e.target.value='';if(!f)return;
-    try{
-      const d=await compressImage(f,1024,1024,0.72);
-      const msgId=await nextMsgId();
-      await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text:'（給小喆AI 看的圖片）',type:'image',imageUrl:d,aiVision:true,createdAt:Date.now(),deleted:false});
-      await writeLog('send','發送圖片給 AI 看');
-      scrollToBottom();
-      handleAIVisionTrigger(d,msgId).catch(err=>console.error('AI vision error',err));
-    }catch(err){showNotif('送出失敗');}
-  };
-  inp.click();
-}
-/* 把圖片丟給 AI，AI 的答案以一般 AI 訊息寫回公共聊天室 */
-async function handleAIVisionTrigger(imageUrl,srcMsgId){
-  if(!me||!imageUrl)return;
-  if(aiBusy){showNotif('小喆AI 正在忙，稍後再試');return;}
-  aiBusy=true;
-  let thinkingKey=null;
-  try{
-    thinkingKey=await nextMsgId();
-    await set(ref(db,'messages/'+thinkingKey),{id:thinkingKey,username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,avatar:'AI',role:'ai',text:'',type:'text',thinking:true,createdAt:Date.now(),deleted:false});
-    const recent=messages.slice(-30).map(m=>`${m.displayName||m.username}: ${m.text||''}`).join('\n');
-    const sys=`你是「小喆AI」，在班級聊天室裡。「${me.displayName||me.username}」剛傳了一張圖片給你，請看圖並用繁體中文簡短回應（2-4 句，活潑一點，可以加 emoji）。\n\n【最近對話】\n${recent||'（還沒開始）'}`;
-    const aiRes=await callAIVision([
-      {role:'system',content:sys},
-      {role:'user',content:[{type:'text',text:'請看這張圖片，說說你看到什麼。'},{type:'image_url',image_url:{url:imageUrl}}]}
-    ]);
-    if(aiRes){
-      const c=String(aiRes.content||'').trim()||'我看完了，但一時說不出話來…';
-      await update(ref(db,'messages/'+thinkingKey),{text:c,reasoning:aiRes.reasoning||'',thinking:false,sponsor:true,createdAt:Date.now()});
-    }else{
-      await update(ref(db,'messages/'+thinkingKey),{text:'抱歉，我現在有點忙',thinking:false});
-    }
-  }catch(e){
-    console.error('AI vision error',e);
-    if(thinkingKey){try{await update(ref(db,'messages/'+thinkingKey),{text:'抱歉，我現在有點忙',thinking:false});}catch(e2){}}
-  }finally{aiBusy=false;}
-}
+/* v1.37 私人聊天：輸入列左邊的圖片按鈕 → 圖片只給小喆AI 看，不會貼到公共頻道。
+   2026-10-17 按用戶要求，拿走公共聊天室「+ → 給 AI 看圖」：
+   普通發送圖片不應該莫名其妙觸發 AI 讀圖，所以連同觸發 AI 讀圖的那一支函式一併刪除。 */
 async function trimAIMemory(){
   const snap=await get(ref(db,'aiMemory/messages'));if(!snap.exists())return;
   const val=snap.val();const keys=Object.keys(val);
@@ -3217,118 +3162,219 @@ function locPreviewHTML(lat,lng){
         +' src="https://tile.openstreetmap.org/'+Z+'/'+wx+'/'+ty+'.png">';
     }
   }
-  return '<div class="lm-map">'+t+'<span class="lm-pin"></span></div>';
+  return '<div class="lm-map"><div class="lm-in">'+t+'</div><span class="lm-pin"></span></div>';
 }
 
-/* ---- 全螢幕地圖 ---- */
+/* ---- 全螢幕地圖 ----
+   2026-10-17：改用雙指縮放（拿走加減按鈕）；標記釘在「發送位置」那一點上，
+   拖地圖時它會跟著地圖走，不再永遠卡在畫面正中（以前看起來像地圖在飄）。
+   連續縮放做法：整數層 z 決定抓哪一級圖磚，sc 是額外的倍率，
+   兩者相乘才是螢幕上的比例，所以縮放可以很順，不會一格一格跳。 */
 let locState=null;
+
+/* 螢幕座標 ↔ 經緯度（用目前的 z 與 sc） */
+function locScreenToGeo(s, x, y){
+  const ox = tmLon2x(s.lng, s.z) * s.sc - s.w / 2;
+  const oy = tmLat2y(s.lat, s.z) * s.sc - s.h / 2;
+  return [ tmX2lon((ox + x) / s.sc, s.z), tmY2lat((oy + y) / s.sc, s.z) ];
+}
+/* 把某個地理點放到畫面的 (mx,my)，同時設定縮放 */
+function locAnchorTo(z, sc, geo, mx, my){
+  const s = locState;
+  if(!s) return;
+  s.z = Math.max(3, Math.min(18, z));
+  s.sc = Math.max(0.5, Math.min(1.9999, sc));
+  const wx = tmLon2x(geo[0], s.z) * s.sc;
+  const wy = tmLat2y(geo[1], s.z) * s.sc;
+  s.lng = tmX2lon((wx - mx + s.w / 2) / s.sc, s.z);
+  s.lat = tmY2lat((wy - my + s.h / 2) / s.sc, s.z);
+  locDraw();
+}
+
 function locDraw(){
-  const s=locState;
-  if(!s||!s.w||!s.ctx)return;
-  s.raf=0;
-  const ctx=s.ctx, w=s.w, h=s.h, z=s.z;
-  ctx.setTransform(s.dpr,0,0,s.dpr,0,0);
-  ctx.fillStyle='#dfe6ec';
-  ctx.fillRect(0,0,w,h);
-  const ox=tmLon2x(s.lng,z)-w/2, oy=tmLat2y(s.lat,z)-h/2, n=Math.pow(2,z);
-  for(let tx=Math.floor(ox/TM_TILE);tx<=Math.floor((ox+w)/TM_TILE);tx++){
-    if(tx<0||tx>=n)continue;
-    for(let ty=Math.floor(oy/TM_TILE);ty<=Math.floor((oy+h)/TM_TILE);ty++){
-      if(ty<0||ty>=n)continue;
-      const img=locTileImg(z,tx,ty);
-      const X=Math.round(tx*TM_TILE-ox), Y=Math.round(ty*TM_TILE-oy);
-      if(img.complete&&img.naturalWidth) ctx.drawImage(img,X,Y,TM_TILE,TM_TILE);
-      else if(!img.__wired){ img.__wired=1; img.addEventListener('load',locSchedule); }
+  const s = locState;
+  if(!s || !s.w || !s.ctx) return;
+  s.raf = 0;
+  const ctx = s.ctx, w = s.w, h = s.h, z = s.z, sc = s.sc;
+  const ts = TM_TILE * sc;              /* 螢幕上一格圖磚的邊長 */
+  ctx.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
+  ctx.fillStyle = '#dfe6ec';
+  ctx.fillRect(0, 0, w, h);
+  const ox = tmLon2x(s.lng, z) * sc - w / 2;
+  const oy = tmLat2y(s.lat, z) * sc - h / 2;
+  const n = Math.pow(2, z);
+  for(let tx = Math.floor(ox / ts); tx <= Math.floor((ox + w) / ts); tx++){
+    if(tx < 0 || tx >= n) continue;
+    for(let ty = Math.floor(oy / ts); ty <= Math.floor((oy + h) / ts); ty++){
+      if(ty < 0 || ty >= n) continue;
+      const img = locTileImg(z, tx, ty);
+      const X = tx * ts - ox, Y = ty * ts - oy;
+      if(img.complete && img.naturalWidth) ctx.drawImage(img, X, Y, ts, ts);
+      else if(!img.__wired){ img.__wired = 1; img.addEventListener('load', locSchedule); }
     }
+  }
+  if(s.pinEl){
+    const px = tmLon2x(s.pinLng, z) * sc - ox;
+    const py = tmLat2y(s.pinLat, z) * sc - oy;
+    s.pinEl.style.transform = 'translate(' + px.toFixed(1) + 'px,' + py.toFixed(1) + 'px) translate(-50%,-50%)';
+    s.pinEl.style.opacity = (px < -40 || py < -40 || px > w + 40 || py > h + 40) ? '0' : '1';
   }
 }
 function locSchedule(){
-  const s=locState;
-  if(!s||s.raf)return;
-  s.raf=requestAnimationFrame(locDraw);
+  const s = locState;
+  if(!s || s.raf) return;
+  s.raf = requestAnimationFrame(locDraw);
 }
 function locResize(){
-  const s=locState;
-  if(!s||!s.cv)return;
-  const r=s.cv.parentElement.getBoundingClientRect();
-  const dpr=Math.min(2,window.devicePixelRatio||1);
-  s.w=Math.max(1,Math.round(r.width));
-  s.h=Math.max(1,Math.round(r.height));
-  s.dpr=dpr;
-  s.cv.width=Math.round(s.w*dpr);
-  s.cv.height=Math.round(s.h*dpr);
-  s.cv.style.width=s.w+'px';
-  s.cv.style.height=s.h+'px';
+  const s = locState;
+  if(!s || !s.cv) return;
+  const host = s.cv.parentElement;
+  /* 用 clientWidth 而不用 getBoundingClientRect：進場動畫有 scale，
+     量到縮細後的尺寸會令標記偏離正中幾個 px。 */
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  s.w = Math.max(1, host.clientWidth);
+  s.h = Math.max(1, host.clientHeight);
+  s.dpr = dpr;
+  s.cv.width = Math.round(s.w * dpr);
+  s.cv.height = Math.round(s.h * dpr);
+  s.cv.style.width = s.w + 'px';
+  s.cv.style.height = s.h + 'px';
   locDraw();
 }
-function locZoom(d){
-  const s=locState;
-  if(!s)return;
-  const z=Math.max(3,Math.min(18,s.z+(Number(d)||0)));
-  if(z===s.z)return;
-  s.z=z;
-  locDraw();
+
+/* 兩指：開始 / 移動 / 結束 */
+function locPinchStart(){
+  const s = locState;
+  if(!s) return;
+  const ids = Object.keys(s.ptrs);
+  if(ids.length < 2){ s.pinch = null; return; }
+  const a = s.ptrs[ids[0]], b = s.ptrs[ids[1]];
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  s.pinch = { d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+              sc: s.sc, z: s.z, geo: locScreenToGeo(s, mx, my) };
 }
+function locPinchMove(){
+  const s = locState;
+  if(!s || !s.pinch) return;
+  const ids = Object.keys(s.ptrs);
+  if(ids.length < 2) return;
+  const a = s.ptrs[ids[0]], b = s.ptrs[ids[1]];
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  let sc = s.pinch.sc * (d / s.pinch.d), z = s.pinch.z;
+  /* 倍率走出 0.5–2 就換一級圖磚，這樣 z 永遠停在整數、sc 保持連續 */
+  while(sc >= 2 && z < 18){ z++; sc /= 2; }
+  while(sc < 0.5 && z > 3){ z--; sc *= 2; }
+  const geo = s.pinch.geo;
+  s.z = z;
+  locAnchorTo(z, sc, geo, mx, my);
+}
+
 function openLocationFullscreen(arg){
-  if(!arg)return;
-  const parts=String(arg).split(',');
-  const la=Number(parts[0]), ln=Number(parts[1]);
-  if(!isFinite(la)||!isFinite(ln))return;
-  const old=document.getElementById('locationFull');
-  if(old)old.remove();
-  const div=document.createElement('div');
-  div.id='locationFull';
-  div.className='loc-full anim-in-page';
-  const coord=escAttr(la.toFixed(6))+', '+escAttr(ln.toFixed(6));
-  const ext='https://www.openstreetmap.org/?mlat='+la+'&mlon='+ln+'#map=16/'+la+'/'+ln;
-  div.innerHTML='<div class="lf-head">'
-    +'<button class="lf-back" data-action="closeLocationFull"><svg class="ico"><use href="#i-back"/></svg></button>'
-    +'<div class="lf-coord">'+coord+'</div>'
-    +'<a class="lf-btn" href="'+escAttr(ext)+'" target="_blank" rel="noopener">在大地圖開啟</a>'
-    +'</div>'
-    +'<div class="lf-stage"><canvas class="lf-canvas"></canvas>'
-    +'<div class="lf-pin"><i></i></div>'
-    +'<div class="lf-zoom">'
-    +'<button data-action="locZoom" data-arg="1" aria-label="放大">+</button>'
-    +'<button data-action="locZoom" data-arg="-1" aria-label="縮小">\u2212</button>'
-    +'</div>'
-    +'<div class="lf-attr">\u00a9 OpenStreetMap \u8ca2\u737b\u8005</div></div>';
+  if(!arg) return;
+  const parts = String(arg).split(',');
+  const la = Number(parts[0]), ln = Number(parts[1]);
+  if(!isFinite(la) || !isFinite(ln)) return;
+  const old = document.getElementById('locationFull');
+  if(old) old.remove();
+  const div = document.createElement('div');
+  div.id = 'locationFull';
+  div.className = 'loc-full anim-in-page';
+  const coord = escAttr(la.toFixed(6)) + ', ' + escAttr(ln.toFixed(6));
+  const ext = 'https://www.openstreetmap.org/?mlat=' + la + '&mlon=' + ln + '#map=16/' + la + '/' + ln;
+  div.innerHTML = '<div class="lf-head">'
+    + '<button class="lf-back" data-action="closeLocationFull"><svg class="ico"><use href="#i-back"/></svg></button>'
+    + '<div class="lf-coord">' + coord + '</div>'
+    + '<a class="lf-btn" href="' + escAttr(ext) + '" target="_blank" rel="noopener">在大地圖開啟</a>'
+    + '</div>'
+    + '<div class="lf-stage"><canvas class="lf-canvas"></canvas>'
+    + '<div class="lf-pin"><i></i></div>'
+    + '<div class="lf-attr">\u00a9 OpenStreetMap \u8ca2\u737b\u8005</div></div>';
   document.body.appendChild(div);
-  const cv=div.querySelector('.lf-canvas');
+  const cv = div.querySelector('.lf-canvas');
   /* 位置全部存成經緯度，畫的時候才換算成像素 ——
      跟痕跡地圖同一個原則：距離用地圖單位定義，縮放時才不會愈拖愈歪。 */
-  locState={ lat:la, lng:ln, z:16, cv:cv, ctx:cv.getContext('2d'),
-             w:0, h:0, dpr:1, drag:null, raf:0 };
-  cv.addEventListener('pointerdown',function(e){
-    const s=locState;
-    if(!s)return;
+  locState = { lat: la, lng: ln, z: 16, sc: 1,
+               pinLat: la, pinLng: ln, pinEl: div.querySelector('.lf-pin'),
+               cv: cv, ctx: cv.getContext('2d'),
+               w: 0, h: 0, dpr: 1, drag: null, ptrs: {}, pinch: null, raf: 0 };
+
+  cv.addEventListener('pointerdown', function(e){
+    const s = locState;
+    if(!s) return;
     try{ cv.setPointerCapture(e.pointerId); }catch(err){}
-    s.drag={x:e.clientX,y:e.clientY};
+    s.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    const ids = Object.keys(s.ptrs);
+    if(ids.length === 1){ s.drag = { x: e.clientX, y: e.clientY }; s.pinch = null; }
+    else if(ids.length === 2){ s.drag = null; locPinchStart(); }
   });
-  cv.addEventListener('pointermove',function(e){
-    const s=locState;
-    if(!s||!s.drag)return;
-    const dx=e.clientX-s.drag.x, dy=e.clientY-s.drag.y;
-    if(!dx&&!dy)return;
-    s.drag.x=e.clientX;
-    s.drag.y=e.clientY;
-    s.lng=tmX2lon(tmLon2x(s.lng,s.z)-dx,s.z);
-    s.lat=Math.max(-85,Math.min(85,tmY2lat(tmLat2y(s.lat,s.z)-dy,s.z)));
+  cv.addEventListener('pointermove', function(e){
+    const s = locState;
+    if(!s) return;
+    const p = s.ptrs[e.pointerId];
+    if(!p) return;
+    p.x = e.clientX; p.y = e.clientY;
+    if(Object.keys(s.ptrs).length >= 2){
+      if(!s.pinch) locPinchStart();
+      locPinchMove();
+      return;
+    }
+    if(!s.drag) return;
+    const dx = e.clientX - s.drag.x, dy = e.clientY - s.drag.y;
+    if(!dx && !dy) return;
+    s.drag.x = e.clientX;
+    s.drag.y = e.clientY;
+    /* 手指移動的是螢幕像素，換算成地圖單位要除以 sc */
+    s.lng = tmX2lon(tmLon2x(s.lng, s.z) - dx / s.sc, s.z);
+    s.lat = Math.max(-85, Math.min(85, tmY2lat(tmLat2y(s.lat, s.z) - dy / s.sc, s.z)));
     locSchedule();
   });
-  const relDrag=function(){ if(locState)locState.drag=null; };
-  cv.addEventListener('pointerup',relDrag);
-  cv.addEventListener('pointercancel',relDrag);
-  cv.addEventListener('dblclick',function(){ locZoom(1); });
-  window.addEventListener('resize',locResize);
+  const locPointerUp = function(e){
+    const s = locState;
+    if(!s) return;
+    delete s.ptrs[e.pointerId];
+    const ids = Object.keys(s.ptrs);
+    if(ids.length < 2) s.pinch = null;
+    if(ids.length === 1) s.drag = { x: s.ptrs[ids[0]].x, y: s.ptrs[ids[0]].y };
+    else if(!ids.length) s.drag = null;
+  };
+  cv.addEventListener('pointerup', locPointerUp);
+  cv.addEventListener('pointercancel', locPointerUp);
+  /* 雙擊放大（桌面滑鼠用；手機主要靠兩指） */
+  cv.addEventListener('dblclick', function(e){
+    const s = locState;
+    if(!s || s.z >= 18) return;
+    const r = cv.getBoundingClientRect();
+    const geo = locScreenToGeo(s, e.clientX - r.left, e.clientY - r.top);
+    locAnchorTo(s.z + 1, s.sc, geo, e.clientX - r.left, e.clientY - r.top);
+  });
+  window.addEventListener('resize', locResize);
   locResize();
+  /* 進場動畫播完再量一次，確保地圖鋪滿、標記正好在正中 */
+  setTimeout(locResize, 60);
+  setTimeout(locResize, 340);
 }
 function closeLocationFull(){
-  const el=document.getElementById('locationFull');
-  locState=null;
-  window.removeEventListener('resize',locResize);
-  if(el)animOut(el,'anim-out-page',260);
+  const el = document.getElementById('locationFull');
+  locState = null;
+  window.removeEventListener('resize', locResize);
+  if(el) animOut(el, 'anim-out-page', 260);
 }
+
+/* 測試用：唯讀，不提供任何寫入 */
+Object.defineProperty(window, '__liveState', {
+  get: function(){
+    return liveState ? { z: liveState.z, sc: liveState.sc || 1,
+                         lat: liveState.lat, lng: liveState.lng } : null;
+  }
+});
+Object.defineProperty(window, '__locState', {
+  get: function(){
+    return locState ? { z: locState.z, sc: locState.sc,
+                        lat: locState.lat, lng: locState.lng,
+                        pinLat: locState.pinLat, pinLng: locState.pinLng } : null;
+  }
+});
 
 /* ===== v1.10 投票系統 ===== */
 window._pollDraft=null;
@@ -3650,6 +3696,8 @@ function profileTopHTML(u){ return nameCard3dHTML(u)+realNameBlock(u)+pointsRow(
 const TOOL_LIST = [
   { id:'mtr', name:'港鐵路線查詢', icon:'i-train', color:'#e2231a', href:'mtr.html',
     desc:'重鐵＋輕鐵全圖轉乘、車費與行車時間，點站設起終點即出建議路線' },
+  { id:'bus', name:'巴士到站時間', icon:'i-bus', color:'#d32f2f', href:'bus.html',
+    desc:'用你目前位置找最近的巴士站，即時列出各線到站倒數，每 30 秒自動更新' },
   { id:'live', name:'全班共享地圖', icon:'i-pin', color:'#22c55e', action:'openLiveMap',
     desc:'只顯示已同意共享的同學，每 10 秒更新；可選擇只分享最新位置，或留下走過的路線' }
 ];
@@ -3659,6 +3707,13 @@ const TOOL_LIST = [
    ⚠ 刻意不提供任何編輯介面：連超級管理員在 App 內都找不到入口，
      只有直接寫資料庫的人（開發者）才改得到。 */
 const TOOL_LIVE_ACTIONS={ openLiveMap:1 };
+/* 入口副標題跟住實際工具數量：清單可以由伺服器改，寫死就會過時 */
+function syncToolEntrySub(){
+  const el=document.querySelector('.tool-entry .ai-sub');
+  if(!el)return;
+  const n=toolList().length;
+  el.textContent = n ? (n + ' 個工具') : '暫時未有工具';
+}
 function toolList(){
   const raw=REMOTE.tools;
   if(!raw||typeof raw!=='object')return TOOL_LIST;
@@ -3755,22 +3810,22 @@ function liveSchedule(){
 function liveDrawTiles(){
   const s=liveState;
   if(!s||!s.w||!s.ctx)return null;
-  const ctx=s.ctx,w=s.w,h=s.h,z=s.z;
+  const ctx=s.ctx,w=s.w,h=s.h,z=s.z,sc=s.sc||1,ts=TM_TILE*sc;
   ctx.setTransform(s.dpr,0,0,s.dpr,0,0);
   ctx.fillStyle='#dfe6ec';
   ctx.fillRect(0,0,w,h);
-  const ox=tmLon2x(s.lng,z)-w/2, oy=tmLat2y(s.lat,z)-h/2, n=Math.pow(2,z);
-  for(let tx=Math.floor(ox/TM_TILE);tx<=Math.floor((ox+w)/TM_TILE);tx++){
+  const ox=tmLon2x(s.lng,z)*sc-w/2, oy=tmLat2y(s.lat,z)*sc-h/2, n=Math.pow(2,z);
+  for(let tx=Math.floor(ox/ts);tx<=Math.floor((ox+w)/ts);tx++){
     if(tx<0||tx>=n)continue;
-    for(let ty=Math.floor(oy/TM_TILE);ty<=Math.floor((oy+h)/TM_TILE);ty++){
+    for(let ty=Math.floor(oy/ts);ty<=Math.floor((oy+h)/ts);ty++){
       if(ty<0||ty>=n)continue;
       const img=locTileImg(z,tx,ty);
-      const X=Math.round(tx*TM_TILE-ox), Y=Math.round(ty*TM_TILE-oy);
-      if(img.complete&&img.naturalWidth) ctx.drawImage(img,X,Y,TM_TILE,TM_TILE);
+      const X=tx*ts-ox, Y=ty*ts-oy;
+      if(img.complete&&img.naturalWidth) ctx.drawImage(img,X,Y,ts,ts);
       else if(!img.__lw){ img.__lw=1; img.addEventListener('load',liveSchedule); }
     }
   }
-  return { ox:ox, oy:oy };
+  return { ox:ox, oy:oy, sc:sc };
 }
 function liveRender(){
   const s=liveState;
@@ -3791,7 +3846,7 @@ function liveRender(){
     const col=safeColor(info.color,'#3b82f6');
     const path=new Path2D();
     pts.forEach(function(p,i){
-      const x=tmLon2x(Number(p.lng),z)-o.ox, y=tmLat2y(Number(p.lat),z)-o.oy;
+      const x=tmLon2x(Number(p.lng),z)*o.sc-o.ox, y=tmLat2y(Number(p.lat),z)*o.sc-o.oy;
       if(i===0)path.moveTo(x,y); else path.lineTo(x,y);
     });
     ctx.lineCap='round';
@@ -3803,12 +3858,13 @@ function liveRender(){
     ctx.lineWidth=3.5;
     ctx.stroke(path);
   });
-  livePlacePins(o.ox,o.oy);
+  livePlacePins(o.ox,o.oy,o.sc);
 }
-function livePlacePins(ox,oy){
+function livePlacePins(ox,oy,sc){
   const s=liveState;
   if(!s||!s.pins)return;
   const z=s.z;
+  sc=sc||1;
   const seen={};
   Object.keys(liveUsers).forEach(function(u){
     const v=liveUsers[u]||{};
@@ -3823,7 +3879,7 @@ function livePlacePins(ox,oy){
       s.pins.appendChild(el);
       s.pinEls[u]=el;
     }
-    const x=tmLon2x(ln,z)-ox, y=tmLat2y(la,z)-oy;
+    const x=tmLon2x(ln,z)*sc-ox, y=tmLat2y(la,z)*sc-oy;
     if(x<-90||y<-90||x>s.w+90||y>s.h+90){ el.style.display='none'; return; }
     el.style.display='';
     el.style.transform='translate('+Math.round(x)+'px,'+Math.round(y)+'px)';
@@ -3851,10 +3907,11 @@ function liveUpdateCount(){
 function liveResize(){
   const s=liveState;
   if(!s||!s.cv)return;
-  const r=s.cv.parentElement.getBoundingClientRect();
+  const host=s.cv.parentElement;
+  /* 同 locResize：用 clientWidth，避免進場 scale 影響量出嚟嘅尺寸 */
   const dpr=Math.min(2,window.devicePixelRatio||1);
-  s.w=Math.max(1,Math.round(r.width));
-  s.h=Math.max(1,Math.round(r.height));
+  s.w=Math.max(1,host.clientWidth);
+  s.h=Math.max(1,host.clientHeight);
   s.dpr=dpr;
   s.cv.width=Math.round(s.w*dpr);
   s.cv.height=Math.round(s.h*dpr);
@@ -3862,13 +3919,45 @@ function liveResize(){
   s.cv.style.height=s.h+'px';
   liveRender();
 }
-function liveZoom(d){
+/* 螢幕座標 ↔ 經緯度（共享地圖） */
+function liveScreenToGeo(s,x,y){
+  const sc=s.sc||1;
+  const ox=tmLon2x(s.lng,s.z)*sc-s.w/2, oy=tmLat2y(s.lat,s.z)*sc-s.h/2;
+  return [ tmX2lon((ox+x)/sc,s.z), tmY2lat((oy+y)/sc,s.z) ];
+}
+function liveAnchorTo(z,sc,geo,mx,my){
   const s=liveState;
   if(!s)return;
-  const z=Math.max(3,Math.min(18,s.z+(Number(d)||0)));
-  if(z===s.z)return;
-  s.z=z;
+  s.z=Math.max(3,Math.min(18,z));
+  s.sc=Math.max(0.5,Math.min(1.9999,sc));
+  const wx=tmLon2x(geo[0],s.z)*s.sc, wy=tmLat2y(geo[1],s.z)*s.sc;
+  s.lng=tmX2lon((wx-mx+s.w/2)/s.sc,s.z);
+  s.lat=tmY2lat((wy-my+s.h/2)/s.sc,s.z);
   liveRender();
+}
+/* 兩指：張開放大、捏合縮細，手指中點當縮放中心 */
+function livePinchStart(){
+  const s=liveState;
+  if(!s)return;
+  const ids=Object.keys(s.ptrs);
+  if(ids.length<2){ s.pinch=null; return; }
+  const a=s.ptrs[ids[0]], b=s.ptrs[ids[1]];
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+  s.pinch={ d:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),
+            sc:s.sc||1, z:s.z, geo:liveScreenToGeo(s,mx,my) };
+}
+function livePinchMove(){
+  const s=liveState;
+  if(!s||!s.pinch)return;
+  const ids=Object.keys(s.ptrs);
+  if(ids.length<2)return;
+  const a=s.ptrs[ids[0]], b=s.ptrs[ids[1]];
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+  const d=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y));
+  let sc=s.pinch.sc*(d/s.pinch.d), z=s.pinch.z;
+  while(sc>=2&&z<18){ z++; sc/=2; }
+  while(sc<0.5&&z>3){ z--; sc*=2; }
+  liveAnchorTo(z,sc,s.pinch.geo,mx,my);
 }
 
 /* ---- 分享 ---- */
@@ -3986,10 +4075,6 @@ function openLiveMap(){
     +'<div class="lf-stage">'
     +'<canvas class="lf-canvas"></canvas>'
     +'<div class="live-pins"></div>'
-    +'<div class="lf-zoom">'
-    +'<button data-action="liveZoom" data-arg="1" aria-label="放大">+</button>'
-    +'<button data-action="liveZoom" data-arg="-1" aria-label="縮小">\u2212</button>'
-    +'</div>'
     +'<div class="live-tip">只會顯示已同意共享的同學</div>'
     +'<div class="lf-attr">\u00a9 OpenStreetMap \u8ca2\u737b\u8005</div>'
     +'</div>';
@@ -3997,29 +4082,55 @@ function openLiveMap(){
   const cv=div.querySelector('.lf-canvas');
   liveMode='live';
   liveUsers={}; liveTrails={}; liveMe=null;
-  liveState={ lat:22.3350, lng:114.1700, z:12, cv:cv, ctx:cv.getContext('2d'),
-              w:0, h:0, dpr:1, drag:null, raf:0, centered:0,
+  liveState={ lat:22.3350, lng:114.1700, z:12, sc:1, cv:cv, ctx:cv.getContext('2d'),
+              w:0, h:0, dpr:1, drag:null, ptrs:{}, pinch:null, raf:0, centered:0,
               stage:div.querySelector('.lf-stage'),
               pins:div.querySelector('.live-pins'), pinEls:{} };
   cv.addEventListener('pointerdown',function(e){
     const s=liveState; if(!s)return;
     try{ cv.setPointerCapture(e.pointerId); }catch(err){}
-    s.drag={x:e.clientX,y:e.clientY};
+    s.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+    const ids=Object.keys(s.ptrs);
+    if(ids.length===1){ s.drag={x:e.clientX,y:e.clientY}; s.pinch=null; }
+    else if(ids.length===2){ s.drag=null; livePinchStart(); }
   });
   cv.addEventListener('pointermove',function(e){
     const s=liveState;
-    if(!s||!s.drag)return;
+    if(!s)return;
+    const p=s.ptrs[e.pointerId];
+    if(!p)return;
+    p.x=e.clientX; p.y=e.clientY;
+    if(Object.keys(s.ptrs).length>=2){
+      if(!s.pinch)livePinchStart();
+      livePinchMove();
+      return;
+    }
+    if(!s.drag)return;
     const dx=e.clientX-s.drag.x, dy=e.clientY-s.drag.y;
     if(!dx&&!dy)return;
     s.drag.x=e.clientX; s.drag.y=e.clientY;
-    s.lng=tmX2lon(tmLon2x(s.lng,s.z)-dx,s.z);
-    s.lat=Math.max(-85,Math.min(85,tmY2lat(tmLat2y(s.lat,s.z)-dy,s.z)));
+    const sc=s.sc||1;
+    s.lng=tmX2lon(tmLon2x(s.lng,s.z)-dx/sc,s.z);
+    s.lat=Math.max(-85,Math.min(85,tmY2lat(tmLat2y(s.lat,s.z)-dy/sc,s.z)));
     liveSchedule();
   });
-  const relDrag=function(){ if(liveState)liveState.drag=null; };
+  const relDrag=function(e){
+    const s=liveState;
+    if(!s)return;
+    delete s.ptrs[e.pointerId];
+    const ids=Object.keys(s.ptrs);
+    if(ids.length<2)s.pinch=null;
+    if(ids.length===1)s.drag={x:s.ptrs[ids[0]].x,y:s.ptrs[ids[0]].y};
+    else if(!ids.length)s.drag=null;
+  };
   cv.addEventListener('pointerup',relDrag);
   cv.addEventListener('pointercancel',relDrag);
-  cv.addEventListener('dblclick',function(){ liveZoom(1); });
+  cv.addEventListener('dblclick',function(e){
+    const s=liveState; if(!s||s.z>=18)return;
+    const r=cv.getBoundingClientRect();
+    const geo=liveScreenToGeo(s,e.clientX-r.left,e.clientY-r.top);
+    liveAnchorTo(s.z+1,s.sc,geo,e.clientX-r.left,e.clientY-r.top);
+  });
   window.addEventListener('resize',liveResize);
   liveResize();
   liveSubscribe();
@@ -4058,7 +4169,7 @@ async function openProfilePage(username,isSelf,fromAdmin){
   const heroHTML=profileTopHTML(u);
   const amAdmin=me&&(me.role==='superadmin'||me.role==='admin');
   if(isSelf){
-    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">小工具</div><div class="about-item tool-entry" data-action="openTools"><div class="ai-left"><div class="ai-icon te"><svg class="ico"><use href="#i-grid"/></svg></div><div><div class="ai-title">小工具</div><div class="ai-sub">港鐵路線查詢</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
+    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">小工具</div><div class="about-item tool-entry" data-action="openTools"><div class="ai-left"><div class="ai-icon te"><svg class="ico"><use href="#i-grid"/></svg></div><div><div class="ai-title">小工具</div><div class="ai-sub">3 個工具</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else if(fromAdmin&&amAdmin){
     /* v1.37：管理員後台點進某人 → 跟一般個人主頁「同一個版面」，
@@ -5496,6 +5607,12 @@ function closeTrailMap(){
    不重要＝外觀、文案、小圖標、體驗微調 —— 那些一律只 +0.01。
    所以下面一版就是一版，不要把同一次部署拆成 v1.36 + v1.36 兩條。 */
 const VERSION_HISTORY=[
+{ver:'v1.38',date:'2026-10-17',changes:[
+'【重要】修好手機版發出投票與位置時，卡片凸出訊息框右邊的問題：以前螢幕一窄，投票選項和位置縮圖就會被撞出去；現在不論螢幕幾窄，兩者都完整留在訊息裡面',
+'【重要】兩個地圖（個人位置、全班共享）改用雙指縮放：拿掉右下角的加減按鈕，用兩隻手指就可以連續放大縮小，而且縮放時手指下面那一點不會跑；拖動地圖時自己的位置標記會跟著地圖移動，不再像是釘在畫面正中飄來飄去',
+'拿走公共聊天室「＋」選單裡面的「給 AI 看圖」：發送圖片不應該順便叫 AI 讀一次，現在傳圖就是單純傳圖',
+'【重要】小工具新增「巴士到站時間」：用目前位置找最近幾個巴士站，即時列出各線到站倒數（每 30 秒自動更新），同名而相距很近的站柱會合成一張卡；取不到定位就不能用，會直接說明並帶你離開',
+]},
 {ver:'v1.37',date:'2026-10-15',changes:[
 '小工具清單交給伺服器決定：以後加工具、改名、改說明、換連結、暫時收起某一款，都不需要重新上傳網站，也不需要任何人更新客戶端。為免被人亂改，App 內完全沒有編輯入口，連超級管理員都改不到',
 '【重要】小工具新增「全班共享地圖」：進去會先問位置權限，拒絕就直接帶你回小工具；同意就會在地圖上看到所有已同意共享的同學，標記用各人自己的顏色，每 10 秒更新一次。可以選「最新位置」（只分享當下位置）或「歷史軌跡」（每 10 秒記一個點、用線連起來），離開就會把位置同軌跡全部刪掉，包括關掉網頁。',
@@ -5850,7 +5967,7 @@ window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
 const REMOTE = { rev:0, feat:{}, ui:{}, notice:null, tools:null, loaded:false };
 const FEATURES = {
   profile:{n:'個人主頁'}, groups:{n:'群聊'}, ai:{n:'AI 聊天'}, admin:{n:'管理員'},
-  games:{n:'小遊戲'}, call:{n:'視訊通話'}, aiimage:{n:'給 AI 看圖'},
+  games:{n:'小遊戲'}, call:{n:'視訊通話'},
   notices:{n:'公告'}, trail:{n:'痕跡地圖'}, online:{n:'在線查詢'},
   mylogs:{n:'我的日誌'}, feedback:{n:'問題反饋'}, loginlink:{n:'一次性登入連結'},
   send:{n:'發送訊息'}, voice:{n:'語音訊息'},
@@ -5864,7 +5981,6 @@ const ACT_FEATURE = {
   openAdmin:'admin',
   openGames:'games', openGameInvite:'games',
   callClass:'call',
-  pickAIImage:'aiimage',
   openNoticeCreate:'notices', submitNotice:'notices', noticeCarousel:'notices', openNoticeDetail:'notices',
   openTrailMap:'trail', openOnlineQuery:'online',
   submitFeedback:'feedback', openLoginLink:'loginlink',
