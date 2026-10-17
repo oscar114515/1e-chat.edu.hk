@@ -93,6 +93,45 @@ input{font:inherit}
 .pop .bTo:hover{background:rgba(6,77,134,.18)}
 .pop .bX{background:var(--panel2);border:1.5px solid var(--line);color:var(--muted);padding:7px}
 .pop .bX:hover{color:var(--text)}
+.pop .bTrain{background:rgba(11,107,203,.10);color:#0b6bcb;border:1.5px solid rgba(11,107,203,.30)}
+.pop .bTrain:hover{background:rgba(11,107,203,.18)}
+@media (prefers-color-scheme:dark){
+  .pop .bTrain{background:rgba(96,174,232,.16);color:#9fd0f5;border-color:rgba(96,174,232,.42)}
+  .pop .bTrain:hover{background:rgba(96,174,232,.26)}
+}
+
+/* ---------- 車站列車：下一班還有多久（不顯示到站時間） ---------- */
+.train{position:absolute;z-index:70;left:12px;right:12px;bottom:12px;max-height:58%;
+  background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 18px 50px -18px rgba(15,23,42,.55);display:flex;flex-direction:column;
+  overflow:hidden;animation:sheetin .2s var(--ease)}
+@keyframes sheetin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-color-scheme:dark){
+  .train{background:#131c30;border-color:#2b3b59;box-shadow:0 20px 56px -16px rgba(0,0,0,.9)}
+}
+.train .tr-h{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;border-bottom:1px solid var(--line)}
+.train .tr-n{font-size:14.5px;font-weight:730;letter-spacing:-.2px}
+.train .tr-s{font-size:11px;color:var(--muted);margin-top:1px}
+.train .tr-x{margin-left:auto;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:var(--panel2);border:1px solid var(--line);color:var(--muted);flex:none}
+.train .tr-x:hover{color:var(--text);border-color:var(--brand)}
+.train .tr-x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.train .tr-b{overflow-y:auto;padding:6px 14px 14px}
+.tr-line{padding:10px 0 4px;border-top:1px dashed var(--line)}
+.tr-line:first-child{border-top:0;padding-top:6px}
+.tr-ln{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.tr-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.tr-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;align-items:center;gap:8px;
+  padding:6px 0;font-size:13px}
+.tr-dir{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px}
+.tr-dest{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-plat{font-size:11px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+  border-radius:6px;padding:1px 6px;white-space:nowrap}
+.tr-min{font-weight:730;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tr-min.soon{color:#dc2626}
+.tr-min.none{color:var(--muted);font-weight:600}
+.tr-msg{padding:12px 0;font-size:12.5px;color:var(--muted);text-align:center}
+.tr-src{padding-top:10px;font-size:10.5px;color:var(--muted);opacity:.85;text-align:center}
 @media (prefers-color-scheme:dark){
   .pop .bFrom{background:rgba(255,92,92,.14);color:#ffa8a8;border-color:rgba(255,100,100,.36)}
   .pop .bFrom:hover{background:rgba(255,92,92,.24)}
@@ -248,8 +287,15 @@ input{font:inherit}
       <div class="pb">
         <button class="bFrom" id="popFrom">設為起點</button>
         <button class="bTo" id="popTo">設為終點</button>
-        <button class="bX" id="popClose">取消</button>
+        <button class="bTrain" id="popTrain">查看車站列車</button>
       </div>
+    </div>
+    <div class="train" id="train" style="display:none" role="dialog" aria-label="車站列車">
+      <div class="tr-h">
+        <div><div class="tr-n" id="trName"></div><div class="tr-s" id="trSub"></div></div>
+        <button class="tr-x" id="trX" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="tr-b" id="trBody"></div>
     </div>
   </div>
 
@@ -670,14 +716,66 @@ function endDrag(){
   if (frame){ cancelAnimationFrame(frame); frame = 0; }
   applyView();               /* 放手才補畫標記、重定位彈窗 */
 }
+/* ---------- 觸控手勢 ----------
+   電腦：滾輪縮放（上面）、按住拖動。
+   手機：本來只有「一指拖動」，所以完全放不大；現在加兩種：
+     · 雙指張合：以兩指中點為錨，中點指住那一個地圖位置不會跑
+     · 雙擊：快速放大／縮回
+   縮放同時要擋住地圖下面那個「車站」的 click，否則放手會彈出車站卡。 */
+const ptrs = new Map();
+let pinch = null, noTapUntil = 0, lastTap = 0, lastTapX = 0, lastTapY = 0;
+
+function pinchMid(){
+  const a = Array.from(ptrs.values());
+  return {x:(a[0].x + a[1].x) / 2, y:(a[0].y + a[1].y) / 2,
+          d:Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y)};
+}
+function startPinch(){
+  const m = pinchMid();
+  if (m.d < 12) { pinch = null; return; }
+  const u = clientToVB(m.x, m.y);
+  pinch = {d:m.d, k:view.k, wx:(u.x - view.x) / view.k, wy:(u.y - view.y) / view.k};
+  drag = null;
+  svg.classList.remove('drag');
+  if (frame){ cancelAnimationFrame(frame); frame = 0; }
+}
+function movePinch(){
+  if (!pinch) return;
+  const m = pinchMid();
+  if (m.d < 12) return;
+  const k2 = Math.min(M.maxK, Math.max(0.85, pinch.k * (m.d / pinch.d)));
+  const u = clientToVB(m.x, m.y);
+  view.k = k2;
+  view.x = u.x - pinch.wx * k2;
+  view.y = u.y - pinch.wy * k2;
+  applyTransform();
+  if (openKey) placePop();
+}
 svg.addEventListener('pointerdown', e => {
-  if (e.target.classList && e.target.classList.contains('hit')) return;
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (ptrs.size >= 2){ startPinch(); noTapUntil = performance.now() + 400; return; }
+  if (e.target.classList && e.target.classList.contains('hit')) return;   /* 車站留給 click */
+  /* 雙擊縮放（手機沒有滾輪，這是第二個放大方法） */
+  const now = performance.now();
+  if (now - lastTap < 320 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 26){
+    measure();
+    const u = clientToVB(e.clientX, e.clientY);
+    zoomAt(u.x, u.y, view.k < 2.2 ? 1.9 : 0.42);
+    lastTap = 0; noTapUntil = now + 400;
+    return;
+  }
+  lastTap = now; lastTapX = e.clientX; lastTapY = e.clientY;
   measure();
   drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y};
   if (frame){ cancelAnimationFrame(frame); frame = 0; }
-  svg.setPointerCapture(e.pointerId); svg.classList.add('drag');
+  try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+  svg.classList.add('drag');
 });
 svg.addEventListener('pointermove', e => {
+  if (ptrs.has(e.pointerId)){
+    const p = ptrs.get(e.pointerId); p.x = e.clientX; p.y = e.clientY;
+  }
+  if (pinch){ movePinch(); return; }
   if (!drag) return;
   /* 螢幕 px → viewBox 單位：除 baseScale（與 k 無關），拖幾多就走幾多 */
   const b = Math.max(1e-6, baseScale());
@@ -685,8 +783,17 @@ svg.addEventListener('pointermove', e => {
   view.y = drag.vy + (e.clientY - drag.y) / b;
   if (!frame) frame = requestAnimationFrame(flushDrag);
 });
-svg.addEventListener('pointerup', endDrag);
-svg.addEventListener('pointercancel', endDrag);
+function endPointer(e){
+  ptrs.delete(e.pointerId);
+  if (pinch){
+    if (ptrs.size < 2){ pinch = null; endDrag(); }   /* 放手才重畫標記 */
+    return;
+  }
+  endDrag();
+}
+svg.addEventListener('pointerup', endPointer);
+svg.addEventListener('pointercancel', endPointer);
+svg.addEventListener('pointerleave', e => { if (e.pointerType !== 'mouse') endPointer(e); });
 let rzT = 0;
 addEventListener('resize', () => {
   measure(); applyView();
@@ -734,12 +841,124 @@ document.getElementById('popTo').onclick = () => {
   P.to = openKey; if (P.from === P.to) P.from = null;
   P.route = null; P.routes = []; P.sel = 0; closePop(); sync(); refresh();
 };
-document.getElementById('popClose').onclick = closePop;
+document.getElementById('popTrain').onclick = () => {
+  const k = openKey; closePop(); openTrain(k);
+};
 document.addEventListener('click', e => {
   if (pop.style.display === 'none') return;
   if (e.target.closest('#pop') || (e.target.classList && e.target.classList.contains('hit'))) return;
   closePop();
 });
+
+
+/* ---------- 車站列車：公開資料 API（rt.data.gov.hk） ----------
+   只顯示「還有幾分鐘」，不顯示鐘面時間 —— 用戶要求。
+   ttnt（time to next train）單位是分鐘，'0' 代表不足一分鐘。 */
+const TRAIN_API = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php';
+let trainKey = null, trainTimer = 0, trainSeq = 0;
+function trainMinText(t){
+  const v = Number(t);
+  if (!isFinite(v)) return {txt:'—', cls:'none'};
+  if (v <= 0) return {txt:'即將到站', cls:'soon'};
+  return {txt:'還有 ' + v + ' 分鐘', cls:'soon'};
+}
+function destZh(code){
+  if (!code) return '';
+  const s = M.stations.find(x => x.c === code);
+  return s ? s.zh : String(code);
+}
+function trRowHTML(dir, item){
+  const m = trainMinText(item && item.ttnt);
+  const plat = item && item.plat ? (item.plat + ' 號月台') : '';
+  const dest = item && item.dest ? destZh(item.dest) : '';
+  return '<div class="tr-row"><span class="tr-dir">' + dir + '</span>'
+    + '<span class="tr-dest">' + (dest ? ('往 ' + escapeTr(dest)) : '—') + '</span>'
+    + '<span class="tr-plat">' + (plat || '月台 —') + '</span>'
+    + '<span class="tr-min ' + m.cls + '">' + m.txt + '</span></div>';
+}
+function escapeTr(t){
+  return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function fetchSchedule(line, sta){
+  const u = TRAIN_API + '?line=' + encodeURIComponent(line) + '&sta=' + encodeURIComponent(sta);
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 8000);
+  try{
+    const r = await fetch(u, {signal:ctl.signal, cache:'no-store'});
+    if (!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+  finally{ clearTimeout(t); }
+}
+async function loadTrains(){
+  const key = trainKey;
+  if (!key) return;
+  const st = S_(key);
+  if (!st) return;
+  const seq = ++trainSeq;
+  const body = document.getElementById('trBody');
+  const sub = document.getElementById('trSub');
+  document.getElementById('trName').textContent = st.zh + (st.en ? '　' + st.en : '');
+  if (!body) return;
+  if (M.id !== 'HR'){
+    body.innerHTML = '<div class="tr-msg">輕鐵的下一班車未接通即時資料，暫時只支援重鐵車站。</div>';
+    if (sub) sub.textContent = '輕鐵';
+    return;
+  }
+  const codes = (st.lines || []).filter(c => M.lineOf && M.lineOf(c));
+  if (!codes.length || !st.c){
+    body.innerHTML = '<div class="tr-msg">這個站沒有可查的即時班次。</div>';
+    if (sub) sub.textContent = '';
+    return;
+  }
+  if (!body.dataset.loaded){
+    body.innerHTML = '<div class="tr-msg">正在查下一班車…</div>';
+  }
+  const results = await Promise.all(codes.map(c => fetchSchedule(c, st.c)));
+  if (seq !== trainSeq || trainKey !== key) return;      /* 已經轉了站，丟掉舊結果 */
+  let html = '', got = 0;
+  codes.forEach((c, i) => {
+    const meta = M.lineOf(c) || {};
+    const j = results[i];
+    const dat = j && j.data && j.data[c + '-' + st.c];
+    if (!dat) return;
+    got++;
+    const up = (dat.UP && dat.UP[0]) || null;
+    const dn = (dat.DOWN && dat.DOWN[0]) || null;
+    if (!up && !dn && !(dat.UP && dat.UP.length) && !(dat.DOWN && dat.DOWN.length)) return;
+    const color = /^#[0-9a-fA-F]{3,8}$/.test(meta.color || '') ? meta.color : '#0b6bcb';
+    html += '<div class="tr-line"><div class="tr-ln"><span class="tr-dot" style="background:' + color + '"></span>'
+      + escapeTr(meta.name || c) + '</div>'
+      + (up ? trRowHTML('上行', up) : '<div class="tr-row"><span class="tr-dir">上行</span><span class="tr-dest" style="color:var(--muted)">暫時沒有班次</span><span class="tr-plat"></span><span class="tr-min none">—</span></div>')
+      + (dn ? trRowHTML('下行', dn) : '<div class="tr-row"><span class="tr-dir">下行</span><span class="tr-dest" style="color:var(--muted)">暫時沒有班次</span><span class="tr-plat"></span><span class="tr-min none">—</span></div>')
+      + '</div>';
+  });
+  if (!html){
+    body.innerHTML = '<div class="tr-msg">暫時查不到即時班次（可能已經收車，或者網絡不通）。</div>';
+  } else {
+    body.innerHTML = html + '<div class="tr-src">資料來源：資料一線通 · 港鐵下一班車　·　每 30 秒自動更新</div>';
+  }
+  body.dataset.loaded = '1';
+  if (sub) sub.textContent = got ? ('即時 · ' + st.c) : (st.c || '');
+}
+function openTrain(key){
+  if (!key) return;
+  trainKey = key;
+  const sheet = document.getElementById('train');
+  if (sheet) sheet.style.display = '';
+  loadTrains();
+  if (trainTimer) clearInterval(trainTimer);
+  trainTimer = setInterval(loadTrains, 30000);
+}
+function closeTrain(){
+  trainKey = null;
+  if (trainTimer){ clearInterval(trainTimer); trainTimer = 0; }
+  const sheet = document.getElementById('train');
+  if (sheet){ sheet.style.display = 'none'; }
+  const body = document.getElementById('trBody');
+  if (body) delete body.dataset.loaded;
+}
+document.getElementById('trX').onclick = closeTrain;
 
 /* ---------- 換模式 ---------- */
 function initMode(id){
@@ -748,6 +967,7 @@ function initMode(id){
   M._idx = {}; M.stations.forEach(s => M._idx[s.key] = s);
   P = {from:null, to:null, route:null, routes:[], sel:0};
   openKey = null; pop.style.display = 'none';
+  if (typeof closeTrain === 'function') closeTrain();
   svg.setAttribute('viewBox', `0 0 ${M.map.w} ${M.map.h}`);
   while (gRoot.firstChild) gRoot.removeChild(gRoot.firstChild);
   gTiles = el('g', {id:'bg'}); gMk = el('g', {}); gHit = el('g', {});
@@ -758,7 +978,11 @@ function initMode(id){
     const r = M.hitPad;
     const h = el('rect', {class:'hit', x:s.x - r, y:s.y - r, width:r*2, height:r*2,
       fill:'#000', 'fill-opacity':0, 'pointer-events':'all', 'data-k':s.key});
-    h.addEventListener('click', e => { e.stopPropagation(); openPop(s.key); });
+    h.addEventListener('click', e => {
+      e.stopPropagation();
+      if (performance.now() < noTapUntil) return;   /* 剛剛在縮放，不當成點車站 */
+      openPop(s.key);
+    });
     gHit.appendChild(h);
   });
   document.getElementById('from').value = ''; document.getElementById('to').value = '';
