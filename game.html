@@ -273,6 +273,10 @@ canvas#cv{background:linear-gradient(135deg,var(--wood1),var(--wood2) 45%,var(--
 /* 棋盤外框加厚成規範的木框 */
 canvas#cv{border:12px solid #a8753c!important;border-radius:var(--r-3)!important}
 
+/* 大廳自由／單人遊戲的畫布：不要桌遊的木色底同木框（上面兩條 canvas#cv 是給棋盤用的，
+   但貪吃蛇、俄羅斯方塊的畫布同樣叫 cv，會被一起染成木色，連邊框都食掉畫面） */
+.cwrap canvas#cv{background:var(--bg)!important;border:0!important;border-radius:0!important;box-shadow:none!important;max-width:none}
+
 /* v1.33 中國象棋：楚河漢界 */
 .xqboard{position:relative}
 .xqriver{position:absolute;left:5%;right:5%;top:50%;transform:translateY(-50%);text-align:center;
@@ -364,15 +368,27 @@ body.theme-light .hudcard{background:rgba(255,255,255,.82)}
 .lb .lbr{width:15px;text-align:right;color:var(--text-sub);font-size:11px}
 .lb .lbv{margin-left:auto;font-weight:700}
 .lb .lbd{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.lb .lbempty{color:var(--text-sub);font-size:11px}
 .stats{display:flex;gap:14px;font-variant-numeric:tabular-nums}
 .stats>div{text-align:center}
 .stats .sv{font-size:17px;font-weight:800}
 .stats .sl{font-size:10px;color:var(--text-sub);letter-spacing:.4px}
-.ctrls{position:absolute;left:0;right:0;bottom:0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center;z-index:3;pointer-events:none}
+.ctrls{position:absolute;left:0;right:0;bottom:0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center;z-index:6;pointer-events:none}
 .ctrls>*{pointer-events:auto}
 .padbtn{width:74px;height:74px;border-radius:50%;background:rgba(56,189,248,.18);border:1px solid rgba(56,189,248,.5);color:var(--accent);
   font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;cursor:pointer}
 .padbtn:active,.padbtn.on{background:var(--accent);color:#0b0d14;transform:scale(.95)}
+.ctrls .padwrap{display:none}
+.ctrls.touch .padwrap{display:block}
+.dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,58px);gap:7px}
+.dbtn{background:rgba(148,163,184,.16);border:1px solid rgba(148,163,184,.45);border-radius:15px;padding:0;
+  display:flex;align-items:center;justify-content:center;color:var(--text-main);touch-action:none;
+  -webkit-tap-highlight-color:transparent;cursor:pointer;transition:background .12s,transform .12s}
+.dbtn svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.dbtn.on{background:var(--accent);border-color:var(--accent);color:#0b0d14;transform:scale(.94)}
+.dbtn.up{grid-area:1/2}.dbtn.left{grid-area:2/1}.dbtn.right{grid-area:2/3}.dbtn.down{grid-area:3/2}
+body.theme-light .dbtn{background:rgba(15,23,42,.07);border-color:rgba(15,23,42,.18)}
+body.theme-light .dbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .kbd{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:8px}
 .kbd .k{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--text-main);user-select:none;-webkit-user-select:none;cursor:pointer}
 .kbd .k:active,.kbd .k.on{background:var(--accent);color:#0b0d14}
@@ -380,7 +396,7 @@ body.theme-light .hudcard{background:rgba(255,255,255,.82)}
 .specbar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(10,13,20,.8);border:1px solid var(--gold);
   border-radius:var(--r-2);padding:10px 18px;font-size:14px;color:var(--gold);font-weight:700;z-index:4;pointer-events:none}
 body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-color:#d5a12a}
-.deadmask{position:absolute;inset:0;background:rgba(6,8,13,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5;backdrop-filter:blur(3px)}
+.deadmask{position:absolute;inset:0;background:rgba(6,8,13,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:4;backdrop-filter:blur(3px);pointer-events:none}
 .deadmask .big{font-size:30px;font-weight:900;letter-spacing:1px}
 .deadmask .sub{font-size:13px;color:var(--text-sub);text-align:center;line-height:1.7}
 </style>
@@ -1316,55 +1332,163 @@ function renderLobbyGame(){
 
 /* ===== 遊戲清單 ===== */
 const LOBBY_ENGINES={ snake:createSnakeLobby };
+/* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
+Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
+window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
+
+/* ═══════════════════════════════════════════════════════════════
+   大廳遊戲共用：正方形場地 + 邊界紅區 + 電腦／觸控判斷
+   ───────────────────────────────────────────────────────────────
+   以後所有「大廳自由」類的即時遊戲（球球大作戰、鬼抓人、彈幕生存…）都用同一套，
+   不要在個別遊戲裡自己再畫一次邊界、自己再判斷一次裝置：
+
+     const A=LobbyArena(半邊長);
+     A.hitWall(x,y)   撞到牆沒有
+     A.inside(x,y,距牆多少)  在不在場內
+     A.randPoint(距牆多少)   場內隨機一點
+     A.danger(x,y)    0 ＝ 安全，1 ＝ 貼住牆
+     A.draw(ctx,toS,zoom,cw,ch)   牆內 20 單位開始漸紅 → 紅牆線 → 牆外最紅
+
+   操控：
+     電腦（滑鼠）→ 保留鼠標操控，不顯示前後左右方向鍵
+     任何觸控裝置 → 顯示前後左右方向鍵
+   不是只看裝置能力：很多手提電腦有觸控屏但平時用滑鼠，
+   所以收到真實 touch 事件才切去觸控模式，收到 mouse 事件就切回電腦模式。
+   ═══════════════════════════════════════════════════════════════ */
+const LOBBY_EDGE_BAND=20;      /* 距邊界多少世界單位開始轉紅（用戶指定 20） */
+
+function LobbyArena(half){
+  const B=LOBBY_EDGE_BAND;
+  const c01=v=>v<0?0:(v>1?1:v);
+  return {
+    half, band:B,
+    hitWall(x,y){ return Math.abs(x)>half||Math.abs(y)>half; },
+    inside(x,y,m){ const h=half-(m||0); return Math.abs(x)<=h&&Math.abs(y)<=h; },
+    randPoint(margin){
+      const h=Math.max(1,half-(margin||0));
+      return {x:(Math.random()*2-1)*h, y:(Math.random()*2-1)*h};
+    },
+    /* 0 ＝ 安全；1 ＝ 貼住牆 */
+    danger(x,y){
+      const d=Math.min(half-Math.abs(x),half-Math.abs(y));
+      return d>=B?0:c01(1-d/B);
+    },
+    draw(c,toS,zoom,w,h){
+      const x0=toS(-half,0).x, x1=toS(half,0).x;
+      const y0=toS(0,-half).y, y1=toS(0,half).y;
+      const band=Math.max(2,B*zoom);
+      const RED='239,68,68';
+      const lin=(ax,ay,bx,by,a0,a1)=>{
+        const g=c.createLinearGradient(ax,ay,bx,by);
+        g.addColorStop(0,'rgba('+RED+','+a0+')');
+        g.addColorStop(1,'rgba('+RED+','+a1+')');
+        return g;
+      };
+      /* 牆內：最後 20 單位由透明漸變到紅 */
+      c.fillStyle=lin(x0,0,x0+band,0,'0.58','0'); c.fillRect(x0,0,band,h);
+      c.fillStyle=lin(x1,0,x1-band,0,'0.58','0'); c.fillRect(x1-band,0,band,h);
+      c.fillStyle=lin(0,y0,0,y0+band,'0.58','0'); c.fillRect(0,y0,w,band);
+      c.fillStyle=lin(0,y1,0,y1-band,'0.58','0'); c.fillRect(0,y1-band,w,band);
+      /* 牆外：越外越紅（最外圍最紅） */
+      if(x0>0){ c.fillStyle=lin(x0,0,0,0,'0.55','0.95'); c.fillRect(0,0,x0,h); }
+      if(x1<w){ c.fillStyle=lin(x1,0,w,0,'0.55','0.95'); c.fillRect(x1,0,w-x1,h); }
+      if(y0>0){ c.fillStyle=lin(0,y0,0,0,'0.55','0.95'); c.fillRect(0,0,w,y0); }
+      if(y1<h){ c.fillStyle=lin(0,y1,0,h,'0.55','0.95'); c.fillRect(0,y1,w,h-y1); }
+      /* 紅牆線（帶一點光暈，遠看都見到） */
+      c.save();
+      c.strokeStyle='#ef4444'; c.lineWidth=Math.max(2,2.4*zoom);
+      c.shadowColor='rgba(239,68,68,.9)'; c.shadowBlur=12;
+      c.strokeRect(x0,y0,x1-x0,y1-y0);
+      c.restore();
+    }
+  };
+}
+
+/** 觸控方向鍵（前後左右）。電腦不用它，所以只在觸控模式顯示。 */
+function buildLobbyDPad(onDir){
+  const el=document.createElement('div');
+  el.className='dpad';
+  const arrow=d=>'<svg viewBox="0 0 24 24"><path d="'+d+'"/></svg>';
+  el.innerHTML=
+    '<button class="dbtn up" data-dir="0,-1" aria-label="上">'+arrow('M12 19V5M5 12l7-7 7 7')+'</button>'
+    +'<button class="dbtn left" data-dir="-1,0" aria-label="左">'+arrow('M19 12H5M12 19l-7-7 7-7')+'</button>'
+    +'<button class="dbtn right" data-dir="1,0" aria-label="右">'+arrow('M5 12h14M12 5l7 7-7 7')+'</button>'
+    +'<button class="dbtn down" data-dir="0,1" aria-label="下">'+arrow('M12 5v14M5 12l7 7 7-7')+'</button>';
+  Array.prototype.forEach.call(el.querySelectorAll('.dbtn'),b=>{
+    const parts=String(b.getAttribute('data-dir')||'0,0').split(',');
+    const dx=Number(parts[0])||0, dy=Number(parts[1])||0;
+    const down=e=>{
+      if(e.cancelable) e.preventDefault();
+      b.classList.add('on');
+      try{ if(b.setPointerCapture&&e.pointerId!=null) b.setPointerCapture(e.pointerId); }catch(_){}
+      onDir(dx,dy);
+    };
+    const up=()=>{ b.classList.remove('on'); onDir(0,0); };
+    b.addEventListener('pointerdown',down);
+    b.addEventListener('pointerup',up);
+    b.addEventListener('pointercancel',up);
+    b.addEventListener('pointerleave',up);
+    b.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+  return el;
+}
+
+/** 這部裝置「預設」是不是觸控：真正用什麼玩，進遊戲後再按真實事件切換。 */
+function lobbyIsTouch(){
+  try{ if(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches) return true; }catch(e){}
+  return (navigator.maxTouchPoints||0)>0;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    貪吃蛇（大廳版）
-   蛇身沿著「頭走過的路徑」長出來，所以轉彎是連續的曲線，不是一格一格跳。
+   全站同一個大廳，點進來就是一條真人在玩的蛇 —— 沒有 AI 假玩家，
+   見到幾條蛇就是幾個真人。蛇身沿著「頭走過的路徑」長出來，
+   所以轉彎是連續的曲線，不是一格一格跳。
    吃豆會變長；撞到別人的身體／撞牆就死，身體會散落成豆給人吃。
+   場地是正方形，越貼近邊界越紅，牆外最紅。
    ═══════════════════════════════════════════════════════════════ */
 function createSnakeLobby(){
-  const R=1020;              // 競技場半徑（世界單位）
-  const R0=11;               // 蛇的半寬
-  const SEG=6;               // 每一節的長度
-  const SPEED=158;           // 基本速度（單位／秒）
-  const SPEED_BOOST=286;     // 加速時的速度
-  const TURN=3.5;            // 每秒最多轉幾弧度（限制轉向 → 不會瞬間折返）
-  const START_N=14;          // 出生長度
-  const NET_DELAY=130;       // 別人的畫面延遲（毫秒）：用插值讓 8Hz 的封包看起來是連續的
-  const FOOD_TARGET=200;     // 場上維持多少顆豆
-  const NBOTS=3;             // 只有自己一個人的時候，自動補幾條 AI 蛇
-
-  const chans=()=> 'hsl('+Math.round(Math.random()*360)+' 72% 58%)';
+  const HALF=1020;           /* 正方形場地半邊長（世界單位）→ 場地 2040×2040 */
+  const R0=11;               /* 蛇的半寬 */
+  const SEG=6;               /* 每一節的長度 */
+  const SPEED=158;           /* 基本速度（單位／秒） */
+  const SPEED_BOOST=286;     /* 加速時的速度 */
+  const TURN=3.5;            /* 每秒最多轉幾弧度（限制轉向 → 不會瞬間折返） */
+  const START_N=14;          /* 出生長度 */
+  const NET_DELAY=130;       /* 別人的畫面延遲（毫秒）：用插值讓 8Hz 的封包看起來是連續的 */
+  const FOOD_TARGET=260;     /* 場上維持多少顆豆（正方形比圓形大，所以比之前多一點） */
+  const ARENA=LobbyArena(HALF);
 
   let cv=null, ctx=null, raf=0, running=false;
-  let stopLive=null, stopFood=null, stopPresence=null;
-  let food={};               // 目前場上的豆（我這端看到的最新一份）
-  let rivals={};             // 別人（含 AI）的狀態：{name,color,h:[樣本],n,dead,lastSeen,bot}
-  let my=null;               // 我自己的蛇
-  let myTrail=[];            // 我的頭部軌跡（本地全解析度，用 0.35 單位抽樣）
-  let best=0, killedBy='', deadUntil=0, deathAt=0;
-  let boosting=false, lastSample=0, lastFoodScan=0, lastBot=0;
+  let stopLive=null, stopFood=null;
+  let food={};               /* 目前場上的豆（我這端看到的最新一份） */
+  let foodReady=false;       /* 收到第一份豆的快照未：未收到就不要補豆，否則每次進場都多 30 粒 */
+  let rivals={};             /* 真人對手：{nm,color,h:[樣本],n,dead,lastSeen} */
+  let my=null;               /* 我自己的蛇 */
+  let myTrail=[];            /* 我的頭部軌跡（本地全解析度，用 0.7 單位抽樣） */
+  let best=0, killedBy='', deadUntil=0;
+  let boosting=false, lastSample=0, lastFoodScan=0;
   let pointer={x:0,y:0,has:false};
-  let botHost='', bots={};
-  let hudRowsEl=null, hudCardEl=null, stCardEl=null, wrapEl=null;
+  let pad={x:0,y:0};         /* 觸控方向鍵按住的絕對方向；0,0 ＝ 沒按 */
+  let hudRowsEl=null, hudCardEl=null, stCardEl=null, wrapEl=null, ctlEl=null;
   let cw=0, ch=0;
 
   /* ── 我的蛇 ── */
   function spawn(){
-    const a=Math.random()*Math.PI*2, d=120+Math.random()*(R-260);
-    my={x:Math.cos(a)*d, y:Math.sin(a)*d, ang:a+Math.PI, n:START_N, alive:true};
+    const p=ARENA.randPoint(150);          /* 出生不要貼牆 */
+    my={x:p.x, y:p.y, ang:Math.random()*Math.PI*2, n:START_N, alive:true};
     myTrail=[{x:my.x,y:my.y}];
     deadUntil=0; killedBy='';
   }
 
   /* ── 樣本進出 ── */
-  const TRAIL_STEP=0.7;      // 頭部軌跡每 0.7 世界單位記一點
+  const TRAIL_STEP=0.7;      /* 頭部軌跡每 0.7 世界單位記一點 */
   function pushTrail(x,y){
     const last=myTrail[0];
     if(last){
       const d=Math.hypot(x-last.x,y-last.y);
       if(d<TRAIL_STEP) return;
-      // 太遠（例如重生）就整條清掉重來，免得畫出一條橫跨整個場地的線
+      /* 太遠（例如重生）就整條清掉重來，免得畫出一條橫跨整個場地的線 */
       if(d>400){ myTrail=[{x,y}]; return; }
     }
     myTrail.unshift({x,y});
@@ -1406,7 +1530,7 @@ function createSnakeLobby(){
     const span=Math.max(1,q.t-p.t);
     let k=(renderT-p.t)/span;
     if(!isFinite(k)) k=1;
-    k=Math.max(0,Math.min(1.3,k));       // 允許一點點外推，網路抖一下也不會卡住
+    k=Math.max(0,Math.min(1.3,k));       /* 允許一點點外推，網路抖一下也不會卡住 */
     return {x:p.x+(q.x-p.x)*k, y:p.y+(q.y-p.y)*k};
   }
   function rivalBody(r,renderT){
@@ -1420,7 +1544,7 @@ function createSnakeLobby(){
   /* ── 死亡：身體散成豆 ── */
   async function die(reason,byName){
     if(!my||!my.alive) return;
-    my.alive=false; killedBy=byName||''; deathAt=sNow(); deadUntil=sNow()+2600;
+    my.alive=false; killedBy=byName||''; deadUntil=sNow()+2600;
     best=Math.max(best,Math.round(my.n));
     const body=bodyFrom(myTrail,my.n);
     const items=[];
@@ -1429,9 +1553,9 @@ function createSnakeLobby(){
       const p=body[i];
       items.push({x:p.x+(Math.random()-.5)*26,y:p.y+(Math.random()-.5)*26,r:5+Math.random()*3,g:1+Math.floor(Math.random()*3),c:0});
     }
-    if(my.n>=25) items.push({x:my.x,y:my.y,r:9,g:6,c:0});     // 大蛇會掉一顆大的
+    if(my.n>=25) items.push({x:my.x,y:my.y,r:9,g:6,c:0});     /* 大蛇會掉一顆大的 */
     await lobbyPushFood(lobbyKey,items);
-    // 記戰績（只加欄位，不動原本的 win/lose 結構）
+    /* 記戰績（只加欄位，不動原本的 win/lose 結構） */
     try{
       const st=myStats.snake||{};
       await update(ref(db,'users/'+me.username+'/gameStats/snake'),{play:(st.play||0)+1,best:Math.max(st.best||0,best),at:sNow()});
@@ -1454,24 +1578,24 @@ function createSnakeLobby(){
     }
   }
 
-  /* ── 碰撞 ── */
+  /* ── 碰撞（正方形：踩出任何一條邊就算撞牆） ── */
   function heading(){ return {x:my.x+Math.cos(my.ang)*R0*1.6, y:my.y+Math.sin(my.ang)*R0*1.6}; }
   function checkDeath(renderT){
     if(!my||!my.alive) return;
     const hd=heading();
-    if(Math.hypot(hd.x,hd.y)>R){ die('撞到結界了'); return; }
+    if(ARENA.hitWall(hd.x,hd.y)){ die('撞到結界了'); return; }
     const keys=Object.keys(rivals);
     for(const u of keys){
       const r=rivals[u]; if(!r||r.dead) continue;
       const rh=rivalHead(r,renderT); if(!rh) continue;
       const dh=Math.hypot(rh.x-hd.x,rh.y-hd.y);
       if(dh < R0*1.9){
-        // 頭對頭：大的贏（比較小的一方死，並把豆子留給對方）；一樣大就一起死
+        /* 頭對頭：大的贏（比較小的一方死，並把豆子留給對方）；一樣大就一起死 */
         if((r.n||START_N)>my.n+1.5){ die('撞到 '+r.name, r.name); return; }
         if(Math.abs((r.n||START_N)-my.n)<=1.5){ die('和 '+r.name+' 撞在一起', r.name); return; }
         continue;
       }
-      // 頭撞到對方身體
+      /* 頭撞到對方身體 */
       const body=rivalBody(r,renderT);
       for(let i=2;i<body.length;i+=2){
         if(Math.hypot(body[i].x-hd.x,body[i].y-hd.y) < R0*1.75){ die('撞到 '+r.name+' 的身體', r.name); return; }
@@ -1479,52 +1603,7 @@ function createSnakeLobby(){
     }
   }
 
-  /* ── AI 對手（只有自己一個人的時候才跑） ── */
-  function botsActive(){
-    const humans=Object.keys(rivals).filter(u=>!rivals[u].bot);
-    return humans.length===0 && botHost===me.username;
-  }
-  function botStep(name,dt,renderT){
-    let b=bots[name];
-    if(!b){ b=bots[name]={x:0,y:0,ang:0,n:18,dead:false,until:0,name:name,color:'#94a3b8'}; spawnBot(b); }
-    if(b.dead){ if(sNow()>=b.until) spawnBot(b); return b; }
-    // 目標：最近的豆；順便避開牆與別人的身體
-    let bestF=null,bd=1e9;
-    for(const id in food){
-      const f=food[id]; const d=Math.hypot(f.x-b.x,f.y-b.y);
-      if(d<bd){ bd=d; bestF=f; }
-    }
-    let want=b.ang;
-    if(bestF) want=Math.atan2(bestF.y-b.y,bestF.x-b.x);
-    // 避牆：太靠邊就轉回中心
-    const dist=Math.hypot(b.x,b.y);
-    if(dist>R*0.82) want=Math.atan2(-b.y,-b.x);
-    // 避蛇：前面一點有沒有別人的身體
-    const ax=b.x+Math.cos(b.ang)*70, ay=b.y+Math.sin(b.ang)*70;
-    for(const u in rivals){
-      const r=rivals[u]; if(!r||r.dead) continue;
-      const body=rivalBody(r,renderT);
-      for(let i=0;i<body.length;i+=3){
-        if(Math.hypot(body[i].x-ax,body[i].y-ay)<R0*2.6){
-          want=b.ang+(Math.random()<0.5?1:-1)*1.5; break;
-        }
-      }
-    }
-    let d=((want-b.ang+Math.PI*3)%(Math.PI*2))-Math.PI;
-    const mx=TURN*0.75*dt;
-    b.ang+=Math.max(-mx,Math.min(mx,d));
-    const sp=SPEED*0.86;
-    b.x+=Math.cos(b.ang)*sp*dt; b.y+=Math.sin(b.ang)*sp*dt;
-    if(Math.hypot(b.x,b.y)>R){ b.dead=true; b.until=sNow()+1800; }
-    if(b.n<40 && bestF && bd<R0+8) b.n+=1;
-    return b;
-  }
-  function spawnBot(b){
-    const a=Math.random()*Math.PI*2, d=200+Math.random()*(R-380);
-    b.x=Math.cos(a)*d; b.y=Math.sin(a)*d; b.ang=a+Math.PI; b.n=16+Math.floor(Math.random()*10); b.dead=false;
-  }
-
-  /* ── 網路 ── */
+  /* ── 網路：只寫自己（沒有 AI，所以不再代寫任何假玩家） ── */
   async function sample(){
     if(!my||!me) return;
     try{
@@ -1533,17 +1612,6 @@ function createSnakeLobby(){
         n:Math.round(my.n),d:my.alive?0:1,t:sNow(),b:boosting?1:0,
         nm:me.displayName,c:safeColor(me.color,'#22c55e')
       });
-    }catch(e){}
-    if(!botsActive()) return;
-    // AI 蛇也由我這端寫上去（別人看到的就是普通的蛇）
-    try{
-      const upd={};
-      for(const k in bots){
-        const b=bots[k];
-        upd['bot_'+me.username+'_'+k]={x:Math.round(b.x),y:Math.round(b.y),a:+b.ang.toFixed(2),
-          n:Math.round(b.n),d:b.dead?1:0,t:sNow(),b:0,nm:b.name,c:'#94a3b8'};
-      }
-      await update(ref(db,'lobbyLive/'+lobbyKey),upd);
     }catch(e){}
   }
 
@@ -1557,10 +1625,13 @@ function createSnakeLobby(){
     const now=sNow();
     const renderT=now-NET_DELAY;
     if(my&&my.alive){
-      // 轉向：往指標（或手機上按住的位置）轉，但每秒最多轉 TURN 弧度
-      if(pointer.has){
-        const want=Math.atan2(pointer.y-my.y,pointer.x-my.x);
-        let d=((want-my.ang+Math.PI*3)%(Math.PI*2))-Math.PI;
+      /* 轉向：方向鍵（觸控）優先，其餘用滑鼠／手指指向的位置；
+         但每秒最多轉 TURN 弧度，所以按「後」不會瞬間反轉，而是繞一個弧。 */
+      let want=null;
+      if(pad.x||pad.y) want=Math.atan2(pad.y,pad.x);
+      else if(pointer.has) want=Math.atan2(pointer.y-my.y,pointer.x-my.x);
+      if(want!==null){
+        const d=((want-my.ang+Math.PI*3)%(Math.PI*2))-Math.PI;
         const mx=TURN*dt;
         my.ang+=Math.max(-mx,Math.min(mx,d));
       }
@@ -1570,7 +1641,7 @@ function createSnakeLobby(){
       if(boosting){
         my.n-=5.2*dt;
         if(my.n<11.5){ my.n=11.5; boosting=false; }
-        // 加速時沿路掉豆（別人可以吃）
+        /* 加速時沿路掉豆（別人可以吃） */
         if(Math.random()<dt*7){
           lobbyPushFood(lobbyKey,[{x:my.x+(Math.random()-.5)*18,y:my.y+(Math.random()-.5)*18,r:5,g:1,c:0}]);
         }
@@ -1582,17 +1653,6 @@ function createSnakeLobby(){
     } else if(my&&!my.alive){
       if(now>=deadUntil){ spawn(); pushTrail(my.x,my.y); sample(); }
     }
-    // AI
-    if(botsActive()){
-      const names=['小翠','阿墨','豆豆','灰灰','阿斑'];
-      for(let i=0;i<NBOTS;i++){
-        const nm=names[i]||('AI'+(i+1));
-        if(!bots[nm]) bots[nm]={name:nm,color:'#94a3b8',x:0,y:0,ang:0,n:16,dead:false,until:0};
-        botStep(nm,dt,renderT);
-      }
-    } else if(Object.keys(bots).length){
-      for(const k in bots) delete bots[k];
-    }
     if(now-lastSample>125){ lastSample=now; sample(); }
     if(now-lastFoodScan>1400){ lastFoodScan=now; keepFood(); }
     draw(renderT,now);
@@ -1601,13 +1661,14 @@ function createSnakeLobby(){
 
   /** 豆子數量維持住（誰都可以補；多補幾顆不影響遊戲） */
   function keepFood(){
+    if(!foodReady) return;              /* 未收到快照就補，會令豆越積越多 */
     const have=Object.keys(food).length;
     if(have>=FOOD_TARGET) return;
-    const add=Math.min(26,FOOD_TARGET-have);
+    const add=Math.min(30,FOOD_TARGET-have);
     const items=[];
     for(let i=0;i<add;i++){
-      const a=Math.random()*Math.PI*2, d=Math.sqrt(Math.random())*(R-40);
-      items.push({x:Math.cos(a)*d,y:Math.sin(a)*d,r:5+Math.random()*3.5,g:1+(Math.random()<0.18?2:0)+(Math.random()<0.05?3:0),c:0});
+      const p=ARENA.randPoint(40);
+      items.push({x:p.x,y:p.y,r:5+Math.random()*3.5,g:1+(Math.random()<0.18?2:0)+(Math.random()<0.05?3:0),c:0});
     }
     lobbyPushFood(lobbyKey,items);
   }
@@ -1628,7 +1689,7 @@ function createSnakeLobby(){
     const cx=cw/2, cy=ch/2;
     const toS=(x,y)=>({x:cx+(x-my.x)*zoom, y:cy+(y-my.y)*zoom});
     ctx.clearRect(0,0,cw,ch);
-    // 背景：會跟著鏡頭移動的點陣（不是純色，滾動時看得出速度）
+    /* 背景：會跟著鏡頭移動的點陣（不是純色，滾動時看得出速度） */
     const gridStep=90*zoom, offX=((cx-my.x*zoom)%gridStep+gridStep)%gridStep;
     const offY=((cy-my.y*zoom)%gridStep+gridStep)%gridStep;
     ctx.fillStyle=document.body.classList.contains('theme-light')?'rgba(15,23,42,.13)':'rgba(255,255,255,.085)';
@@ -1637,13 +1698,10 @@ function createSnakeLobby(){
         ctx.beginPath(); ctx.arc(x,y,1.15,0,6.284); ctx.fill();
       }
     }
-    // 結界
-    const c=toS(0,0), rp=R*zoom;
-    ctx.beginPath(); ctx.arc(c.x,c.y,rp,0,6.284);
-    ctx.strokeStyle='rgba(226,176,74,.42)'; ctx.lineWidth=2.5; ctx.stroke();
-    ctx.strokeStyle='rgba(226,176,74,.12)'; ctx.lineWidth=12; ctx.stroke();
+    /* 正方形結界：牆內 20 單位漸紅、牆線紅、牆外最紅 */
+    ARENA.draw(ctx,toS,zoom,cw,ch);
 
-    // 豆
+    /* 豆 */
     for(const id in food){
       const f=food[id];
       const p=toS(f.x,f.y); const rr=(f.r||6)*zoom;
@@ -1655,19 +1713,19 @@ function createSnakeLobby(){
       if(big){ ctx.beginPath(); ctx.arc(p.x,p.y,rr*1.9,0,6.284); ctx.fillStyle='rgba(251,191,36,.18)'; ctx.fill(); }
     }
 
-    // 別人的蛇（先畫遠的，我的畫在最上面）
+    /* 別人的蛇（先畫短的，長的畫在上面；我的最後畫） */
     const order=Object.keys(rivals).sort((a,b)=>(rivals[a].n||0)-(rivals[b].n||0));
     for(const u of order){
       const r=rivals[u]; if(!r||r.dead) continue;
       const body=rivalBody(r,renderT); if(body.length<2) continue;
       drawSnake(body.map(p=>toS(p.x,p.y)), r.color||'#94a3b8', zoom);
     }
-    // 我的
+    /* 我的 */
     if(my&&my.alive){
       const body=bodyFrom(myTrail,my.n).map(p=>toS(p.x,p.y));
       drawSnake(body, safeColor(me.color,'#22c55e'), zoom);
     }
-    // 死亡遮罩
+    /* 死亡遮罩 */
     if(my&&!my.alive){
       const left=Math.max(0,Math.ceil((deadUntil-now)/1000));
       const el=document.getElementById('ovBox');
@@ -1696,7 +1754,7 @@ function createSnakeLobby(){
     path(); ctx.strokeStyle='rgba(0,0,0,.34)'; ctx.lineWidth=r*2+3.4; ctx.stroke();
     path(); ctx.strokeStyle=color; ctx.lineWidth=r*2; ctx.stroke();
     path(); ctx.strokeStyle='rgba(255,255,255,.20)'; ctx.lineWidth=r*0.62; ctx.stroke();
-    // 頭
+    /* 頭 */
     const h=pts[0];
     const ang=Math.atan2(pts[0].y-pts[1].y, pts[0].x-pts[1].x);
     ctx.save(); ctx.translate(h.x,h.y); ctx.rotate(ang);
@@ -1712,7 +1770,7 @@ function createSnakeLobby(){
     ctx.restore();
   }
 
-  /* ── HUD ── */
+  /* ── HUD（只有真人，沒有假玩家） ── */
   function tickHud(now){
     if(!hudRowsEl) return;
     const rows=[];
@@ -1720,8 +1778,9 @@ function createSnakeLobby(){
     for(const u in rivals){ const r=rivals[u]; if(r) rows.push({me:false,name:r.nm||u,n:Math.round(r.n||0),color:r.color||'#94a3b8',alive:!r.dead}); }
     rows.sort((a,b)=>b.n-a.n);
     const top=rows.slice(0,6);
-    hudRowsEl.innerHTML=top.map((x,i)=>`<div class="lbrow ${x.me?'me':''}"><span class="lbr">${i+1}</span><span class="lbd" style="background:${safeColor(x.color,'#94a3b8')}"></span><span class="lbn">${escapeHtml(x.name)}${x.alive?'':''}</span><span class="lbv">${x.n}</span></div>`).join('')||'<div class="lbrow">還沒有人</div>';
-    hudCardEl.style.opacity='';
+    hudRowsEl.innerHTML=top.map((x,i)=>`<div class="lbrow ${x.me?'me':''}"><span class="lbr">${i+1}</span><span class="lbd" style="background:${safeColor(x.color,'#94a3b8')}"></span><span class="lbn">${escapeHtml(x.name)}</span><span class="lbv">${x.n}</span></div>`).join('')
+      + (rows.length<2?'<div class="lbrow"><span class="lbempty">暫時只有你一個，其他同學進來就會出現</span></div>':'');
+    if(hudCardEl) hudCardEl.style.opacity='';
     const mine=rows.findIndex(x=>x.me);
     if(stCardEl){
       stCardEl.innerHTML=`
@@ -1736,20 +1795,22 @@ function createSnakeLobby(){
     mounted:false,
     async start(){
       spawn();
-      keepFood();          // 場上沒豆就補（第一個進來的人負責）
-      // 訂閱：別的蛇
+      keepFood();          /* 場上沒豆就補（第一個進來的人負責） */
+      /* 訂閱：別的真人玩家的蛇 */
       stopLive=onValue(ref(db,'lobbyLive/'+lobbyKey),snap=>{
         const v=snap.val()||{};
         const seen={};
         for(const u in v){
           if(u===me.username) continue;
+          if(u.indexOf('bot_')===0) continue;      /* 以前的 AI 蛇殘留，直接不理 */
           const s=v[u]||{};
-          const isBot=u.indexOf('bot_')===0;
-          const r=rivals[u]||(rivals[u]={h:[],n:0,name:u,color:'#94a3b8',nm:s.nm||u,bot:isBot,dead:false});
+          const r=rivals[u]||(rivals[u]={h:[],n:0,name:u,color:'#94a3b8',nm:s.nm||u,dead:false});
           r.nm=s.nm||r.nm; r.color=safeColor(s.c,r.color); r.dead=!!s.d;
-          r.n=Number(s.n)||0;                       // 長度一定要讀進來，否則積分榜永遠是 0
+          r.n=Number(s.n)||0;                       /* 長度一定要讀進來，否則積分榜永遠是 0 */
           r.lastSeen=Date.now();
           const t=Number(s.t)||0;
+          /* 超過 15 秒沒有心跳 ＝ 已經離開（關頁／斷網），不要留一條鬼影在場上 */
+          if(t && Date.now()-t>15000){ delete rivals[u]; continue; }
           const last=r.h[r.h.length-1];
           if(!last||t>last.t) r.h.push({x:Number(s.x)||0,y:Number(s.y)||0,t:t});
           if(r.h.length>420) r.h.splice(0,r.h.length-420);
@@ -1757,17 +1818,7 @@ function createSnakeLobby(){
         }
         for(const u in rivals){ if(!seen[u]&&Date.now()-(rivals[u].lastSeen||0)>9000) delete rivals[u]; }
       });
-      stopFood=onValue(ref(db,'lobbyFood/'+lobbyKey),snap=>{ food=snap.val()||{}; });
-      // AI 主辦：沒有其他真人、而且我的帳號最小（避免兩個人都以為自己是主辦）
-      try{
-        const snap=await get(ref(db,'lobbyPresence/'+lobbyKey+'/players'));
-        const names=Object.keys(snap.val()||{});
-        botHost=(names.length?names.slice().sort():[me.username])[0];
-      }catch(e){ botHost=me.username; }
-      stopPresence=onValue(ref(db,'lobbyPresence/'+lobbyKey+'/players'),snap=>{
-        const names=Object.keys(snap.val()||{});
-        botHost=(names.length?names.slice().sort():[me.username])[0];
-      });
+      stopFood=onValue(ref(db,'lobbyFood/'+lobbyKey),snap=>{ food=snap.val()||{}; foodReady=true; });
       sample();
     },
     mount(canvas){
@@ -1777,8 +1828,32 @@ function createSnakeLobby(){
       window.addEventListener('resize',resize);
       hudRowsEl=appEl.querySelector('#lbRows'); hudCardEl=appEl.querySelector('#lbCard'); stCardEl=appEl.querySelector('#stCard');
       wrapEl=appEl.querySelector('#cwrap');
-      // 控制：手指／滑鼠指到哪就往哪轉（手機按住即可）；空白鍵或右邊按鈕加速
+      ctlEl=appEl.querySelector('#ctrlBox');
+      /* 電腦：只用滑鼠；觸控：左下多一組前後左右方向鍵（右下加速照舊） */
+      ctlEl.innerHTML='<div class="padwrap" id="padBox"></div><div style="flex:1"></div>'
+        +'<div class="padbtn" id="btnBoost">加速<br>衝刺</div>';
+      const setTouch=on=>{ if(ctlEl) ctlEl.classList.toggle('touch',!!on); };
+      const padBox=appEl.querySelector('#padBox');
+      if(padBox) padBox.appendChild(buildLobbyDPad((dx,dy)=>{
+        pad.x=dx; pad.y=dy;
+        if(dx||dy) pointer.has=false;      /* 用方向鍵時不要被上一次的滑鼠位置拉走 */
+      }));
+      setTouch(lobbyIsTouch());
+      /* 真正用什麼玩就以什麼為準：摸到螢幕就出方向鍵，用滑鼠就收起來 */
+      let lastTouchAt=0;
+      const onDown=e=>{
+        const pt=e.pointerType||'';
+        if(pt==='touch'||pt==='pen'){ lastTouchAt=Date.now(); setTouch(true); }
+        else if(pt==='mouse'&&Date.now()-lastTouchAt>900) setTouch(false);
+      };
+      const onMouse=e=>{
+        if(e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents) return;
+        if(Date.now()-lastTouchAt<900) return;      /* 觸控之後瀏覽器補發的假 mouse 事件，不理 */
+        if(ctlEl&&ctlEl.classList.contains('touch')) setTouch(false);
+      };
+      /* 手指／滑鼠指到哪就往哪轉（手機按住即可）；空白鍵或右邊按鈕加速 */
       const setP=(ev)=>{
+        if(ev.target&&ev.target.closest&&ev.target.closest('.ctrls')) return;   /* 按到方向鍵／加速，不要當成指向 */
         const rect=wrapEl.getBoundingClientRect();
         const t=ev.touches&&ev.touches[0]?ev.touches[0]:ev;
         const sx=t.clientX-rect.left, sy=t.clientY-rect.top;
@@ -1788,13 +1863,11 @@ function createSnakeLobby(){
         pointer.has=true;
         if(ev.cancelable) ev.preventDefault();
       };
+      const onMove=e=>{ if(e.buttons||e.pointerType==='mouse') setP(e); };
       wrapEl.addEventListener('pointerdown',setP,{passive:false});
-      wrapEl.addEventListener('pointermove',e=>{ if(e.buttons||e.pointerType==='mouse') setP(e); },{passive:false});
-      wrapEl.addEventListener('touchstart',setP,{passive:false});
-      wrapEl.addEventListener('touchmove',setP,{passive:false});
-      const ctl=appEl.querySelector('#ctrlBox');
-      ctl.innerHTML=`<div style="flex:1"></div>
-        <div class="padbtn" id="btnBoost">加速<br>衝刺</div>`;
+      wrapEl.addEventListener('pointermove',onMove,{passive:false});
+      wrapEl.addEventListener('pointerdown',onDown,{passive:true});
+      window.addEventListener('mousemove',onMouse,{passive:true});
       const bb=appEl.querySelector('#btnBoost');
       const on=()=>{boosting=true;bb.classList.add('on');};
       const off=()=>{boosting=false;bb.classList.remove('on');};
@@ -1807,31 +1880,35 @@ function createSnakeLobby(){
       this._offKey=()=>{
         window.removeEventListener('keydown',kd);
         window.removeEventListener('keyup',ku);
+        window.removeEventListener('mousemove',onMouse);
         window.removeEventListener('resize',resize);
       };
       running=true; lastT=performance.now();
       raf=requestAnimationFrame(loop);
     },
     tickHud(){ tickHud(sNow()); },
+    /* 測試／除錯用：純讀，沒有任何寫入面 */
+    probe(x,y){
+      return {inside:ARENA.inside(x,y,0),hit:ARENA.hitWall(x,y),
+        danger:+ARENA.danger(x,y).toFixed(3),half:HALF,band:LOBBY_EDGE_BAND};
+    },
+    /* 測試／除錯用：純讀，沒有任何寫入面 */
+    debug(){
+      return {x:Math.round(my.x),y:Math.round(my.y),ang:+my.ang.toFixed(3),n:Math.round(my.n),
+        alive:!!(my&&my.alive),half:HALF,band:LOBBY_EDGE_BAND,
+        edge:+ARENA.danger(my.x,my.y).toFixed(3),
+        rivals:Object.keys(rivals).length,pad:{x:pad.x,y:pad.y},
+        touch:ctlEl?ctlEl.classList.contains('touch'):null,boosting:boosting};
+    },
     async stop(){
       running=false; this.mounted=false;
       if(raf) cancelAnimationFrame(raf); raf=0;
       if(this._offKey){ try{ this._offKey(); }catch(e){} this._offKey=null; }
       if(stopLive){ try{stopLive();}catch(e){} stopLive=null; }
       if(stopFood){ try{stopFood();}catch(e){} stopFood=null; }
-      if(stopPresence){ try{stopPresence();}catch(e){} stopPresence=null; }
       try{
         await remove(ref(db,'lobbyLive/'+lobbyKey+'/'+me.username));
       }catch(e){}
-      // 我是 AI 主辦 → 把我代寫的那幾條 AI 蛇一起刪掉，別人不會看到鬼影
-      if(me&&botHost===me.username){
-        const keys=Object.keys(bots);
-        if(keys.length){
-          const upd={};
-          for(const k of keys) upd['bot_'+me.username+'_'+k]=null;
-          try{ await update(ref(db,'lobbyLive/'+lobbyKey),upd); }catch(e){}
-        }
-      }
     }
   };
 }
