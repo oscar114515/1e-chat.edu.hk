@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-8IKkrBsLgoZCHGKgN5R/wNIPFzi0sOd1fBiR0K4+A+Y=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-+QZrO95R+1/+ss25MYuAjyLehF1jEeZ9Grohnbvm+6Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1045,7 +1045,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.7';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.8';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -3913,7 +3913,7 @@ const TOOL_LIST = [
   { id:'mtr', name:'港鐵路線查詢', icon:'i-train', color:'#e2231a', href:'mtr.html',
     desc:'重鐵＋輕鐵全圖轉乘、車費與行車時間，點站設起終點即出建議路線' },
   { id:'bus', name:'巴士到站時間', icon:'i-bus', color:'#d32f2f', href:'bus.html',
-    desc:'用你目前位置找最近的巴士站，即時列出各線到站倒數，每 30 秒自動更新' },
+    desc:'用你目前位置找最近的巴士站，九巴、龍運與城巴路線一齊列出到站倒數，每 30 秒自動更新' },
   { id:'google', name:'Google 搜尋首頁', icon:'i-search', color:'#4285f4', href:'google.html',
     desc:'純介面復刻的搜尋首頁：Google 大字、搜尋框、AI 模式、Gmail 與圖片入口，一按就回到熟悉的畫面' },
   { id:'green', name:'綠紙產生器', icon:'i-slip', color:'#1e8e3e', href:'green.html',
@@ -5910,6 +5910,9 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.8',date:'2026-10-18',changes:[
+'巴士到站時間加入城巴：以前只查得到九巴同龍運，現在城巴路線都會一齊列出，黃色路線號就係城巴。同一個街口的九巴站同城巴站會合成一張卡，全部路線按到站時間排好，唔需要再開兩個 App 對',
+]},
 {ver:'v1.38.7',date:'2026-10-18',changes:[
 '小程式新增「綠紙產生器」：左邊填班別、姓名、日期同違規事項，右邊即時排出跟學校一樣的綠色通告，可以隨機號碼、可以自己加減行，填完直接列印或者存成 PDF，唔需要再開 Word 慢慢調位',
 ]},
