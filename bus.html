@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0b6bcb">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23d32f2f'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round'%3E%3Crect x='5.5' y='4.5' width='13' height='10.5' rx='2.5'/%3E%3Cpath d='M5.5 9.6h13M9.5 4.5v5.1M14.5 4.5v5.1M8.6 15v2.4M15.4 15v2.4'/%3E%3C/g%3E%3C/svg%3E">
 <title>巴士到站時間 · 附近車站</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://data.etabus.gov.hk; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://data.etabus.gov.hk https://rt.data.gov.hk; base-uri 'none'; form-action 'none'; frame-src 'none'">
 <style>
 :root{
   --bg:#f4f6fa; --panel:#ffffff; --panel2:#f6f8fc; --text:#0f172a; --muted:#66748c;
@@ -77,6 +77,8 @@ h1{font-size:17px;margin:0;letter-spacing:.2px}
 .no{min-width:52px;padding:4px 9px;border-radius:8px;text-align:center;font-weight:800;font-size:14px;
   font-variant-numeric:tabular-nums;letter-spacing:.3px;background:var(--panel2);
   border:1px solid var(--line);color:var(--text)}
+/* 城巴：黃底黑字，一眼分得出 */
+.no.ctb{background:#ffd400;border-color:#ffd400;color:#16181d}
 .dest{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   min-width:0;padding-right:2px}
 .arrs{display:flex;gap:7px;justify-content:flex-end}
@@ -216,6 +218,10 @@ h1{font-size:17px;margin:0;letter-spacing:.2px}
 'use strict';
 
 var KMB = 'https://data.etabus.gov.hk/v1/transport/kmb';
+var CTB = 'https://rt.data.gov.hk/v2/transport/citybus';
+var CTB_IDX = 'ctb-data.json';
+var CTB_KEY = 'bus_ctb_v1';
+var CTB_MAX = 8;          /* 每個城巴站最多查幾條路線（API 要逐條問） */
 var CACHE_KEY = 'bus_stop_v1';
 var CACHE_TTL = 7 * 864e5;
 var REFRESH = 30000;
@@ -224,7 +230,7 @@ var MAX_DIST = 1500;     /* 1500 米內一個站都找不到，就當附近沒�
 var MAX_ROWS = 20;       /* 每張卡最多列幾條路線 */
 var MERGE_M = 250;       /* 同名而相距 250 米內 → 當同一個站 */
 
-var S = { here:null, all:null, skew:0, timer:null, ticker:null, busy:false, last:0, stopped:false };
+var S = { here:null, kmb:null, ctb:null, sr:{}, skew:0, timer:null, ticker:null, busy:false, last:0, stopped:false };
 
 function $(id){ return document.getElementById(id); }
 function esc(v){
@@ -260,8 +266,13 @@ function dist(a, b, c, d){
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 function walk(m){ return Math.max(1, Math.ceil(m / 72)); }
+/* 城巴習慣寫「銅鑼灣 - 怡和街」，九巴寫「怡和街」。
+   不去掉前面的區域名，同一條街就會分成兩張卡。 */
 function baseName(n){
-  return String(n || '').replace(/\s*[\(（][A-Z]{2}\d+[\)）]\s*$/, '');
+  var s = String(n || '').replace(/\s*[\(（][A-Z]{2}[A-Z0-9]{1,6}[\)）]\s*$/, '');
+  var m = s.match(/^.{1,10}?\s*[-–—－]\s*(.+)$/);
+  if(m && m[1] && m[1].length >= 2) s = m[1];
+  return s.replace(/\s+$/, '').replace(/^\s+/, '');
 }
 
 /* ---------- 車站清單（七日快取，6775 個站約 470 KB） ---------- */
@@ -278,7 +289,7 @@ function readCache(){
 function writeCache(d){
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), d: d })); }catch(e){}
 }
-function loadStops(){
+function loadKmb(){
   var c = readCache();
   if(c) return Promise.resolve(c);
   return fetch(KMB + '/stop', { cache:'no-store' }).then(function(r){
@@ -294,6 +305,37 @@ function loadStops(){
     if(!out.length) throw new Error('empty');
     writeCache(out);
     return out;
+  });
+}
+
+/* ---------- 城巴站點索引（本機檔案，七日快取） ----------
+   城巴開放數據沒有「全站清單」這個端點，也沒有「一個站所有路線」的 ETA，
+   所以站點與「站→路線」對照是預先整理成 ctb-data.json 放在同一目錄，
+   到站時間再由前端逐條路線去問。 */
+function loadCtb(){
+  try{
+    var c = localStorage.getItem(CTB_KEY);
+    if(c){
+      var o = JSON.parse(c);
+      if(o && o.t && o.d && o.d.s && Date.now() - o.t < CACHE_TTL) return Promise.resolve(o.d);
+    }
+  }catch(e){}
+  return fetch(CTB_IDX, { cache:'no-store' }).then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(j){
+    var names = j.n || [], keys = j.k || [];
+    var stops = (j.s || []).map(function(a){
+      return [ String(a[0]), String(names[a[1]] || ''), +a[2], +a[3] ];
+    });
+    var sr = {}, raw = j.r || {};
+    for(var id in raw){
+      if(!Object.prototype.hasOwnProperty.call(raw, id)) continue;
+      sr[id] = raw[id].map(function(i){ return String(keys[i] || ''); }).filter(Boolean);
+    }
+    var d = { s: stops, r: sr };
+    try{ localStorage.setItem(CTB_KEY, JSON.stringify({ t: Date.now(), d: d })); }catch(e){}
+    return d;
   });
 }
 
@@ -341,6 +383,68 @@ function groupEta(j){
   return { skew:skew, rows:rows };
 }
 
+/* 城巴主機對「一次過幾十個請求」會回不含 CORS 標頭的錯誤，瀏覽器就當成 CORS 失敗。
+   所以所有城巴請求都要排隊，同時最多 4 個。 */
+var CTB_INFLIGHT = 0, CTB_QUEUE = [];
+function ctbFetch(url){
+  return new Promise(function(resolve){
+    CTB_QUEUE.push({ url:url, resolve:resolve });
+    pumpCtb();
+  });
+}
+function pumpCtb(){
+  while(CTB_INFLIGHT < 4 && CTB_QUEUE.length){
+    var job = CTB_QUEUE.shift();
+    CTB_INFLIGHT++;
+    fetch(job.url, { cache:'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .catch(function(){ return null; })
+      .then(function(j){ CTB_INFLIGHT--; job.resolve(j); pumpCtb(); });
+  }
+}
+
+/* 城巴：逐條路線問，只取該站該方向；每站最多問 CTB_MAX 條 */
+function getEtaCtb(stopId){
+  var list = S.sr[stopId] || [];
+  var total = list.length;
+  var use = list.slice(0, CTB_MAX);
+  if(!use.length) return Promise.resolve({ skew:0, rows:[], total:0 });
+
+  return Promise.all(use.map(function(k){
+    var p = k.split('|'), route = p[0], dir = p[1];
+    return ctbFetch(CTB + '/eta/CTB/' + encodeURIComponent(stopId) + '/' + encodeURIComponent(route))
+      .then(function(j){ return { j:j, route:route, dir:dir }; })
+      .catch(function(){ return { j:null, route:route, dir:dir }; });
+  })).then(function(arr){
+    var map = {}, order = [];
+    arr.forEach(function(x){
+      if(!x.j || !x.j.data) return;
+      x.j.data.forEach(function(it){
+        if(!it || !it.eta) return;
+        if(String(it.route) !== String(x.route)) return;
+        if(it.dir && x.dir && String(it.dir) !== String(x.dir)) return;
+        var t = Date.parse(it.eta);
+        if(!isFinite(t)) return;
+        var dest = String(it.dest_tc || it.dest_en || '');
+        var key = String(it.route) + '|' + dest;
+        if(!map[key]){
+          map[key] = { route:String(it.route), dest:dest, dir:x.dir, etas:[], op:'ctb' };
+          order.push(key);
+        }
+        map[key].etas.push(t);
+      });
+    });
+    var rows = order.map(function(k){
+      var r = map[k];
+      r.etas.sort(function(a, b){ return a - b; });
+      r.next = r.etas.length ? r.etas[0] : Infinity;
+      return r;
+    }).filter(function(r){ return r.etas.length > 0; });
+    rows.sort(function(a, b){ return a.next - b.next; });
+    return { skew:0, rows:rows, total:total };
+  });
+}
+
 /* ---------- 到站文字 ---------- */
 function arrHTML(t){
   var left = t - (Date.now() + S.skew);
@@ -381,7 +485,7 @@ function skeleton(){
 
 function renderNear(list, animate){
   if(!list.length){
-    $('list').innerHTML = '<div class="msg"><b>附近沒有九巴車站</b>1.5 公里內都找不到，可能你在比較偏遠的地方。</div>';
+    $('list').innerHTML = '<div class="msg"><b>附近沒有巴士站</b>1.5 公里內九巴與城巴都找不到車站，可能你在比較偏遠的地方。</div>';
     $('sub').textContent = '範圍內沒有車站';
     return;
   }
@@ -394,12 +498,15 @@ function renderNear(list, animate){
       var shown = rows.slice(0, MAX_ROWS);
       inner = shown.map(function(r){
         var arrs = r.etas.map(arrHTML).join('');
-        return '<div class="rt"><span class="no">' + esc(r.route) + '</span>'
+        return '<div class="rt"><span class="no' + (r.op === 'ctb' ? ' ctb' : '') + '">' + esc(r.route) + '</span>'
              + '<span class="dest">往 ' + esc(r.dest) + '</span>'
              + '<span class="arrs">' + arrs + '</span></div>';
       }).join('');
       if(rows.length > shown.length){
         inner += '<div class="more">另有 ' + (rows.length - shown.length) + ' 條路線未顯示</div>';
+      }
+      if(g.ctbMore){
+        inner += '<div class="more">城巴另有 ' + g.ctbMore + ' 條路線未列出（每站最多顯示 ' + CTB_MAX + ' 條）</div>';
       }
     }
     return '<section class="stop' + (animate ? '' : ' noanim') + '"'
@@ -434,11 +541,16 @@ function barRestart(){
    路線又幾乎一樣。所以先按街名歸組（相距 250 米內算同一個站），再把各柱的路線合併。 */
 function nearbyGroups(){
   var raw = [];
-  for(var i = 0; i < S.all.length; i++){
-    var s = S.all[i];
-    var d = dist(S.here.lat, S.here.lng, s[2], s[3]);
-    if(d <= MAX_DIST) raw.push({ id:s[0], name:s[1], dist:d, lat:s[2], lng:s[3] });
+  function scan(arr, op){
+    if(!arr) return;
+    for(var i = 0; i < arr.length; i++){
+      var s = arr[i];
+      var d = dist(S.here.lat, S.here.lng, s[2], s[3]);
+      if(d <= MAX_DIST) raw.push({ id:s[0], name:s[1], dist:d, lat:s[2], lng:s[3], op:op });
+    }
   }
+  scan(S.kmb, 'kmb');
+  scan(S.ctb, 'ctb');
   raw.sort(function(a, b){ return a.dist - b.dist; });
   var groups = [], byName = {};
   raw.forEach(function(s){
@@ -449,10 +561,10 @@ function nearbyGroups(){
       if(dist(arr[j].lat, arr[j].lng, s.lat, s.lng) <= MERGE_M){ g = arr[j]; break; }
     }
     if(!g){
-      g = { name:key, dist:s.dist, lat:s.lat, lng:s.lng, ids:[], pools:[], rows:[] };
+      g = { name:key, dist:s.dist, lat:s.lat, lng:s.lng, pins:[], pools:[], rows:[] };
       arr.push(g); groups.push(g);
     }
-    if(g.ids.length < 3) g.ids.push(s.id);
+    if(g.pins.length < 4) g.pins.push({ id:s.id, op:s.op });
     if(s.dist < g.dist) g.dist = s.dist;
   });
   groups.sort(function(a, b){ return a.dist - b.dist; });
@@ -467,7 +579,7 @@ function mergeRows(pools){
     rows.forEach(function(r){
       var k = r.route + '|' + r.dest;
       var t = map[k];
-      if(!t){ t = map[k] = { route:r.route, dest:r.dest, dir:r.dir, etas:[] }; order.push(k); }
+      if(!t){ t = map[k] = { route:r.route, dest:r.dest, dir:r.dir, etas:[], op:r.op || 'kmb' }; order.push(k); }
       for(var i = 0; i < r.etas.length; i++) t.etas.push(r.etas[i]);
     });
   });
@@ -501,18 +613,20 @@ function refresh(showSkeleton){
   }
   var reqs = [];
   groups.forEach(function(g){
-    g.ids.forEach(function(id){ reqs.push({ id:id, g:g }); });
+    g.pins.forEach(function(pn){ reqs.push({ pin:pn, g:g }); });
   });
   Promise.all(reqs.map(function(q){
-    return getEta(q.id).then(function(j){ return { j:j, g:q.g }; })
-                       .catch(function(){ return { j:null, g:q.g }; });
+    var pr = (q.pin.op === 'ctb')
+      ? getEtaCtb(q.pin.id).then(function(gg){ return { gg:gg, g:q.g }; })
+      : getEta(q.pin.id).then(function(j){ return { gg:groupEta(j), g:q.g }; });
+    return pr.catch(function(){ return { gg:null, g:q.g }; });
   })).then(function(res){
     var skewSet = false;
     res.forEach(function(x){
-      if(!x.j) return;
-      var gg = groupEta(x.j);
-      if(!skewSet){ S.skew = gg.skew; skewSet = true; }
-      x.g.pools.push(gg.rows);
+      if(!x.gg) return;
+      if(!skewSet && isFinite(x.gg.skew)){ S.skew = x.gg.skew; skewSet = true; }
+      x.g.pools.push(x.gg.rows);
+      if(x.gg.total && x.gg.total > CTB_MAX) x.g.ctbMore = (x.g.ctbMore || 0) + (x.gg.total - CTB_MAX);
     });
     groups.forEach(function(g){ g.rows = mergeRows(g.pools); });
     renderNear(groups, !!showSkeleton);
@@ -536,8 +650,9 @@ function stamp(){
   var d = new Date(S.last);
   var p = function(n){ return (n < 10 ? '0' : '') + n; };
   $('foot').innerHTML = '<b>更新時間</b> ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
-    + ' · 每 30 秒自動更新<br><b>資料來源</b> 九巴／龍運開放數據（data.etabus.gov.hk）'
-    + ' · 現時只包含九巴及龍運路線<br><b>範圍</b> 自動顯示最近 4 個巴士站，不分方向<br><b>提醒</b> 到站時間由巴士公司估算，實際情況可能因路面狀況而有出入。';
+    + ' · 每 30 秒自動更新<br><b>資料來源</b> 九巴／龍運（data.etabus.gov.hk）與城巴（rt.data.gov.hk）開放數據<br>'
+    + '<b>範圍</b> 自動顯示最近 4 個巴士站，不分方向；城巴每個站最多列出 ' + CTB_MAX + ' 條路線（黃色路線號）<br>'
+    + '<b>提醒</b> 到站時間由巴士公司估算，實際情況可能因路面狀況而有出入。';
 }
 
 function locate(){
@@ -545,8 +660,11 @@ function locate(){
   navigator.geolocation.getCurrentPosition(function(pos){
     S.here = { lat:pos.coords.latitude, lng:pos.coords.longitude };
     $('sub').textContent = '正在搜尋附近車站…';
-    loadStops().then(function(all){
-      S.all = all;
+    var pK = loadKmb().then(function(a){ S.kmb = a; }).catch(function(){ S.kmb = []; });
+    var pC = loadCtb().then(function(d){ S.ctb = d.s; S.sr = d.r; })
+                      .catch(function(){ S.ctb = []; S.sr = {}; });
+    Promise.all([pK, pC]).then(function(){
+      if(!S.kmb.length && !S.ctb.length) throw new Error('empty');
       refresh(true);
     }).catch(function(){
       $('list').innerHTML = '<div class="msg"><b>未能載入車站資料</b>請檢查網絡連線，然後按右上角重新整理。</div>';
