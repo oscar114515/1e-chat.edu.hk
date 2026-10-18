@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Google</title>
+<!--
+  Google 搜尋首頁 · 純介面復刻
+  只做「看得到的東西」，冇任何搜尋、登入、跳轉功能：
+  所有按鈕都不會做任何事，輸入框可以打字但不會送出。
+  圖片一律用內嵌 SVG（冇外部請求、斷網都開得到、唔會被 CSP img-src 擋）。
+-->
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    background:#fff;color:#1f1f1f;
+    font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+    display:flex;flex-direction:column;min-height:100%;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;border:none;background:none;padding:0;cursor:pointer;color:inherit}
+  svg{display:block}
+
+  /* ═══ 頂欄：Gmail / 圖片 / 九宮格 / 帳戶 ═══ */
+  .gbar{
+    display:flex;align-items:center;justify-content:flex-end;
+    gap:4px;height:64px;padding:0 18px 0 12px;flex:0 0 auto;
+  }
+  .glink{
+    font-size:14px;line-height:24px;color:#1f1f1f;padding:8px 10px;border-radius:6px;
+    white-space:nowrap;
+  }
+  .glink:hover{text-decoration:underline}
+  .iconbtn{
+    width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    margin-left:2px;transition:background .15s;
+  }
+  .iconbtn:hover{background:#f1f3f4}
+  .iconbtn svg{width:24px;height:24px}
+  .avatar{
+    width:36px;height:36px;border-radius:50%;margin-left:10px;flex:0 0 auto;
+    background:linear-gradient(135deg,#4285f4,#8b5cf6 55%,#ea4335);
+    color:#fff;font-size:15px;font-weight:700;letter-spacing:.2px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 3px rgba(66,133,244,0);
+    transition:box-shadow .2s;
+  }
+  .avatar:hover{box-shadow:0 0 0 3px rgba(66,133,244,.16)}
+
+  /* ═══ 主體：logo + 搜尋框 + 兩個按鈕 ═══ */
+  main{
+    flex:1 1 auto;display:flex;flex-direction:column;align-items:center;
+    padding:0 20px;width:100%;
+  }
+  .logo-wrap{margin-top:clamp(30px,15vh,170px);line-height:0}
+  .glogo{width:272px;height:auto}
+  /* 搜尋框 + 下拉要一起定位，所以外面再包一層 */
+  .sbox-wrap{position:relative;width:100%;max-width:584px;margin-top:26px;z-index:20}
+  .searchbox{
+    display:flex;align-items:center;gap:2px;
+    width:100%;height:48px;
+    padding:0 6px 0 4px;
+    border:1px solid #dfe1e5;border-radius:24px;background:#fff;
+    transition:box-shadow .18s ease,border-color .18s ease;
+  }
+  .searchbox:hover,.searchbox:focus-within{
+    box-shadow:0 1px 6px rgba(32,33,36,.28);border-color:rgba(223,225,229,0);
+  }
+
+  /* ═══ 下拉：外觀同 Google「最近搜尋」一樣，內容其實是問答紀錄 ═══
+     標題只寫「最近搜尋」，唔會提 AI、亦唔會提對話，睇落同普通瀏覽器紀錄冇分別。
+     每一行上面係問題，下面直接跟住回覆（灰字），唔需要再點開任何東西。 */
+  .hdrop{
+    position:absolute;left:0;right:0;top:calc(100% + 2px);
+    background:#fff;border:1px solid #dfe1e5;border-radius:20px;
+    box-shadow:0 4px 10px rgba(32,33,36,.22);
+    padding:5px 0 7px;overflow-y:auto;max-height:min(58vh,420px);z-index:40;
+    -webkit-overflow-scrolling:touch;
+  }
+  .hdrop[hidden]{display:none}
+  .hd-head{font-size:12px;color:#70757a;padding:7px 18px 3px;letter-spacing:.2px}
+  .hd-row{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:9px 10px 9px 16px;cursor:pointer;transition:background .12s;
+  }
+  .hd-row:hover{background:#f8f9fa}
+  .hd-ic{width:18px;height:18px;flex:0 0 auto;margin-top:1px;color:#9aa0a6;display:flex;align-items:center;justify-content:center}
+  .hd-ic svg{width:18px;height:18px}
+  .hd-tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .hd-q{
+    font-size:14px;color:#202124;line-height:1.4;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .hd-a{
+    font-size:12.5px;color:#5f6368;line-height:1.55;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+    overflow:hidden;word-break:break-word;
+  }
+  .hd-a.wait{color:#9aa0a6}
+  .hd-x{
+    width:26px;height:26px;border-radius:50%;flex:0 0 auto;margin-top:-2px;color:#9aa0a6;
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;
+  }
+  .hd-row:hover .hd-x,.hd-row:focus-within .hd-x{opacity:1}
+  .hd-x:hover{background:#e8eaed;color:#5f6368}
+  .hd-x svg{width:14px;height:14px}
+
+  /* ═══ 點開歷史後的卡片：版面借 Google 的摘要卡，冇任何 AI 字樣 ═══ */
+  .dlg{position:fixed;inset:0;background:rgba(32,33,36,.42);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+  .dlg[hidden]{display:none}
+  .dlg-card{
+    background:#fff;border-radius:16px;width:100%;max-width:660px;max-height:84vh;
+    display:flex;flex-direction:column;overflow:hidden;
+    box-shadow:0 12px 40px rgba(0,0,0,.3);
+    animation:dlgIn .18s ease;
+  }
+  @keyframes dlgIn{from{opacity:0;transform:translateY(8px) scale(.986)}to{opacity:1;transform:none}}
+  .dlg-top{display:flex;align-items:flex-start;gap:10px;padding:16px 14px 9px 20px;border-bottom:1px solid #f1f3f4}
+  .dlg-q{flex:1 1 auto;font-size:17px;font-weight:600;color:#202124;line-height:1.45;word-break:break-word;padding-top:2px}
+  .dlg-x{width:34px;height:34px;border-radius:50%;flex:0 0 auto;color:#5f6368;display:flex;align-items:center;justify-content:center}
+  .dlg-x:hover{background:#f1f3f4}
+  .dlg-x svg{width:18px;height:18px}
+  .dlg-meta{font-size:12px;color:#80868b;padding:9px 20px 0}
+  .dlg-body{padding:9px 20px 24px;overflow-y:auto;font-size:14.5px;line-height:1.85;color:#1f1f1f}
+  .dlg-body p{margin:0 0 10px}
+  .dlg-body p:last-child{margin-bottom:0}
+  .dlg-body ul{margin:0 0 10px;padding-left:20px}
+  .dlg-body li{margin:4px 0}
+  .dlg-body b{font-weight:700;color:#111}
+  .dlg-wait{color:#70757a}
+  .dlg-wait::after{content:'';display:inline-block;width:14px;height:14px;margin-left:2px;vertical-align:-2px;border:2px solid #dadce0;border-top-color:#4285f4;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .plus{
+    width:36px;height:36px;border-radius:50%;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;color:#444746;
+  }
+  .plus:hover{background:#f1f3f4}
+  .plus svg{width:20px;height:20px}
+  .qbox{
+    flex:1 1 auto;min-width:0;height:100%;border:none;outline:none;background:none;
+    font-size:16px;color:#1f1f1f;font-family:inherit;padding:0 4px 0 6px;
+  }
+  .qbox::placeholder{color:#5e5e5e;opacity:1}
+  .right{display:flex;align-items:center;gap:2px;flex:0 0 auto;padding-right:2px}
+  .aip{
+    display:flex;align-items:center;gap:6px;height:32px;padding:0 13px 0 9px;margin-right:2px;
+    border-radius:16px;background:#f1f3f4;color:#1f1f1f;font-size:13px;font-weight:600;
+    white-space:nowrap;transition:background .15s;
+  }
+  .aip:hover{background:#e7e9ec}
+  .aip svg{width:16px;height:16px;flex:0 0 auto}
+  .mic,.lens{
+    width:38px;height:38px;border-radius:50%;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;color:#444746;
+  }
+  .mic:hover,.lens:hover{background:#f1f3f4}
+  .mic svg{width:22px;height:22px}
+  .lens svg{width:22px;height:22px}
+
+  .gbtns{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:28px;flex-wrap:wrap}
+  .gbtn{
+    height:36px;padding:0 16px;border-radius:4px;border:1px solid #f8f9fa;
+    background:#f8f9fa;color:#3c4043;font-size:14px;line-height:34px;white-space:nowrap;
+    transition:box-shadow .15s,border-color .15s;
+  }
+  .gbtn:hover{border-color:#dadce0;box-shadow:0 1px 1px rgba(0,0,0,.1)}
+  .lang{
+    margin-top:30px;font-size:13px;color:#4d5156;text-align:center;
+    display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;
+  }
+  .lang a{color:#1a0dab}
+  .lang a:hover{text-decoration:underline}
+
+  /* ═══ 底部 ═══ */
+  footer{
+    flex:0 0 auto;background:#f2f2f2;color:#70757a;font-size:14px;
+    border-top:1px solid #e4e4e4;
+  }
+  .frow{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:0 30px;height:48px;flex-wrap:wrap;
+  }
+  .frow a{padding:0 2px}
+  .frow a:hover{text-decoration:underline}
+  .fside{display:flex;align-items:center;gap:26px}
+  .floc{color:#70757a}
+
+  /* ═══ 窄螢幕（手機）═══ */
+  @media (max-width:600px){
+    .gbar{height:56px;padding:0 8px 0 4px}
+    .glink{font-size:13px;padding:7px 7px}
+    .iconbtn{width:36px;height:36px;margin-left:0}
+    .iconbtn svg{width:22px;height:22px}
+    .avatar{width:32px;height:32px;font-size:14px;margin-left:6px}
+    main{padding:0 16px}
+    .logo-wrap{margin-top:clamp(36px,19vh,170px)}
+    .glogo{width:170px}
+    .sbox-wrap{margin-top:22px}
+    .searchbox{height:48px;padding:0 4px 0 2px}
+    .hd-row{padding:9px 8px 9px 14px;gap:10px}
+    .hdrop{max-height:min(62vh,440px)}
+    .dlg{padding:14px}
+    .dlg-card{max-height:86vh;border-radius:14px}
+    .dlg-q{font-size:16px}
+    .dlg-body{font-size:14px}
+    .qbox{font-size:15px}
+    .aip{height:30px;padding:0 10px 0 8px;font-size:12px}
+    .aip svg{width:14px;height:14px}
+    .mic,.lens{width:34px;height:34px}
+    .mic svg,.lens svg{width:20px;height:20px}
+    .gbtns{margin-top:24px;gap:10px}
+    .gbtn{height:34px;font-size:13px;line-height:32px;padding:0 13px}
+    .lang{margin-top:22px;font-size:12px}
+    .frow{padding:0 16px;height:auto;min-height:44px;justify-content:center;gap:14px;padding-top:8px;padding-bottom:8px}
+    .fside{gap:18px}
+  }
+  @media (max-height:560px){
+    .logo-wrap{margin-top:16px}
+    .glogo{width:150px}
+    .sbox-wrap{margin-top:16px}
+    .gbtns{margin-top:16px}
+    .lang{margin-top:14px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ 頂欄 ═══ -->
+<header class="gbar">
+  <a class="glink" href="#" onclick="return false">Gmail</a>
+  <a class="glink" href="#" onclick="return false">圖片</a>
+  <button class="iconbtn" type="button" aria-label="Google 應用程式">
+    <svg viewBox="0 0 24 24" fill="#444746" aria-hidden="true">
+      <circle cx="5.5" cy="5.5" r="2.1"/><circle cx="12" cy="5.5" r="2.1"/><circle cx="18.5" cy="5.5" r="2.1"/>
+      <circle cx="5.5" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="18.5" cy="12" r="2.1"/>
+      <circle cx="5.5" cy="18.5" r="2.1"/><circle cx="12" cy="18.5" r="2.1"/><circle cx="18.5" cy="18.5" r="2.1"/>
+    </svg>
+  </button>
+  <button class="avatar" type="button" aria-label="Google 帳戶">O</button>
+</header>
+
+<!-- ═══ 主體 ═══ -->
+<main>
+  <div class="logo-wrap">
+    <svg class="glogo" viewBox="0 0 272 92" role="img" aria-label="Google">
+      <path fill="#4285F4" d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65l-22.49.01z"/>
+      <path fill="#EA4335" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+      <path fill="#FBBC05" d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+      <path fill="#4285F4" d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z"/>
+      <path fill="#34A853" d="M225 3v65h-9.5V3h9.5z"/>
+      <path fill="#EA4335" d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.7-8.23-4.7-4.95 0-11.84 4.37-11.59 12.93z"/>
+    </svg>
+  </div>
+
+  <!-- 搜尋框：輸入之後按 Enter 就會送出去，答案收藏在下面那個「最近搜尋」清單裡 -->
+  <div class="sbox-wrap">
+  <form class="searchbox" autocomplete="off" action="#" id="gForm">
+    <button class="plus" type="button" aria-label="加入圖片或檔案">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#444746" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+    <input class="qbox" type="text" placeholder="問問 Google" aria-label="搜尋" spellcheck="false">
+    <div class="right">
+      <button class="aip" type="button" aria-label="AI 模式">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="aiGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#4285F4"/><stop offset=".5" stop-color="#9B72F2"/><stop offset="1" stop-color="#EA4335"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#aiGrad)" d="M12 2.6l1.86 5.28a3.4 3.4 0 0 0 2.06 2.06L21.2 11.8a.6.6 0 0 1 0 1.14l-5.28 1.86a3.4 3.4 0 0 0-2.06 2.06L12 22.14a.6.6 0 0 1-1.14 0l-1.86-5.28a3.4 3.4 0 0 0-2.06-2.06L1.66 12.94a.6.6 0 0 1 0-1.14l5.28-1.86A3.4 3.4 0 0 0 9 7.88L10.86 2.6a.6.6 0 0 1 1.14 0z"/>
+        </svg>
+        AI 模式
+      </button>
+      <button class="mic" type="button" aria-label="語音搜尋">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M12 2.9a3 3 0 0 0-3 3v5.4a3 3 0 0 0 6 0V5.9a3 3 0 0 0-3-3z"/>
+          <path fill="#34A853" d="M5.5 10.6h1.6a4.9 4.9 0 0 0 4.1 4.85v1.6A6.5 6.5 0 0 1 5.5 10.6z"/>
+          <path fill="#FBBC05" d="M18.5 10.6h-1.6a4.9 4.9 0 0 1-4.1 4.85v1.6a6.5 6.5 0 0 0 5.7-6.45z"/>
+          <path fill="#EA4335" d="M11.2 16.9h1.6V21h-1.6z"/>
+          <path fill="#EA4335" d="M9.2 19.9h5.6a.8.8 0 0 1 0 1.6H9.2a.8.8 0 0 1 0-1.6z"/>
+        </svg>
+      </button>
+      <button class="lens" type="button" aria-label="以圖片搜尋">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4.2 9.3V6.6a2.4 2.4 0 0 1 2.4-2.4h2.7" stroke="#4285F4" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M14.7 4.2h2.7a2.4 2.4 0 0 1 2.4 2.4v2.7" stroke="#EA4335" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M19.8 14.7v2.7a2.4 2.4 0 0 1-2.4 2.4h-2.7" stroke="#FBBC05" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M9.3 19.8H6.6a2.4 2.4 0 0 1-2.4-2.4v-2.7" stroke="#34A853" stroke-width="1.9" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="2.6" fill="#4285F4"/>
+        </svg>
+      </button>
+    </div>
+  </form>
+  <!-- 這塊就是「向下展開」的地方：看起來是搜尋記錄，其實是對話 -->
+  <div class="hdrop" id="hdrop" hidden>
+    <div class="hd-head">最近搜尋</div>
+    <div id="hdList"></div>
+  </div>
+  </div>
+
+  <div class="gbtns">
+    <button class="gbtn" type="button">Google 搜尋</button>
+    <button class="gbtn" type="button">好手氣</button>
+  </div>
+
+  <div class="lang">
+    <span>Google 提供：</span>
+    <a href="#" onclick="return false">中文（繁體）</a>
+    <a href="#" onclick="return false">English</a>
+  </div>
+</main>
+
+<!-- ═══ 底部 ═══ -->
+<footer>
+  <div class="frow">
+    <div class="fside">
+      <a href="#" onclick="return false">關於</a>
+      <a href="#" onclick="return false">商店</a>
+    </div>
+    <div class="floc">香港</div>
+    <div class="fside">
+      <a href="#" onclick="return false">私隱</a>
+      <a href="#" onclick="return false">條款</a>
+      <a href="#" onclick="return false">設定</a>
+    </div>
+  </div>
+</footer>
+
+<!-- 點「最近搜尋」其中一條才會彈出來的卡片 -->
+<div class="dlg" id="dlg" hidden>
+  <div class="dlg-card" role="dialog" aria-modal="true">
+    <div class="dlg-top">
+      <div class="dlg-q" id="dlgQ"></div>
+      <button class="dlg-x" id="dlgX" type="button" aria-label="關閉">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="dlg-meta" id="dlgMeta"></div>
+    <div class="dlg-body" id="dlgBody"></div>
+  </div>
+</div>
+
+<script>
+/* ═══ 搜尋框背後的那一層 ═══════════════════════════════════════════
+   表面：一個普通的 Google 首頁，輸入東西按 Enter 就「搜尋」。
+   實際：問題交給聊天室那張分頁去問 AI（這裡不放 API key），
+        答案不顯示在畫面正中，而是收進「最近搜尋」清單；
+        要再點開那一條，才會在卡片裡看到內容。
+   所以旁人只看得到一堆搜尋記錄，看不到任何對話痕跡。 */
+(function(){
+  var HKEY='g_recent_q';
+  var form=document.getElementById('gForm');
+  var input=form.querySelector('.qbox');
+  var wrap=document.querySelector('.sbox-wrap');
+  var drop=document.getElementById('hdrop');
+  var list=document.getElementById('hdList');
+  var dlg=document.getElementById('dlg');
+  var dlgQ=document.getElementById('dlgQ');
+  var dlgMeta=document.getElementById('dlgMeta');
+  var dlgBody=document.getElementById('dlgBody');
+  var dlgId=null;
+
+  var hist=[];
+  try{ hist=JSON.parse(localStorage.getItem(HKEY)||'[]'); }catch(e){ hist=[]; }
+  if(!Array.isArray(hist)) hist=[];
+  hist=hist.filter(function(x){ return x&&x.id&&x.q; }).slice(0,30);
+  /* 上次未完成的（例如中途關了分頁）不要一直轉圈 */
+  hist.forEach(function(x){
+    if(x.st==='pending'){ x.st='err'; x.a=x.a||'上次沒有完成，請再問一次'; }
+  });
+
+  function persist(){ try{ localStorage.setItem(HKEY, JSON.stringify(hist.slice(0,30))); }catch(e){} }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  var CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.6V12l3 1.8"/></svg>';
+  var XSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  /* 把回覆壓成一行連續文字，直接放在問題下面 */
+  function plainA(it){
+    if(it.st==='pending') return { t:'正在整理相關內容', wait:true };
+    var s=String(it.a||'').replace(/\*\*/g,'').replace(/`/g,'');
+    s=s.split(/\n+/).map(function(x){
+      x=x.trim();
+      if(/^[-•*]\s+/.test(x)) return '· '+x.replace(/^[-•*]\s+/,'');
+      return x;
+    }).filter(Boolean).join('  ');
+    if(!s) s='暫時沒有回應';
+    return { t:s, wait:false };
+  }
+
+  function renderList(){
+    if(!hist.length){ drop.hidden=true; list.innerHTML=''; return; }
+    list.innerHTML=hist.map(function(it,i){
+      var p=plainA(it);
+      return '<div class="hd-row" data-i="'+i+'" role="button" tabindex="0">'
+        + '<span class="hd-ic">'+CLOCK+'</span>'
+        + '<span class="hd-tx">'
+        +   '<span class="hd-q">'+esc(it.q)+'</span>'
+        +   '<span class="hd-a'+(p.wait?' wait':'')+'">'+esc(p.t)+'</span>'
+        + '</span>'
+        + '<button class="hd-x" type="button" data-del="'+i+'" aria-label="移除這筆記錄">'+XSVG+'</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  function askParent(q,id){
+    try{
+      if(window.parent && window.parent!==window){
+        window.parent.postMessage({type:'g-ask',id:id,q:q}, location.origin);
+        return;
+      }
+    }catch(e){}
+    settle(id,false,'要在聊天室的小工具裡打開才可以用');
+  }
+
+  function submitQuery(){
+    var q=String(input.value||'').trim();
+    if(!q){ input.focus(); return; }
+    var it={ id:'q'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+             q:q.slice(0,300), a:'', t:Date.now(), st:'pending' };
+    hist.unshift(it);
+    hist=hist.slice(0,30);
+    persist(); renderList();
+    input.value='';
+    /* 保持展開：答案一回來就即時出現在這一筆下面 */
+    drop.hidden=false;
+    askParent(it.q,it.id);
+  }
+
+  function settle(id,ok,text){
+    var found=null;
+    for(var i=0;i<hist.length;i++){
+      if(hist[i].id===id){ hist[i].st=ok?'ok':'err'; hist[i].a=text; found=hist[i]; break; }
+    }
+    if(!found) return;
+    persist();
+    if(!drop.hidden) renderList();
+    if(dlgId===id) renderDlg();
+  }
+
+  function md(text){
+    var s=esc(text||'');
+    s=s.replace(/^#{1,6}\s*/gm,'');
+    s=s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+    s=s.replace(/`([^`\n]+)`/g,'$1');
+    var out='',buf=[];
+    function flush(){
+      if(!buf.length) return;
+      out+='<ul>'+buf.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+      buf=[];
+    }
+    String(s).split(/\n+/).forEach(function(ln){
+      var t=ln.trim();
+      if(!t){ flush(); return; }
+      if(/^[-•*]\s+/.test(t)){ buf.push(t.replace(/^[-•*]\s+/,'')); }
+      else { flush(); out+='<p>'+t+'</p>'; }
+    });
+    flush();
+    return out || '<p></p>';
+  }
+
+  function renderDlg(){
+    var it=null;
+    for(var i=0;i<hist.length;i++){ if(hist[i].id===dlgId){ it=hist[i]; break; } }
+    if(!it) return;
+    dlgQ.textContent=it.q;
+    var d=new Date(it.t);
+    var p=function(n){ return (n<10?'0':'')+n; };
+    dlgMeta.textContent=d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+    if(it.st==='pending'){
+      dlgBody.innerHTML='<div class="dlg-wait">正在整理相關內容</div>';
+      return;
+    }
+    dlgBody.innerHTML=md(it.a||'');
+    dlgBody.scrollTop=0;
+  }
+
+  function openDlg(i){
+    var it=hist[i];
+    if(!it) return;
+    dlgId=it.id;
+    renderDlg();
+    drop.hidden=true;
+    dlg.hidden=false;
+    document.body.style.overflow='hidden';
+  }
+  function closeDlg(){
+    dlg.hidden=true;
+    dlgId=null;
+    document.body.style.overflow='';
+  }
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    submitQuery();
+  });
+  document.querySelector('.aip').addEventListener('click',function(){ submitQuery(); });
+
+  input.addEventListener('focus',function(){
+    if(hist.length){ renderList(); drop.hidden=false; }
+  });
+  input.addEventListener('input',function(){
+    if(hist.length&&!drop.hidden) renderList();
+  });
+
+  list.addEventListener('click',function(e){
+    var del=e.target.closest('[data-del]');
+    if(del){
+      e.preventDefault(); e.stopPropagation();
+      var i=+del.getAttribute('data-del');
+      if(isFinite(i)&&i>=0){ hist.splice(i,1); persist(); renderList(); }
+      return;
+    }
+    var row=e.target.closest('.hd-row');
+    if(row){
+      e.preventDefault();
+      openDlg(+row.getAttribute('data-i'));
+    }
+  });
+
+  document.addEventListener('mousedown',function(e){
+    if(wrap && !wrap.contains(e.target)) drop.hidden=true;
+  });
+  document.getElementById('dlgX').addEventListener('click',closeDlg);
+  dlg.addEventListener('click',function(e){ if(e.target===dlg) closeDlg(); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    if(!dlg.hidden) closeDlg();
+    else drop.hidden=true;
+  });
+
+  window.addEventListener('message',function(e){
+    if(e.origin!==location.origin) return;
+    var d=e.data;
+    if(!d||d.type!=='g-ans'||!d.id) return;
+    settle(d.id,!!d.ok,d.ok?(d.text||''):(d.err||'暫時無法回應'));
+  });
+
+  renderList();
+})();
+</script>
+
+</body>
+</html>
