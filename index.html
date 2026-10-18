@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-ZDyAZbHdWNcRfTlsL3KL2eG0WC4XhNe1NdVtkjYWIUo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-q5aY2tgJcv9jIjp+xgpu2NbeawAI+KL7IPe9ssdR6Bw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -146,7 +146,7 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
 /* ===== 小遊戲 ===== */
 #gamesOverlay{position:fixed;inset:0;background:#0b0d14;z-index:200;animation:panelIn .22s cubic-bezier(.4,0,.2,1)}
-#gamesOverlay iframe{width:100%;height:100%;border:0;display:block}
+#gamesOverlay iframe{width:100%;height:100%;border:0;display:block;outline:none}
 .game-invite{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.28);border-radius:var(--r-2);padding:10px 12px;cursor:pointer}
 .game-invite .gi-title{font-size:14.5px;font-weight:700;margin-bottom:3px}
 .game-invite .gi-sub{font-size:12px;opacity:.85;margin-bottom:9px}
@@ -493,6 +493,16 @@ input[type=file]{display:none}
 .sn-card .sn-card-actions .sn-appeal{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
 .sn-card .sn-card-actions .sn-confirm{background:rgba(148,163,184,.2);color:var(--text-main)}
 .sn-empty{text-align:center;color:var(--text-muted);padding:60px 20px;font-size:14px}
+/* v1.38.5 通知「已確定」狀態：以前按確定只是把卡片從畫面刪掉，資料仍是未處理，
+   一重進頁面又原封不動長回來。現在改成「就地換狀態」，卡片留住並轉做灰底，
+   動作列換成一句「這條消息已被確定」，重進也只會見到這句。 */
+.sn-card.sn-acked{opacity:.72;border-color:var(--border);box-shadow:none}
+.sn-card.sn-acked .sn-card-title{color:var(--text-sub)}
+.sn-acked-tip{font-size:13px;color:var(--text-muted);padding:11px 0 1px;display:flex;align-items:center;gap:8px}
+.sn-acked-tip::before{content:'';width:15px;height:15px;border-radius:50%;background:var(--ok-tx);opacity:.8;flex:0 0 auto}
+.sn-sub-tip{font-size:11.5px;color:var(--text-sub);margin-left:auto;white-space:nowrap;font-weight:500}
+.sn-header .sn-ackall{background:rgba(148,163,184,.16);color:var(--text-main);border:none;border-radius:var(--r-1);padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;flex:0 0 auto}
+.sn-header .sn-ackall[disabled]{opacity:.42;cursor:default}
 .admin-feedback{padding:14px;border-radius:var(--r-2);background:var(--bg-input);border:1px solid var(--border);margin-bottom:12px}
 .admin-feedback .af-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
 .admin-feedback .af-from{font-size:14px;font-weight:600}
@@ -1034,7 +1044,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.4';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.5';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1586,6 +1596,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='feedbackDone')return await feedbackDone(arg);
     if(action==='appealMsg')return await appealMsg(arg);
     if(action==='dismissSystemNotice')return await dismissSystemNotice(arg);
+    if(action==='ackAllSystemNotices')return await ackAllSystemNotices();
     if(action==='adminSendSystemNotice')return await adminSendSystemNotice();
     if(action==='adminDeleteSystemNotice')return await adminDeleteSystemNotice(arg);
     if(action==='scrollToBottom')return scrollToBottom();
@@ -1636,7 +1647,7 @@ function subscribePendingNotices(){ if(unsubPendingNotices)unsubPendingNotices()
 function subscribeRequests(){ if(unsubRequests)unsubRequests();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubRequests=onValue(ref(db,'requests'),snap=>{requests=snap.val()||{};for(const k in requests)if(typeof requests[k]==='object')requests[k]._key=k;updateAdminBadge();}); }
 function subscribeFeedbacks(){ if(unsubFeedbacks)unsubFeedbacks();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubFeedbacks=onValue(ref(db,'feedbacks'),snap=>{feedbacks=snap.val()||{};for(const k in feedbacks)if(typeof feedbacks[k]==='object')feedbacks[k]._key=k;updateAdminBadge();}); }
 function subscribeMyRejections(){ if(unsubMyRejections)unsubMyRejections();if(!me)return;unsubMyRejections=onValue(ref(db,'notifications/'+me.username),snap=>{const val=snap.val()||{};myRejections=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(n=>!n.read).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));}); }
-function subscribeSystemNotices(){ if(unsubSystemNotices)unsubSystemNotices();if(!me)return;unsubSystemNotices=onValue(ref(db,'systemNotices/'+me.username),snap=>{const val=snap.val()||{};systemNotices=Object.keys(val).map(k=>({_key:k,...val[k]})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));updateGroupBadge();}); }
+function subscribeSystemNotices(){ if(unsubSystemNotices)unsubSystemNotices();if(!me)return;unsubSystemNotices=onValue(ref(db,'systemNotices/'+me.username),snap=>{const val=snap.val()||{};systemNotices=Object.keys(val).map(k=>({_key:k,...val[k]})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));refreshAllBadges();if(currentPageKey==='systemNotice'&&document.getElementById('systemNoticeOverlay'))openSystemNotice();}); }
 function subscribeThanks(){ if(unsubThanks)unsubThanks();unsubThanks=onValue(ref(db,'thanks'),snap=>{const val=snap.val()||{};thanksList=Object.keys(val).map(k=>({_key:k,...val[k]})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));}); }
 function subscribeMyGroups(){
   if(unsubMyGroups)unsubMyGroups();
@@ -1654,7 +1665,7 @@ function subscribeMyGroups(){
 }
 
 function updateGroupBadge(){
-  const unread=systemNotices.filter(n=>!n.read).length;
+  const unread=systemNotices.filter(n=>!noticeAcked(n)).length;
   if(unread>0){if(navGroupBadge){navGroupBadge.textContent=unread;navGroupBadge.classList.remove('hidden');}}
   else{if(navGroupBadge)navGroupBadge.classList.add('hidden');}
 }
@@ -1666,6 +1677,18 @@ function updateAdminBadge(){
   const total=noticeCount+reqCount+fbCount;
   if(total>0){if(navAdminBadge){navAdminBadge.textContent=total;navAdminBadge.classList.remove('hidden');}}
   else{if(navAdminBadge)navAdminBadge.classList.add('hidden');}
+}
+/* ═══ v1.38.5 一次過刷新所有紅點 ═══
+   以前按「確定」只叫 updateGroupBadge()，底部「管理」那個待處理紅點完全沒有動；
+   而群聊列表那一行、通知頁自己的未讀數是寫死在 HTML 字串裡的，返回時
+   頁面快照原封不動貼回來，紅點就跟著復活 —— 這就是「通知消失了紅色還在」。
+   所有紅點來源集中在這裡算一次，任何會改變未讀的地方都叫這一個。 */
+function refreshAllBadges(){
+  try{updateGroupBadge();}catch(e){}
+  try{updateAdminBadge();}catch(e){}
+  const unread=systemNotices.filter(n=>!noticeAcked(n)).length;
+  const row=document.querySelector('[data-action="openSystemNotice"] .gi-badge');
+  if(row){ if(unread>0)row.textContent=unread; else row.remove(); }
 }
 
 function renderClassStatus(){
@@ -2870,7 +2893,9 @@ function render(){
     const avatarCls=isDeletedUser?'avatar deleted':'avatar';
     return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}</div></div>`;
   }).join('');
-  if(atBottom&&!searchKeyword&&!suppress)chatBox.scrollTop=chatBox.scrollHeight;
+  /* v1.38.5：剛從別的頁面返回聊天室時，位置是刻意還原到原處的，
+     不應該立刻被「新訊息自動捲到底」搶走，所以鎖 600ms。 */
+  if(atBottom&&!searchKeyword&&!suppress&&Date.now()>suppressAutoScrollUntil)chatBox.scrollTop=chatBox.scrollHeight;
   updateScrollToBottomBtn();
   /* v1.36 點訊息 → 彈出「訊息編號 / 舉報 / 管理刪除」。
      訊息裡本來就有動作的元素（頭像、投票選項、圖片、連結…）不攔，讓它們做自己的事。 */
@@ -3133,16 +3158,81 @@ async function adminDeleteMsg(msgId){ const snap=await readQueryOnce(query(ref(d
 async function adminDeleteAIMsg(msgId){ const snap=await readQueryOnce(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:true,deletedAt:Date.now(),deletedBy:me.username}); }
 async function restoreMsg(msgId){ const snap=await readQueryOnce(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await update(ref(db,'messages/'+key),{deleted:false,deletedAt:null,deletedBy:null}); }
 async function purgeMsg(msgId){ const snap=await readQueryOnce(query(ref(db,'messages'),orderByChild('createdAt'),limitToLast(300)));const val=snap.val()||{};const key=Object.keys(val).find(k=>val[k].id===msgId);if(!key)return;await remove(ref(db,'messages/'+key)); }
-async function appealMsg(noticeKey){ const reason=prompt('請填寫申訴理由：');if(!reason)return;await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{appealed:true,appealReason:reason,appealedAt:Date.now()});await push(ref(db,'requests'),{type:'appeal',noticeKey,reason,from:me.username,fromName:me.displayName,createdAt:Date.now(),status:'pending'});showNotif('已送出申訴');closePage(); }
+async function appealMsg(noticeKey){
+  const reason=prompt('請填寫申訴理由：'); if(!reason)return;
+  const now=Date.now();
+  /* v1.38.5：申訴也是一種「處理」，同樣要標成已確定，否則申訴完那張卡
+     仍然掛著「我要申訴／確定」兩個按鈕，看起來像沒有送出過。 */
+  await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),
+    {appealed:true,appealReason:reason,appealedAt:now,read:true,acknowledgedAt:now,acknowledgedBy:me.username});
+  await push(ref(db,'requests'),{type:'appeal',noticeKey,reason,from:me.username,fromName:me.displayName,createdAt:now,status:'pending'});
+  showNotif('已送出申訴');
+  const card=noticeCardEl(noticeKey);
+  if(card){
+    card.classList.add('sn-acked');
+    const acts=card.querySelector('.sn-card-actions');
+    if(acts)acts.innerHTML='<div class="sn-acked-tip">已送出申訴，等待管理員處理</div>';
+  }
+  refreshAllBadges();
+}
+/* ═══ v1.38.5 通知「確定」變成一個狀態，不再只是把卡片刪掉 ══════════════
+   舊做法：寫 read:true，然後把卡片 DOM remove() 掉。
+   問題有兩個：
+     · 資料層只有 read，分不出「已經看過」和「已經確定處理」；
+     · 卡片被刪的只是畫面上那一個，資料仍然在，所以重開通知頁、
+       或者返回時把頁面快照貼回來，同一張卡又帶著「確定」按鈕原封不動長回來，
+       用家感受就等於「根本沒有確定過」。
+   現在：寫 read:true + acknowledgedAt（何時確定）＋ acknowledgedBy（誰確定），
+   卡片留住、轉灰底，動作列就地換成「這條消息已被確定」。 */
+function noticeCardEl(key){
+  return document.querySelector(`.sn-card[data-nkey="${escAttr(key)}"]`);
+}
+/* 判斷「這條通知是否已經處理過」。
+   acknowledgedAt 是 v1.38.5 之後才寫的，但舊版按確定時只寫了 read:true，
+   那批舊資料如果不認 read，用戶重進仍然會見到「確定」按鈕 —— 正是要修的病。
+   所以兩個條件任一成立都算已確定。 */
+function noticeAcked(n){ return !!(n&&(n.acknowledgedAt||n.read)); }
+function markNoticeAcked(key){
+  const card=noticeCardEl(key);
+  if(!card||card.classList.contains('sn-acked'))return;
+  card.classList.add('sn-acked');
+  const acts=card.querySelector('.sn-card-actions');
+  if(acts)acts.innerHTML='<div class="sn-acked-tip">這條消息已被確定</div>';
+  const left=systemNotices.filter(n=>!noticeAcked(n)&&n._key!==key).length;
+  const tip=document.querySelector('#systemNoticeOverlay .sn-sub-tip');
+  if(tip)tip.textContent=left>0?`還有 ${left} 條未確定`:'全部已確定';
+  const all=document.querySelector('#systemNoticeOverlay .sn-ackall');
+  if(all)all.disabled=(left<=0);
+}
 async function dismissSystemNotice(noticeKey){
   if(!me)return;
-  await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),{read:true});
-  // 立即從畫面移除這張卡片，並顯示已讀提示，讓使用者看得到反應
-  const card=document.querySelector(`.sn-card [data-action="dismissSystemNotice"][data-arg="${escAttr(noticeKey)}"]`)?.closest('.sn-card');
-  if(card){ card.style.transition='opacity .25s,transform .25s'; card.style.opacity='0'; card.style.transform='translateY(-6px)'; setTimeout(()=>card.remove(),250); }
-  showNotif('已讀');
-  // 重新整理通知列表（隱藏這張卡片以外的未讀小紅點）
-  updateGroupBadge();
+  const now=Date.now();
+  markNoticeAcked(noticeKey);          // 先給反應，不用等網絡回來才有動靜
+  try{
+    await update(ref(db,'systemNotices/'+me.username+'/'+noticeKey),
+      {read:true,acknowledgedAt:now,acknowledgedBy:me.username});
+  }catch(e){
+    showNotif('確定失敗，請重試');
+    if(currentPageKey==='systemNotice')openSystemNotice();
+    return;
+  }
+  refreshAllBadges();
+}
+/* 通知頁右上角「全部確定」：一次把所有未確定的通知處理掉 */
+async function ackAllSystemNotices(){
+  if(!me)return;
+  const left=systemNotices.filter(n=>!noticeAcked(n));
+  if(!left.length){showNotif('沒有未確定的通知');return;}
+  const now=Date.now();
+  left.forEach(n=>markNoticeAcked(n._key));
+  const all=document.querySelector('#systemNoticeOverlay .sn-ackall');
+  if(all)all.disabled=true;
+  try{
+    await Promise.all(left.map(n=>update(ref(db,'systemNotices/'+me.username+'/'+n._key),
+      {read:true,acknowledgedAt:now,acknowledgedBy:me.username})));
+  }catch(e){}
+  showNotif('已全部確定');
+  refreshAllBadges();
 }
 
 /* ═══ v1.38 位置地圖（自繪圖磚）══════════════════════════════════════
@@ -3412,11 +3502,16 @@ function openGames(roomId,gameKey){
     +'&v='+encodeURIComponent(CURRENT_VERSION||'');
   if(roomId)url+='&room='+encodeURIComponent(roomId);
   if(gameKey)url+='&game='+encodeURIComponent(gameKey);
-  ov.innerHTML=`<iframe id="gamesFrame" src="${escAttr(url)}" allow="clipboard-write"></iframe>`;
+  ov.innerHTML=`<iframe id="gamesFrame" tabindex="0" src="${escAttr(url)}" allow="clipboard-write"></iframe>`;
   document.body.appendChild(ov);
   window._gamesFrame=ov.querySelector('#gamesFrame');
-  // iframe 載入完成後再推一次主題（避免剛好載入比 applyTheme 慢，畫面停在深色）
-  window._gamesFrame.addEventListener('load',syncGamesTheme);
+  /* iframe 載入完成後：① 再推一次主題（避免載入比 applyTheme 慢，停在深色）
+     ② 把鍵盤焦點交給小遊戲 —— 不然剛打開時按空白鍵／方向鍵仍然會傳去聊天室，
+     小恐龍就完全跳不起來（要先用滑鼠點一下畫面才有反應，用戶實際就是撞到這個）。 */
+  window._gamesFrame.addEventListener('load',()=>{
+    syncGamesTheme();
+    try{ window._gamesFrame.focus(); }catch(e){}
+  });
 }
 window.addEventListener('message',(e)=>{
   if(e.data&&e.data.type==='closeGames'){const ov=document.getElementById('gamesOverlay');if(ov)ov.remove();}
@@ -3591,21 +3686,71 @@ let currentPageKey=null;
    現在 push 的時候連 scrollTop 一起存，pop 的時候一起還原；
    回到主聊天室（疊層空了）也還原 #chatBox 的位置。 */
 let chatScrollMemo=0;
-function pageScrollerTop(){
-  const fp=pageRoot.querySelector('.fp-body');
-  if(fp)return fp.scrollTop;
-  const ps=document.getElementById('pcBody');
-  if(ps)return ps.scrollTop;
-  return 0;
+let suppressAutoScrollUntil=0;   /* 返回主畫面後短暫鎖住「自動捲到底」，否則新訊息一到位置又被拉走 */
+let _pageSameKey=false;          /* 這次是「同一個 key 就地重繪」而不是新開一層 */
+/* 捲動容器其實有三個：openPage() 開的 .fp-body、私聊的 #pcBody、管理員後台的 #adminBody。
+   以前只認 .fp-body，所以在管理員後台切分頁、或者私聊退出，位置一律歸零。 */
+const SCROLL_SELECTORS=['.fp-body','#pcBody','#adminBody'];
+function findScroller(){
+  for(const s of SCROLL_SELECTORS){
+    const el=pageRoot.querySelector(s)||document.querySelector(s);
+    if(el&&el.scrollHeight>el.clientHeight+4)return el;
+  }
+  for(const s of SCROLL_SELECTORS){
+    const el=pageRoot.querySelector(s)||document.querySelector(s);
+    if(el)return el;
+  }
+  return null;
 }
+function pageScrollerTop(){ const el=findScroller(); return el?el.scrollTop:0; }
 function restorePageScroll(top){
-  const fp=pageRoot.querySelector('.fp-body');
-  if(fp){ fp.scrollTop=top||0; return true; }
-  return false;
+  const el=findScroller();
+  if(!el)return false;
+  const max=Math.max(0,el.scrollHeight-el.clientHeight);
+  el.scrollTop=Math.min(top||0,max);   /* 內容未長高就先夾住，之後幾次補還原會追上去 */
+  return true;
 }
+/* ═══ v1.38.5 全頁重寫的唯一出口 ═══
+   以前有十幾處直接寫 pageRoot.innerHTML，每一處都會把捲動位置歸零；
+   其中「同一個 key 重新渲染」的情況（封禁／授權完再開同一頁、切管理分頁、
+   按完全部確定）最容易被看成「整個頁面重新載入、被拉回最上面」。
+   現在統一走這裡：同 key 自動保住位置，新開一層才由 0 開始。 */
+function setPageHTML(html,keepScroll){
+  const keep=(keepScroll===undefined)?_pageSameKey:keepScroll;
+  const top=keep?pageScrollerTop():0;
+  pageRoot.innerHTML=html;
+  if(keep){
+    restorePageScroll(top);
+    requestAnimationFrame(()=>restorePageScroll(top));
+    setTimeout(()=>restorePageScroll(top),120);
+    setTimeout(()=>restorePageScroll(top),320);
+  }
+  return top;
+}
+/* ═══ v1.38.5 導航序號：擋住「退出去又自己刷新回來」 ═══
+   openProfilePage() / openSystemNotice() 這些要先 await 網絡。如果網絡慢，
+   用家已經按了返回，await 回來之後仍然會把頁面重新寫進 pageRoot ——
+   看起來就是「我明明退了出來，介面自己又刷新了一次」。
+   每次導航發一個號，彈頁時把號加一；回來的舊請求驗不過就直接放棄。 */
+let navSeq=0;
+function navStart(){ return ++navSeq; }
+function navAlive(seq){ return seq===navSeq; }
 function beginPage(key){
-  if(currentPageKey===null){ chatScrollMemo=chatBox?chatBox.scrollTop:0; currentPageKey=key; return; }
-  if(currentPageKey===key) return;            // 同層重新渲染（例：封禁後刷新），不重複疊加
+  if(currentPageKey===null){ chatScrollMemo=chatBox?chatBox.scrollTop:0; currentPageKey=key; _pageSameKey=false; return; }
+  if(currentPageKey===key){
+    /* 同層重新渲染（封禁完再開同一頁、切管理分頁、投票草稿重繪……）。
+       調用方下一句就會把 pageRoot.innerHTML 整個換掉，捲動位置一定歸零。
+       這裡記住位置，並在下一個 microtask（＝調用方寫完 HTML 之後）補還原；
+       再補兩次 rAF／timeout，處理頭像、圖片非同步撐高的情況。
+       有這個兜底，就算某處沒有走 setPageHTML() 也不會被拉回最上面。 */
+    _pageSameKey=true;
+    const t=pageScrollerTop();
+    Promise.resolve().then(()=>{ if(_pageSameKey) restorePageScroll(t); });
+    requestAnimationFrame(()=>{ if(_pageSameKey) restorePageScroll(t); });
+    setTimeout(()=>{ restorePageScroll(t); },160);
+    return;
+  }
+  _pageSameKey=false;
   // 存快照前先把動畫 class 拿掉，否則還原時會誤播「從右邊進來」而不是「從左邊推回來」
   const cur=pageRoot.querySelector(':scope > .fullPage');
   if(cur)cur.classList.remove('anim-in-page','anim-in-back');
@@ -3614,18 +3759,31 @@ function beginPage(key){
   currentPageKey=key;
 }
 function popPage(){
+  ++navSeq;                                     /* 進行中的非同步導航全部作廢 */
+  _pageSameKey=false;
   const prev=pageStack.pop();
   if(prev){ pageRoot.innerHTML=prev.html; currentPageKey=prev.key; }
   else{ pageRoot.innerHTML=''; currentPageKey=null; }
   // 還原捲動位置要在掛上「從左邊推回來」動畫之後再來一次，
   // 因為動畫 class 會讓瀏覽器重算版面，中間那一次有可能被夾回 0。
   if(prev){ restorePageScroll(prev.scroll); }
-  else if(chatBox){ chatBox.scrollTop=chatScrollMemo; if(typeof updateScrollToBottomBtn==='function')updateScrollToBottomBtn(); }
+  else if(chatBox){ chatBox.scrollTop=chatScrollMemo; suppressAutoScrollUntil=Date.now()+600; if(typeof updateScrollToBottomBtn==='function')updateScrollToBottomBtn(); }
   const np=pageRoot.querySelector(':scope > .fullPage');
   if(np){ np.classList.remove('anim-in-page'); np.classList.add('anim-in-back'); }   // 上一層從左邊推回來
-  if(prev)restorePageScroll(prev.scroll);
+  if(prev){
+    /* 分階段補還原：頭像和圖片是非同步撐高的，第一次還原時內容高度還不夠，
+       瀏覽器會把 scrollTop 夾成 0 —— 之後就永遠停在頂部。
+       這就是「我滑到很下面，退出來卻在最上面」最常見的物理原因。 */
+    restorePageScroll(prev.scroll);
+    requestAnimationFrame(()=>restorePageScroll(prev.scroll));
+    setTimeout(()=>restorePageScroll(prev.scroll),60);
+    setTimeout(()=>restorePageScroll(prev.scroll),300);
+  }
+  /* 返回時貼回來的是一段 HTML 快照，裡面寫死的紅點數字仍然是舊的，
+     所以每次還原之後都要重新算一次。 */
+  try{ refreshAllBadges(); }catch(e){}
 }
-function resetPageStack(){ pageStack=[];currentPageKey=null;pageRoot.innerHTML=''; }
+function resetPageStack(){ ++navSeq; pageStack=[];currentPageKey=null;_pageSameKey=false;pageRoot.innerHTML=''; }
 
 /* 新開一層頁面時，讓它從右邊滑進來（安卓版的 push 效果）。
    用 MutationObserver 統一掛，不用改 13 個開頁面的地方。 */
@@ -3666,7 +3824,7 @@ async function closePage(){
 }
 function openPage({title,bodyHTML,heroHTML,key}){
   beginPage(key||('page:'+title));
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`;
+  setPageHTML(`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">${escapeHtml(title)}</div></div><div class="fp-body">${heroHTML||''}<div class="profile-content">${bodyHTML||''}</div></div></div>`);
 }
 
 /* ═══ v1.36 班別名冊姓名 ═══
@@ -4235,7 +4393,13 @@ window.addEventListener('pagehide',function(){
 });
 
 async function openProfilePage(username,isSelf,fromAdmin){
+  /* v1.38.5：這裡第一句就要等網絡。如果等途中用家已經按了返回，
+     await 回來之後仍然會把整頁重新寫進 pageRoot —— 看上去就是
+     「我明明退了出去，介面自己又刷新回來」。所以先領一個導航序號，
+     回來驗票，彈過頁就直接放棄。 */
+  const seq=navStart();
   const snap=await get(child(ref(db),'users/'+username));
+  if(!navAlive(seq))return;
   if(!snap.exists()){openPage({title:'已註銷',bodyHTML:'<div class="empty">該用戶已註銷帳戶</div>',key:'profile:'+username});return;}
   const u=snap.val();
   const heroHTML=profileTopHTML(u);
@@ -4714,9 +4878,17 @@ function openAdminPage(tab){
   pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
+/* v1.38.5：記住每個管理分頁各自的捲動位置。
+   以前切走再切回來一定回到最頂 —— body.innerHTML 一換，位置就沒有了。 */
+let _adminTab=null;
+const adminTabScroll={};
 async function renderAdminTab(tab){
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.arg===tab));
   const body=document.getElementById('adminBody');if(!body)return;
+  if(_adminTab&&_adminTab!==tab){
+    const sc=findScroller();
+    if(sc)adminTabScroll[_adminTab]=sc.scrollTop;
+  }
   if(tab==='users')body.innerHTML=renderUserList();
   else if(tab==='accounts')body.innerHTML=renderAccountManage();
   else if(tab==='notices')body.innerHTML=renderPendingNotices();
@@ -4726,6 +4898,13 @@ async function renderAdminTab(tab){
   else if(tab==='groups')body.innerHTML=await renderGroupsAdmin();
   else if(tab==='usage'){ body.innerHTML='<div class="empty">正在統計資料用量…</div>'; await renderUsageTab(body); }
   else if(tab==='remote'){ body.innerHTML=renderRemoteTab(); }
+  _adminTab=tab;
+  const back=adminTabScroll[tab]||0;
+  if(back){
+    restorePageScroll(back);
+    requestAnimationFrame(()=>restorePageScroll(back));
+    setTimeout(()=>restorePageScroll(back),120);
+  }
 }
 function renderUserList(){
   const list=Object.values(allUsers).filter(u=>u.hasLoggedIn||u.neverLoggedIn!==true).sort((a,b)=>{const ca=a.class||'';const cb=b.class||'';if(ca!==cb)return ca.localeCompare(cb);return (a.seat||0)-(b.seat||0);});
@@ -4925,30 +5104,39 @@ async function openMyLogs(){ await openUserLogs(me.username); }
 async function openGroupList(){
   if(!me)return;
   const keys=Object.keys(myGroups).sort((a,b)=>(myGroups[b].lastAt||0)-(myGroups[a].lastAt||0));
-  const unreadCount=systemNotices.filter(n=>!n.read).length;
+  const unreadCount=systemNotices.filter(n=>!noticeAcked(n)).length;
   let bodyHTML='';
   const sysItem=`<div class="group-item" data-action="openSystemNotice"><div class="gi-avatar notify">${SYS_NOTICE_ICON}</div><div class="gi-info"><div class="gi-name">${SYS_NOTICE_NAME}</div><div class="gi-sub">${systemNotices.length} 條通知</div></div>${unreadCount>0?`<div class="gi-badge">${unreadCount}</div>`:''}</div>`;
   if(keys.length===0){bodyHTML=sysItem+`<div class="empty">還沒有其他群聊，點右上角「+ 建立群聊」</div>`;}
   else{bodyHTML=sysItem+keys.map(key=>{const g=myGroups[key];const memberCount=Object.keys(g.members||{}).length;const lastMsg=g.lastMsg||'（還沒有訊息）';return `<div class="group-item" data-action="openGroupChat" data-arg="${escAttr(key)}"><div class="gi-avatar">群</div><div class="gi-info"><div class="gi-name">${escapeHtml(key)}</div><div class="gi-sub">${memberCount} 人 · ${escapeHtml(String(lastMsg).slice(0,20))}</div></div></div>`;}).join('');}
   beginPage('groupList');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">我的群聊</div><button class="btn-primary" style="width:auto;padding:8px 14px;margin:0" data-action="openCreateGroup">+ 建立群聊</button></div><div class="fp-body">${bodyHTML}</div></div>`;
+  setPageHTML(`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">我的群聊</div><button class="btn-primary" style="width:auto;padding:8px 14px;margin:0" data-action="openCreateGroup">+ 建立群聊</button></div><div class="fp-body">${bodyHTML}</div></div>`);
 }
 async function openSystemNotice(){
   if(!me)return;
-  const unread=systemNotices.filter(n=>!n.read);
-  for(const n of unread){ try{await update(ref(db,'systemNotices/'+me.username+'/'+n._key),{read:true});}catch(e){} }
+  /* v1.38.5：刪掉「一開頁就把全部未讀寫成 read:true」那一段。
+     舊做法令「進來看過」＝「已處理」：紅點一開就清，但卡片上的「確定」
+     按鈕仍然在（那段寫入之後完全沒有重畫畫面），兩邊狀態互相矛盾，
+     用家就會覺得「點進去、退出來，還是那條未讀、還是那個確定」。
+     現在開頁只讀不寫，紅點只會在真正按了「確定」／「全部確定」之後才消失。 */
   let bodyHTML='';
   if(systemNotices.length===0){bodyHTML=`<div class="sn-empty">暫無通知</div>`;}
   else{
     bodyHTML=systemNotices.map(n=>{
       const time=new Date(n.createdAt).toLocaleString('zh-TW');
+      const acked=noticeAcked(n);
       let actions='';
-      if(n.canAppeal&&!n.appealed)actions=`<button class="sn-appeal" data-action="appealMsg" data-arg="${escAttr(n._key)}">我要申訴</button><button class="sn-confirm" data-action="dismissSystemNotice" data-arg="${escAttr(n._key)}">確定</button>`;
-      return `<div class="sn-card"><div class="sn-card-title">${escapeHtml(n.title||'系統通知')}</div><div class="sn-card-time">${time}</div><div class="sn-card-body">${n.html?n.html:escapeHtml(n.body||'').replace(/\n/g,'<br>')}</div>${actions?`<div class="sn-card-actions">${actions}</div>`:''}</div>`;
+      if(acked)actions=`<div class="sn-acked-tip">這條消息已被確定</div>`;
+      else if(n.appealed)actions=`<div class="sn-acked-tip">已送出申訴，等待管理員處理</div>`;
+      else if(n.canAppeal)actions=`<button class="sn-appeal" data-action="appealMsg" data-arg="${escAttr(n._key)}">我要申訴</button><button class="sn-confirm" data-action="dismissSystemNotice" data-arg="${escAttr(n._key)}">確定</button>`;
+      return `<div class="sn-card${acked?' sn-acked':''}" data-nkey="${escAttr(n._key)}"><div class="sn-card-title">${escapeHtml(n.title||'系統通知')}</div><div class="sn-card-time">${time}</div><div class="sn-card-body">${n.html?n.html:escapeHtml(n.body||'').replace(/\n/g,'<br>')}</div>${actions?`<div class="sn-card-actions">${actions}</div>`:''}</div>`;
     }).join('');
   }
+  const left=systemNotices.filter(n=>!noticeAcked(n)).length;
+  const tip=`<span class="sn-sub-tip">${left>0?`還有 ${left} 條未確定`:'全部已確定'}</span>`;
+  const ackAll=`<button class="sn-ackall" data-action="ackAllSystemNotices"${left>0?'':' disabled'}>全部確定</button>`;
   beginPage('systemNotice');
-  pageRoot.innerHTML=`<div class="fullPage" id="systemNoticeOverlay"><div class="sn-header"><button class="sn-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="sn-title">${SYS_NOTICE_ICON} ${SYS_NOTICE_NAME}</div></div><div class="sn-body">${bodyHTML}</div></div>`;
+  setPageHTML(`<div class="fullPage" id="systemNoticeOverlay"><div class="sn-header"><button class="sn-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="sn-title">${SYS_NOTICE_ICON} ${SYS_NOTICE_NAME}</div>${tip}${ackAll}</div><div class="sn-body">${bodyHTML}</div></div>`);
 }
 async function adminSendSystemNotice(){ if(me.role!=='superadmin'&&me.role!=='admin')return; const target=prompt('發送給（all 或 username）：'); if(!target)return; const title=prompt('標題：'); if(!title)return; const body=prompt('內容：'); if(!body)return; const targets=target==='all'?Object.keys(allUsers).filter(u=>u!==AI_NAME):[target]; for(const t of targets){ await pushSystemNotice(t,{type:'admin_system',title,body,createdAt:Date.now(),read:false}); } showNotif('已發送'); }
 async function adminDeleteSystemNotice(key){ await remove(ref(db,'systemNotices/'+me.username+'/'+key)); showNotif('已刪除'); openSystemNotice(); }
@@ -5683,6 +5871,14 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.5',date:'2026-10-18',changes:[
+'【重要】修好小恐龍「跑得太快」：之前把官方的「每幀加速 0.001」寫成「每毫秒加速 0.001」，結果 7 秒就衝到最高速，比 Google 那隻快成十幾倍。現在照官方節奏，要跑大約兩分鐘才會加到最快，10 秒時速度 6.6、分數 99，同原版一致',
+'【重要】修好電腦版按空白鍵沒反應：從聊天室打開小遊戲時，鍵盤焦點仍然留在聊天室，所以按空白鍵、上下鍵完全沒有動靜，要先按一下遊戲畫面才有用。現在一打開小遊戲就會把焦點交進去，直接按空白鍵就跳得起來',
+'系統通知的「確定」改成真正的已確定狀態：以前按下去只是把卡片從畫面移走，資料沒有變，重新進入通知頁又原封不動長回來，感覺像從來沒有確定過。現在卡片會留著並轉成灰底，按鈕換成「這條消息已被確定」，退出再進來仍然是已確定；申訴之後也一樣。通知頁右上角新增「全部確定」，可以一次清掉所有未處理的通知',
+'通知處理完之後所有紅色標記一併清除：以前只清了聊天分頁那個紅點，底部「管理」的待處理數字、群聊列表那一行、通知頁自己的未讀數都沒有跟著變，返回時頁面快照貼回來更會把舊數字一齊帶回。現在所有紅點集中一次重算，按完確定就全部同步消失',
+'【重要】修好「退出去之後頁面自己刷新一次」：打開用戶資料要等網絡，如果等途中按了返回，回來的資料照樣把整頁重新畫一次，看起來就是退了又自己跳回去。現在彈頁之後，遲到的請求會自動作廢，不會再把畫面蓋回去。順帶把管理員後台每個分頁的捲動位置分開記住，切走再切回來仍在原來的位置',
+'返回上一頁不再被拉回最上面：以前只認得一般頁面的捲動區，管理員後台切分頁、私聊退出、封禁或授權之後重開同一頁，位置一律歸零；而且頭像和圖片是後加載的，第一次還原時內容高度不夠，位置會被夾成 0 就再也回不去。現在三個捲動區都認得，同一個頁面重繪會保住位置，並分階段補還原；返回聊天室也會先鎖住自動捲到底',
+]},
 {ver:'v1.38.4',date:'2026-10-17',changes:[
 '新增一個小彩蛋：在任何看得見的輸入框（聊天框、登入帳號、搜尋、改名、投票選項……）輸入含有「秋葵」兩個字的內容並送出，畫面就會落一場秋葵雨；不管前後加了幾多字都算。彩蛋是全站同步的 —— 只要有一個人觸發，所有已開啟的聊天室、App 會一齊落，不用重新載入',
 '單機遊戲新增「小恐龍」：同 Google 瀏覽器斷網時彈出來那隻一模一樣，用官方原裝精靈圖重寫，全部圖片都內嵌在網頁裡，所以完全斷網都玩得到。空白鍵／向上鍵跳，向下鍵蹲（跳起途中按會加速落地），手機有「蹲／跳」兩顆大按鈕',
