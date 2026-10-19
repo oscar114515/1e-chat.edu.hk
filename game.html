@@ -3806,6 +3806,8 @@ function renderTetris(r,g,spec){
 
 /* ===== 遊戲邏輯入口 ===== */
 function seatOf(r,u){const p=r.players&&r.players[u];return p?(p.seat||0):-1;}
+/* 代 AI 出手時，只有「自己」才彈提示；幫 AI 走棋不應該彈給房主看 */
+function notifyIf(who,msg){ if(who===me.username) showNotice(msg); }
 function playerNames(r){const e=Object.entries(r.players||{});e.sort((a,b)=>(a[1].seat||0)-(b[1].seat||0));return e.map(x=>x[0]);}
 /* ═══ AI 玩家（公開功能：房主可以加 AI 補位）═══════════════════════════
    房間的 players 就是一個普通字典，多塞一筆 {name,ai:true,seat} 進去，
@@ -4293,14 +4295,16 @@ function drawLudo(r,g,bar,spec){
 }
 
 function dicePips(d){let h='';for(let i=0;i<9;i++)h+=`<div class="pip"></div>`;const map={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};const on=map[d]||[];h='';for(let i=0;i<9;i++)h+=`<div class="pip ${on.includes(i)?'on':''}"></div>`;return h;}
-function canMove(r,pi){
-  const p=r.state.planes[me.username][pi];const d=r.state.dice;
+function canMove(r,pi,asUser){
+  asUser=asUser||me.username;
+  const p=r.state.planes[asUser][pi];const d=r.state.dice;
   if(p>=57)return false;
   if(p<0)return d===6;
   return p+d<=57;
 }
-async function ludoRoll(){
-  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username)return;
+async function ludoRoll(asUser){
+  asUser=asUser||me.username;
+  const r=curRoom;if(r.status!=='playing'||r.turn!==asUser)return;
   const d=chDice(6);
   await update(ref(db,'games/'+curRoomId),{'state/dice':d,'state/rolled':true});
 }
@@ -4309,21 +4313,22 @@ async function ludoPass(){
   const next=names[(names.indexOf(r.turn)+1)%names.length];
   await update(ref(db,'games/'+curRoomId),{turn:next,'state/dice':0,'state/rolled':false});
 }
-async function ludoMove(pi){
-  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username||!r.state.rolled)return;
-  const pl=(r.state.planes[me.username]||[]).slice();const d=r.state.dice;
-  if(!canMove(r,pi))return;
+async function ludoMove(pi,asUser){
+  asUser=asUser||me.username;
+  const r=curRoom;if(r.status!=='playing'||r.turn!==asUser||!r.state.rolled)return;
+  const pl=(r.state.planes[asUser]||[]).slice();const d=r.state.dice;
+  if(!canMove(r,pi,asUser))return;
   let np=pl[pi]<0?0:pl[pi]+d;
   if(np>57)return;
   pl[pi]=np;
   // 更新棋盤
   const planes={};Object.entries(r.state.planes).forEach(([u,v])=>planes[u]=v.slice());
-  planes[me.username]=pl;
+  planes[asUser]=pl;
   // 撞子：同一環格上的對手送回基地
   if(np<52){
-    const myRc=FXQ_COL[r.state.colors[me.username]||0];
+    const myRc=FXQ_COL[r.state.colors[asUser]||0];
     const mp=fxqPos(pi,np+1,myRc);
-    Object.entries(planes).forEach(([u,v])=>{ if(u===me.username)return;
+    Object.entries(planes).forEach(([u,v])=>{ if(u===asUser)return;
       const rc=FXQ_COL[r.state.colors[u]||0];
       v.forEach((p2,i2)=>{ if(p2<0||p2>50)return;      // 只有跑道中段會被撞（照參考站，起點與終點前不撞）
         const q=fxqPos(i2,p2+1,rc);
@@ -4398,6 +4403,7 @@ function unoPlayable(card, top){
   return unoCN(card.color) === unoCN(top.color) || unoVN(card.value) === unoVN(top.value);
 }
 let unoSel = -1, unoDrew = false;
+const unoDrewFor = {};   // AI 玩家各自的「已抽牌」狀態，不要跟玩家的 unoDrew 混在一起
 async function unoAskColor(){
   return new Promise(resolve => {
     const pick = document.createElement('div'); pick.className = 'sheet';
@@ -5717,11 +5723,12 @@ function klCurrent(r) {
   const i = (Number(klState(r).turnIdx) || 0) % names.length;
   return names[i];
 }
-async function klRoll() {
+async function klRoll(asUser) {
+  asUser=asUser||me.username;
   const r = curRoom;
   if (!r || r.status !== 'playing' || r.game !== 'konglok') return;
   if (klState(r).rolling) return;
-  if (klCurrent(r) !== me.username) return showNotice('還沒輪到你擲骰');
+  if (klCurrent(r) !== asUser) return notifyIf(asUser,'還沒輪到你擲骰');
   // rolling 當鎖，避免連點兩次擲出兩次
   let res;
   try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/rolling'), v => (v === true) ? undefined : true); }
@@ -5732,18 +5739,18 @@ async function klRoll() {
   const pos = Object.assign({}, st.pos || {});
   names.forEach(u => { if (typeof pos[u] !== 'number') pos[u] = 0; });
   const dice = chDice(6);
-  let np = Math.min(KL_N, (pos[me.username] || 0) + dice);
+  let np = Math.min(KL_N, (pos[asUser] || 0) + dice);
   let jump = null;
   const sp = KL_SPECIAL[np];
   if (sp) { np = Math.max(0, Math.min(KL_N, np + sp)); jump = sp; }
-  pos[me.username] = np;
+  pos[asUser] = np;
   const finished = np >= KL_N;
   await update(ref(db, 'games/' + curRoomId + '/state'), {
-    dice: dice, pos: pos, rolling: false, lastJump: jump, lastBy: me.username,
+    dice: dice, pos: pos, rolling: false, lastJump: jump, lastBy: asUser,
     turnIdx: finished ? (Number(st.turnIdx) || 0) : ((Number(st.turnIdx) || 0) + 1) % names.length,
   });
-  await update(ref(db, 'games/' + curRoomId), { turn: finished ? me.username : names[((Number(st.turnIdx) || 0) + 1) % names.length] });
-  if (finished) await finishGame(me.username);
+  await update(ref(db, 'games/' + curRoomId), { turn: finished ? asUser : names[((Number(st.turnIdx) || 0) + 1) % names.length] });
+  if (finished) await finishGame(asUser);
 }
 /** 排列方式：7 欄、蛇形（S 形）走。回傳 index → [col,row] */
 function klCellPos(i) {
@@ -6220,27 +6227,29 @@ function goScore(b, side){
   return score;
 }
 function goWho(r, i){ return goReplay(r).moves % 2 === 0 ? 1 : 2; }   /* 1＝黑（先手） */
-async function goMove(i){
+async function goMove(i,asUser){
+  asUser=asUser||me.username;
   const r = curRoom;
   if(!r || r.status !== 'playing' || r.game !== 'go') return;
   const names = playerNames(r);
   const side = goWho(r, i);
-  if(names[side === 1 ? 0 : 1] !== me.username) return showNotice('還沒輪到你');
+  if(names[side === 1 ? 0 : 1] !== asUser) return notifyIf(asUser,'還沒輪到你');
   const st = goReplay(r);
   const res = goTry(st.b, i, side);
-  if(!res.ok) return showNotice('這裡不可以下（自殺或已有棋子）');
+  if(!res.ok) return notifyIf(asUser,'這裡不可以下（自殺或已有棋子）');
   const back = res.board.join('');
   if(res.captured.length === 1 && st.posHist.length >= 2 && back === st.posHist[st.posHist.length - 2])
-    return showNotice('劫爭：不可以馬上提回來，要先在別處下一手');
-  await pushAction({t:'mv', i:i, p:me.username});
+    return notifyIf(asUser,'劫爭：不可以馬上提回來，要先在別處下一手');
+  await pushAction({t:'mv', i:i, p:asUser});
 }
-async function goPass(){
+async function goPass(asUser){
+  asUser=asUser||me.username;
   const r = curRoom;
   if(!r || r.status !== 'playing' || r.game !== 'go') return;
   const names = playerNames(r);
   const side = goWho(r, 0);
-  if(names[side === 1 ? 0 : 1] !== me.username) return showNotice('還沒輪到你');
-  await pushAction({t:'pass', p:me.username});
+  if(names[side === 1 ? 0 : 1] !== asUser) return notifyIf(asUser,'還沒輪到你');
+  await pushAction({t:'pass', p:asUser});
 }
 async function goCheckEnd(r){
   if(!r || r.game !== 'go' || r.status !== 'playing') return;
@@ -7035,12 +7044,13 @@ function mpTurnU(r){
   if (!alive.length) return '';
   return alive[(Number(st.turnIdx) || 0) % alive.length];
 }
-async function mpRoll(){
+async function mpRoll(asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'monopoly' || r.status !== 'playing') return;
   const st = mpState(r);
-  if (st.pending) return showNotice('要先決定買不買');
+  if (st.pending) return notifyIf(asUser,'要先決定買不買');
   if (st.rolling) return;
-  if (mpTurnU(r) !== me.username) return showNotice('還沒輪到你擲骰');
+  if (mpTurnU(r) !== asUser) return notifyIf(asUser,'還沒輪到你擲骰');
   let res;
   try { res = await runTransaction(ref(db, 'games/' + curRoomId + '/state/rolling'), v => (v === true) ? undefined : true); }
   catch (e) { return; }
@@ -7049,41 +7059,41 @@ async function mpRoll(){
   const pos = Object.assign({}, st.pos || {}), money = Object.assign({}, st.money || {});
   names.forEach(u => { if (typeof pos[u] !== 'number') pos[u] = 0; if (typeof money[u] !== 'number') money[u] = MP_MONEY0; });
   const dice = chDice(6);
-  const from = pos[me.username];
+  const from = pos[asUser];
   const to = (from + dice) % MP_N;
   let salary = 0;
   const log = [];
-  if (to < from) { salary = MP_SALARY; money[me.username] += salary; log.push(`${nameOf(r, me.username)} 經過起點，收 ${salary}`); }
-  pos[me.username] = to;
+  if (to < from) { salary = MP_SALARY; money[asUser] += salary; log.push(`${nameOf(r, asUser)} 經過起點，收 ${salary}`); }
+  pos[asUser] = to;
   const cell = MP_BOARD[to];
   const owner = Object.assign({}, st.owner || {});
   let pending = null, extra = {};
   if (cell.t === 'prop') {
     const ow = owner[to];
-    if (!ow) pending = { uid: me.username, tile: to };
-    else if (ow !== me.username && !(st.out || []).includes(ow)) {
+    if (!ow) pending = { uid: asUser, tile: to };
+    else if (ow !== asUser && !(st.out || []).includes(ow)) {
       const rent = mpRent(cell.price);
-      money[me.username] -= rent; money[ow] = (money[ow] || 0) + rent;
-      log.push(`${nameOf(r, me.username)} 付租金 ${rent} 給 ${nameOf(r, ow)}`);
-    } else if (ow === me.username) log.push(`${nameOf(r, me.username)} 回到自己的地`);
+      money[asUser] -= rent; money[ow] = (money[ow] || 0) + rent;
+      log.push(`${nameOf(r, asUser)} 付租金 ${rent} 給 ${nameOf(r, ow)}`);
+    } else if (ow === asUser) log.push(`${nameOf(r, asUser)} 回到自己的地`);
   } else if (cell.t === 'tax') {
-    money[me.username] -= cell.amount;
-    log.push(`${nameOf(r, me.username)} 繳稅 ${cell.amount}`);
+    money[asUser] -= cell.amount;
+    log.push(`${nameOf(r, asUser)} 繳稅 ${cell.amount}`);
   } else if (cell.t === 'chance') {
     const c = MP_CHANCE[Math.floor(Math.random() * MP_CHANCE.length) % MP_CHANCE.length];
-    money[me.username] += c.d;
-    log.push(`${nameOf(r, me.username)}：${c.t}`);
+    money[asUser] += c.d;
+    log.push(`${nameOf(r, asUser)}：${c.t}`);
     extra.lastCard = c.t;
-  } else if (cell.t === 'go') log.push(`${nameOf(r, me.username)} 停在起點`);
+  } else if (cell.t === 'go') log.push(`${nameOf(r, asUser)} 停在起點`);
   // 付不出錢 → 破產
   const out = (st.out || []).slice();
-  if (money[me.username] < 0) {
-    log.push(`${nameOf(r, me.username)} 付不出錢，破產出局`);
-    out.push(me.username);
+  if (money[asUser] < 0) {
+    log.push(`${nameOf(r, asUser)} 付不出錢，破產出局`);
+    out.push(asUser);
     const ow2 = Object.assign({}, owner);
-    Object.keys(ow2).forEach(k => { if (ow2[k] === me.username) delete ow2[k]; });
+    Object.keys(ow2).forEach(k => { if (ow2[k] === asUser) delete ow2[k]; });
     // 破產者的地全部釋出，餘款歸零
-    money[me.username] = 0;
+    money[asUser] = 0;
     await update(ref(db, 'games/' + curRoomId + '/state'), {
       dice: dice, pos: pos, money: money, owner: ow2, out: out, rolling: false, pending: null,
       log: (st.log || []).concat(log).slice(-40), turnIdx: (Number(st.turnIdx) || 0),
@@ -7107,34 +7117,36 @@ async function mpAfterMove(r, out, pos, money, owner, log){
     else await finishGame('draw');
   }
 }
-async function mpBuy(){
+async function mpBuy(asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'monopoly') return;
   const st = mpState(r);
   const pd = st.pending;
-  if (!pd || pd.uid !== me.username) return showNotice('現在不是你的決定');
+  if (!pd || pd.uid !== asUser) return notifyIf(asUser,'現在不是你的決定');
   const cell = MP_BOARD[pd.tile];
   const money = Object.assign({}, st.money || {});
-  if ((money[me.username] || 0) < cell.price) return showNotice('錢不夠');
-  money[me.username] -= cell.price;
+  if ((money[asUser] || 0) < cell.price) return notifyIf(asUser,'錢不夠');
+  money[asUser] -= cell.price;
   const owner = Object.assign({}, st.owner || {});
-  owner[pd.tile] = me.username;
+  owner[pd.tile] = asUser;
   const names = playerNames(r);
   await update(ref(db, 'games/' + curRoomId + '/state'), {
     money: money, owner: owner, pending: null,
     turnIdx: ((Number(st.turnIdx) || 0) + 1) % Math.max(1, names.length),
-    log: (st.log || []).concat([`${nameOf(r, me.username)} 買下 ${cell.n}（${cell.price}）`]).slice(-40),
+    log: (st.log || []).concat([`${nameOf(r, asUser)} 買下 ${cell.n}（${cell.price}）`]).slice(-40),
   });
 }
-async function mpSkip(){
+async function mpSkip(asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'monopoly') return;
   const st = mpState(r);
   const pd = st.pending;
-  if (!pd || pd.uid !== me.username) return showNotice('現在不是你的決定');
+  if (!pd || pd.uid !== asUser) return notifyIf(asUser,'現在不是你的決定');
   const names = playerNames(r);
   await update(ref(db, 'games/' + curRoomId + '/state'), {
     pending: null,
     turnIdx: ((Number(st.turnIdx) || 0) + 1) % Math.max(1, names.length),
-    log: (st.log || []).concat([`${nameOf(r, me.username)} 放棄買地`]).slice(-40),
+    log: (st.log || []).concat([`${nameOf(r, asUser)} 放棄買地`]).slice(-40),
   });
 }
 function drawMonopoly(r, g, bar, spec){
@@ -7600,14 +7612,15 @@ const CH_DEF={
     const mv=gomokuBest(r.state.board.slice(),my,op);
     if(mv) gomokuMove(mv.i,mv.j,who);
   }}},
-  ludo:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return r.turn===me.username; },fn(){
+  ludo:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return r.turn===who; },fn(who){
+    who=who||me.username;
     const r=curRoom;
-    if(!r.state.rolled){ ludoRoll(); return; }
-    const my=(r.state.planes||{})[me.username]||[];
+    if(!r.state.rolled){ ludoRoll(who); return; }
+    const my=(r.state.planes||{})[who]||[];
     const d=Number(r.state.dice)||0;
     let best=-1,bs=-1e9;
     for(let i=0;i<my.length;i++){
-      if(!canMove(r,i)) continue;
+      if(!canMove(r,i,who)) continue;
       const p=my[i], np=p<0?0:p+d;
       let sc=np*0.5;
       if(p<0) sc+=60;
@@ -7615,32 +7628,35 @@ const CH_DEF={
       if(np>=52&&np<57) sc+=80;
       if(sc>bs){ bs=sc; best=i; }
     }
-    if(best>=0) ludoMove(best); else ludoPass();
+    if(best>=0) ludoMove(best,who); else ludoPass();
   }}},
-  konglok:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return klCurrent(r)===me.username; },fn(){ klRoll(); }}},
-  monopoly:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return mpTurnU(r)===me.username; },fn(){
+  konglok:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return klCurrent(r)===who; },fn(who){ klRoll(who||me.username); }}},
+  monopoly:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return mpTurnU(r)===who; },fn(who){
+    who=who||me.username;
     const r=curRoom,st=mpState(r);
-    if(st.pending&&st.pending.uid===me.username){
+    if(st.pending&&st.pending.uid===who){
       const cell=MP_BOARD[st.pending.tile];
-      const cash=(st.money||{})[me.username]||0;
-      if(cash>=cell.price*2.2) mpBuy(); else mpSkip();
+      const cash=(st.money||{})[who]||0;
+      if(cash>=cell.price*2.2) mpBuy(who); else mpSkip(who);
       return;
     }
-    mpRoll();
+    mpRoll(who);
   }}},
-  uno:{ai:{n:'AI 代打',mine(r){
+  uno:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const eng=getEngine(r); if(!eng) return false;
     const cur=eng.currentPlayer?eng.currentPlayer.name:'';
-    return cur===me.username;
-  },fn(){
+    return cur===who;
+  },fn(who){
+    who=who||me.username;
     const r=curRoom,eng=getEngine(r); if(!eng) return;
-    const p=eng.getPlayer(me.username); if(!p) return;
+    const p=eng.getPlayer(who); if(!p) return;
     const top=eng.discardedCard; if(!top) return;
     const hand=p.hand||[];
     const ok=hand.filter(c=>unoPlayable(c,top));
     if(!ok.length){
-      if(!unoDrew){ pushAction({t:'draw',p:me.username}); unoDrew=true; }
-      else { pushAction({t:'pass',p:me.username}); unoDrew=false; }
+      if(!unoDrewFor[who]){ pushAction({t:'draw',p:who}); unoDrewFor[who]=true; }
+      else { pushAction({t:'pass',p:who}); unoDrewFor[who]=false; }
       return;
     }
     const rank=c=>{ const v=unoVN(c.value);
@@ -7658,8 +7674,9 @@ const CH_DEF={
       hand.forEach(c=>{ const cc=unoCN(c.color); if(cnt[cc]!==undefined) cnt[cc]++; });
       declared=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||'red';
     }
-    pushAction({t:'play',p:me.username,c:col,v:val,d:declared});
-    unoSel=-1; unoDrew=false;
+    pushAction({t:'play',p:who,c:col,v:val,d:declared});
+    if(who===me.username){ unoSel=-1; unoDrew=false; }
+    unoDrewFor[who]=false;
   }}},
   xiangqi:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return xqPlayerOf(xqTurnSide(r),playerNames(r))===who; },fn(who){
     who=who||me.username;
@@ -7691,14 +7708,16 @@ const CH_DEF={
     const mv=dsBestMove(dsReplay(r),side,3);
     if(mv) dsMove(mv[0],mv[1],who);
   }}},
-  go:{ai:{n:'AI 代打',mine(r){
+  go:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const st=goReplay(r);
     const side=st.moves%2===0?1:2;
-    return playerNames(r)[side===1?0:1]===me.username;
-  },fn(){
+    return playerNames(r)[side===1?0:1]===who;
+  },fn(who){
+    who=who||me.username;
     const r=curRoom;
     const i=goBestMove(r);
-    if(i>=0) goMove(i); else goPass();
+    if(i>=0) goMove(i,who); else goPass(who);
   }}},
   checkers:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return r.turn===who; },fn(who){
     who=who||me.username;
