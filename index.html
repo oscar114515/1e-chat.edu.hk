@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-+QZrO95R+1/+ss25MYuAjyLehF1jEeZ9Grohnbvm+6Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-MepftFk3MvrFUZju5YZ3uVbzooghoQGr0t0E3jKWFe0=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -603,6 +603,65 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 .score-chip-fixed{display:none !important}
 @media (max-width:600px){.score-chip{font-size:11px;padding:2px 7px}}
 
+/* ══ v1.38.10 積分中心／兌換碼／積分商店 ══════════════════════════════
+   兌換碼由超級管理員在後台建立，一經任何人使用即永久失效。
+   積分商店由管理員上架，學生用積分兌換，庫存扣完即下架。
+   整個兌換介面自成一頁（不是彈窗），因為要放輸入框、商品清單和紀錄。 */
+.realname-card .rn-row.rn-click{cursor:pointer;border-radius:var(--r-1);margin:0 -6px;padding-left:6px;padding-right:6px;transition:background var(--dur-1) var(--ease-out)}
+.realname-card .rn-row.rn-click:hover{background:rgba(148,163,184,.09)}
+.realname-card .rn-row.rn-click:active{background:rgba(148,163,184,.16)}
+.rn-go{display:inline-flex;align-items:center;gap:4px;color:var(--text-muted);font-size:12px;font-weight:600}
+.rn-go .ico{width:1em;height:1em}
+.pt-hero{position:relative;overflow:hidden;border-radius:var(--r-3);padding:20px 18px;margin:0 0 16px;
+  background:linear-gradient(135deg,rgba(251,191,36,.16),rgba(139,92,246,.16));
+  border:1px solid rgba(251,191,36,.28)}
+.pt-hero::after{content:'';position:absolute;right:-50px;top:-70px;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(251,191,36,.22),transparent 70%);pointer-events:none}
+.pt-hero-label{font-size:12.5px;font-weight:600;color:var(--text-sub);letter-spacing:.4px}
+.pt-hero-num{display:flex;align-items:center;gap:9px;margin-top:7px;font-size:30px;font-weight:800;
+  line-height:1.15;color:var(--gold);letter-spacing:-.5px;word-break:break-all}
+.pt-hero-num .ico{width:.95em;height:.95em;flex:0 0 auto}
+@media (max-width:420px){.pt-hero-num{font-size:25px}}
+/* 餘額理論上不會是負數（扣唔到就成筆交易取消），但資料庫若被手動改成負數，至少看得出來 */
+.pt-hero-num.neg{color:var(--danger)}
+.score-chip.neg{color:var(--danger);border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.12)}
+.pt-code{display:flex;gap:8px;align-items:stretch}
+.pt-code input{flex:1 1 auto;min-width:0;width:auto;padding:13px 14px;border-radius:var(--r-2);
+  border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);
+  font-size:17px;font-weight:700;letter-spacing:2.5px;font-family:Consolas,Menlo,monospace;
+  text-transform:uppercase;outline:none}
+.pt-code input::placeholder{letter-spacing:0;font-weight:500;font-family:inherit;text-transform:none;color:var(--text-muted)}
+.pt-code input:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.18)}
+.pt-code .btn-primary{flex:0 0 auto;width:auto;margin:0;padding:0 22px;font-size:14px;border-radius:var(--r-2)}
+.pt-msg{font-size:12.5px;font-weight:600;margin-top:9px;min-height:17px;line-height:1.45}
+.pt-msg.ok{color:var(--ok-tx)}
+.pt-msg.bad{color:var(--danger)}
+.shop-grid{display:grid;gap:9px}
+.shop-card{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--r-2);
+  background:var(--bg-card);border:1px solid var(--border)}
+.shop-card.sold{opacity:.5}
+.shop-card .sh-main{flex:1 1 auto;min-width:0}
+.shop-card .sh-name{font-size:14px;font-weight:700;color:var(--text-main);word-break:break-word}
+.shop-card .sh-note{font-size:12px;color:var(--text-sub);margin-top:3px;word-break:break-word}
+.shop-card .sh-cost{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;color:var(--gold);margin-top:5px}
+.shop-card .sh-cost .ico{width:1em;height:1em}
+.shop-card .sh-btn{flex:0 0 auto;width:auto;margin:0;padding:9px 15px;font-size:13px;border-radius:var(--r-2)}
+.pt-his{display:flex;flex-direction:column;gap:1px;border-radius:var(--r-2);overflow:hidden;border:1px solid var(--border)}
+.pt-his-row{display:flex;align-items:center;gap:9px;padding:11px 13px;background:var(--bg-card);font-size:12.5px}
+.pt-his-row+.pt-his-row{border-top:1px solid var(--border)}
+.pt-his-row .h-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-main);font-weight:600}
+.pt-his-row .h-d{flex:0 0 auto;color:var(--text-muted);font-size:11.5px}
+.pt-his-row .h-p{flex:0 0 auto;font-weight:800}
+.pt-his-row .h-p.plus{color:var(--ok-tx)}
+.pt-his-row .h-p.minus{color:var(--danger)}
+.code-row{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--r-2);
+  background:var(--bg-card);border:1px solid var(--border);margin-bottom:8px}
+.code-row.used{opacity:.5}
+.code-row .cr-main{flex:1 1 auto;min-width:0}
+.code-row .cr-code{font-family:Consolas,Menlo,monospace;font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text-main)}
+.code-row .cr-sub{font-size:11.5px;color:var(--text-sub);margin-top:3px}
+.code-row .cr-btn{flex:0 0 auto;width:auto;margin:0;padding:8px 13px;font-size:12px;border-radius:var(--r-1)}
+
 /* v1.36 版本資訊簡化：一行摘要 + 更早的只留版本號 */
 .version-item .vi-sum{font-size:13px;color:var(--text-sub);margin-top:2px}
 .version-item.old{opacity:.55;padding:6px 0}
@@ -964,7 +1023,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
 
 <div id="chatScreen" class="hidden">
   <header>
-    <div class="title">班級聊天室</div><span class="score-chip" id="scoreTop" title="積分（暫未啟用）"></span>
+    <div class="title">班級聊天室</div><span class="score-chip" id="scoreTop" title="積分"></span>
     <div class="right">
       <span class="ver">v1.35</span>
       <span id="weatherChip" class="weather-chip hidden" title=""></span>
@@ -1024,7 +1083,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
     </div>
   </div>
 
-  <span class="score-chip score-chip-fixed" id="scoreBottom" title="積分（暫未啟用）"></span>
+  <span class="score-chip score-chip-fixed" id="scoreBottom" title="積分"></span>
   <div id="bottomNav">
     <button class="nav-item" data-action="openMyProfile"><span class="nav-icon"><svg class="ico"><use href="#i-user"/></svg></span><span>個人主頁</span></button>
     <button class="nav-item" data-action="openGroupList"><span class="nav-icon"><svg class="ico"><use href="#i-msg"/></svg></span><span>群聊</span><span class="nav-badge hidden" id="navGroupBadge">0</span></button>
@@ -1045,7 +1104,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.8';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.11';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1416,7 +1475,7 @@ async function handleLogin(uArg,pArg){
     if(data.disabled===true){loginError.textContent='此帳號已停用';return;}
     if(data.banned&&data.banned.type==='severe'){loginError.textContent='你已被封禁，無法登入。\n原因：'+(data.banned.reason||'（無原因）');return;}
     if(data.password!==p){loginError.textContent='密碼錯誤';return;}
-    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null};
+    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{await update(ref(db,'users/'+me.username),{hasLoggedIn:true,neverLoggedIn:null,lastLoginAt:Date.now()});}catch(e){}
@@ -1469,6 +1528,13 @@ document.addEventListener('click',async(e)=>{
     if(action==='login')return await handleLogin();
     if(action==='logout')return await handleLogout();
     if(action==='openTools')return openToolsPage();
+    if(action==='openPoints')return openPointsPage();
+    if(action==='redeemCode')return await redeemCode();
+    if(action==='buyShopItem')return await buyShopItem(arg);
+    if(action==='adminCreateRedeem')return await adminCreateRedeem();
+    if(action==='adminCreateShop')return await adminCreateShop();
+    if(action==='adminDeleteShop')return await adminDeleteShop(arg);
+    if(action==='copyCode')return copyCode(arg);
     if(action==='openLiveMap')return openLiveMap();
     if(action==='openMyProfile'){ await openProfilePage(me.username,true); return syncToolEntrySub(); }
     if(action==='openUserProfile'){ await openProfilePage(arg,arg===me.username); return syncToolEntrySub(); }
@@ -2166,14 +2232,14 @@ function freezeBrowser(target){
   }
 }
 
-/* ── 積分（預留）──────────────────────────────
-   目前只讀 users/{username}/points 顯示，沒有任何人可以加減、也沒有用途。
-   之後要啟用只要在後台加加減的介面即可，前端這裡不用改。 */
+/* ── 積分 ──────────────────────────────────
+   只讀 users/{username}/points 顯示，加減要由後台或直接改資料庫。
+   ⚠ me 物件是登入時逐個欄位抄出來的，漏抄 points 就會永遠顯示 0（v1.38.9 修）。 */
 function pointsOf(u){ return Number((u&&u.points)||0)||0; }
 function renderPoints(){
   const v=pointsOf(me);
   const html='<svg class="ico"><use href="#i-score"/></svg><span>'+(v||0)+'</span>';
-  ['scoreTop','scoreBottom'].forEach(id=>{ const el=document.getElementById(id); if(el)el.innerHTML=html; });
+  ['scoreTop','scoreBottom'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.innerHTML=html; el.classList.toggle('neg',v<0); } });
 }
 
 /* ── v1.36 視訊通話 ────────────────────────────────
@@ -3817,6 +3883,7 @@ function popPage(){
   /* 返回時貼回來的是一段 HTML 快照，裡面寫死的紅點數字仍然是舊的，
      所以每次還原之後都要重新算一次。 */
   try{ refreshAllBadges(); }catch(e){}
+  try{ syncPointNodes(); }catch(e){}
 }
 function resetPageStack(){ ++navSeq; pageStack=[];currentPageKey=null;_pageSameKey=false;pageRoot.innerHTML=''; }
 
@@ -3872,12 +3939,335 @@ function realNameBlock(u){
   const row=(label,val)=>val?`<div class="rn-row"><span class="rn-label">${label}</span><span class="rn-val">${escapeHtml(val)}</span></div>`:'';
   return `<div class="section-title">班別名冊姓名</div><div class="realname-card">${row('中文名',chi)}${row('英文名',eng)}</div>`;
 }
-/* ═══ v1.37 積分列（預留）═══
+/* ═══ v1.37 積分列 ═══
    積分本來只掛在標題列，進到個人主頁就看不到。現在個人主頁也放一條，
-   位置在名冊姓名下面，資料同樣只讀 users/{u}/points。 */
-function pointsRow(u){
+   位置在名冊姓名下面，資料同樣只讀 users/{u}/points。
+   v1.38.10：自己的那一條可以點，點進去是整頁的積分中心（兌換碼＋商店）；
+   看別人主頁時那一條純顯示，不能點（不能替別人兌換）。 */
+function pointsRow(u,isSelf){
   const v=pointsOf(u);
-  return `<div class="section-title">積分</div><div class="realname-card"><div class="rn-row"><span class="rn-label">目前積分</span><span class="rn-val"><svg class="ico" style="width:1.1em;height:1.1em;vertical-align:-.15em;color:var(--gold)"><use href="#i-score"/></svg> ${v}</span></div></div>`;
+  const cls='rn-row'+(isSelf?' rn-click':'');
+  const act=isSelf?' data-action="openPoints"':'';
+  const go=isSelf?`<span class="rn-go">兌換<svg class="ico"><use href="#i-next"/></svg></span>`:'';
+  return `<div class="section-title">積分</div><div class="realname-card"><div class="${cls}"${act}><span class="rn-label">目前積分</span><span class="rn-val"><svg class="ico" style="width:1.1em;height:1.1em;vertical-align:-.15em;color:var(--gold)"><use href="#i-score"/></svg> <span data-pts-self="${isSelf?'1':'0'}">${v}</span></span>${go}</div></div>`;
+}
+/* 個人主頁／兌換頁貼回快照之後，積分數字會凍結在舊值 —— 統一由這裡刷新。 */
+function syncPointNodes(){
+  if(!me)return;
+  const v=pointsOf(me);
+  document.querySelectorAll('[data-pts-self="1"]').forEach(el=>{ if(el.textContent!==String(v)) el.textContent=v; });
+  const hero=document.getElementById('ptHeroNum');
+  if(hero){ hero.textContent=v; hero.classList.toggle('neg',v<0); }
+}
+/* ═══════════════════════════════════════════════════════════════════
+   v1.38.10 積分中心（整頁）
+   ───────────────────────────────────────────────────────────────────
+   入口：個人主頁「目前積分」那一行（只有自己的主頁可以點）。
+   一頁之內做三件事：看分數、輸入兌換碼、用積分兌換商店商品。
+   用戶明確要求「兌換積分介面是整個頁面，不是一個小卡片」，
+   所以這裡走 beginPage/setPageHTML 的正常分頁流程，可以按返回。
+   資料：
+     redeem/{CODE} = {code,points,note,createdBy,createdAt,usedBy,usedAt}
+       · 任何人用過（usedBy 有值）就永久失效，這是用戶指定的規則
+     shop/{pushKey} = {name,cost,stock,note,createdAt,createdBy}
+       · stock 為 null／空 = 不限量；扣到 0 顯示「已兌換完」
+     redeemLog/{username}/{pushKey} = {code,points,at}
+     shopOrders/{username}/{pushKey} = {item,name,cost,at}
+   扣分／加分一律用 runTransaction，避免兩個人同時兌換把分數蓋掉。
+   ═══════════════════════════════════════════════════════════════════ */
+function openPointsPage(){
+  const seq=navStart();
+  beginPage('points');
+  setPageHTML(`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">積分</div></div><div class="fp-body"><div class="profile-content">
+    <div class="pt-hero"><div class="pt-hero-label">目前積分</div><div class="pt-hero-num"><svg class="ico"><use href="#i-score"/></svg><span id="ptHeroNum">${pointsOf(me)}</span></div></div>
+    <div class="section-title">兌換積分</div>
+    <div class="pt-code"><input type="text" id="redeemInput" placeholder="輸入兌換碼" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn-primary" data-action="redeemCode" id="redeemBtn">兌換</button></div>
+    <div class="pt-msg" id="redeemMsg"></div>
+    <div class="section-title">積分商店</div>
+    <div class="shop-grid" id="shopList"><div class="empty">正在載入商品…</div></div>
+    <div class="section-title">最近的兌換</div>
+    <div id="ptHis"><div class="empty">正在載入…</div></div>
+  </div></div></div>`);
+  /* 輸入框按 Enter 直接兌換 */
+  const inp=document.getElementById('redeemInput');
+  if(inp)inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); redeemCode(); } });
+  loadShopAndHistory(seq);
+}
+async function loadShopAndHistory(seq){
+  try{
+    const [shopSnap,logSnap,ordSnap]=await Promise.all([
+      get(ref(db,'shop')),
+      get(ref(db,'redeemLog/'+me.username)),
+      get(ref(db,'shopOrders/'+me.username)),
+    ]);
+    if(seq!=null&&!navAlive(seq))return;
+    /* 商品清單 */
+    const shopEl=document.getElementById('shopList');
+    if(shopEl){
+      const items=shopSnap.exists()?Object.entries(shopSnap.val()):[];
+      items.sort((a,b)=>(Number(a[1].cost)||0)-(Number(b[1].cost)||0)||((a[1].createdAt||0)-(b[1].createdAt||0)));
+      if(!items.length)shopEl.innerHTML='<div class="empty">暫時未有商品</div>';
+      else shopEl.innerHTML=items.map(([id,it])=>{
+        const cost=Number(it.cost)||0;
+        const stock=(it.stock==null||it.stock==='')?null:Number(it.stock);
+        const sold=stock!==null&&stock<=0;
+        /* 八達通式：積分不夠就換不到，餘額永遠不會被扣到負數。
+           按鈕要寫明「積分不足」，只變灰會令人以為按壞了。 */
+        const enough=pointsOf(me)>=cost;
+        const can=enough&&!sold;
+        const label=sold?'已換完':(enough?'兌換':'積分不足');
+        return `<div class="shop-card ${sold?'sold':''}"><div class="sh-main"><div class="sh-name">${escapeHtml(it.name||'')}</div>${it.note?`<div class="sh-note">${escapeHtml(it.note)}</div>`:''}<div class="sh-cost"><svg class="ico"><use href="#i-score"/></svg>${cost}${stock!==null?` · 剩 ${Math.max(0,stock)} 份`:''}</div></div><button class="btn-primary sh-btn" data-action="buyShopItem" data-arg="${escAttr(id)}" ${can?'':'disabled'}>${label}</button></div>`;
+      }).join('');
+    }
+    /* 兌換紀錄：兌換碼與商品合併，時間新到舊，最多 20 條 */
+    const rows=[];
+    if(logSnap.exists())Object.values(logSnap.val()).forEach(x=>rows.push({t:'兌換碼 '+String(x.code||''),p:Number(x.points)||0,at:Number(x.at)||0}));
+    if(ordSnap.exists())Object.values(ordSnap.val()).forEach(x=>rows.push({t:'兌換 '+String(x.name||''),p:-(Number(x.cost)||0),at:Number(x.at)||0}));
+    rows.sort((a,b)=>b.at-a.at);
+    const hisEl=document.getElementById('ptHis');
+    if(hisEl){
+      if(!rows.length)hisEl.innerHTML='<div class="empty">還沒有兌換紀錄</div>';
+      else hisEl.innerHTML='<div class="pt-his">'+rows.slice(0,20).map(r=>`<div class="pt-his-row"><span class="h-t">${escapeHtml(r.t)}</span><span class="h-d">${fmtShortTime(r.at)}</span><span class="h-p ${r.p>=0?'plus':'minus'}">${r.p>=0?'+':''}${r.p}</span></div>`).join('')+'</div>';
+    }
+  }catch(e){
+    const shopEl=document.getElementById('shopList');
+    if(shopEl&&!/^\s*$/.test(shopEl.innerHTML.replace(/<[^>]*>/g,''))){/* 已有內容就不要蓋掉 */}
+    else if(shopEl)shopEl.innerHTML='<div class="empty">載入失敗，請稍後再試</div>';
+  }
+}
+function fmtShortTime(t){
+  if(!t)return '';
+  const d=new Date(t), n=new Date();
+  const p=x=>String(x).padStart(2,'0');
+  const hm=p(d.getHours())+':'+p(d.getMinutes());
+  if(d.toDateString()===n.toDateString())return '今天 '+hm;
+  return (d.getMonth()+1)+'月'+d.getDate()+'日 '+hm;
+}
+/* 兌換碼：格式化成大寫、去掉空白與連字號，避免同學打「ABCD-1234」就兌換失敗 */
+function normCode(s){ return String(s||'').toUpperCase().replace(/[\s\-－_]/g,'').trim(); }
+async function redeemCode(){
+  const inp=document.getElementById('redeemInput');
+  const msg=document.getElementById('redeemMsg');
+  const btn=document.getElementById('redeemBtn');
+  if(!inp||!msg)return;
+  const code=normCode(inp.value);
+  const say=(txt,ok)=>{ msg.textContent=txt; msg.className='pt-msg '+(ok?'ok':'bad'); };
+  if(!code){ say('請先輸入兌換碼',false); inp.focus(); return; }
+  if(btn){ btn.disabled=true; btn.classList.add('btn-loading'); }
+  say('正在兌換…',true);
+  try{
+    /* ⚠ 必須先 get 一次，把節點拉進本地快取。
+       runTransaction 第一輪是用本地快取當 cur；如果本地沒有這個節點，cur 就是 null，
+       而 cur 為 null 時返回 undefined 會即場中止，SDK 根本不會去伺服器確認 ——
+       結果就是「明明未用過都話已經被使用」。先讀一次就沒有這個問題。 */
+    const pre=await get(ref(db,'redeem/'+code));
+    if(!pre.exists()){ say('兌換碼不正確',false); inp.value=''; return; }
+    if((pre.val()||{}).usedBy){ say('這個兌換碼已經被使用了',false); inp.value=''; return; }
+    /* 用交易把「寫入使用人」和「檢查是否已用」綁在一起：
+       兩個人同時輸入同一組碼，只有一個人的交易會成功。 */
+    const tr=await runTransaction(ref(db,'redeem/'+code),cur=>{
+      /* ⚠ 這裡不可以 return（undefined）！
+         runTransaction 第一輪是用本地快取當 cur，本地未有這個節點時 cur 是 null。
+         回傳 undefined 等於「即刻放棄」，SDK 連伺服器都不會問，
+         結果就是「明明未用過都話已用」。回傳 null 代表「維持不存在」，
+         SDK 會拿伺服器真實值再跑一次，到時 cur 就有值了。 */
+      if(cur===null)return null;
+      if(cur.usedBy)return;        // 已經被用過 → 中止
+      return {code:cur.code||code,points:Number(cur.points)||0,note:cur.note||'',
+              createdBy:cur.createdBy||'',createdAt:Number(cur.createdAt)||0,
+              usedBy:me.username,usedAt:Date.now()};
+    });
+    if(!tr.committed){
+      say('這個兌換碼已經被使用了',false);
+      inp.value='';
+      return;
+    }
+    const got=Number((tr.snapshot.val()||{}).points)||0;
+    /* 加分同樣用交易，避免和商店扣分撞在一起 */
+    try{ await get(ref(db,'users/'+me.username+'/points')); }catch(e){}
+    const pr=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
+      if(v===null)return null;
+      let n=(Number(v)||0)+got;
+      if(n>9007199254740991)n=9007199254740991;   // 超過 JS 安全整數會失真，封頂
+      return n;
+    });
+    if(!pr.committed){
+      /* 加分失敗 → 把兌換碼放回去，不能讓同學白蝕一組碼 */
+      try{ await update(ref(db,'redeem/'+code),{usedBy:null,usedAt:null}); }catch(e){}
+      say('兌換失敗，請再試一次',false);
+      return;
+    }
+    me.points=Number(pr.snapshot.val())||0;
+    try{ await push(ref(db,'redeemLog/'+me.username),{code:code,points:got,at:Date.now()}); }catch(e){}
+    renderPoints(); syncPointNodes();
+    inp.value='';
+    say('兌換成功，已加入 '+got+' 分',true);
+    try{ writeLog('redeem','兌換碼 '+code+' +'+got+' 分'); }catch(e){}
+    if(typeof showNotif==='function')showNotif('已兌換 '+got+' 分');
+    loadShopAndHistory(navSeq);
+  }catch(e){
+    say('兌換失敗，請稍後再試',false);
+  }finally{
+    if(btn){ btn.disabled=false; btn.classList.remove('btn-loading'); }
+  }
+}
+async function buyShopItem(id){
+  if(!id)return;
+  const seq=navStart();
+  try{
+    const snap=await get(ref(db,'shop/'+id));
+    if(!snap.exists()){ showNotif('商品已經下架'); loadShopAndHistory(seq); return; }
+    const it=snap.val();
+    const cost=Number(it.cost)||0;
+    const stock=(it.stock==null||it.stock==='')?null:Number(it.stock);
+    if(stock!==null&&stock<=0){ showNotif('這個商品已經換完'); loadShopAndHistory(seq); return; }
+    if(pointsOf(me)<cost){ showNotif('積分不足，還差 '+(cost-pointsOf(me))+' 分'); return; }
+    if(!confirm('確定用 '+cost+' 分兌換「'+(it.name||'')+'」？'))return;
+    /* 先扣分（最關鍵的一步），扣不到就整個取消 */
+    try{ await get(ref(db,'users/'+me.username+'/points')); }catch(e){}
+    const pr=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
+      if(v===null)return null;     // 本地未有資料 → 交回伺服器重試
+      const n=Number(v)||0;
+      if(n<cost)return;            // 分數不夠 → 中止
+      return n-cost;
+    });
+    if(!pr.committed){ showNotif('積分不足，還差 '+(cost-pointsOf(me))+' 分'); return; }
+    me.points=Number(pr.snapshot.val())||0;
+    /* 再扣庫存；若這一步失敗（例如最後一份剛被別人換走）就把分數退回去 */
+    let stockOk=true;
+    if(stock!==null){
+      const sr=await runTransaction(ref(db,'shop/'+id),cur=>{
+        if(cur===null)return null;
+        const s=Number(cur.stock);
+        if(!(s>0))return;          // 已經沒有庫存 → 中止
+        return {...cur,stock:s-1};
+      });
+      stockOk=sr.committed;
+    }
+    if(!stockOk){
+      const back=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
+        if(v===null)return null;
+        return (Number(v)||0)+cost;
+      });
+      if(back.committed)me.points=Number(back.snapshot.val())||0;
+      showNotif('這個商品剛剛被換完，積分已退回');
+      renderPoints(); syncPointNodes(); loadShopAndHistory(seq);
+      return;
+    }
+    try{ await push(ref(db,'shopOrders/'+me.username),{item:id,name:it.name||'',cost:cost,at:Date.now()}); }catch(e){}
+    renderPoints(); syncPointNodes();
+    showNotif('已兌換「'+(it.name||'')+'」');
+    try{ writeLog('shopbuy','兌換 '+String(it.name||'')+' -'+cost+' 分'); }catch(e){}
+    loadShopAndHistory(seq);
+  }catch(e){
+    showNotif('兌換失敗，請稍後再試');
+  }
+}
+/* ── 後台：兌換碼 ───────────────────────────────────────────── */
+const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genCode(len){
+  len=len||8;
+  const arr=new Uint8Array(len);
+  try{ crypto.getRandomValues(arr); }catch(e){ for(let i=0;i<len;i++)arr[i]=Math.floor(Math.random()*256); }
+  let s='';
+  for(let i=0;i<len;i++)s+=CODE_CHARS[arr[i]%CODE_CHARS.length];
+  return s;
+}
+async function renderRedeemTab(){
+  if(me.role!=='superadmin')return '<div class="empty">無權限</div>';
+  const snap=await get(ref(db,'redeem'));
+  const items=snap.exists()?Object.entries(snap.val()):[];
+  items.sort((a,b)=>((a[1].usedBy?1:0)-(b[1].usedBy?1:0))||((b[1].createdAt||0)-(a[1].createdAt||0)));
+  const unused=items.filter(x=>!x[1].usedBy).length;
+  const head=`<div class="section-title">新增兌換碼</div>
+  <div class="form-row"><input type="number" id="rc_points" placeholder="可兌換積分（例如 100）" min="1"></div>
+  <div class="form-row"><input type="text" id="rc_note" placeholder="備註（例如：數學小測獎勵，可留空）" maxlength="30"></div>
+  <button class="btn-primary" data-action="adminCreateRedeem">生成兌換碼</button>
+  <div class="err" id="rcErr"></div>
+  <div class="section-title">所有兌換碼（未使用 ${unused}／共 ${items.length}）</div>`;
+  if(!items.length)return head+'<div class="empty">還未建立任何兌換碼</div>';
+  return head+items.map(([code,it])=>{
+    const used=!!it.usedBy;
+    return `<div class="code-row ${used?'used':''}"><div class="cr-main"><div class="cr-code">${escapeHtml(code)}</div><div class="cr-sub">${Number(it.points)||0} 分${it.note?' · '+escapeHtml(it.note):''} · ${used?'已由 '+escapeHtml(it.usedBy)+' 使用':'未使用'}</div></div>${used?'':`<button class="btn-ghost cr-btn" data-action="copyCode" data-arg="${escAttr(code)}">複製</button>`}</div>`;
+  }).join('');
+}
+async function adminCreateRedeem(){
+  if(me.role!=='superadmin')return;
+  const errEl=document.getElementById('rcErr');
+  if(errEl)errEl.textContent='';
+  const pts=Number((document.getElementById('rc_points')||{}).value);
+  const note=((document.getElementById('rc_note')||{}).value||'').trim();
+  if(!pts||pts<1||!Number.isFinite(pts)){ if(errEl)errEl.textContent='請輸入大於 0 的積分'; return; }
+  if(pts>9007199254740991)pts=9007199254740991;
+  let code='';
+  for(let i=0;i<8;i++){
+    code=genCode(8);
+    const chk=await get(ref(db,'redeem/'+code));
+    if(!chk.exists())break;
+    code='';
+  }
+  if(!code){ if(errEl)errEl.textContent='生成失敗，請再試一次'; return; }
+  await set(ref(db,'redeem/'+code),{code:code,points:pts,note:note,createdBy:me.username,createdAt:Date.now(),usedBy:null,usedAt:null});
+  try{ writeLog('redeemnew','建立兌換碼 '+code+' '+pts+' 分'); }catch(e){}
+  renderAdminTab('redeem');
+  setTimeout(()=>{ try{ copyText(code); showNotif('已建立 '+code+'，已複製'); }catch(e){ showNotif('已建立 '+code); } },260);
+}
+function copyText(txt){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt); return; }
+  }catch(e){}
+  try{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+  }catch(e){}
+}
+function copyCode(code){ copyText(code); showNotif('已複製 '+code); }
+/* ── 後台：積分商店 ─────────────────────────────────────────── */
+async function renderShopTab(){
+  if(me.role!=='superadmin')return '<div class="empty">無權限</div>';
+  const snap=await get(ref(db,'shop'));
+  const items=snap.exists()?Object.entries(snap.val()):[];
+  items.sort((a,b)=>(Number(a[1].cost)||0)-(Number(b[1].cost)||0));
+  const head=`<div class="section-title">新增商品</div>
+  <div class="form-row"><input type="text" id="sh_name" placeholder="商品名稱（例如：換座位一星期）" maxlength="24"></div>
+  <div class="form-row"><input type="number" id="sh_cost" placeholder="所需積分" min="1"></div>
+  <div class="form-row"><input type="number" id="sh_stock" placeholder="數量（留空 = 不限）" min="0"></div>
+  <div class="form-row"><input type="text" id="sh_note" placeholder="說明（可留空）" maxlength="40"></div>
+  <button class="btn-primary" data-action="adminCreateShop">上架商品</button>
+  <div class="err" id="shErr"></div>
+  <div class="section-title">所有商品（${items.length}）</div>`;
+  if(!items.length)return head+'<div class="empty">商店還是空的</div>';
+  return head+'<div class="shop-grid">'+items.map(([id,it])=>{
+    const stock=(it.stock==null||it.stock==='')?null:Number(it.stock);
+    return `<div class="shop-card"><div class="sh-main"><div class="sh-name">${escapeHtml(it.name||'')}</div>${it.note?`<div class="sh-note">${escapeHtml(it.note)}</div>`:''}<div class="sh-cost"><svg class="ico"><use href="#i-score"/></svg>${Number(it.cost)||0}${stock!==null?' · 剩 '+Math.max(0,stock)+' 份':' · 不限量'}</div></div><button class="btn-danger sh-btn" data-action="adminDeleteShop" data-arg="${escAttr(id)}">下架</button></div>`;
+  }).join('')+'</div>';
+}
+async function adminCreateShop(){
+  if(me.role!=='superadmin')return;
+  const errEl=document.getElementById('shErr');
+  if(errEl)errEl.textContent='';
+  const name=((document.getElementById('sh_name')||{}).value||'').trim();
+  const cost=Number((document.getElementById('sh_cost')||{}).value);
+  const stockRaw=((document.getElementById('sh_stock')||{}).value||'').trim();
+  const note=((document.getElementById('sh_note')||{}).value||'').trim();
+  if(!name){ if(errEl)errEl.textContent='請輸入商品名稱'; return; }
+  if(!cost||cost<1||!Number.isFinite(cost)){ if(errEl)errEl.textContent='請輸入大於 0 的積分'; return; }
+  if(cost>9007199254740991)cost=9007199254740991;
+  let stock=null;
+  if(stockRaw!==''){ stock=Math.floor(Number(stockRaw)); if(!Number.isFinite(stock)||stock<0){ if(errEl)errEl.textContent='數量請填 0 或以上'; return; } }
+  const id='item_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  await set(ref(db,'shop/'+id),{name:name,cost:cost,stock:stock,note:note,createdAt:Date.now(),createdBy:me.username});
+  try{ writeLog('shopnew','上架商品 '+name+' '+cost+' 分'); }catch(e){}
+  renderAdminTab('shop');
+  showNotif('已上架');
+}
+async function adminDeleteShop(id){
+  if(me.role!=='superadmin'||!id)return;
+  if(!confirm('下架這個商品？已經兌換過的紀錄會保留。'))return;
+  await remove(ref(db,'shop/'+id));
+  try{ writeLog('shopdel','下架商品 '+id); }catch(e){}
+  renderAdminTab('shop');
+  showNotif('已下架');
 }
 /* ═══ v1.37 統一 3D 名牌 ═══
    用戶投訴：「個人主頁上面太普通了」。
@@ -3904,7 +4294,7 @@ function nameCard3dHTML(u){
   return `<div class="profile3dWrap"><div class="profile3dCard" style="background:linear-gradient(135deg,${light} 0%,${dark} 100%)"><div class="glass"></div><div class="p3content"><span class="p3title" style="color:${textColor}">${escapeHtml(u.displayName||u.username)}</span><span class="p3text" style="color:${textColor};opacity:.85">${sub}</span></div><div class="p3logo">${circles}<span class="circle c5" style="background:${bgColor};color:#fff;font-size:22px;font-weight:900">${avHTML}</span></div></div></div>`;
 }
 /* 名牌 + 名冊 + 積分：個人主頁三種入口共用的「上半部」 */
-function profileTopHTML(u){ return nameCard3dHTML(u)+realNameBlock(u)+pointsRow(u); }
+function profileTopHTML(u,isSelf){ return nameCard3dHTML(u)+realNameBlock(u)+pointsRow(u,isSelf); }
 /* ═══ v1.38 小工具專區 ═══════════════════════════════════════════════
    一個獨立頁面列出所有小工具。清單寫死在 TOOL_LIST，之後加工具只要加一行。
    工具本身是獨立單檔網頁（例如 mtr.html），不內嵌進 chat.html ——
@@ -4441,7 +4831,7 @@ async function openProfilePage(username,isSelf,fromAdmin){
   if(!navAlive(seq))return;
   if(!snap.exists()){openPage({title:'已註銷',bodyHTML:'<div class="empty">該用戶已註銷帳戶</div>',key:'profile:'+username});return;}
   const u=snap.val();
-  const heroHTML=profileTopHTML(u);
+  const heroHTML=profileTopHTML(u,!!isSelf);
   const amAdmin=me&&(me.role==='superadmin'||me.role==='admin');
   if(isSelf){
     const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
@@ -4914,7 +5304,7 @@ function openAdminPage(tab){
   const isSuper=me.role==='superadmin';
   const accountTab=isSuper?`<button class="tab ${tab==='accounts'?'active':''}" data-action="switchAdminTab" data-arg="accounts">帳號管理</button>`:'';
   beginPage('admin');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='redeem'?'active':''}" data-action="switchAdminTab" data-arg="redeem">兌換碼</button><button class="tab ${tab==='shop'?'active':''}" data-action="switchAdminTab" data-arg="shop">商店</button>`:''}${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
 /* v1.38.5：記住每個管理分頁各自的捲動位置。
@@ -4936,6 +5326,8 @@ async function renderAdminTab(tab){
   else if(tab==='logs')body.innerHTML=await renderAllLogs();
   else if(tab==='groups')body.innerHTML=await renderGroupsAdmin();
   else if(tab==='usage'){ body.innerHTML='<div class="empty">正在統計資料用量…</div>'; await renderUsageTab(body); }
+  else if(tab==='redeem'){ body.innerHTML='<div class="empty">正在載入兌換碼…</div>'; body.innerHTML=await renderRedeemTab(); }
+  else if(tab==='shop'){ body.innerHTML='<div class="empty">正在載入商品…</div>'; body.innerHTML=await renderShopTab(); }
   else if(tab==='remote'){ body.innerHTML=renderRemoteTab(); }
   _adminTab=tab;
   const back=adminTabScroll[tab]||0;
@@ -5910,6 +6302,17 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.11',date:'2026-10-19',changes:[
+'積分改成八達通式：不夠分就換不到，餘額永遠不會被扣成負數。商品按鈕會寫明「積分不足」，按下去只會提示還差幾分，不會扣錢也不會扣庫存',
+]},
+{ver:'v1.38.10',date:'2026-10-19',changes:[
+'新增兌換碼：在個人主頁點「目前積分」那一行，會開一整頁的積分中心，輸入兌換碼就可以加分。每組兌換碼只可以有一個人用，一有人用過就即刻失效，其他人再輸入會提示「已經被使用了」',
+'新增積分商店：管理員上架商品（名稱、所需積分、數量、說明），學生在積分中心就可以用積分兌換，換完會扣分並記錄，數量扣到 0 就顯示已換完。所有加減分都用交易處理，兩個人同時按也不會把分數算錯',
+'後台多了「兌換碼」和「商店」兩個分頁：兌換碼可以即時生成、一鍵複製、看誰用了；商品可以上架、看剩餘數量、下架',
+]},
+{ver:'v1.38.9',date:'2026-10-19',changes:[
+'積分終於顯示得到：以前登入之後只會抄名冊上那幾個欄位，漏了積分本身，所以就算資料庫有分數，畫面上永遠都是 0。現在登入會一併讀回積分，標題列、手機版底部和個人主頁都見到真實分數',
+]},
 {ver:'v1.38.8',date:'2026-10-18',changes:[
 '巴士到站時間加入城巴：以前只查得到九巴同龍運，現在城巴路線都會一齊列出，黃色路線號就係城巴。同一個街口的九巴站同城巴站會合成一張卡，全部路線按到站時間排好，唔需要再開兩個 App 對',
 ]},
@@ -6280,7 +6683,7 @@ window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
     const data=snap.val();
     if(data.disabled===true){sessionStorage.removeItem('chat_me');return;}
     if(data.banned&&data.banned.type==='severe'){sessionStorage.removeItem('chat_me');return;}
-    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null};
+    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{await set(ref(db,'presence/'+me.username),Date.now());}catch(e){}
