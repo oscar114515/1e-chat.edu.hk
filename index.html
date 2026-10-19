@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-PPVqMQrkEDuMzB9/7ruX29BKcNPlImmo6FXZehAzKXI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-bYEbBcKIiyexKT7kuR7K49v0IdT7MJjWPX/kLlNatEU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1111,7 +1111,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.13';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.14';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -6368,6 +6368,9 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.14',date:'2026-10-19',changes:[
+'修好超大餘額付不到入場費的問題：帳戶分數接近 JavaScript 安全整數上限（2 的 53 次方）時，扣分的原子交易會不斷重試到失敗，於是明明有分都顯示「積分不足」，而且分數其實一分都沒有扣。現在交易失敗會自動改用「先讀一次再寫一次」補上，扣分、派彩、退款三條路都一樣',
+]},
 {ver:'v1.38.13',date:'2026-10-19',changes:[
 '小遊戲加入入場費：按難度分三檔，小的 50 分、中的 150 分、高的 500 分。連線對戰開房時房主要先付，其他人加入前會問一次「允不允許扣」，拒絕就原車返回、一分都不會扣',
 '獎金分帳：兩個人玩就贏家獨吞整個彩池（例如五子棋各付 150，贏的一方拿走 300），平手就各自原銀奉還；三個人以上冠軍拿七成，其餘三成由其他玩家分回',
