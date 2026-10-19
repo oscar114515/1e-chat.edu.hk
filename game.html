@@ -3933,6 +3933,14 @@ function initGameState(r, seed){
 
 function renderGame(r,g){
   if(isSecretUser()) mountCheat();
+  /* 保險：棋盤已經填滿但還停在 playing（舊版漏判平手留下的死局），
+     任何一端打開這一局就補判一次，不用等誰再落子。 */
+  try{
+    const bd=r.state&&r.state.board;
+    if(r.status==='playing'&&Array.isArray(bd)&&bd.length&&bd.every(x=>x)&&(r.game==='gomoku'||r.game==='tictactoe')){
+      setTimeout(()=>{ try{ tryWinCheck(); }catch(e){} },80);
+    }
+  }catch(e){}
   if(r.status==='ended') return renderEnded(r,g);
   const spec=!!(r.spectators&&r.spectators[me.username]);
   let turnName=r.turn;
@@ -4142,6 +4150,8 @@ async function tryWinCheck(){
     for(let i=0;i<N;i++)for(let j=0;j<N;j++){const v=b[i*N+j];if(!v)continue;
       for(const [dx,dy] of dirs){let c=1;for(let k=1;k<5;k++){const ni=i+dx*k,nj=j+dy*k;if(ni<0||nj<0||ni>=N||nj>=N)break;if(b[ni*N+nj]!==v)break;c++;}
         if(c>=5){ await finishGame(byMark('1','2',v));return; } } }
+    // 225 格全部填滿又沒有人五連 → 平手（以前漏了這一步，棋盤滿了就永遠卡住）
+    if(b.every(c=>c)){ await finishGame('draw'); }
   } else if(r.game==='ludo'){
     for(const [u,pl] of Object.entries(r.state.planes)){ if(pl.every(p=>p>=57)){ await finishGame(u);return; } }
   } else if(r.game==='uno'){
