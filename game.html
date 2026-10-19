@@ -645,26 +645,34 @@ async function takePoints(u,n){
       if(v<n){ bal=v; return; }             // 餘額不足 → 中止（唔會寫入）
       ok=true; bal=v-n; return v-n;
     });
-  }catch(e){ return {ok:false,bal:bal}; }
+  }catch(e){ ok=false; }
+  if(!ok){
+    /* 超大數值（接近 2^53）時交易會無限重試到 maxretry，永遠寫唔入。
+       退回「讀一次再寫一次」，並先確認交易其實有沒有偷偷成功。 */
+    const now=await readPoints(u);
+    if(now===cur-n) return {ok:true,bal:now};       // 交易其實已經扣了
+    if(now<n) return {ok:false,bal:now};
+    try{ await set(ref(db,'users/'+u+'/points'),now-n); return {ok:true,bal:now-n}; }
+    catch(e2){ return {ok:false,bal:now}; }
+  }
   return {ok:ok,bal:bal};
 }
 async function givePoints(u,n){
   n=Math.floor(Number(n)||0);
   if(!u||n<=0) return;
   const base=await readPoints(u);
-  let wrote=false;
   try{
     const res=await runTransaction(ref(db,'users/'+u+'/points'),c=>{
       if(c===null||c===undefined) return null;   // 同上：先讓 SDK 取伺服器值
-      wrote=true; return (Number(c)||0)+n;
+      return (Number(c)||0)+n;
     });
     const sv=res&&res.snapshot?res.snapshot.val():null;
-    if(sv!==null&&sv!==undefined) return;        // 交易真的寫入了
+    if(sv!==null&&sv!==undefined&&Number(sv)!==base) return;   // 交易真的寫入了
   }catch(e){}
-  if(!wrote){
-    // 節點本來就不存在 → 用讀到的值直接寫（0 + n）
-    try{ await set(ref(db,'users/'+u+'/points'),base+n); }catch(e){}
-  }
+  // 交易失敗（超大數值 maxretry）或節點本來不存在 → 讀一次再寫一次
+  const now=await readPoints(u);
+  if(now===base+n) return;                       // 其實已經加了
+  try{ await set(ref(db,'users/'+u+'/points'),now+n); }catch(e){}
 }
 async function nodeExists(path){
   try{ const s=await get(ref(db,path)); return s.exists(); }catch(e){ return false; }
@@ -677,7 +685,12 @@ async function addPot(rid,delta){
       return Math.max(0,(Number(p)||0)+delta);
     });
     const sv=res&&res.snapshot?res.snapshot.val():null;
-    if(sv===null||sv===undefined) await set(ref(db,'games/'+rid+'/pot'),Math.max(0,delta));
+    if(sv!==null&&sv!==undefined) return;
+  }catch(e){}
+  try{
+    const s=await get(ref(db,'games/'+rid+'/pot'));
+    const cur=s.exists()?(Number(s.val())||0):0;
+    await set(ref(db,'games/'+rid+'/pot'),Math.max(0,cur+delta));
   }catch(e){}
 }
 /* ── 付費確認框（回傳 Promise<boolean>）── */
