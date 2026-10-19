@@ -596,6 +596,210 @@ const catOf=k=>(gameDef(k).cat)||'multi';
 const isLobby=k=>catOf(k)==='lobby';
 const isSolo=k=>catOf(k)==='solo';
 
+/* ═══════════════════════════════════════════════════════════════
+   v1.41 入場費與獎金分帳
+   ───────────────────────────────────────────────────────────────
+   難度三檔：小 50、中 150、高 500
+     連線對戰  開房時房主先付，其他人加入前問一次「允不允許扣」
+     大廳自由  入場 50，局內每吃 10 粒回 +1（單局上限 100）
+     單人遊戲  免費
+   分帳：
+     2 人        贏家獨吞整個彩池
+     3 人以上    冠軍 70%，其餘 30% 由其他玩家平均分回
+     平手        每人原銀奉還
+     中途退出    退一半，另一半留在彩池歸贏家
+   ═══════════════════════════════════════════════════════════════ */
+const DIFF_HIGH=['go','xiangqi','chess','sanguosha'];
+const DIFF_MID=['gomoku','ludo','uno','checkers','doushou','konglok','monopoly','werewolf','scriptmurder'];
+const DIFF_OF={};
+DIFF_HIGH.forEach(k=>DIFF_OF[k]='high');
+DIFF_MID.forEach(k=>DIFF_OF[k]='mid');
+const DIFF_NAME={low:'小',mid:'中',high:'高'};
+const FEE={low:50,mid:150,high:500};
+const LOBBY_STEP=10, LOBBY_CAP=100;
+function diffOf(k){ return DIFF_OF[k]||'low'; }
+function feeOf(k){
+  const c=catOf(k);
+  if(c==='solo') return 0;
+  if(c==='lobby') return FEE.low;
+  return FEE[diffOf(k)];
+}
+
+/* ── 積分（全部走交易，扣不到就整筆取消；餘額永不為負）── */
+async function readPoints(u){
+  try{ const s=await get(ref(db,'users/'+u+'/points')); return Number(s.val())||0; }catch(e){ return 0; }
+}
+async function takePoints(u,n){
+  n=Math.floor(Number(n)||0);
+  const cur=await readPoints(u);            // 先拉進快取，交易第一輪才不會誤以為餘額 0
+  if(n<=0) return {ok:true,bal:cur};
+  if(cur<n) return {ok:false,bal:cur};
+  let ok=false, bal=cur;
+  try{
+    await runTransaction(ref(db,'users/'+u+'/points'),c=>{
+      /* ⚠ 交易第一輪用本地快取；本地沒有這個節點時 c 是 null。
+         回傳 null ＝「維持不存在」，SDK 會拿伺服器值再跑一次；
+         直接在這裡中止，就等於連問都不問伺服器（餘額 1200 也會被當成 0）。 */
+      if(c===null||c===undefined) return null;
+      const v=Number(c)||0;
+      if(v<n){ bal=v; return; }             // 餘額不足 → 中止（唔會寫入）
+      ok=true; bal=v-n; return v-n;
+    });
+  }catch(e){ return {ok:false,bal:bal}; }
+  return {ok:ok,bal:bal};
+}
+async function givePoints(u,n){
+  n=Math.floor(Number(n)||0);
+  if(!u||n<=0) return;
+  const base=await readPoints(u);
+  let wrote=false;
+  try{
+    const res=await runTransaction(ref(db,'users/'+u+'/points'),c=>{
+      if(c===null||c===undefined) return null;   // 同上：先讓 SDK 取伺服器值
+      wrote=true; return (Number(c)||0)+n;
+    });
+    const sv=res&&res.snapshot?res.snapshot.val():null;
+    if(sv!==null&&sv!==undefined) return;        // 交易真的寫入了
+  }catch(e){}
+  if(!wrote){
+    // 節點本來就不存在 → 用讀到的值直接寫（0 + n）
+    try{ await set(ref(db,'users/'+u+'/points'),base+n); }catch(e){}
+  }
+}
+async function nodeExists(path){
+  try{ const s=await get(ref(db,path)); return s.exists(); }catch(e){ return false; }
+}
+async function addPot(rid,delta){
+  if(!rid||!delta) return;
+  try{
+    const res=await runTransaction(ref(db,'games/'+rid+'/pot'),p=>{
+      if(p===null||p===undefined) return null;
+      return Math.max(0,(Number(p)||0)+delta);
+    });
+    const sv=res&&res.snapshot?res.snapshot.val():null;
+    if(sv===null||sv===undefined) await set(ref(db,'games/'+rid+'/pot'),Math.max(0,delta));
+  }catch(e){}
+}
+/* ── 付費確認框（回傳 Promise<boolean>）── */
+function askPay(title,lines,okText,cancelText){
+  return new Promise(resolve=>{
+    const el=document.createElement('div'); el.className='sheet'; el.id='paySheet';
+    el.innerHTML=`<div class="inner"><h3>${escapeHtml(title)}</h3>
+      ${lines.map(l=>`<div class="desc" style="margin:0 0 6px">${escapeHtml(l)}</div>`).join('')}
+      <button class="btn" id="payOk">${escapeHtml(okText)}</button>
+      <button class="btn ghost" id="payCancel">${escapeHtml(cancelText)}</button></div>`;
+    document.body.appendChild(el);
+    const done=v=>{ el.remove(); resolve(v); };
+    el.querySelector('#payOk').onclick=()=>done(true);
+    el.querySelector('#payCancel').onclick=()=>done(false);
+    el.onclick=e=>{ if(e.target===el) done(false); };
+  });
+}
+/* ── 加入房間前收費 ── */
+const payBusy={}, payDeclined={};
+async function chargeEntry(fee){
+  const rid=curRoomId; if(!rid||!me) return false;
+  if(payBusy[rid]) return payBusy[rid];     // 同一房間不重複問
+  const task=(async()=>{
+    const bal=await readPoints(me.username);
+    const g=gameDef(curRoom&&curRoom.game);
+    const ok=await askPay('入場費 '+fee+' 積分',
+      [`「${g.n}」（難度${DIFF_NAME[diffOf(g.k)]}）需要 ${fee} 積分，目前有 ${bal} 分。`],
+      '確定加入','不玩了');
+    if(!ok) return false;
+    // 已經付過就不再扣（同一個人開兩個分頁也只扣一次）
+    if(await nodeExists('games/'+rid+'/paid/'+me.username)) return true;
+    const t=await takePoints(me.username,fee);
+    if(!t.ok){
+      await askPay('積分不足',[`需要 ${fee} 積分，你目前只有 ${t.bal} 分。`],'知道了','關閉');
+      return false;
+    }
+    try{ await set(ref(db,'games/'+rid+'/paid/'+me.username),fee); }catch(e){}
+    await addPot(rid,fee);
+    showNotice('已扣 '+fee+' 積分');
+    return true;
+  })();
+  payBusy[rid]=task;
+  try{ return await task; } finally{ delete payBusy[rid]; }
+}
+/* ── 結算：只有搶到 settled 旗標的那一端負責派彩 ── */
+async function settlePot(r,winner,winners){
+  const rid=curRoomId; if(!rid) return;
+  let rr=r;
+  try{ const s=await get(ref(db,'games/'+rid)); if(s.exists()) rr=s.val(); }catch(e){}
+  const pot=Number(rr&&rr.pot)||0;
+  if(pot<=0) return;
+  if(await nodeExists('games/'+rid+'/settled')) return;   // 另一端已經派過
+  let res;
+  try{ res=await runTransaction(ref(db,'games/'+rid+'/settled'),c=>c===true?undefined:true); }catch(e){ return; }
+  if(!res||!res.committed) return;           // 另一端已經派過
+  const names=playerNames(rr);
+  const fee=Number(rr.fee)||0;
+  let left=pot;
+  const give=async(u,n)=>{
+    n=Math.min(Math.floor(Number(n)||0),left);
+    if(!u||n<=0) return 0;
+    left-=n; await givePoints(u,n); return n;
+  };
+  /* 中途斷線（直接關頁、沒有按退出）的人照樣退一半：付款名單減去現役名單就是走掉的人 */
+  const paidMap=rr.paid||{}, refundedMap=rr.refunded||{};
+  for(const u of Object.keys(paidMap)){
+    if(names.includes(u)) continue;
+    if(refundedMap[u]!==undefined) continue;
+    const half=Math.floor(fee/2);
+    if(half>0&&left>=half){ left-=half; await givePoints(u,half); }
+  }
+  const winArr=(winners&&winners.length)?winners.filter(u=>names.includes(u)):null;
+  if(winner==='closed'||(!winArr&&winner==='draw')){
+    for(const u of names){ if(left<=0) break; await give(u,fee); }
+    return;
+  }
+  if(winArr){
+    const each=Math.floor(left/winArr.length);
+    for(const u of winArr) await give(u,each);
+    return;
+  }
+  if(!names.includes(winner)) return;
+  if(names.length<=2){ await give(winner,left); return; }
+  await give(winner,Math.floor(left*0.7));    // 3 人以上：冠軍 70%
+  const others=names.filter(u=>u!==winner);
+  if(others.length){
+    // 沒有可靠名次時，餘下 30% 由其他玩家平均分回（不會無中生有，總額永遠 ≤ 彩池）
+    const each=Math.floor(left/others.length);
+    for(const u of others) await give(u,each);
+  }
+}
+/* ── 中途退出退款（未開局退全額，開局後退一半）── */
+async function refundOnLeave(rid){
+  const r=curRoom; if(!r||!me) return;
+  if(!(r.players&&r.players[me.username])) return;
+  const fee=Number(r.fee)||0; if(fee<=0) return;
+  if(r.refunded&&r.refunded[me.username]!==undefined) return;
+  const back=r.status==='playing'?Math.floor(fee/2):fee;
+  if(back<=0) return;
+  if(await nodeExists('games/'+rid+'/refunded/'+me.username)) return;
+  try{ await set(ref(db,'games/'+rid+'/refunded/'+me.username),back); }catch(e){ return; }
+  await givePoints(me.username,back);
+  await addPot(rid,-back);
+  showNotice(r.status==='playing'?('中途退出，已退回 '+back+' 積分'):('已退回 '+back+' 積分'));
+}
+/* ── 大廳遊戲：每吃 10 粒回 +1（單局上限 100）── */
+let lobbyEarn=0, lobbyEarnTimer=null;
+function stopLobbyEarn(){ if(lobbyEarnTimer){ clearInterval(lobbyEarnTimer); lobbyEarnTimer=null; } }
+function startLobbyEarn(){
+  stopLobbyEarn(); lobbyEarn=0;
+  lobbyEarnTimer=setInterval(async()=>{
+    if(!lgame||!lobbyKey||!me){ stopLobbyEarn(); return; }
+    let units=0;
+    try{ units=Number(lgame.units&&lgame.units())||0; }catch(e){ units=0; }
+    const want=Math.min(LOBBY_CAP,Math.floor(units/LOBBY_STEP));
+    if(want<=lobbyEarn) return;
+    const d=want-lobbyEarn; lobbyEarn=want;
+    await givePoints(me.username,d);
+    showNotice('吃了 '+(want*LOBBY_STEP)+' 粒，+'+d+' 積分');
+  },2000);
+}
+
 /* ===== 載入用戶 ===== */
 async function loadUser(){
   let uname=params.get('u')||localStorage.getItem('game_user')||'';
@@ -830,6 +1034,20 @@ async function nextMsgId(){
 }
 async function doCreate(){
   const g=gameDef(pick.g);
+  const fee=feeOf(g.k);
+  /* v1.41 開房先收費：房主付，這筆就是彩池的第一份 */
+  if(fee>0){
+    const bal=await readPoints(me.username);
+    const ok=await askPay('開房費用 '+fee+' 積分',
+      [`「${g.n}」（難度${DIFF_NAME[diffOf(g.k)]}）開房需要 ${fee} 積分，目前有 ${bal} 分。`],
+      '確定支付','取消');
+    if(!ok) return;
+    const t=await takePoints(me.username,fee);
+    if(!t.ok){
+      await askPay('積分不足',[`開房需要 ${fee} 積分，你目前只有 ${t.bal} 分。`],'知道了','關閉');
+      return;
+    }
+  }
   const rid=push(ref(db,'games')).key;
   const now=Date.now();
   const solo=isSolo(g.k);
@@ -842,6 +1060,7 @@ async function doCreate(){
     status:solo?'playing':'waiting',
     createdAt:now,startAt:null,turn:null,winner:null,state:{},topic:null,
     topicLevel:(GAMES_NEED_TOPIC[g.k]?pick.level:null),
+    fee:fee||null,pot:fee||null,paid:fee?{[me.username]:fee}:null,
     players:{[me.username]:{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:0}},
     spectators:{}};
   if(solo){
@@ -918,6 +1137,7 @@ async function ensureTopic(r){
 let lateJoin = false;
 function joinRoom(rid){
   curRoomId=rid; view='room'; try{window.__roomId=rid;}catch(e){}
+  delete payDeclined[rid];          // 重新開一次房間就要重新問一次
   lateJoin=false;
   if(roomSub)roomSub();
   roomSub=onValue(ref(db,'games/'+rid),async snap=>{
@@ -987,6 +1207,19 @@ async function ensureMembership(){
   const pcount=r.players?Object.keys(r.players).length:0;
   if(r.status==='waiting'||r.status==='countdown'){
     if(pcount<(r.setMax||r.maxP)){
+      /* v1.41 入場先問「允不允許扣」，拒絕就退出、一分都不扣 */
+      const fee=Number(r.fee)||0;
+      const paid=!!(r.paid&&r.paid[me.username]!==undefined);
+      if(fee>0&&!paid){
+        if(payDeclined[curRoomId]){ exitRoomQuietly(); return; }
+        const ok=await chargeEntry(fee);
+        if(!ok){
+          payDeclined[curRoomId]=1;
+          exitRoomQuietly();
+          showNotice('未扣積分，已退出');
+          return;
+        }
+      }
       const pr=ref(db,'games/'+curRoomId+'/players/'+me.username);
       await set(pr,{name:me.displayName,color:me.color,avatar:me.avatar||'',seat:pcount});
       // 關鍵：連線斷開時由伺服器自動移除，避免「人退了但還在名單裡」→ 倒數照跑
@@ -1007,6 +1240,14 @@ async function ensureMembership(){
 }
 function registerPresence(nodeRef){
   try{ onDisconnect(nodeRef).remove(); }catch(e){}
+}
+/* 拒絕付費／積分不足 → 斷訂閱、回大廳 */
+function exitRoomQuietly(){
+  if(roomSub){ try{ roomSub(); }catch(e){} roomSub=null; }
+  if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
+  try{ window.__roomId=null; }catch(e){}
+  curRoomId=null; curRoom=null; view='lobby';
+  render();
 }
 /* 誰是臥底：全員都按了「我記好了」→ 自動進入描述階段（由任一客戶端推進） */
 async function ucCheckReady(r){
@@ -1237,10 +1478,17 @@ async function leaveRoom(){
       // 以前房主退出只把自己從名單移除，房間還停在 waiting →
       // 那條邀請會一直留在對話框、點進去只剩自己一個。
       if(isHost){
-        await update(ref(db,'games/'+rid),{status:'ended',winner:'closed'});
+        // 已經分出勝負就不要改寫 winner，否則結束畫面會被蓋成「房主關閉」
+        if(curRoom&&curRoom.status!=='ended'){
+          await update(ref(db,'games/'+rid),{status:'ended',winner:'closed'});
+          // v1.41 房主關房 → 彩池原銀奉還（沒人贏就沒有人輸）
+          try{ await settlePot(curRoom,'closed'); }catch(e){}
+        }
       }else{
         const pr=ref(db,'games/'+rid+'/players/'+me.username);
         const sr=ref(db,'games/'+rid+'/spectators/'+me.username);
+        // v1.41 中途退出：未開局退全額，開局後退一半（另一半留在彩池）
+        try{ await refundOnLeave(rid); }catch(e){}
         try{ onDisconnect(pr).cancel(); }catch(e){}
         try{ onDisconnect(sr).cancel(); }catch(e){}
         await remove(pr); await remove(sr);
@@ -1320,6 +1568,19 @@ async function lobbyLeavePresence(){
 async function enterLobbyGame(gk){
   const g=gameDef(gk);
   if(!g.ok||!LOBBY_ENGINES[gk]){ showNotice('「'+g.n+'」即將推出，敬請期待'); return; }
+  /* v1.41 大廳入場費：入場 50，局內每吃 10 粒回 +1（單局上限 100） */
+  const fee=feeOf(gk);
+  if(fee>0){
+    const bal=await readPoints(me.username);
+    const ok=await askPay('入場費 '+fee+' 積分',
+      [`「${g.n}」入場需要 ${fee} 積分，目前有 ${bal} 分。`],'確定入場','不玩了');
+    if(!ok) return;
+    const t=await takePoints(me.username,fee);
+    if(!t.ok){
+      await askPay('積分不足',[`入場需要 ${fee} 積分，你目前只有 ${t.bal} 分。`],'知道了','關閉');
+      return;
+    }
+  }
   if(tet){ try{ tet.unmount(); }catch(e){} tet=null; }
   if(typeof dinoGame!=='undefined' && dinoGame){ try{ dinoGame.unmount(); }catch(e){} dinoGame=null; }
   if(lgame) await leaveLobbyGame(true);
@@ -1328,9 +1589,11 @@ async function enterLobbyGame(gk){
   render();
   await lobbyJoinPresence(gk);
   await lgame.start();
+  if(fee>0) startLobbyEarn(); else stopLobbyEarn();
 }
 async function leaveLobbyGame(silent){
   const gk=lobbyKey;
+  stopLobbyEarn();
   if(lgame){ try{ await lgame.stop(); }catch(e){} lgame=null; }
   if(gk&&me){ await lobbyLeavePresence(); }
   lobbyKey=null;
@@ -1914,6 +2177,8 @@ function createSnakeLobby(){
       raf=requestAnimationFrame(loop);
     },
     tickHud(){ tickHud(sNow()); },
+    /* v1.41 本局吃了多少粒（＝最長長度減出生長度），大廳「每 10 粒 +1」靠這個換算 */
+    units(){ return Math.max(0, Math.round(best)-START_N); },
     /* 測試／除錯用：純讀，沒有任何寫入面 */
     probe(x,y){
       return {inside:ARENA.inside(x,y,0),hit:ARENA.hitWall(x,y),
@@ -3030,6 +3295,7 @@ async function finishGame(winner, winners){
   }catch(e){ return; }
   if(!res.committed) return;                // 別人搶先結束了，不重複統計
   await update(ref(db,'games/'+curRoomId),{status:'ended',endedAt:Date.now()});
+  await settlePot(r,winner,winners);        // v1.41 派彩（只有一端會執行）
   const names=playerNames(r);
   const winArr=(winners&&winners.length)?winners:null;
   for(const u of names){
