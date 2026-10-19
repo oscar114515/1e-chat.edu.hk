@@ -2310,6 +2310,8 @@ function createTetris(){
   let local=null, specMode=false, rid=null, specData=null;
   let cv=null, ctx=null, raf=0, mounted=false, running=false;
   let gravityAcc=0, dropInt=800, softDrop=false;
+  /* 作弊模組：AI 的目標落點與思考時間（不瞬移，逐格移過去） */
+  let botPlan=null, botThink=0, botNew=true, botTries=0;
   let keyHandler=null, onResize=null, lastWrite=0;
   let paintedAt=0;
 
@@ -2341,6 +2343,7 @@ function createTetris(){
       if(isSecretUser()&&CH_STATE['tetris:god']){ local.board=new Array(TET_W*TET_H).fill(''); }
       else { local.over=true; over(); return false; }
     }
+    botNew=true; botPlan=null; botTries=0;
     return true;
   }
   function lock(){
@@ -2523,8 +2526,9 @@ function createTetris(){
       return this;
     },
     _dbg(){ return local?{score:local.score,lines:local.lines,over:local.over,filled:local.board.filter(Boolean).length}:null; },
-    /* 作弊模組用：算最佳落點並直接鎖定 */
-    _bot(){
+    _pos(){ return local?{x:local.x,rot:local.rot,y:local.y,ti:local.ti,over:local.over}:null; },
+    /* 作弊模組用：算出最佳落點（只算，不動棋盤） */
+    _plan(){
       if(!local||local.over) return null;
       let best=null,bs=-1e9;
       for(let rot=0;rot<4;rot++){
@@ -2561,10 +2565,23 @@ function createTetris(){
           if(sc>bs){ bs=sc; best={rot:rot,x:bx,y:by}; }
         }
       }
-      if(!best) return null;
-      local.rot=best.rot; local.x=best.x; local.y=best.y;
-      lock();
       return best;
+    },
+    /* 開著隨機延遲時：每個新方塊先「想」3–10 秒 */
+    _canThink(){
+      if(!local||local.over) return false;
+      if(botNew){ botNew=false; botThink=Date.now()+3000+Math.random()*7000; return false; }
+      return Date.now()>=botThink;
+    },
+    /* 每一 tick 只做一件事：一次旋轉、或一格橫移；到位後交由重力自然落下 */
+    _bot(){
+      if(!local||local.over) return null;
+      if(!botPlan||botTries>40){ botPlan=this._plan(); botTries=0; }
+      if(!botPlan) return null;
+      botTries++;
+      if(local.rot!==botPlan.rot){ rotate(); return {step:'rot',plan:botPlan}; }
+      if(local.x!==botPlan.x){ move(local.x<botPlan.x?1:-1); return {step:'move',plan:botPlan}; }
+      return {step:'fall',plan:botPlan};
     },
     mount(canvas){
       cv=canvas; ctx=cv.getContext('2d'); mounted=true;
@@ -7795,12 +7812,18 @@ const CH_DEF={
   }}},
   flappy:{ai:{n:'AI 代打（自動過管）',mine(r){ return false; },fn(){}}},
   snake:{god:{n:'無敵模式'},ai:{n:'AI 代打（自動吃豆）',mine(r){ return false; },fn(){}}},
-  tetris:{god:{n:'無敵模式'},ai:{n:'AI 代打',mine(r){ return !!(window.__tetBot&&window.__tetBot.mounted); },fn(){ window.__tetBot&&window.__tetBot._bot(); }}},
+  tetris:{god:{n:'無敵模式'},ai:{n:'AI 代打',mine(r){
+    const b=window.__tetBot; if(!b||!b.mounted) return false;
+    if(!CH_STATE['delay']) return true;       // 沒開延遲就照舊馬上動
+    return b._canThink();                      // 開了就每個新方塊先想 3–10 秒
+  },fn(){ window.__tetBot&&window.__tetBot._bot(); }}},
   dino:{god:{n:'無敵模式'},ai:{n:'AI 代打（自動跳）',mine(r){ return false; },fn(){}}},
 };
 
 /* ── 介面 ── */
-let chTapLast=0, chBusyAt=0, chOpen=false;
+let chTapLast=0, chBusyAt=0, chOpen=false, chMinePrev=false, chThinkAt=0;
+/* 隨機延遲：模擬真人思考，每次輪到自己先等 3–10 秒（俄羅斯方塊自己在 _canThink 管） */
+function chDelayOn(){ return !!CH_STATE['delay']; }
 function chStyle(){
   if(document.getElementById('chStyle')) return;
   const st=document.createElement('style'); st.id='chStyle';
@@ -7839,13 +7862,16 @@ function chRefresh(){
   if(!def){
     body.innerHTML=CH_INFO[g]?'':(g?'<div class="ch-empty">這款暫時未有</div>':'');
   }else{
-    body.innerHTML=Object.keys(def).map(k=>{
+    const dlyOn=!!CH_STATE['delay'];
+    const dlyRow=`<div class="ch-row" data-k="__delay"><span>隨機延遲（3–10 秒）</span><span class="ch-sw ${dlyOn?'on':''}"></span></div>`;
+    body.innerHTML=dlyRow+Object.keys(def).map(k=>{
       const on=!!CH_STATE[g+':'+k];
       return `<div class="ch-row" data-k="${k}"><span>${def[k].n}</span><span class="ch-sw ${on?'on':''}"></span></div>`;
     }).join('');
     body.querySelectorAll('.ch-row').forEach(el=>{
       el.onclick=()=>{
-        const key=g+':'+el.dataset.k;
+        const k=el.dataset.k;
+        const key=(k==='__delay')?'delay':(g+':'+k);
         CH_STATE[key]=!CH_STATE[key];
         chSave(); chRefresh();
         showNotice(CH_STATE[key]?'已開啟':'已關閉',900);
@@ -7889,7 +7915,11 @@ setInterval(()=>{
   if(Date.now()-chBusyAt<1100) return;      // 等上一步寫入生效，避免連落兩子
   let mine=false;
   try{ mine=def.ai.mine? !!def.ai.mine(r) : (r.turn===me.username); }catch(e){ mine=false; }
-  if(!mine) return;
+  if(!mine){ chMinePrev=false; chThinkAt=0; return; }
+  if(chDelayOn() && g!=='tetris'){
+    if(!chMinePrev){ chMinePrev=true; chThinkAt=Date.now()+3000+Math.random()*7000; }
+    if(Date.now()<chThinkAt) return;
+  }else{ chMinePrev=false; }
   chBusyAt=Date.now();
   try{ def.ai.fn(); }catch(e){}
   chBusyAt=Date.now();          // 搜尋若花了好幾秒，寫入前再擋一次，避免同一回合連走兩步
