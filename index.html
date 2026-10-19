@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-MepftFk3MvrFUZju5YZ3uVbzooghoQGr0t0E3jKWFe0=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-RT80Js4k0M/x8wVDnLNQHRfP5JKIhdH/M/6W0IcVztc=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -661,6 +661,13 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 .code-row .cr-code{font-family:Consolas,Menlo,monospace;font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text-main)}
 .code-row .cr-sub{font-size:11.5px;color:var(--text-sub);margin-top:3px}
 .code-row .cr-btn{flex:0 0 auto;width:auto;margin:0;padding:8px 13px;font-size:12px;border-radius:var(--r-1)}
+/* 後台「積分管理」小卡：一個輸入框 + 加／減／設為 三顆並排 */
+.pts-admin{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2);padding:12px 13px;margin-bottom:12px}
+.pts-admin .pa-now{font-size:12.5px;color:var(--text-sub);margin-bottom:9px}
+.pts-admin .pa-now b{font-size:18px;font-weight:800;color:var(--gold);margin-left:6px;letter-spacing:-.3px}
+.pts-admin .form-row{margin-bottom:0}
+.pa-btns{display:flex;gap:8px;margin-top:9px}
+.pa-btns button{flex:1 1 0;width:auto;margin:0;padding:10px 6px;font-size:13px;border-radius:var(--r-1)}
 
 /* v1.36 版本資訊簡化：一行摘要 + 更早的只留版本號 */
 .version-item .vi-sum{font-size:13px;color:var(--text-sub);margin-top:2px}
@@ -1104,7 +1111,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.11';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.12';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1534,6 +1541,9 @@ document.addEventListener('click',async(e)=>{
     if(action==='adminCreateRedeem')return await adminCreateRedeem();
     if(action==='adminCreateShop')return await adminCreateShop();
     if(action==='adminDeleteShop')return await adminDeleteShop(arg);
+    if(action==='adminPtsAdd')return await adminPts('add',arg);
+    if(action==='adminPtsSub')return await adminPts('sub',arg);
+    if(action==='adminPtsSet')return await adminPts('set',arg);
     if(action==='copyCode')return copyCode(arg);
     if(action==='openLiveMap')return openLiveMap();
     if(action==='openMyProfile'){ await openProfilePage(me.username,true); return syncToolEntrySub(); }
@@ -4269,6 +4279,54 @@ async function adminDeleteShop(id){
   renderAdminTab('shop');
   showNotif('已下架');
 }
+/* ═══ v1.38.12 後台積分管理 ═══
+   kind: 'add' 加 / 'sub' 減 / 'set' 直接設定
+   減分不可以扣到負數（跟商店消費同一個八達通規則），超出就直接擋住並講清楚最多扣幾多。
+   全部走 runTransaction：對方同一時間在商店兌換都不會互相蓋掉。 */
+async function adminPts(kind,username){
+  if(me.role!=='superadmin'||!username)return;
+  const valEl=document.getElementById('pa_val');
+  const errEl=document.getElementById('paErr');
+  const sayBad=t=>{ if(errEl)errEl.textContent=t; };
+  if(errEl)errEl.textContent='';
+  const raw=String((valEl||{}).value||'').trim();
+  const n=Math.floor(Number(raw));
+  if(raw===''||!Number.isFinite(n)||n<0){ sayBad('請輸入 0 或以上的整數'); return; }
+  const snap=await get(ref(db,'users/'+username+'/points'));
+  const cur=Number(snap.val())||0;
+  let target;
+  if(kind==='add')target=cur+n;
+  else if(kind==='sub'){
+    if(n>cur){ sayBad('最多只可以減 '+cur+' 分（不可以扣到負數）'); return; }
+    target=cur-n;
+  }else target=n;
+  if(target>9007199254740991)target=9007199254740991;
+  try{
+    const r=await runTransaction(ref(db,'users/'+username+'/points'),v=>{
+      if(v===null)return null;
+      /* 交易內再按一次規則檢查：讀取之後對方可能已經花掉分數 */
+      const now=Number(v)||0;
+      if(kind==='add')return Math.min(9007199254740991,now+n);
+      if(kind==='sub')return n>now?now:now-n;
+      return target;
+    });
+    if(!r.committed){ sayBad('操作失敗，請再試一次'); return; }
+    const after=Number(r.snapshot.val())||0;
+    const nowEl=document.getElementById('paNow');
+    if(nowEl)nowEl.textContent=after;
+    if(valEl)valEl.value='';
+    if(username===me.username){ me.points=after; renderPoints(); }
+    const label=kind==='add'?'加 ':(kind==='sub'?'減 ':'設為 ');
+    try{ writeLog('adminpts',label+n+' 分 → '+username+'（'+cur+' → '+after+'）'); }catch(e){}
+    showNotif(label+n+' 分完成，現在 '+after+' 分');
+    /* 個人主頁／其他地方貼回快照時靠這個刷新 */
+    try{ syncPointNodes(); }catch(e){}
+    /* 減分途中對方剛花掉分數 → 交易內按「不可以負數」夾住了，要講清楚實際扣了多少 */
+    if(kind==='sub'&&(cur-after)!==n)sayBad('對方分數剛剛有變動，實際只扣了 '+(cur-after)+' 分');
+  }catch(e){
+    sayBad('操作失敗，請稍後再試');
+  }
+}
 /* ═══ v1.37 統一 3D 名牌 ═══
    用戶投訴：「個人主頁上面太普通了」。
    以前三種入口各畫一套：
@@ -4851,6 +4909,14 @@ async function openProfilePage(username,isSelf,fromAdmin){
     const canBan=isSuper&&u.username!==me.username&&!isTargetSuper;
     const canGrant=isSuper&&u.username!==me.username;
     const canAccount=isSuper&&u.username!==me.username;
+    /* ═══ v1.38.12 積分管理（超級管理員）═══
+       在後台「用戶」點任何人 → 這一區可以加分、減分、直接設定。
+       加減分都走交易，避免和對方同時在商店兌換時把數字蓋掉。
+       三個動作都寫入 logs，事後查得到是誰改的、改成幾多。 */
+    if(isSuper){
+      const curPts=Number(u.points)||0;
+      bodyHTML+=`<div class="section-title">積分管理</div><div class="pts-admin"><div class="pa-now">目前積分<b id="paNow">${curPts}</b></div><div class="form-row"><input type="number" id="pa_val" placeholder="輸入分數" min="0" step="1" inputmode="numeric"></div><div class="pa-btns"><button class="btn-ok" data-action="adminPtsAdd" data-arg="${escAttr(u.username)}">加</button><button class="btn-warn" data-action="adminPtsSub" data-arg="${escAttr(u.username)}">減</button><button class="btn-primary" data-action="adminPtsSet" data-arg="${escAttr(u.username)}">設為</button></div><div class="err" id="paErr"></div></div>`;
+    }
     if(canAccount){bodyHTML+=`<div class="section-title">帳號管理</div><div class="ban-block">`;if(u.disabled)bodyHTML+=`<button class="btn-ok" data-action="enableAccount" data-arg="${escAttr(u.username)}">恢復</button>`;else bodyHTML+=`<button class="btn-warn" data-action="disableAccount" data-arg="${escAttr(u.username)}">停用</button>`;bodyHTML+=`<button class="btn-danger" data-action="deleteAccount" data-arg="${escAttr(u.username)}">徹底刪除</button></div>`;}
     if(canBan){
       if(u.banned)bodyHTML+=`<button class="btn-ok" data-action="unban" data-arg="${escAttr(u.username)}">解除${u.banned.type==='severe'?'封禁':'禁言'}</button>`;
@@ -6302,6 +6368,9 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.12',date:'2026-10-19',changes:[
+'後台可以直接改積分：在「管理員後台 → 用戶」點任何一個人，下面多了一欄「積分管理」，可以加、減、或者直接設成指定分數。三個動作都會寫入日誌，事後查得到是誰改的、由幾多改成幾多。減分一樣不可以扣到負數，超出會直接講清楚最多扣幾多',
+]},
 {ver:'v1.38.11',date:'2026-10-19',changes:[
 '積分改成八達通式：不夠分就換不到，餘額永遠不會被扣成負數。商品按鈕會寫明「積分不足」，按下去只會提示還差幾分，不會扣錢也不會扣庫存',
 ]},
