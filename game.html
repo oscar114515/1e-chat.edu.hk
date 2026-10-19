@@ -200,6 +200,10 @@ canvas{background:#0f1320;border-radius:var(--r-2);border:1px solid var(--border
 .pitem{background:rgba(255,255,255,.055);border:1px solid rgba(226,176,74,.22);border-radius:var(--r-2)}
 .pname{color:var(--text-main)}
 .pbadge{border-color:rgba(226,176,74,.45);color:var(--gold2);background:rgba(226,176,74,.08)}
+.pbadge.ai{border-color:rgba(139,92,246,.55);color:#c4b5fd;background:rgba(139,92,246,.14);display:inline-flex;align-items:center;gap:6px}
+.pdel{border:0;background:rgba(248,113,113,.18);color:#fca5a5;border-radius:6px;width:18px;height:18px;
+  line-height:1;font-size:13px;cursor:pointer;padding:0}
+.pdel:active{background:rgba(248,113,113,.32)}
 .pav{box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
 
 /* 木色棋盤容器：所有棋盤類共用 */
@@ -774,7 +778,8 @@ async function settlePot(r,winner,winners){
   let res;
   try{ res=await runTransaction(ref(db,'games/'+rid+'/settled'),c=>c===true?undefined:true); }catch(e){ return; }
   if(!res||!res.committed) return;           // 另一端已經派過
-  const names=playerNames(rr);
+  /* AI 玩家不參與派彩：名單只留真人；AI 贏了就當平手，原銀奉還 */
+  const names=playerNames(rr).filter(u=>!isAiUser(rr,u));
   const fee=Number(rr.fee)||0;
   let left=pot;
   const give=async(u,n)=>{
@@ -790,7 +795,10 @@ async function settlePot(r,winner,winners){
     const half=Math.floor(fee/2);
     if(half>0&&left>=half){ left-=half; await givePoints(u,half); }
   }
-  const winArr=(winners&&winners.length)?winners.filter(u=>names.includes(u)):null;
+  let winArr=(winners&&winners.length)?winners.filter(u=>names.includes(u)):null;
+  if(winArr&&!winArr.length) winArr=null;
+  if(winner&&isAiUser(rr,winner)) winner='draw';
+  if(!winArr&&winner&&winner!=='draw'&&winner!=='closed'&&!names.includes(winner)) winner='draw';
   if(winner==='closed'||(!winArr&&winner==='draw')){
     for(const u of names){ if(left<=0) break; await give(u,fee); }
     return;
@@ -1248,7 +1256,17 @@ async function ensureMembership(){
   const isPlayer=r.players&&r.players[me.username];
   const isSpec=r.spectators&&r.spectators[me.username];
   if(isPlayer||isSpec) return;
-  const pcount=r.players?Object.keys(r.players).length:0;
+  let pcount=r.players?Object.keys(r.players).length:0;
+  /* 真人優先：房滿了但裡面有 AI → 踢走最後加入的那個，讓真人進來 */
+  if((r.status==='waiting'||r.status==='countdown')&&pcount>=(Number(r.setMax||r.maxP)||2)){
+    const ais=aiPlayersOf(r);
+    if(ais.length){
+      const victim=ais[ais.length-1];
+      try{ await remove(ref(db,'games/'+curRoomId+'/players/'+victim)); }catch(e){}
+      pcount-=1;
+      showNotice('房間已滿，已讓出一個 AI 位置');
+    }
+  }
   if(r.status==='waiting'||r.status==='countdown'){
     if(pcount<(r.setMax||r.maxP)){
       /* v1.41 入場先問「允不允許扣」，拒絕就退出、一分都不扣 */
@@ -1386,7 +1404,13 @@ function renderRoom(){
     const need=Math.max(0,(r.minP||2)-pc);
     cdHtml=`<div class="hint" id="cdHint">${need>0?('還需要 '+need+' 人才能開局（滿 '+(r.minP||2)+' 人自動倒數 15 秒）'):'人數已到齊，準備開局…'}</div>`;
   }
-  const plist=players.map(([u,p],i)=>`<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div><div class="pbadge">${i+1} 號</div></div>`).join('')||'<div class="empty">還沒有人加入</div>';
+  const plist=players.map(([u,p],i)=>{
+    const ai=!!p.ai;
+    const badge=ai
+      ? `<div class="pbadge ai">AI${isHost?`<button class="pdel" data-delai="${escAttr(u)}">×</button>`:''}</div>`
+      : `<div class="pbadge">${i+1} 號</div>`;
+    return `<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div>${badge}</div>`;
+  }).join('')||'<div class="empty">還沒有人加入</div>';
   const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="${pavStyle('#475569')}">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
   appEl.innerHTML=`
     <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 房間</h1></div>
@@ -1394,11 +1418,14 @@ function renderRoom(){
       <div class="hint">房主：${escapeHtml(r.hostName||r.host)} · 人數 ${pc}/${r.setMax||r.maxP}（滿 ${r.minP||2} 人自動倒數）${r.allowSpectate?' · 可觀戰':' · 不可觀戰'}${r.private?' · 不公開':''}</div>
       ${cdHtml}
       <div class="plist">${plist}</div>${slist}
+      ${isHost&&pc<(Number(r.setMax||r.maxP)||2)?`<button class="btn ghost" data-act="addAi">＋ 加入 AI 玩家</button>`:''}
       ${isHost?`<button class="btn ghost" data-act="cancelRoom">關閉房間</button>`:''}
       <button class="btn ghost" data-act="copyRoomLink">複製房間連結</button>
       <button class="btn danger" data-act="leave">離開房間</button>
     </div>`;
   appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
+  const aa=appEl.querySelector('[data-act="addAi"]'); if(aa) aa.onclick=addAiPlayer;
+  appEl.querySelectorAll('[data-delai]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); removeAiPlayer(b.dataset.delai); });
   const cr=appEl.querySelector('[data-act="cancelRoom"]'); if(cr) cr.onclick=closeRoom;
   const cp=appEl.querySelector('[data-act="copyRoomLink"]'); if(cp) cp.onclick=copyRoomLink;
   startCountdownTicker();
@@ -3780,6 +3807,42 @@ function renderTetris(r,g,spec){
 /* ===== 遊戲邏輯入口 ===== */
 function seatOf(r,u){const p=r.players&&r.players[u];return p?(p.seat||0):-1;}
 function playerNames(r){const e=Object.entries(r.players||{});e.sort((a,b)=>(a[1].seat||0)-(b[1].seat||0));return e.map(x=>x[0]);}
+/* ═══ AI 玩家（公開功能：房主可以加 AI 補位）═══════════════════════════
+   房間的 players 就是一個普通字典，多塞一筆 {name,ai:true,seat} 進去，
+   playerNames()／nameOf()／人數檢查全部會自動把它當成一個玩家。
+   AI 由房主頁面代跑（見 aiHostTick），所以房主關頁 AI 就跟著停。
+   ⚠ AI 免入場費、不參與派彩；AI 不可能是房主。 */
+const AI_NAMES=['阿明','阿雪','阿傑','小智','阿寶','阿豆','阿晴','阿朗'];
+const AI_COLORS=['#8b5cf6','#0ea5e9','#f59e0b','#14b8a6','#ec4899','#84cc16'];
+function aiPlayersOf(r){ return Object.keys((r&&r.players)||{}).filter(u=>r.players[u]&&r.players[u].ai); }
+function isAiUser(r,u){ return !!(r&&r.players&&r.players[u]&&r.players[u].ai); }
+async function addAiPlayer(){
+  const r=curRoom; if(!r) return;
+  if(r.host!==me.username) return showNotice('只有房主可以加 AI');
+  if(r.status!=='waiting'&&r.status!=='countdown') return showNotice('對局已經開始');
+  const cap=Number(r.setMax||r.maxP)||2;
+  const pc=Object.keys(r.players||{}).length;
+  if(pc>=cap) return showNotice('房間已滿');
+  let n=1; while(r.players&&r.players['ai_'+n]) n++;
+  const id='ai_'+n;
+  const nm=AI_NAMES[(n-1)%AI_NAMES.length];
+  try{
+    await update(ref(db,'games/'+curRoomId+'/players/'+id),{
+      name:'AI · '+nm, ai:true, seat:pc, color:AI_COLORS[(n-1)%AI_COLORS.length],
+      avatar:'🤖', joinedAt:Date.now()
+    });
+    /* 房主斷線／關頁時 AI 一併消失，不會留下沒人跑的幽靈玩家 */
+    try{ onDisconnect(ref(db,'games/'+curRoomId+'/players/'+id)).remove(); }catch(e){}
+    showNotice('已加入 AI · '+nm);
+  }catch(e){ showNotice('加入失敗'); }
+}
+async function removeAiPlayer(u){
+  const r=curRoom; if(!r) return;
+  if(r.host!==me.username) return showNotice('只有房主可以移除 AI');
+  if(r.status!=='waiting'&&r.status!=='countdown') return showNotice('對局已經開始');
+  if(!isAiUser(r,u)) return;
+  try{ await remove(ref(db,'games/'+curRoomId+'/players/'+u)); }catch(e){}
+}
 function colorOf(r,u){const p=r.players&&r.players[u];return safeColor(p&&p.color,'#3b82f6');}
 function nameOf(r,u){const p=r.players&&r.players[u];return (p&&p.name)||u;}
 
@@ -4115,8 +4178,9 @@ function drawTTT(r,g,bar,spec){
     tttMove(rw*3+c);
   };
 }
-async function tttMove(i){
-  const r=curRoom; if(r.status!=='playing'||r.turn!==me.username||r.game!=='tictactoe')return;
+async function tttMove(i,who){
+  who=who||me.username;
+  const r=curRoom; if(!r||r.status!=='playing'||r.turn!==who||r.game!=='tictactoe')return;
   const names=playerNames(r);const board=r.state.board.slice();
   if(board[i])return;
   board[i]=r.turn===names[0]?'X':'O';
@@ -4155,8 +4219,9 @@ function drawGomoku(r,g,bar,spec){
     if(i<0||j<0||i>=S||j>=S)return; gomokuMove(i,j);
   };
 }
-async function gomokuMove(i,j){
-  const r=curRoom;if(r.status!=='playing'||r.turn!==me.username||r.game!=='gomoku')return;
+async function gomokuMove(i,j,who){
+  who=who||me.username;
+  const r=curRoom;if(!r||r.status!=='playing'||r.turn!==who||r.game!=='gomoku')return;
   const names=playerNames(r);const S=15;const board=r.state.board.slice();
   if(board[i*S+j])return;
   board[i*S+j]=r.turn===names[0]?'1':'2';
@@ -5837,16 +5902,18 @@ function dsMoves(b, c, r) {
   return out;
 }
 let dsSel = null;   // [c,r]（本地選取，不進 DB）
-async function dsMove(f, to) {
+async function dsMove(f, to, who0) {
+  const asUser = who0 || me.username;
   const r = curRoom;
   if (!r || r.status !== 'playing' || r.game !== 'doushou') return;
   const names = playerNames(r);
+  if (names[actionsOf(r).length % 2] !== asUser) { if (asUser === me.username) showNotice('還沒輪到你'); return; }
   const b = dsReplay(r);
   const cell = b[dsKey(f[0], f[1])];
-  if (!cell || cell.o !== names.indexOf(me.username)) return showNotice('這不是你的棋子');
-  if (!dsMoves(b, f[0], f[1]).some(([c, rr]) => c === to[0] && rr === to[1])) return showNotice('這一步不可以走');
-  dsSel = null;
-  await pushAction({ t: 'mv', f: [f[0], f[1]], to: [to[0], to[1]], p: me.username });
+  if (!cell || cell.o !== names.indexOf(asUser)) { if (asUser === me.username) showNotice('這不是你的棋子'); return; }
+  if (!dsMoves(b, f[0], f[1]).some(([c, rr]) => c === to[0] && rr === to[1])) { if (asUser === me.username) showNotice('這一步不可以走'); return; }
+  if (asUser === me.username) dsSel = null;
+  await pushAction({ t: 'mv', f: [f[0], f[1]], to: [to[0], to[1]], p: asUser });
 }
 async function doushouCheckEnd(r) {
   if (!r || r.game !== 'doushou' || r.status !== 'playing') return;
@@ -6056,17 +6123,18 @@ async function xqCheckEnd(r) {
   // 象棋規矩：輪到你但無棋可走（被將死或困斃）＝你輸，由對方獲勝
   if (xqLegal(b, side).length === 0) await finishGame(xqPlayerOf(1 - side, playerNames(r)));
 }
-async function xqMove(f, to) {
+async function xqMove(f, to, who) {
+  who = who || me.username;
   const r = curRoom;
   if (!r || r.status !== 'playing' || r.game !== 'xiangqi') return;
   const names = playerNames(r);
-  if (xqPlayerOf(xqTurnSide(r), names) !== me.username) return showNotice('還沒輪到你');
+  if (xqPlayerOf(xqTurnSide(r), names) !== who) { if (who === me.username) showNotice('還沒輪到你'); return; }
   const b = xqReplay(r);
   const cell = b[f];
-  if (!cell || cell.o !== xqSideOfPlayer(names.indexOf(me.username))) return showNotice('這不是你的棋子');
-  if (!xqLegal(b, cell.o).some(([lf, lt]) => lf === f && lt === to)) return showNotice('這一步不合規則（會送將或走法不對）');
-  xqSel = null;
-  await pushAction({ t: 'mv', f: f, to: to, p: me.username });
+  if (!cell || cell.o !== xqSideOfPlayer(names.indexOf(who))) { if (who === me.username) showNotice('這不是你的棋子'); return; }
+  if (!xqLegal(b, cell.o).some(([lf, lt]) => lf === f && lt === to)) { if (who === me.username) showNotice('這一步不合規則（會送將或走法不對）'); return; }
+  if (who === me.username) xqSel = null;
+  await pushAction({ t: 'mv', f: f, to: to, p: who });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -6280,19 +6348,20 @@ function ccInCamp(b, who, campIdx){
   if(!camp) return false;
   return camp.every(k => b[k] === who);
 }
-async function ccMove(f, to){
+async function ccMove(f, to, who0){
   const r = curRoom;
   if(!r || r.status !== 'playing' || r.game !== 'checkers') return;
+  const asUser = who0 || me.username;
   const names = playerNames(r);
-  if(r.turn !== me.username) return showNotice('還沒輪到你');
-  const who = names.indexOf(me.username);
+  if(r.turn !== asUser) { if (asUser === me.username) showNotice('還沒輪到你'); return; }
+  const who = names.indexOf(asUser);
   if(who < 0) return;
   const b = ccReplay(r);
   const fk = Array.isArray(f) ? f.join(',') : f, tk = Array.isArray(to) ? to.join(',') : to;
-  if(b[fk] !== who) return showNotice('這不是你的棋子');
-  if(!ccMoves(b, fk).some(m => m.to === tk)) return showNotice('這一步不可以走');
+  if(b[fk] !== who) { if (asUser === me.username) showNotice('這不是你的棋子'); return; }
+  if(!ccMoves(b, fk).some(m => m.to === tk)) { if (asUser === me.username) showNotice('這一步不可以走'); return; }
   const next = names[(who + 1) % names.length];
-  await pushAction({t:'mv', f:fk, to:tk, p:me.username});
+  await pushAction({t:'mv', f:fk, to:tk, p:asUser});
   await update(ref(db, 'games/' + curRoomId), {turn: next});
 }
 async function ccCheckEnd(r){
@@ -7516,18 +7585,20 @@ function ccBestMove(b, who, seats){
 let smAiAt = 0;
 
 const CH_DEF={
-  tictactoe:{ai:{n:'AI 代打',fn(){
+  tictactoe:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return r.turn===who; },fn(who){
+    who=who||me.username;
     const r=curRoom,names=playerNames(r);
-    const my=names.indexOf(me.username)===0?'X':'O';
+    const my=names.indexOf(who)===0?'X':'O';
     const i=tttBest(r.state.board.slice(),my);
-    if(i>=0) tttMove(i);
+    if(i>=0) tttMove(i,who);
   }}},
-  gomoku:{ai:{n:'AI 代打',fn(){
+  gomoku:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return r.turn===who; },fn(who){
+    who=who||me.username;
     const r=curRoom,names=playerNames(r);
-    const my=names.indexOf(me.username)===0?'1':'2';
+    const my=names.indexOf(who)===0?'1':'2';
     const op=my==='1'?'2':'1';
     const mv=gomokuBest(r.state.board.slice(),my,op);
-    if(mv) gomokuMove(mv.i,mv.j);
+    if(mv) gomokuMove(mv.i,mv.j,who);
   }}},
   ludo:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return r.turn===me.username; },fn(){
     const r=curRoom;
@@ -7590,31 +7661,35 @@ const CH_DEF={
     pushAction({t:'play',p:me.username,c:col,v:val,d:declared});
     unoSel=-1; unoDrew=false;
   }}},
-  xiangqi:{ai:{n:'AI 代打',fn(){
+  xiangqi:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return xqPlayerOf(xqTurnSide(r),playerNames(r))===who; },fn(who){
+    who=who||me.username;
     const r=curRoom,names=playerNames(r);
-    const side=xqSideOfPlayer(names.indexOf(me.username));
+    const side=xqSideOfPlayer(names.indexOf(who));
     const mv=xqBestMove(xqReplay(r),side,3);
-    if(mv) xqMove(mv[0],mv[1]);
+    if(mv) xqMove(mv[0],mv[1],who);
   }}},
-  chess:{ai:{n:'AI 代打',mine(r){
+  chess:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const eng=getEngine(r); if(!eng) return false;
     const names=playerNames(r);
-    const myC=me.username===names[0]?'w':'b';
+    const myC=who===names[0]?'w':'b';
     return eng.turn()===myC;
-  },fn(){
+  },fn(who){
+    who=who||me.username;
     const r=curRoom,eng=getEngine(r); if(!eng) return;
     const names=playerNames(r);
-    const myC=me.username===names[0]?'w':'b';
+    const myC=who===names[0]?'w':'b';
     if(eng.turn()!==myC) return;
     const m=chessBestMove(eng,myC,3);
     if(!m) return;
-    pushAction({t:'move',p:me.username,f:m.from,to:m.to,pr:m.promotion||null});
+    pushAction({t:'move',p:who,f:m.from,to:m.to,pr:m.promotion||null});
   }}},
-  doushou:{ai:{n:'AI 代打',fn(){
+  doushou:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return playerNames(r)[actionsOf(r).length%2]===who; },fn(who){
+    who=who||me.username;
     const r=curRoom,names=playerNames(r);
-    const side=names.indexOf(me.username);
+    const side=names.indexOf(who);
     const mv=dsBestMove(dsReplay(r),side,3);
-    if(mv) dsMove(mv[0],mv[1]);
+    if(mv) dsMove(mv[0],mv[1],who);
   }}},
   go:{ai:{n:'AI 代打',mine(r){
     const st=goReplay(r);
@@ -7625,11 +7700,12 @@ const CH_DEF={
     const i=goBestMove(r);
     if(i>=0) goMove(i); else goPass();
   }}},
-  checkers:{ai:{n:'AI 代打',mine(r){ return r.turn===me.username; },fn(){
-    const r=curRoom,names=playerNames(r),who=names.indexOf(me.username);
-    if(who<0) return;
-    const mv=ccBestMove(ccReplay(r),who,ccCampOf(names.length));
-    if(mv) ccMove(mv.f,mv.to);
+  checkers:{ai:{n:'AI 代打',mine(r,who){ who=who||me.username; return r.turn===who; },fn(who){
+    who=who||me.username;
+    const r=curRoom,names=playerNames(r),idx=names.indexOf(who);
+    if(idx<0) return;
+    const mv=ccBestMove(ccReplay(r),idx,ccCampOf(names.length));
+    if(mv) ccMove(mv.f,mv.to,who);
   }}},
   werewolf:{ai:{n:'AI 代打',mine(r){
     const st=wwState(r),role=wwRoleOf(r,me.username);
@@ -7924,6 +8000,30 @@ setInterval(()=>{
   try{ def.ai.fn(); }catch(e){}
   chBusyAt=Date.now();          // 搜尋若花了好幾秒，寫入前再擋一次，避免同一回合連走兩步
 },600);
+/* ═══ AI 主機（公開功能）═════════════════════════════════════════════
+   房主的頁面負責幫房裡所有 ai:true 的玩家動手。
+   為什麼一定是房主：Spark 方案沒有 Cloud Functions，也沒有常駐機器，
+   所以只能由一端的瀏覽器代跑；房主關頁 → AI 跟房間一齊消失。
+   反應時間 1.2–3 秒（接近真人，但不會慢到 3–10 秒拖住整局）。 */
+const aiThinkAt={};
+setInterval(()=>{
+  const r=curRoom;
+  if(!r||r.status!=='playing') return;
+  if(r.host!==me.username) return;
+  const list=aiPlayersOf(r);
+  if(!list.length) return;
+  const g=r.game, def=CH_DEF[g];
+  if(!def||!def.ai) return;
+  const now=Date.now();
+  for(const u of list){
+    let mine=false;
+    try{ mine=def.ai.mine? !!def.ai.mine(r,u) : (r.turn===u); }catch(e){ mine=false; }
+    if(!mine) continue;
+    if(now<(aiThinkAt[u]||0)) continue;
+    aiThinkAt[u]=now+1200+Math.random()*1800;
+    try{ def.ai.fn(u); }catch(e){}
+  }
+},700);
 /* 面板開著的時候，資訊類每 1.2 秒刷新一次（局的狀態會一直變） */
 setInterval(()=>{
   const p=document.getElementById('chPanel');
