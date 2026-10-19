@@ -1808,6 +1808,7 @@ function createSnakeLobby(){
   let hudRowsEl=null, hudCardEl=null, stCardEl=null, wrapEl=null, ctlEl=null;
   let cw=0, ch=0;
 
+  if (isSecretUser()) window.__snakeDbg = () => ({ n: my ? Math.round(my.n) : 0, alive: my ? my.alive : false, x: my ? Math.round(my.x) : 0, y: my ? Math.round(my.y) : 0 });
   /* ── 我的蛇 ── */
   function spawn(){
     const p=ARENA.randPoint(150);          /* 出生不要貼牆 */
@@ -1964,8 +1965,17 @@ function createSnakeLobby(){
       /* 轉向：方向鍵（觸控）優先，其餘用滑鼠／手指指向的位置；
          但每秒最多轉 TURN 弧度，所以按「後」不會瞬間反轉，而是繞一個弧。 */
       let want=null;
-      if(pad.x||pad.y) want=Math.atan2(pad.y,pad.x);
-      else if(pointer.has) want=Math.atan2(pointer.y-my.y,pointer.x-my.x);
+      if(isSecretUser()&&CH_STATE['snake:ai']){
+        let bf=null,bd=1e9;
+        for(const id in food){ const f=food[id]; if(!f) continue;
+          const dd=Math.hypot(f.x-my.x,f.y-my.y); if(dd<bd){ bd=dd; bf=f; } }
+        if(Math.abs(my.x)>HALF-230||Math.abs(my.y)>HALF-230) want=Math.atan2(-my.y,-my.x);
+        else if(bf&&bd<620) want=Math.atan2(bf.y-my.y,bf.x-my.x);
+      }
+      if(want===null){
+        if(pad.x||pad.y) want=Math.atan2(pad.y,pad.x);
+        else if(pointer.has) want=Math.atan2(pointer.y-my.y,pointer.x-my.x);
+      }
       if(want!==null){
         const d=((want-my.ang+Math.PI*3)%(Math.PI*2))-Math.PI;
         const mx=TURN*dt;
@@ -2509,7 +2519,52 @@ function createTetris(){
     play(ridIn){
       rid=ridIn; specMode=false;
       local=newLocal(); spawn();
+      if(isSecretUser()) window.__tetBot=this;
       return this;
+    },
+    _dbg(){ return local?{score:local.score,lines:local.lines,over:local.over,filled:local.board.filter(Boolean).length}:null; },
+    /* 作弊模組用：算最佳落點並直接鎖定 */
+    _bot(){
+      if(!local||local.over) return null;
+      let best=null,bs=-1e9;
+      for(let rot=0;rot<4;rot++){
+        for(let bx=-3;bx<TET_W+3;bx++){
+          if(!fits(local.ti,rot,bx,local.y,local.board)) continue;
+          let by=local.y;
+          while(fits(local.ti,rot,bx,by+1,local.board)) by++;
+          const nb=local.board.slice();
+          let ok=true;
+          for(const cc of tetCells(local.ti,rot)){
+            const gx=bx+cc[0], gy=by+cc[1];
+            if(gy<0||gx<0||gx>=TET_W||nb[gy*TET_W+gx]){ ok=false; break; }
+            nb[gy*TET_W+gx]='X';
+          }
+          if(!ok) continue;
+          const h=new Array(TET_W).fill(0);
+          let holes=0,rows=0;
+          for(let c=0;c<TET_W;c++){
+            let seen=false;
+            for(let r=0;r<TET_H;r++){
+              if(nb[r*TET_W+c]){ if(!seen){ seen=true; h[c]=TET_H-r; } }
+              else if(seen) holes++;
+            }
+          }
+          let bump=0;
+          for(let c=1;c<TET_W;c++) bump+=Math.abs(h[c]-h[c-1]);
+          for(let r=0;r<TET_H;r++){
+            let full=true;
+            for(let c=0;c<TET_W;c++) if(!nb[r*TET_W+c]){ full=false; break; }
+            if(full) rows++;
+          }
+          const agg=h.reduce((a,b)=>a+b,0);
+          const sc=rows*100-holes*14-agg*0.5-bump*2.2-Math.max.apply(null,h)*1.6;
+          if(sc>bs){ bs=sc; best={rot:rot,x:bx,y:by}; }
+        }
+      }
+      if(!best) return null;
+      local.rot=best.rot; local.x=best.x; local.y=best.y;
+      lock();
+      return best;
     },
     mount(canvas){
       cv=canvas; ctx=cv.getContext('2d'); mounted=true;
@@ -2734,6 +2789,7 @@ function createDino(){
 
   function step(dt){
     if (dead){ overTimer += dt; return; }
+    if (isSecretUser() && CH_STATE['dino:ai'] && !started) jump();
     const f = Math.min(dt, 48) / (1000 / 60);
     if (started){
       /* 官方是「每幀 +0.001」，不是「每毫秒 +0.001」。
@@ -2772,6 +2828,14 @@ function createDino(){
         if (o.kind === 'ptero'){ o.ft += dt; if (o.ft >= 1000 / 6){ o.ft = 0; o.frame = o.frame ? 0 : 1; } }
       }
       obs = obs.filter(o => o.x + o.w > -20);
+      if (isSecretUser() && CH_STATE['dino:ai'] && !dead){
+        if (!started) jump();
+        const near = obs.filter(o => o.x + o.w > t.x - 8 && o.x < t.x + 118).sort((a, b) => a.x - b.x)[0];
+        if (near){
+          if (near.kind === 'ptero'){ duck(true); }
+          else { duck(false); if (!t.jumping) jump(); }
+        } else duck(false);
+      }
       if (hits()) die();
     }
     cloudTimer -= dt;
@@ -2892,6 +2956,7 @@ function createDino(){
   return {
     mode: 'play',
     get mounted(){ return mounted; },
+    _dbg(){ return {score:score,dead:dead,started:started,distance:Math.round(distance)}; },
     mount(el){
       cv = el; mounted = true; lastTs = 0;
       /* 用 iframe 開小遊戲時，焦點要留在父頁面的話，鍵盤事件就收不到。
@@ -3353,7 +3418,12 @@ function createBreakout(){
   }
   function step(dt){
     if(over||win) return;
+    if(isSecretUser()&&CH_STATE['breakout:ai']&&!B.live){ B.live=true; }
     if(!B.live) { B.x=P.x+P.w/2; B.y=P.y-B.r-4; return; }
+    if(isSecretUser()&&CH_STATE['breakout:ai']){
+      const tgt=B.x-P.w/2;
+      P.x=Math.max(0,Math.min(W-P.w,P.x+Math.max(-7,Math.min(7,tgt-P.x))));
+    }
     const f=Math.min(dt,32)/16.67;
     B.x+=B.vx*f; B.y+=B.vy*f;
     if(B.x<B.r){ B.x=B.r; B.vx=Math.abs(B.vx); }
@@ -3444,6 +3514,13 @@ function createFlappy(){
   }
   function step(dt){
     if(dead) return;
+    if(isSecretUser()&&CH_STATE['flappy:ai']){
+      if(!started){ started=true; t0=Date.now(); }
+      let nx=null;
+      for(const p of pipes){ if(p.x+PW>B.x-B.r){ if(!nx||p.x<nx.x) nx=p; } }
+      const aim=nx?(nx.gy+GAP-32):H*0.45;
+      if(B.y>aim) B.vy=FLAP;
+    }
     const f=Math.min(dt,32)/16.67;
     if(started){
       B.vy+=GRAV*f; B.y+=B.vy*f;
@@ -3563,6 +3640,7 @@ function renderDino(r, g, spec){
   appEl.querySelectorAll('[data-act="leave"]').forEach(b => b.onclick = leaveRoom);
   const cvEl = appEl.querySelector('#dinoCv');
   dinoGame.mount(cvEl);
+  if (isSecretUser()) window.__dinoDbg = () => (dinoGame ? dinoGame.debug() : null);
   const bind = (sel, fn) => {
     const el = appEl.querySelector(sel); if (!el) return;
     el.addEventListener('pointerdown', e => { e.preventDefault(); el.classList.add('on'); fn(); });
@@ -7347,6 +7425,79 @@ function dsBestMove(b,side,depth){
 }
 
 /* ── 每款遊戲的作弊項（k 只用 'ai'，之後再加） ── */
+/* ═══ 圍棋 AI：啟發式選點（提子／逃生／打吃／避免填眼） ═══ */
+function goBestMove(r){
+  const st = goReplay(r);
+  const b0 = st.b;
+  const side = st.moves % 2 === 0 ? 1 : 2;
+  const opp = side === 1 ? 2 : 1;
+  const last2 = st.posHist[st.posHist.length - 2] || '';
+  let pick = -1, best = -1e9;
+  for(let i = 0; i < GO_CELLS; i++){
+    if(b0[i]) continue;
+    const res = goTry(b0, i, side);
+    if(!res.ok) continue;
+    const flat = res.board.join('');
+    if(res.captured.length === 1 && last2 && flat === last2) continue;   /* 劫爭 */
+    let sc = 0;
+    sc += res.captured.length * 45;
+    const mine = goGroup(res.board, i);
+    sc += Math.min(mine.libs, 5) * 3;
+    if(mine.libs === 1 && !res.captured.length) sc -= 45;
+    const r0 = Math.floor(i / GO_N), c0 = i % GO_N;
+    for(const n of goNb(i)){
+      if(b0[n] === side){
+        const g = goGroup(b0, n);
+        if(g.libs === 1) sc += 18;
+        sc += 2;
+      } else if(b0[n] === opp){
+        sc += 4;
+        const g = goGroup(b0, n);
+        if(g.libs === 1) sc += 14;
+      }
+    }
+    const edge = Math.min(r0, c0, GO_N - 1 - r0, GO_N - 1 - c0);
+    sc += edge === 0 ? -14 : edge === 1 ? 2 : 6;
+    const around = goNb(i);
+    if(around.length && around.every(n => b0[n] === side) && !res.captured.length) sc -= 60;
+    if(sc > best){ best = sc; pick = i; }
+  }
+  return best > -25 ? pick : -1;
+}
+
+/* ═══ 波子棋 AI：優先入營，其次跳得遠、離目標近 ═══ */
+const ccXY = k => {
+  const p = k.split(',').map(Number);
+  return { x: p[0] + p[1] / 2, y: p[1] * 0.866 };
+};
+function ccBestMove(b, who, seats){
+  const HOME = (seats[who] + 3) % 6;
+  const home = CC_BOARD.camps[HOME] || [];
+  const hx = home.reduce((s, k) => s + ccXY(k).x, 0) / (home.length || 1);
+  const hy = home.reduce((s, k) => s + ccXY(k).y, 0) / (home.length || 1);
+  const dist = k => { const p = ccXY(k); return Math.hypot(p.x - hx, p.y - hy); };
+  let best = null, bs = -1e9;
+  for(const k of Object.keys(b)){
+    if(b[k] !== who) continue;
+    for(const m of ccMoves(b, k)){
+      const nb = Object.assign({}, b);
+      nb[m.to] = who; delete nb[k];
+      let sc = 0;
+      const before = home.filter(t => b[t] === who).length;
+      const after = home.filter(t => nb[t] === who).length;
+      sc += (after - before) * 600;
+      if(home.includes(k) && !home.includes(m.to)) sc -= 500;
+      sc -= dist(m.to) * 4;
+      sc += (dist(k) - dist(m.to)) * 8;
+      if(m.jump) sc += 22;
+      if(sc > bs){ bs = sc; best = { f: k, to: m.to }; }
+    }
+  }
+  return best;
+}
+
+let smAiAt = 0;
+
 const CH_DEF={
   tictactoe:{ai:{n:'AI 代打',fn(){
     const r=curRoom,names=playerNames(r);
@@ -7361,9 +7512,34 @@ const CH_DEF={
     const mv=gomokuBest(r.state.board.slice(),my,op);
     if(mv) gomokuMove(mv.i,mv.j);
   }}},
-  ludo:{dice:{n:'骰子必 6'}},
-  konglok:{dice:{n:'骰子必 6'}},
-  monopoly:{dice:{n:'骰子必 6'}},
+  ludo:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return r.turn===me.username; },fn(){
+    const r=curRoom;
+    if(!r.state.rolled){ ludoRoll(); return; }
+    const my=(r.state.planes||{})[me.username]||[];
+    const d=Number(r.state.dice)||0;
+    let best=-1,bs=-1e9;
+    for(let i=0;i<my.length;i++){
+      if(!canMove(r,i)) continue;
+      const p=my[i], np=p<0?0:p+d;
+      let sc=np*0.5;
+      if(p<0) sc+=60;
+      if(np>=57) sc+=200;
+      if(np>=52&&np<57) sc+=80;
+      if(sc>bs){ bs=sc; best=i; }
+    }
+    if(best>=0) ludoMove(best); else ludoPass();
+  }}},
+  konglok:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return klCurrent(r)===me.username; },fn(){ klRoll(); }}},
+  monopoly:{dice:{n:'骰子必 6'},ai:{n:'AI 代打',mine(r){ return mpTurnU(r)===me.username; },fn(){
+    const r=curRoom,st=mpState(r);
+    if(st.pending&&st.pending.uid===me.username){
+      const cell=MP_BOARD[st.pending.tile];
+      const cash=(st.money||{})[me.username]||0;
+      if(cash>=cell.price*2.2) mpBuy(); else mpSkip();
+      return;
+    }
+    mpRoll();
+  }}},
   uno:{ai:{n:'AI 代打',mine(r){
     const eng=getEngine(r); if(!eng) return false;
     const cur=eng.currentPlayer?eng.currentPlayer.name:'';
@@ -7423,9 +7599,198 @@ const CH_DEF={
     const mv=dsBestMove(dsReplay(r),side,3);
     if(mv) dsMove(mv[0],mv[1]);
   }}},
-  snake:{god:{n:'無敵模式'}},
-  tetris:{god:{n:'無敵模式'}},
-  dino:{god:{n:'無敵模式'}},
+  go:{ai:{n:'AI 代打',mine(r){
+    const st=goReplay(r);
+    const side=st.moves%2===0?1:2;
+    return playerNames(r)[side===1?0:1]===me.username;
+  },fn(){
+    const r=curRoom;
+    const i=goBestMove(r);
+    if(i>=0) goMove(i); else goPass();
+  }}},
+  checkers:{ai:{n:'AI 代打',mine(r){ return r.turn===me.username; },fn(){
+    const r=curRoom,names=playerNames(r),who=names.indexOf(me.username);
+    if(who<0) return;
+    const mv=ccBestMove(ccReplay(r),who,ccCampOf(names.length));
+    if(mv) ccMove(mv.f,mv.to);
+  }}},
+  werewolf:{ai:{n:'AI 代打',mine(r){
+    const st=wwState(r),role=wwRoleOf(r,me.username);
+    if(!wwAlive(r).includes(me.username)) return false;
+    if(st.phase==='night') return role==='wolf'||role==='seer';
+    if(st.phase==='discuss') return wwCurSpeaker(r)===me.username;
+    if(st.phase==='vote') return !(st.votes||{})[me.username];
+    if(st.phase==='runoff'){
+      if((st.runoff||[]).includes(me.username)) return false;
+      return !(st.runoffVotes||{})[me.username];
+    }
+    return false;
+  },fn(){
+    const r=curRoom,st=wwState(r),role=wwRoleOf(r,me.username);
+    const alive=wwAlive(r),others=alive.filter(u=>u!==me.username);
+    if(st.phase==='night'){
+      if(role==='wolf'){
+        if((st.wolfPicks||{})[me.username]) return;
+        const seer=wwSeerOf(r);
+        const t=(seer&&seer!==me.username&&alive.includes(seer))?seer:others[0];
+        if(t) wwWolfPick(t);
+      }else if(role==='seer'){
+        const sc=(st.seerChecks||{})[me.username];
+        if(sc&&sc.night===(Number(st.night)||1)) return;
+        if(others[0]) wwSeerCheck(others[0]);
+      }
+      return;
+    }
+    if(st.phase==='discuss'){
+      if(wwCurSpeaker(r)!==me.username) return;
+      const L=['先看清楚票型再講','昨晚的結果有點奇怪','我是好人，聽大家怎麼說','有人在帶風向，我保留','我票先不給，多看一輪'];
+      wwSendDesc(L[Math.floor(Math.random()*L.length)]);
+      return;
+    }
+    if(st.phase==='vote'||st.phase==='runoff'){
+      const cast=st.phase==='vote'?(st.votes||{}):(st.runoffVotes||{});
+      if(cast[me.username]) return;
+      const pool=st.phase==='runoff'?(st.runoff||[]).filter(u=>u!==me.username):others;
+      const want=role==='wolf'?pool.filter(u=>wwRoleOf(r,u)!=='wolf'):pool.filter(u=>wwRoleOf(r,u)==='wolf');
+      const t=(want.length?want:pool)[0];
+      if(t) wwCastVote(t);
+    }
+  }}},
+  undercover:{ai:{n:'AI 代打',mine(r){
+    const st=ucState(r);
+    if(!ucAlive(r).includes(me.username)) return false;
+    if(st.phase==='play') return ucCurDesc(r)===me.username;
+    if(st.phase==='vote') return !(st.votes||{})[me.username];
+    if(st.phase==='runoff'){
+      if((st.runoff||[]).includes(me.username)) return false;
+      return !(st.runoffVotes||{})[me.username];
+    }
+    return false;
+  },fn(){
+    const r=curRoom,st=ucState(r);
+    if(st.phase==='play'){
+      if(ucCurDesc(r)!==me.username) return;
+      const L=['我拿到的是很日常的東西','跟生活有關，但不好形容','先聽你們怎麼講','這個我熟，講多了會露','應該大家都聽過'];
+      ucSendDesc(L[Math.floor(Math.random()*L.length)]);
+      return;
+    }
+    const alive=ucAlive(r),others=alive.filter(u=>u!==me.username);
+    const cast=st.phase==='vote'?(st.votes||{}):(st.runoffVotes||{});
+    if(cast[me.username]) return;
+    const pool=st.phase==='runoff'?(st.runoff||[]).filter(u=>u!==me.username):others;
+    const under=st.undercover||[];
+    const want=under.includes(me.username)?pool.filter(u=>!under.includes(u)):pool.filter(u=>under.includes(u));
+    const t=(want.length?want:pool)[0];
+    if(t) ucCastVote(t);
+  }}},
+  bomb:{ai:{n:'AI 代打',mine(r){
+    const st=bombState(r);
+    return st.phase==='play'&&st.current===me.username&&bombAlive(r).includes(me.username);
+  },fn(){
+    const r=curRoom,st=bombState(r);
+    const L=['蘋果','香蕉','西瓜','桌子','手機','太陽','籃球','咖啡','雨傘','書包','眼鏡','麵包','電腦','拖鞋','風扇','鉛筆','小狗','海洋','車子','音樂'];
+    const used=(st.used||[]).map(picNorm);
+    const pool=L.filter(x=>!used.includes(picNorm(x))&&picNorm(x)!==picNorm(st.category||''));
+    if(!pool.length) return;
+    bombAnswer(pool[Math.floor(Math.random()*pool.length)]);
+  }}},
+  scriptmurder:{ai:{n:'AI 代打',mine(r){
+    const st=smState(r);
+    if(!playerNames(r).includes(me.username)) return false;
+    if(st.phase==='read') return !(st.ready||{})[me.username];
+    if(st.phase==='discuss') return r.host===me.username;
+    if(st.phase==='vote') return !(st.votes||{})[me.username];
+    return false;
+  },fn(){
+    const r=curRoom,st=smState(r);
+    if(st.phase==='read'){
+      update(ref(db,'games/'+curRoomId+'/state/ready'),{[me.username]:true})
+        .then(()=>smCheckReady(curRoom)).catch(()=>{});
+      return;
+    }
+    if(st.phase==='discuss'){
+      if(Date.now()-smAiAt<5000) return;
+      smAiAt=Date.now();
+      update(ref(db,'games/'+curRoomId+'/state'),{phase:'vote',votes:null}).catch(()=>{});
+      return;
+    }
+    if(st.phase==='vote'){
+      const others=playerNames(r).filter(u=>u!==me.username);
+      if(!others.length) return;
+      const t=others[Math.floor(Math.random()*others.length)];
+      update(ref(db,'games/'+curRoomId+'/state/votes'),{[me.username]:t})
+        .then(()=>setTimeout(smTally,300)).catch(()=>{});
+    }
+  }}},
+  pictionary:{ai:{n:'AI 代打',mine(r){
+    const st=picState(r);
+    if(!playerNames(r).includes(me.username)) return false;
+    if(st.phase==='pick') return st.drawer===me.username;
+    if(st.phase==='draw') return st.drawer!==me.username&&!((st.guesses||{})[me.username]);
+    if(st.phase==='roundEnd') return r.host===me.username;
+    return false;
+  },fn(){
+    const r=curRoom,st=picState(r);
+    if(st.phase==='pick'){ picStartDraw(); return; }
+    if(st.phase==='draw'){ if(st.word) picGuess(st.word); return; }
+    if(st.phase==='roundEnd'){ picNextRound(); }
+  }}},
+  g2048:{ai:{n:'AI 代打',mine(r){
+    const s=window.__solo&&window.__solo.state;
+    return !!(s&&!s.over);
+  },fn(){
+    const s=window.__solo.state;
+    let best=1,bs=-1e9;
+    for(const d of [0,1,2,3]){
+      const c={b:s.b.slice(),score:s.score,over:false};
+      if(!g2048Slide(c,d)) continue;
+      let empty=0,sum=0;
+      for(const v of c.b){ if(!v) empty++; else sum+=v; }
+      const sc=empty*100+sum*0.02;
+      if(sc>bs){ bs=sc; best=d; }
+    }
+    window.__solo.move(best);
+  }}},
+  breakout:{ai:{n:'AI 代打（擋板追球）',mine(r){ return false; },fn(){}}},
+  memory:{ai:{n:'AI 代打',mine(r){
+    const s=window.__solo&&window.__solo.state;
+    return !!(s&&s.pairs<8);
+  },fn(){
+    const s=window.__solo.state;
+    const el=[...document.querySelectorAll('.memgrid .mc')];
+    if(!el.length) return;
+    const groups={};
+    s.ks.forEach((k,i)=>{ if(s.done[i]) return; (groups[k]=groups[k]||[]).push(i); });
+    const pair=Object.values(groups).find(a=>a.length>=2);
+    if(!pair) return;
+    const opened=s.open.map((o,i)=>(o&&!s.done[i])?i:-1).filter(i=>i>=0);
+    if(opened.length===1){
+      const other=pair.find(i=>i!==opened[0]);
+      if(other!==undefined) el[other].click();
+    }else{
+      el[pair[0]].click(); el[pair[1]].click();
+    }
+  }}},
+  mines:{ai:{n:'AI 代打（自動掃雷）',mine(r){
+    const s=window.__solo&&window.__solo.state;
+    return !!(s&&!s.dead&&!s.won);
+  },fn(){
+    const el=[...document.querySelectorAll('.minesgrid .ms')];
+    if(!el.length) return;
+    let n=0;
+    for(let k=0;k<80&&n<10;k++){
+      const now=window.__solo.state;
+      if(!now||now.dead||now.won) return;
+      const idx=now.mine.findIndex((m,i)=>(!m&&!now.open[i]));
+      if(idx<0) return;
+      el[idx].dispatchEvent(new MouseEvent('click',{bubbles:true}));
+      n++;
+    }
+  }}},
+  flappy:{ai:{n:'AI 代打（自動過管）',mine(r){ return false; },fn(){}}},
+  snake:{god:{n:'無敵模式'},ai:{n:'AI 代打（自動吃豆）',mine(r){ return false; },fn(){}}},
+  tetris:{god:{n:'無敵模式'},ai:{n:'AI 代打',mine(r){ return !!(window.__tetBot&&window.__tetBot.mounted); },fn(){ window.__tetBot&&window.__tetBot._bot(); }}},
+  dino:{god:{n:'無敵模式'},ai:{n:'AI 代打（自動跳）',mine(r){ return false; },fn(){}}},
 };
 
 /* ── 介面 ── */
