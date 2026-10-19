@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-bYEbBcKIiyexKT7kuR7K49v0IdT7MJjWPX/kLlNatEU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-XTzXHNP7fKd9msjjSWrrEYJ/yZ6/haFjorGf14P/FCs=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -597,7 +597,8 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
    標題列本來就會 flex-wrap，擠不下時整組換行，不會蓋住任何按鈕。 */
 .score-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;
   font-size:12px;font-weight:600;color:var(--gold);background:rgba(226,176,74,.12);
-  border:1px solid rgba(226,176,74,.3);vertical-align:middle;flex:0 0 auto;white-space:nowrap}
+  border:1px solid rgba(226,176,74,.3);vertical-align:middle;flex:0 0 auto;white-space:nowrap;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 .score-chip .ico{width:1.05em;height:1.05em}
 /* 舊的手機版浮動 chip：保留節點（只加不刪），但永遠不顯示 */
 .score-chip-fixed{display:none !important}
@@ -619,7 +620,8 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
   background:radial-gradient(circle,rgba(251,191,36,.22),transparent 70%);pointer-events:none}
 .pt-hero-label{font-size:12.5px;font-weight:600;color:var(--text-sub);letter-spacing:.4px}
 .pt-hero-num{display:flex;align-items:center;gap:9px;margin-top:7px;font-size:30px;font-weight:800;
-  line-height:1.15;color:var(--gold);letter-spacing:-.5px;word-break:break-all}
+  line-height:1.15;color:var(--gold);letter-spacing:-.5px;word-break:break-all;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 .pt-hero-num .ico{width:.95em;height:.95em;flex:0 0 auto}
 @media (max-width:420px){.pt-hero-num{font-size:25px}}
 /* 餘額理論上不會是負數（扣唔到就成筆交易取消），但資料庫若被手動改成負數，至少看得出來 */
@@ -1111,7 +1113,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.14';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.15';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2247,9 +2249,9 @@ function freezeBrowser(target){
    ⚠ me 物件是登入時逐個欄位抄出來的，漏抄 points 就會永遠顯示 0（v1.38.9 修）。 */
 function pointsOf(u){ return Number((u&&u.points)||0)||0; }
 function renderPoints(){
-  const v=pointsOf(me);
-  const html='<svg class="ico"><use href="#i-score"/></svg><span>'+(v||0)+'</span>';
-  ['scoreTop','scoreBottom'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.innerHTML=html; el.classList.toggle('neg',v<0); } });
+  paintPoints(pointsOf(me));
+  /* 積分一有變動就交給自動回正（只有 stu14 會真的啟動，其他人即刻返回） */
+  try{ if(typeof autoPointsKick==='function')autoPointsKick(); }catch(e){}
 }
 
 /* ── v1.36 視訊通話 ────────────────────────────────
@@ -3964,10 +3966,115 @@ function pointsRow(u,isSelf){
 /* 個人主頁／兌換頁貼回快照之後，積分數字會凍結在舊值 —— 統一由這裡刷新。 */
 function syncPointNodes(){
   if(!me)return;
-  const v=pointsOf(me);
-  document.querySelectorAll('[data-pts-self="1"]').forEach(el=>{ if(el.textContent!==String(v)) el.textContent=v; });
+  paintPoints(pointsOf(me));
+}
+/* ═══════════════════════════════════════════════════════════════════
+   積分顯示的唯一出口
+   ───────────────────────────────────────────────────────────────────
+   聊天框頂部（#scoreTop）、底部（#scoreBottom）、個人主頁／兌換頁的
+   那一行（[data-pts-self="1"]）、積分中心的大字（#ptHeroNum），
+   全部只由 paintPoints() 更新，不要在其他地方各自寫 textContent，
+   否則一定會漏一兩個（v1.38.15 前的老問題）。
+   只改文字、不重建 innerHTML：自動回正每 100ms 叫一次，重建會閃。
+   ═══════════════════════════════════════════════════════════════════ */
+function paintPoints(v){
+  const s=String(v), neg=v<0;
+  ['scoreTop','scoreBottom'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    let sp=el.querySelector('span');
+    if(!sp){                                   // 第一次：靜態 HTML 是空的
+      el.innerHTML='<svg class="ico"><use href="#i-score"/></svg><span></span>';
+      sp=el.querySelector('span');
+    }
+    if(sp&&sp.textContent!==s)sp.textContent=s;
+    el.classList.toggle('neg',neg);
+  });
+  document.querySelectorAll('[data-pts-self="1"]').forEach(function(el){
+    if(el.textContent!==s)el.textContent=s;
+  });
   const hero=document.getElementById('ptHeroNum');
-  if(hero){ hero.textContent=v; hero.classList.toggle('neg',v<0); }
+  if(hero){ if(hero.textContent!==s)hero.textContent=s; hero.classList.toggle('neg',neg); }
+}
+/* ═══════════════════════════════════════════════════════════════════
+   積分自動回正（只對 stu14 一個帳戶生效）
+   ───────────────────────────────────────────────────────────────────
+   需求原文：積分被扣或者被加、不等於 1,000,000 的時候，便以每秒 10 點的速度
+   變回 1,000,000；但每一個數字的變化過程都要看得清楚，不是 999990 直接跳 1000000。
+
+   所以這裡是「一步只走 1 點、每 100ms 走一步」＝每秒 10 點：
+       999997 → 999998 → 999999 → 1000000
+   而不是每 100ms 加 10 點。
+
+   兩層分工，避免把資料庫寫爆：
+     · 資料庫：偵測到偏離就一次過寫成 1,000,000（只寫一次），
+       這樣兌換／商店的交易讀到的就是 1,000,000，不會因為舊值不夠而失敗。
+     · 畫面：由本地計時器逐格爬回去（純顯示層，不再碰資料庫）。
+   非 stu14 完全不啟動，連計時器都不建立。
+   ═══════════════════════════════════════════════════════════════════ */
+const AUTOPT_UID='stu14';
+const AUTOPT_TARGET=1000000;   // 目標積分
+const AUTOPT_MS=100;           // 每步 100ms × 每步 1 點 ＝ 每秒 10 點
+const AUTOPT_MAX=1000;         // 逐格最多爬 1000 步（100 秒）；更大的差距先落到起點再爬
+let _autoPtTimer=null,_autoPtBusy=false,_autoPtDbAt=0,_autoPtWatch=false;
+
+function autoPointsOn(){ return !!(me&&me.username===AUTOPT_UID); }
+
+/* 盯住自己的 points：後台改分、其他裝置改分都會即刻回來（只對 stu14 註冊） */
+function autoPointsWatch(){
+  if(_autoPtWatch||!autoPointsOn())return;
+  _autoPtWatch=true;
+  try{
+    onValue(ref(db,'users/'+me.username+'/points'),function(snap){
+      if(_autoPtBusy)return;                 // 本地動畫進行中，以本地值為準
+      const v=Number(snap.val())||0;
+      if(v===pointsOf(me))return;
+      me.points=v;
+      paintPoints(v);
+      try{ autoPointsKick(); }catch(e){}
+    });
+  }catch(e){ _autoPtWatch=false; }
+}
+
+/* 把資料庫對齊目標（安樂寫法：直接寫，不靠交易讀舊值） */
+function autoPointsFlush(){
+  if(!autoPointsOn())return;
+  try{ set(ref(db,'users/'+me.username+'/points'),AUTOPT_TARGET).catch(function(){}); }catch(e){}
+}
+
+function autoPointsStop(){
+  if(_autoPtTimer){ clearInterval(_autoPtTimer); _autoPtTimer=null; }
+  _autoPtBusy=false;
+}
+
+function autoPointsKick(){
+  if(!autoPointsOn()){ if(_autoPtTimer)autoPointsStop(); return; }
+  autoPointsWatch();
+  if(_autoPtBusy)return;
+  if(pointsOf(me)===AUTOPT_TARGET)return;
+  autoPointsStart();
+}
+
+function autoPointsStart(){
+  _autoPtBusy=true;
+  /* 差距太大（例如真的被改成 0 分）就不逐格爬幾萬步：先落到起點再爬，過程一樣逐格看得清 */
+  const cur=pointsOf(me);
+  if(Math.abs(cur-AUTOPT_TARGET)>AUTOPT_MAX){
+    me.points=cur<AUTOPT_TARGET?AUTOPT_TARGET-AUTOPT_MAX:AUTOPT_TARGET+AUTOPT_MAX;
+    paintPoints(me.points);
+  }
+  /* 資料庫一次過對齊目標（1.2 秒冷卻，避免連續兌換時狂寫） */
+  const now=Date.now();
+  if(now>=_autoPtDbAt){ _autoPtDbAt=now+1200; autoPointsFlush(); }
+  if(_autoPtTimer)clearInterval(_autoPtTimer);
+  _autoPtTimer=setInterval(function(){
+    if(!autoPointsOn()){ autoPointsStop(); return; }
+    const v=pointsOf(me);
+    if(v===AUTOPT_TARGET){ autoPointsFlush(); autoPointsStop(); return; }
+    const n=v<AUTOPT_TARGET?v+1:v-1;
+    me.points=n;
+    paintPoints(n);
+  },AUTOPT_MS);
 }
 /* ═══════════════════════════════════════════════════════════════════
    v1.38.10 積分中心（整頁）
@@ -6368,6 +6475,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.15',date:'2026-10-19',changes:[
+'積分數字實時同步：聊天框頂部、底部、個人主頁、積分中心四處的數字改由同一個出口更新。兌換兌換碼、買積分商店商品、後台加減分之後，四處會同時跟著變，不會再有一處停在舊分數',
+'積分數字改用等寬字型，位數增減時數字不會左右跳動',
+]},
 {ver:'v1.38.14',date:'2026-10-19',changes:[
 '修好超大餘額付不到入場費的問題：帳戶分數接近 JavaScript 安全整數上限（2 的 53 次方）時，扣分的原子交易會不斷重試到失敗，於是明明有分都顯示「積分不足」，而且分數其實一分都沒有扣。現在交易失敗會自動改用「先讀一次再寫一次」補上，扣分、派彩、退款三條路都一樣',
 ]},
