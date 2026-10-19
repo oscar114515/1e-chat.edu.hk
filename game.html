@@ -7659,6 +7659,7 @@ const CH_DEF={
   undercover:{ai:{n:'AI 代打',mine(r){
     const st=ucState(r);
     if(!ucAlive(r).includes(me.username)) return false;
+    if(st.phase==='reveal') return !((st.ready||{})[me.username]);
     if(st.phase==='play') return ucCurDesc(r)===me.username;
     if(st.phase==='vote') return !(st.votes||{})[me.username];
     if(st.phase==='runoff'){
@@ -7668,6 +7669,11 @@ const CH_DEF={
     return false;
   },fn(){
     const r=curRoom,st=ucState(r);
+    if(st.phase==='reveal'){
+      update(ref(db,'games/'+curRoomId+'/state/ready'),{[me.username]:true})
+        .then(()=>ucCheckReady(curRoom)).catch(()=>{});
+      return;
+    }
     if(st.phase==='play'){
       if(ucCurDesc(r)!==me.username) return;
       const L=['我拿到的是很日常的東西','跟生活有關，但不好形容','先聽你們怎麼講','這個我熟，講多了會露','應該大家都聽過'];
