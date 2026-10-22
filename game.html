@@ -55,6 +55,7 @@ body{background:var(--bg);color:var(--text-main);font-family:-apple-system,Blink
 .countdown{text-align:center;font-size:44px;font-weight:800;color:var(--gold);margin:16px 0 4px;font-variant-numeric:tabular-nums}
 .hint{text-align:center;font-size:13px;color:var(--text-sub);margin-bottom:10px}
 .board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
+.zoom-box{width:100%;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center}
 canvas{background:#0f1320;border-radius:var(--r-2);border:1px solid var(--border);touch-action:none;-webkit-user-select:none;user-select:none}
 .side{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .turnbar{text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:var(--r-2);background:var(--bg-card);border:1px solid var(--border)}
@@ -166,10 +167,29 @@ canvas{background:#0f1320;border-radius:var(--r-2);border:1px solid var(--border
 .pip{border-radius:50%;background:#3a4260}
 .pip.on{background:#fff}
 .cards{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;padding:8px 0}
-.uno{width:52px;height:78px;border-radius:var(--r-1);border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+/* v1.38.16 UNO 官方牌面：彩色卡 + 白色斜橢圓 + 中央大符號 + 四角小符號 */
+.uno{position:relative;width:52px;height:78px;border-radius:9px;border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+  box-shadow:0 3px 8px rgba(0,0,0,.4);padding:0}
+.uno .uo{position:absolute;left:50%;top:50%;width:44px;height:28px;
+  transform:translate(-50%,-50%) rotate(-18deg);background:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center}
+.uno .uo b{font-size:19px;font-weight:800;font-family:"Arial Black",Arial,Helvetica,sans-serif;
+  line-height:1;color:var(--uc,#111);letter-spacing:-.5px}
+.uno .uc{position:absolute;font-size:9px;font-weight:800;color:#fff;line-height:1;z-index:2;
+  text-shadow:0 1px 1px rgba(0,0,0,.35);font-family:"Arial Black",Arial,sans-serif}
+.uno .ct{left:4px;top:3px}
+.uno .cb{right:4px;bottom:3px;transform:rotate(180deg)}
 .uno.playable{outline:3px solid var(--gold);outline-offset:2px}
-.uno.r{background:#dc2626}.uno.g{background:#16a34a}.uno.b{background:#2563eb}.uno.y{background:#ca8a04}.uno.w{background:#1f2937}
-.uno.sm{width:34px;height:52px;font-size:14px;cursor:default}
+.uno.r{background:#dc2626;--uc:#dc2626}
+.uno.g{background:#16a34a;--uc:#16a34a}
+.uno.b{background:#2563eb;--uc:#2563eb}
+.uno.y{background:#ca8a04;--uc:#ca8a04}
+.uno.w{background:conic-gradient(#dc2626 0 25%,#2563eb 0 50%,#16a34a 0 75%,#ca8a04 0);--uc:#111827}
+.uno.sm{width:34px;height:52px;cursor:default}
+.uno.sm .uo{width:28px;height:18px}
+.uno.sm .uo b{font-size:12px}
+.uno.sm .uc{font-size:7px}
 .deck-row{display:flex;gap:12px;align-items:center;justify-content:center}
 .notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,36,.96);border:1px solid var(--border-strong);border-radius:var(--r-2);padding:18px 24px;font-size:15px;z-index:99;text-align:center;max-width:80vw;pointer-events:none}
 .empty{text-align:center;color:var(--text-sub);padding:50px 20px;font-size:14px}
@@ -406,6 +426,13 @@ body.theme-light .hudcard{background:rgba(255,255,255,.82)}
 .padbtn{width:74px;height:74px;border-radius:50%;background:rgba(56,189,248,.18);border:1px solid rgba(56,189,248,.5);color:var(--accent);
   font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;cursor:pointer}
 .padbtn:active,.padbtn.on{background:var(--accent);color:#0b0d14;transform:scale(.95)}
+/* v1.38.16 貪吃蛇改用虛擬搖桿（取代四個方向鍵）：拖去邊就走邊，唔會排隊轉向 */
+.joy{width:118px;height:118px;border-radius:50%;background:rgba(56,189,248,.12);
+  border:2px solid rgba(56,189,248,.4);position:relative;touch-action:none;
+  display:flex;align-items:center;justify-content:center}
+.joyknob{width:52px;height:52px;border-radius:50%;background:rgba(56,189,248,.8);
+  border:1px solid rgba(255,255,255,.55);box-shadow:0 2px 8px rgba(0,0,0,.4);
+  transition:transform .05s linear}
 .ctrls .padwrap{display:none}
 .ctrls.touch .padwrap{display:block}
 .dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,58px);gap:7px}
@@ -564,6 +591,7 @@ let me=null;               // {username,displayName,color,avatar,role,cls,seat}
 let myStats={};
 let roomsSub=null, roomSub=null;
 let curRoom=null, curRoomId=null;
+let roomWaitStart=0;   // 進入房間後等資料的起點（用來看是不是卡住了）
 // v1.31 我是從「邀請／房間連結」進來的嗎？（是的話退出要回去聊天室，不是回大廳）
 let cameFromInvite=false;
 let view='lobby';
@@ -1187,6 +1215,7 @@ async function ensureTopic(r){
 let lateJoin = false;
 function joinRoom(rid){
   curRoomId=rid; view='room'; try{window.__roomId=rid;}catch(e){}
+  roomWaitStart=Date.now();
   delete payDeclined[rid];          // 重新開一次房間就要重新問一次
   lateJoin=false;
   if(roomSub)roomSub();
@@ -1194,6 +1223,7 @@ function joinRoom(rid){
     if(!snap.exists()){ curRoom=null; showNotice('房間已不存在或已被關閉'); view='lobby'; render(); return; }
     const prev=curRoom;
     curRoom=snap.val();
+    roomWaitStart=0;
     // 第一次收到資料時就已經是「已結束」，而且我不是這場的玩家 → 我是遲到的人
     if(!prev && curRoom.status==='ended' && !(curRoom.players&&curRoom.players[me.username])) lateJoin=true;
     if(!lateJoin) await ensureMembership();     // 已結束的房間不要再把自己塞進去
@@ -1373,7 +1403,22 @@ async function cancelCountdownIfShort(rid){
   }catch(e){}
 }
 function renderRoom(){
-  const r=curRoom; if(!r){ appEl.innerHTML='<div class="empty">載入中...</div>'; return; }
+  const r=curRoom;
+  if(!r){
+    const waited=roomWaitStart?Date.now()-roomWaitStart:0;
+    if(waited>9000){
+      appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>載入不到</h1></div>
+        <div class="wrap"><div class="empty">等太久，拿不到房間資料。<br>可能是網絡問題，按下面重試一次。</div>
+        <button class="btn" data-act="retryRoom">重試</button>
+        <button class="btn ghost" data-act="leave">回到大廳</button></div>`;
+      const rb=appEl.querySelector('[data-act="retryRoom"]'); if(rb) rb.onclick=()=>location.reload();
+      appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
+      return;
+    }
+    appEl.innerHTML='<div class="empty">載入中…</div>';
+    setTimeout(()=>{ if(view==='room'&&!curRoom){ try{ render(); }catch(e){} } }, 1500);
+    return;
+  }
   const g=gameDef(r.game);
   if(lateJoin) return renderLateRoom(r,g);          // 對局在我進來之前就結束了
   if(r.status==='playing'||r.status==='ended'){ return renderGame(r,g); }
@@ -1795,6 +1840,36 @@ function buildLobbyDPad(onDir){
   return el;
 }
 
+/* 虛擬搖桿：按住拖曳，傳回單位方向（dx,dy）；放手回 0,0 */
+function buildLobbyJoystick(onDir){
+  const el=document.createElement('div');
+  el.className='joy';
+  el.innerHTML='<div class="joyknob"></div>';
+  const knob=el.querySelector('.joyknob');
+  const R=34;
+  let active=false, cx=0, cy=0, pid=null;
+  const apply=(px,py)=>{
+    const dx=px-cx, dy=py-cy, d=Math.hypot(dx,dy);
+    if(d<1){ knob.style.transform='translate(0,0)'; onDir(0,0); return; }
+    const cl=Math.min(d,R);
+    knob.style.transform='translate('+(dx/d*cl).toFixed(1)+'px,'+(dy/d*cl).toFixed(1)+'px)';
+    if(cl<8){ onDir(0,0); return; }        // 死區：手指輕微抖動不要當成轉向
+    onDir(dx/d, dy/d);
+  };
+  el.addEventListener('pointerdown',e=>{
+    active=true; pid=e.pointerId;
+    const r=el.getBoundingClientRect(); cx=r.left+r.width/2; cy=r.top+r.height/2;
+    try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    apply(e.clientX,e.clientY);
+    if(e.cancelable) e.preventDefault();
+  },{passive:false});
+  el.addEventListener('pointermove',e=>{ if(active&&e.pointerId===pid) apply(e.clientX,e.clientY); });
+  const end=()=>{ active=false; pid=null; knob.style.transform='translate(0,0)'; onDir(0,0); };
+  el.addEventListener('pointerup',end);
+  el.addEventListener('pointercancel',end);
+  return el;
+}
+
 /** 這部裝置「預設」是不是觸控：真正用什麼玩，進遊戲後再按真實事件切換。 */
 function lobbyIsTouch(){
   try{ if(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches) return true; }catch(e){}
@@ -1815,7 +1890,7 @@ function createSnakeLobby(){
   const SEG=6;               /* 每一節的長度 */
   const SPEED=158;           /* 基本速度（單位／秒） */
   const SPEED_BOOST=286;     /* 加速時的速度 */
-  const TURN=3.5;            /* 每秒最多轉幾弧度（限制轉向 → 不會瞬間折返） */
+  const TURN=4.4;            /* 每秒最多轉幾弧度（3.5 → 4.4：轉向爽一點，唔會覺得撳咗冇反應） */
   const START_N=14;          /* 出生長度 */
   const NET_DELAY=130;       /* 別人的畫面延遲（毫秒）：用插值讓 8Hz 的封包看起來是連續的 */
   const FOOD_TARGET=260;     /* 場上維持多少顆豆（正方形比圓形大，所以比之前多一點） */
@@ -1873,6 +1948,9 @@ function createSnakeLobby(){
       const a=pts[i-1], b=pts[i];
       const d=Math.hypot(b.x-a.x,b.y-a.y);
       if(d<=1e-6) continue;
+      /* 軌跡斷開（重生、掉幀、切換視窗）就不要用一條長直線連過去，
+         否則畫面上會見到蛇身突然拉出一條「分叉」。 */
+      if(d>SEG*4) break;
       if(d>=left){
         const t=left/d;
         out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
@@ -1953,16 +2031,18 @@ function createSnakeLobby(){
       const r=rivals[u]; if(!r||r.dead) continue;
       const rh=rivalHead(r,renderT); if(!rh) continue;
       const dh=Math.hypot(rh.x-hd.x,rh.y-hd.y);
-      if(dh < R0*1.9){
+      if(dh < R0*2.2){        /* 1.9 → 2.2：補償 130ms 延遲，唔會明明撞到都穿過去 */
         /* 頭對頭：大的贏（比較小的一方死，並把豆子留給對方）；一樣大就一起死 */
         if((r.n||START_N)>my.n+1.5){ die('撞到 '+r.name, r.name); return; }
         if(Math.abs((r.n||START_N)-my.n)<=1.5){ die('和 '+r.name+' 撞在一起', r.name); return; }
         continue;
       }
-      /* 頭撞到對方身體 */
+      /* 頭撞到對方身體：先看兩條蛇距離，太遠就整條跳過（省 CPU），
+         近就逐點檢查 —— 以前隔點跳（i+=2）會漏掉兩個取樣點之間的位置，看起來就是穿模。 */
+      if(Math.hypot(rh.x-hd.x,rh.y-hd.y) > 460) continue;
       const body=rivalBody(r,renderT);
-      for(let i=2;i<body.length;i+=2){
-        if(Math.hypot(body[i].x-hd.x,body[i].y-hd.y) < R0*1.75){ die('撞到 '+r.name+' 的身體', r.name); return; }
+      for(let i=2;i<body.length;i++){
+        if(Math.hypot(body[i].x-hd.x,body[i].y-hd.y) < R0*2.0){ die('撞到 '+r.name+' 的身體', r.name); return; }
       }
     }
   }
@@ -2207,9 +2287,9 @@ function createSnakeLobby(){
         +'<div class="padbtn" id="btnBoost">加速<br>衝刺</div>';
       const setTouch=on=>{ if(ctlEl) ctlEl.classList.toggle('touch',!!on); };
       const padBox=appEl.querySelector('#padBox');
-      if(padBox) padBox.appendChild(buildLobbyDPad((dx,dy)=>{
+      if(padBox) padBox.appendChild(buildLobbyJoystick((dx,dy)=>{
         pad.x=dx; pad.y=dy;
-        if(dx||dy) pointer.has=false;      /* 用方向鍵時不要被上一次的滑鼠位置拉走 */
+        if(dx||dy) pointer.has=false;      /* 用搖桿時不要被上一次的滑鼠位置拉走 */
       }));
       setTouch(lobbyIsTouch());
       /* 真正用什麼玩就以什麼為準：摸到螢幕就出方向鍵，用滑鼠就收起來 */
@@ -3835,6 +3915,9 @@ async function addAiPlayer(){
     });
     /* 房主斷線／關頁時 AI 一併消失，不會留下沒人跑的幽靈玩家 */
     try{ onDisconnect(ref(db,'games/'+curRoomId+'/players/'+id)).remove(); }catch(e){}
+    /* 加了 AI 之後人數可能已經夠，但只有「真人加入」那條路會叫倒數，
+       AI 加入不會經過 ensureMembership，所以這裡要自己補一次 */
+    setTimeout(function(){ try{ maybeStartCountdown(); }catch(e){} }, 600);
     showNotice('已加入 AI · '+nm);
   }catch(e){ showNotice('加入失敗'); }
 }
@@ -3928,6 +4011,13 @@ function initGameState(r, seed){
     // 交給第三方引擎：不預先產生任何盤面，開局只寫種子，各端重放動作
     state={};turn=null;
   }
+  /* 遊戲事件日誌：開局記一筆，出事之後查得到「哪一局、誰在玩、幾點開」 */
+  try{
+    if(curRoomId) set(ref(db,'gameLog/'+curRoomId),{
+      game:r.game, host:r.host||'', players:names, fee:Number(r.fee)||0,
+      maxP:r.maxP||0, at:Date.now(), endedAt:null, winner:null
+    });
+  }catch(e){}
   return {players:players,turn:turn,state:state};
 }
 
@@ -4107,6 +4197,7 @@ function backHome(){
 // 不傳就沿用舊行為（winner 本人勝，'draw' 平手）。
 async function finishGame(winner, winners){
   const r=curRoom; if(!r||r.status==='ended')return;
+  try{ if(curRoomId) update(ref(db,'gameLog/'+curRoomId),{endedAt:Date.now(),winner:String(winner||'')}); }catch(e){}
   // 用 winner 當原子鎖：雙方同時判定勝利時，只有一方能寫入，另一方直接放棄
   // （否則戰績會被重複累加兩次）
   let res;
@@ -4202,12 +4293,18 @@ async function tttMove(i,who){
 }
 
 /* ===== 五子棋 ===== */
+let gomokuZoom=1;   // 1 / 1.5 / 2，重繪後要記住
 function drawGomoku(r,g,bar,spec){
-  const S=15,C=23,PAD=18,W=C*(S-1)+PAD*2; // 345
+  const S=15,C=26,PAD=20,W=C*(S-1)+PAD*2; // 404：格距由 23 加到 26，手指冇咁易按錯
+  const zw=Math.round(W*gomokuZoom);
   appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
-   <div class="wrap"><div class="board-wrap">${bar}<canvas id="cv" width="${W}" height="${W}"></canvas>
+   <div class="wrap"><div class="board-wrap">${bar}
+   <div class="zoom-box"><canvas id="cv" width="${W}" height="${W}" style="width:${zw}px;max-width:none"></canvas></div>
+   <div class="side"><button class="chip" id="zmBtn">${gomokuZoom>=2?'還原':'放大'}</button></div>
    <div class="hint">五子連線者勝</div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
+  const zmb=appEl.querySelector('#zmBtn');
+  if(zmb) zmb.onclick=()=>{ gomokuZoom=(gomokuZoom>=2?1:gomokuZoom+0.5); render(); };
   ctx.fillStyle='#d29a55';ctx.fillRect(0,0,W,W);          // v1.33 木色照規範
   ctx.strokeStyle='#4d2d18';ctx.lineWidth=1;                // 線色照規範
   // 1px 的線畫在整數座標會跨在兩個像素之間 → 每條線都被平均成 50% 混色（看起來糊）。
@@ -4392,14 +4489,38 @@ const UCOLORS = { red: '紅', blue: '藍', green: '綠', yellow: '黃', wild: '�
 const UVALUES = { skip: '⊘', reverse: '⇄', draw_two: '+2', wild: '彩', wild_draw_four: '+4', wild_draw_two: '+4' };
 const unoCN = c => String(c).toLowerCase();
 const unoVN = v => String(v).toLowerCase();
+/* ⚠ 第三方 UNO 引擎的 value／color 是「數字常數」而不是字串：
+     Value: 0–9 數字牌、10=DRAW_TWO、11=REVERSE、12=SKIP、13=WILD、14=WILD_DRAW_FOUR
+     Color: 1=RED、2=BLUE、3=GREEN、4=YELLOW
+   以前直接 String() 之後拿去查 UVALUES，永遠查不到 → 牌面全部顯示「10」「14」、
+   顏色也對不上，這就是「看不到顏色、功能牌一個都沒有」的真正原因。 */
+const UNO_VAL_NAME = {0:'0',1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',
+  10:'draw_two',11:'reverse',12:'skip',13:'wild',14:'wild_draw_four'};
+const UNO_COL_NAME = {1:'red',2:'blue',3:'green',4:'yellow'};
 function unoLabel(card){
-  const v = unoVN(card.value), col = unoCN(card.color);
-  return { text: (UVALUES[v] || v).toUpperCase(), cls: col === 'wild' ? 'w' : col[0] };
+  const rawV = card && card.value, rawC = card && card.color;
+  const v = (typeof rawV === 'number') ? (UNO_VAL_NAME[rawV] || String(rawV)) : unoVN(rawV);
+  const isWild = (v === 'wild' || v === 'wild_draw_four');
+  let col;
+  if (isWild) col = 'wild';
+  else if (typeof rawC === 'number') col = UNO_COL_NAME[rawC] || '';
+  else col = unoCN(rawC);
+  const text = (UVALUES[v] || v).toUpperCase();
+  /* mark＝印在牌面上的符號；wild（普通變色卡）官方牌面只有四色，不印字 */
+  const mark = (v === 'wild') ? '' : text;
+  return { text, mark, cls: (col === 'wild' || !col) ? 'w' : col[0] };
+}
+/* 產生一張官方樣式的牌面（中央斜橢圓 + 四角小字） */
+function unoFace(L){
+  const m = L.mark || '';
+  const corner = m ? `<span class="uc ct">${m}</span><span class="uc cb">${m}</span>` : '';
+  return corner + `<span class="uo">${m ? `<b>${m}</b>` : ''}</span>`;
 }
 function unoFindCard(eng, who, col, val, declared){
   const p = eng.getPlayer(who); if (!p) return null;
   if (col === 'wild'){
-    const card = p.hand.find(c => unoCN(c.color) === 'wild' && unoVN(c.value) === val);
+    const vn = c => (typeof c.value === 'number') ? (UNO_VAL_NAME[c.value] || String(c.value)) : unoVN(c.value);
+    const card = p.hand.find(c => (vn(c) === 'wild' || vn(c) === 'wild_draw_four') && vn(c) === val);
     if (!card) return null;
     const map = { red: 'RED', blue: 'BLUE', green: 'GREEN', yellow: 'YELLOW' };
     const dc = map[declared];
@@ -4433,7 +4554,8 @@ function drawUno(r, g, bar, spec){
   const myTurn = amPlayer && !spec && cur === me.username;
   const top = eng.discardedCard;
   const topL = unoLabel(top);
-  const curColor = unoCN(top.color);
+  const topCls = unoLabel(top).cls;
+  const curColor = topCls === 'w' ? 'wild' : ({r:'red',b:'blue',g:'green',y:'yellow'}[topCls] || '');
   const shownColor = curColor === 'wild' ? (r.wildColor || 'wild') : curColor;
 
   const oppo = names.filter(u => u !== me.username).map(u => {
@@ -4448,7 +4570,7 @@ function drawUno(r, g, bar, spec){
     handHtml = mine.map((c, i) => {
       const L = unoLabel(c);
       const can = myTurn && unoPlayable(c, top);
-      return `<div class="uno ${L.cls} ${can ? 'playable' : ''}" data-i="${i}" style="${unoSel === i ? 'transform:translateY(-10px)' : ''}">${escapeHtml(L.text)}</div>`;
+      return `<div class="uno ${L.cls} ${can ? 'playable' : ''}" data-i="${i}" style="${unoSel === i ? 'transform:translateY(-10px)' : ''}">${unoFace(L)}</div>`;
     }).join('') || '<div class="empty">（沒有手牌）</div>';
   }
 
@@ -4457,7 +4579,7 @@ function drawUno(r, g, bar, spec){
      ${bar}
      <div class="plist">${oppo}</div>
      <div class="deck-row">
-       <div style="text-align:center"><div class="uno ${topL.cls}" style="margin:0 auto">${escapeHtml(topL.text)}</div>
+       <div style="text-align:center"><div class="uno ${topL.cls} sm" style="margin:0 auto">${unoFace(topL)}</div>
          <div class="hint" style="margin-top:6px">檯面 · 顏色 ${UCOLORS[shownColor] || '—'}</div></div>
        <div style="text-align:center"><div class="uno w" id="drawBtn" style="margin:0 auto;background:#111827">抽</div>
          <div class="hint" style="margin-top:6px">牌庫 ${eng.deck.length} 張</div></div>
@@ -4762,21 +4884,22 @@ function ucDescList(r){
   return Object.values(d).filter(x => x && x.t).sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
 }
 /** 輪到我的時候打一句描述送出 → 自動輪到下一位；全員講完 → 進入投票 */
-async function ucSendDesc(text){
+async function ucSendDesc(text,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'undercover' || r.status !== 'playing') return false;
   const st = ucState(r);
   if (st.phase !== 'play') return false;
   const alive = ucAlive(r);
   if (!alive.length) return false;
-  if (ucCurDesc(r) !== me.username) { showNotice('現在不是你的回合'); return false; }
+  if (ucCurDesc(r) !== asUser) { notifyIf(asUser,'現在不是你的回合'); return false; }
   const t = String(text || '').trim();
-  if (!t) { showNotice('要先寫一句描述'); return false; }
-  if (picNorm(t) === picNorm(ucWordOf(r, me.username))) { showNotice('不可以直接說出你的詞'); return false; }
+  if (!t) { notifyIf(asUser,'要先寫一句描述'); return false; }
+  if (picNorm(t) === picNorm(ucWordOf(r, asUser))) { notifyIf(asUser,'不可以直接說出你的詞'); return false; }
   const idx = (Number(st.descIdx) || 0);
   const next = idx + 1;
   const done = next >= alive.length;
   await push(ref(db, 'games/' + curRoomId + '/state/descs'), {
-    u: me.username, t: t.slice(0, 80), r: Number(st.round) || 1, at: Date.now(),
+    u: asUser, t: t.slice(0, 80), r: Number(st.round) || 1, at: Date.now(),
   });
   const upd = { descIdx: done ? 0 : next };
   if (done) { upd.phase = 'vote'; upd.votes = null; }
@@ -4785,18 +4908,19 @@ async function ucSendDesc(text){
   return true;
 }
 /** 投票（或平票後的單獨再投） */
-async function ucCastVote(target){
+async function ucCastVote(target,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'undercover' || r.status !== 'playing') return;
   const st = ucState(r);
   const alive = ucAlive(r);
-  if (!alive.includes(me.username)) { showNotice('你已經出局了'); return; }
-  if (!alive.includes(target) || target === me.username) return;
+  if (!alive.includes(asUser)) { notifyIf(asUser,'你已經出局了'); return; }
+  if (!alive.includes(target) || target === asUser) return;
   if (st.phase === 'vote') {
-    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [me.username]: target });
+    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [asUser]: target });
   } else if (st.phase === 'runoff') {
-    if (!(st.runoff || []).includes(target)) return showNotice('這一輪只能投平票的那幾位');
-    if ((st.runoff || []).includes(me.username)) return showNotice('平票的人不能投票');
-    await update(ref(db, 'games/' + curRoomId + '/state/runoffVotes'), { [me.username]: target });
+    if (!(st.runoff || []).includes(target)) return notifyIf(asUser,'這一輪只能投平票的那幾位');
+    if ((st.runoff || []).includes(asUser)) return notifyIf(asUser,'平票的人不能投票');
+    await update(ref(db, 'games/' + curRoomId + '/state/runoffVotes'), { [asUser]: target });
   } else return;
   setTimeout(ucSettle, 250);
 }
@@ -5152,24 +5276,25 @@ async function picNextRound(){
   });
 }
 /* 猜答案 */
-async function picGuess(text){
+async function picGuess(text,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'pictionary') return;
   const st = picState(r);
   if (st.phase !== 'draw') return;
-  if (me.username === st.drawer) return;
-  if ((st.guesses || {})[me.username]) return;
+  if (asUser === st.drawer) return;
+  if ((st.guesses || {})[asUser]) return;
   if (picNorm(text) === picNorm(st.word)) {
     const scores = Object.assign({}, st.scores || {});
-    scores[me.username] = (scores[me.username] || 0) + 2;
+    scores[asUser] = (scores[asUser] || 0) + 2;
     scores[st.drawer] = (scores[st.drawer] || 0) + 1;
     // 用 set 分開寫，避免 update 混用帶「/」深層路徑的坑
-    await set(ref(db, 'games/' + curRoomId + '/state/guesses/' + me.username), true);
+    await set(ref(db, 'games/' + curRoomId + '/state/guesses/' + asUser), true);
     await set(ref(db, 'games/' + curRoomId + '/state/scores'), scores);
-    showNotice('猜中了！＋2 分');
+    notifyIf(asUser,'猜中了！＋2 分');
     setTimeout(() => picCheckEndRound(curRoom), 300);
     checkCheating();   // 猜中後：AI 掃描整幅畫有沒有寫字（防作弊）
   } else {
-    showNotice('不對，再試試');
+    notifyIf(asUser,'不對，再試試');
   }
 }
 /* 防作弊：把整幅畫送給多模態 AI，檢查有沒有寫出任何文字 */
@@ -5406,21 +5531,22 @@ function bombNextOf(r, victim) {
   }
   return alive[0];
 }
-async function bombAnswer(txt) {
+async function bombAnswer(txt,asUser) {
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.status !== 'playing' || r.game !== 'bomb') return false;
   const st = bombState(r);
   if (st.phase !== 'play') return false;
-  if (st.current !== me.username) { showNotice('現在不是你的回合'); return false; }
+  if (st.current !== asUser) { notifyIf(asUser,'現在不是你的回合'); return false; }
   const v = String(txt || '').trim();
-  if (!v) { showNotice('要講一個答案才可以'); return false; }
-  if (picNorm(v) === picNorm(st.category)) { showNotice('不可以直接講出題目本身'); return false; }
-  if ((st.used || []).map(picNorm).includes(picNorm(v))) { showNotice('這個答案有人講過了'); return false; }
+  if (!v) { notifyIf(asUser,'要講一個答案才可以'); return false; }
+  if (picNorm(v) === picNorm(st.category)) { notifyIf(asUser,'不可以直接講出題目本身'); return false; }
+  if ((st.used || []).map(picNorm).includes(picNorm(v))) { notifyIf(asUser,'這個答案有人講過了'); return false; }
   // 樂觀鎖：寫入前一刻再確認炸彈還在我手上，避免連點兩次重複推進
   let cur;
   try { cur = (await get(ref(db, 'games/' + curRoomId + '/state/current'))).val(); } catch (e) { return false; }
-  if (cur !== me.username) { showNotice('慢了一步，炸彈已經傳走了'); return false; }
+  if (cur !== asUser) { notifyIf(asUser,'慢了一步，炸彈已經傳走了'); return false; }
   const alive = bombAlive(r);
-  const i = alive.indexOf(me.username);
+  const i = alive.indexOf(asUser);
   const next = alive.length ? alive[(i + 1) % alive.length] : '';
   const dur = Math.max(6, Number(st.duration || 20) - 1);
   await update(ref(db, 'games/' + curRoomId + '/state'), {
@@ -6664,25 +6790,27 @@ async function wwFinish(team, r){
   }
 }
 /* ── 夜晚 ── */
-async function wwWolfPick(target){
+async function wwWolfPick(target,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
   const st = wwState(r);
-  if (st.phase !== 'night') return showNotice('現在不是晚上');
-  if (wwRoleOf(r, me.username) !== 'wolf') return showNotice('只有狼人可以在晚上行動');
-  if (!wwAlive(r).includes(target) || target === me.username) return;
-  await update(ref(db, 'games/' + curRoomId + '/state/wolfPicks'), { [me.username]: target });
+  if (st.phase !== 'night') return notifyIf(asUser,'現在不是晚上');
+  if (wwRoleOf(r, asUser) !== 'wolf') return notifyIf(asUser,'只有狼人可以在晚上行動');
+  if (!wwAlive(r).includes(target) || target === asUser) return;
+  await update(ref(db, 'games/' + curRoomId + '/state/wolfPicks'), { [asUser]: target });
   setTimeout(wwCheckNight, 250);
 }
-async function wwSeerCheck(target){
+async function wwSeerCheck(target,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
   const st = wwState(r);
-  if (st.phase !== 'night') return showNotice('現在不是晚上');
-  if (wwRoleOf(r, me.username) !== 'seer') return showNotice('只有預言家可以查身分');
-  if (!wwAlive(r).includes(target) || target === me.username) return;
-  const done = (st.seerChecks || {})[me.username];
-  if (done && done.night === st.night) return showNotice('今晚已經查過了');
+  if (st.phase !== 'night') return notifyIf(asUser,'現在不是晚上');
+  if (wwRoleOf(r, asUser) !== 'seer') return notifyIf(asUser,'只有預言家可以查身分');
+  if (!wwAlive(r).includes(target) || target === asUser) return;
+  const done = (st.seerChecks || {})[asUser];
+  if (done && done.night === st.night) return notifyIf(asUser,'今晚已經查過了');
   await update(ref(db, 'games/' + curRoomId + '/state/seerChecks'), {
-    [me.username]: { night: Number(st.night) || 1, target: target, isWolf: wwRoleOf(r, target) === 'wolf' },
+    [asUser]: { night: Number(st.night) || 1, target: target, isWolf: wwRoleOf(r, target) === 'wolf' },
   });
   setTimeout(wwCheckNight, 250);
 }
@@ -6743,19 +6871,20 @@ function wwCurSpeaker(r){
   if (!alive.length) return '';
   return alive[(Number(wwState(r).descIdx) || 0) % alive.length];
 }
-async function wwSendDesc(text){
+async function wwSendDesc(text,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return false;
   const st = wwState(r);
   if (st.phase !== 'discuss') return false;
   const alive = wwAlive(r);
   if (!alive.length) return false;
-  if (wwCurSpeaker(r) !== me.username) { showNotice('現在不是你的發言時間'); return false; }
+  if (wwCurSpeaker(r) !== asUser) { notifyIf(asUser,'現在不是你的發言時間'); return false; }
   const t = String(text || '').trim();
-  if (!t) { showNotice('要先寫一句話'); return false; }
+  if (!t) { notifyIf(asUser,'要先寫一句話'); return false; }
   const next = (Number(st.descIdx) || 0) + 1;
   const done = next >= alive.length;
   await push(ref(db, 'games/' + curRoomId + '/state/descs'), {
-    u: me.username, t: t.slice(0, 90), r: Number(st.round) || 1, at: Date.now(),
+    u: asUser, t: t.slice(0, 90), r: Number(st.round) || 1, at: Date.now(),
   });
   const upd = { descIdx: done ? 0 : next };
   if (done) { upd.phase = 'vote'; upd.votes = null; }
@@ -6763,17 +6892,18 @@ async function wwSendDesc(text){
   return true;
 }
 /* ── 投票放逐 ── */
-async function wwCastVote(target){
+async function wwCastVote(target,asUser){
+  asUser=asUser||me.username;
   const r = curRoom; if (!r || r.game !== 'werewolf' || r.status !== 'playing') return;
   const st = wwState(r), alive = wwAlive(r);
-  if (!alive.includes(me.username)) { showNotice('你已經出局了'); return; }
-  if (!alive.includes(target) || target === me.username) return;
+  if (!alive.includes(asUser)) { notifyIf(asUser,'你已經出局了'); return; }
+  if (!alive.includes(target) || target === asUser) return;
   if (st.phase === 'vote') {
-    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [me.username]: target });
+    await update(ref(db, 'games/' + curRoomId + '/state/votes'), { [asUser]: target });
   } else if (st.phase === 'runoff') {
-    if (!(st.runoff || []).includes(target)) return showNotice('這一輪只能投平票的那幾位');
-    if ((st.runoff || []).includes(me.username)) return showNotice('平票的人不能投票');
-    await update(ref(db, 'games/' + curRoomId + '/state/runoffVotes'), { [me.username]: target });
+    if (!(st.runoff || []).includes(target)) return notifyIf(asUser,'這一輪只能投平票的那幾位');
+    if ((st.runoff || []).includes(asUser)) return notifyIf(asUser,'平票的人不能投票');
+    await update(ref(db, 'games/' + curRoomId + '/state/runoffVotes'), { [asUser]: target });
   } else return;
   setTimeout(wwSettle, 250);
 }
@@ -7736,103 +7866,111 @@ const CH_DEF={
     const mv=ccBestMove(ccReplay(r),idx,ccCampOf(names.length));
     if(mv) ccMove(mv.f,mv.to,who);
   }}},
-  werewolf:{ai:{n:'AI 代打',mine(r){
-    const st=wwState(r),role=wwRoleOf(r,me.username);
-    if(!wwAlive(r).includes(me.username)) return false;
+  werewolf:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
+    const st=wwState(r),role=wwRoleOf(r,who);
+    if(!wwAlive(r).includes(who)) return false;
     if(st.phase==='night') return role==='wolf'||role==='seer';
-    if(st.phase==='discuss') return wwCurSpeaker(r)===me.username;
-    if(st.phase==='vote') return !(st.votes||{})[me.username];
+    if(st.phase==='discuss') return wwCurSpeaker(r)===who;
+    if(st.phase==='vote') return !(st.votes||{})[who];
     if(st.phase==='runoff'){
-      if((st.runoff||[]).includes(me.username)) return false;
-      return !(st.runoffVotes||{})[me.username];
+      if((st.runoff||[]).includes(who)) return false;
+      return !(st.runoffVotes||{})[who];
     }
     return false;
-  },fn(){
-    const r=curRoom,st=wwState(r),role=wwRoleOf(r,me.username);
-    const alive=wwAlive(r),others=alive.filter(u=>u!==me.username);
+  },fn(who){
+    who=who||me.username;
+    const r=curRoom,st=wwState(r),role=wwRoleOf(r,who);
+    const alive=wwAlive(r),others=alive.filter(u=>u!==who);
     if(st.phase==='night'){
       if(role==='wolf'){
-        if((st.wolfPicks||{})[me.username]) return;
+        if((st.wolfPicks||{})[who]) return;
         const seer=wwSeerOf(r);
-        const t=(seer&&seer!==me.username&&alive.includes(seer))?seer:others[0];
-        if(t) wwWolfPick(t);
+        const t=(seer&&seer!==who&&alive.includes(seer))?seer:others[0];
+        if(t) wwWolfPick(t,who);
       }else if(role==='seer'){
-        const sc=(st.seerChecks||{})[me.username];
+        const sc=(st.seerChecks||{})[who];
         if(sc&&sc.night===(Number(st.night)||1)) return;
-        if(others[0]) wwSeerCheck(others[0]);
+        if(others[0]) wwSeerCheck(others[0],who);
       }
       return;
     }
     if(st.phase==='discuss'){
-      if(wwCurSpeaker(r)!==me.username) return;
+      if(wwCurSpeaker(r)!==who) return;
       const L=['先看清楚票型再講','昨晚的結果有點奇怪','我是好人，聽大家怎麼說','有人在帶風向，我保留','我票先不給，多看一輪'];
-      wwSendDesc(L[Math.floor(Math.random()*L.length)]);
+      wwSendDesc(L[Math.floor(Math.random()*L.length)],who);
       return;
     }
     if(st.phase==='vote'||st.phase==='runoff'){
       const cast=st.phase==='vote'?(st.votes||{}):(st.runoffVotes||{});
-      if(cast[me.username]) return;
-      const pool=st.phase==='runoff'?(st.runoff||[]).filter(u=>u!==me.username):others;
+      if(cast[who]) return;
+      const pool=st.phase==='runoff'?(st.runoff||[]).filter(u=>u!==who):others;
       const want=role==='wolf'?pool.filter(u=>wwRoleOf(r,u)!=='wolf'):pool.filter(u=>wwRoleOf(r,u)==='wolf');
       const t=(want.length?want:pool)[0];
-      if(t) wwCastVote(t);
+      if(t) wwCastVote(t,who);
     }
   }}},
-  undercover:{ai:{n:'AI 代打',mine(r){
+  undercover:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const st=ucState(r);
-    if(!ucAlive(r).includes(me.username)) return false;
-    if(st.phase==='reveal') return !((st.ready||{})[me.username]);
-    if(st.phase==='play') return ucCurDesc(r)===me.username;
-    if(st.phase==='vote') return !(st.votes||{})[me.username];
+    if(!ucAlive(r).includes(who)) return false;
+    if(st.phase==='reveal') return !((st.ready||{})[who]);
+    if(st.phase==='play') return ucCurDesc(r)===who;
+    if(st.phase==='vote') return !(st.votes||{})[who];
     if(st.phase==='runoff'){
-      if((st.runoff||[]).includes(me.username)) return false;
-      return !(st.runoffVotes||{})[me.username];
+      if((st.runoff||[]).includes(who)) return false;
+      return !(st.runoffVotes||{})[who];
     }
     return false;
-  },fn(){
+  },fn(who){
+    who=who||me.username;
     const r=curRoom,st=ucState(r);
     if(st.phase==='reveal'){
-      update(ref(db,'games/'+curRoomId+'/state/ready'),{[me.username]:true})
+      update(ref(db,'games/'+curRoomId+'/state/ready'),{[who]:true})
         .then(()=>ucCheckReady(curRoom)).catch(()=>{});
       return;
     }
     if(st.phase==='play'){
-      if(ucCurDesc(r)!==me.username) return;
+      if(ucCurDesc(r)!==who) return;
       const L=['我拿到的是很日常的東西','跟生活有關，但不好形容','先聽你們怎麼講','這個我熟，講多了會露','應該大家都聽過'];
-      ucSendDesc(L[Math.floor(Math.random()*L.length)]);
+      ucSendDesc(L[Math.floor(Math.random()*L.length)],who);
       return;
     }
-    const alive=ucAlive(r),others=alive.filter(u=>u!==me.username);
+    const alive=ucAlive(r),others=alive.filter(u=>u!==who);
     const cast=st.phase==='vote'?(st.votes||{}):(st.runoffVotes||{});
-    if(cast[me.username]) return;
-    const pool=st.phase==='runoff'?(st.runoff||[]).filter(u=>u!==me.username):others;
+    if(cast[who]) return;
+    const pool=st.phase==='runoff'?(st.runoff||[]).filter(u=>u!==who):others;
     const under=st.undercover||[];
-    const want=under.includes(me.username)?pool.filter(u=>!under.includes(u)):pool.filter(u=>under.includes(u));
+    const want=under.includes(who)?pool.filter(u=>!under.includes(u)):pool.filter(u=>under.includes(u));
     const t=(want.length?want:pool)[0];
-    if(t) ucCastVote(t);
+    if(t) ucCastVote(t,who);
   }}},
-  bomb:{ai:{n:'AI 代打',mine(r){
+  bomb:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const st=bombState(r);
-    return st.phase==='play'&&st.current===me.username&&bombAlive(r).includes(me.username);
-  },fn(){
+    return st.phase==='play'&&st.current===who&&bombAlive(r).includes(who);
+  },fn(who){
+    who=who||me.username;
     const r=curRoom,st=bombState(r);
     const L=['蘋果','香蕉','西瓜','桌子','手機','太陽','籃球','咖啡','雨傘','書包','眼鏡','麵包','電腦','拖鞋','風扇','鉛筆','小狗','海洋','車子','音樂'];
     const used=(st.used||[]).map(picNorm);
     const pool=L.filter(x=>!used.includes(picNorm(x))&&picNorm(x)!==picNorm(st.category||''));
     if(!pool.length) return;
-    bombAnswer(pool[Math.floor(Math.random()*pool.length)]);
+    bombAnswer(pool[Math.floor(Math.random()*pool.length)],who);
   }}},
-  scriptmurder:{ai:{n:'AI 代打',mine(r){
+  scriptmurder:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const st=smState(r);
-    if(!playerNames(r).includes(me.username)) return false;
-    if(st.phase==='read') return !(st.ready||{})[me.username];
-    if(st.phase==='discuss') return r.host===me.username;
-    if(st.phase==='vote') return !(st.votes||{})[me.username];
+    if(!playerNames(r).includes(who)) return false;
+    if(st.phase==='read') return !(st.ready||{})[who];
+    if(st.phase==='discuss') return r.host===who;
+    if(st.phase==='vote') return !(st.votes||{})[who];
     return false;
-  },fn(){
+  },fn(who){
+    who=who||me.username;
     const r=curRoom,st=smState(r);
     if(st.phase==='read'){
-      update(ref(db,'games/'+curRoomId+'/state/ready'),{[me.username]:true})
+      update(ref(db,'games/'+curRoomId+'/state/ready'),{[who]:true})
         .then(()=>smCheckReady(curRoom)).catch(()=>{});
       return;
     }
@@ -7843,24 +7981,26 @@ const CH_DEF={
       return;
     }
     if(st.phase==='vote'){
-      const others=playerNames(r).filter(u=>u!==me.username);
+      const others=playerNames(r).filter(u=>u!==who);
       if(!others.length) return;
       const t=others[Math.floor(Math.random()*others.length)];
-      update(ref(db,'games/'+curRoomId+'/state/votes'),{[me.username]:t})
+      update(ref(db,'games/'+curRoomId+'/state/votes'),{[who]:t})
         .then(()=>setTimeout(smTally,300)).catch(()=>{});
     }
   }}},
-  pictionary:{ai:{n:'AI 代打',mine(r){
+  pictionary:{ai:{n:'AI 代打',mine(r,who){
+    who=who||me.username;
     const st=picState(r);
-    if(!playerNames(r).includes(me.username)) return false;
-    if(st.phase==='pick') return st.drawer===me.username;
-    if(st.phase==='draw') return st.drawer!==me.username&&!((st.guesses||{})[me.username]);
-    if(st.phase==='roundEnd') return r.host===me.username;
+    if(!playerNames(r).includes(who)) return false;
+    if(st.phase==='pick') return st.drawer===who;
+    if(st.phase==='draw') return st.drawer!==who&&!((st.guesses||{})[who]);
+    if(st.phase==='roundEnd') return r.host===who;
     return false;
-  },fn(){
+  },fn(who){
+    who=who||me.username;
     const r=curRoom,st=picState(r);
     if(st.phase==='pick'){ picStartDraw(); return; }
-    if(st.phase==='draw'){ if(st.word) picGuess(st.word); return; }
+    if(st.phase==='draw'){ if(st.word) picGuess(st.word,who); return; }
     if(st.phase==='roundEnd'){ picNextRound(); }
   }}},
   g2048:{ai:{n:'AI 代打',mine(r){
