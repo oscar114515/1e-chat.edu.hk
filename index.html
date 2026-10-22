@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-XTzXHNP7fKd9msjjSWrrEYJ/yZ6/haFjorGf14P/FCs=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-JYvom4S8Dfyg9YSuSHJRTvvVDr2XA7N/gpYjukxgwLY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1113,7 +1113,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.15';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.16';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1494,9 +1494,33 @@ async function handleLogin(uArg,pArg){
     try{await set(ref(db,'presence/'+me.username),Date.now());}catch(e){}
     try{await ensureAIUser();}catch(e){}
     try{await writeLog('login','登入系統');}catch(e){}
+    try{await recordLoginDevice();}catch(e){}
     enterChat();
   }catch(e){ console.error(e);loginError.textContent='登入失敗：'+(e.code||e.message); }
   finally{loginBtn.disabled=false;loginBtn.textContent='登入';}
+}
+/* 記錄這次登入的裝置，日後帳號出事查得到（只留最近 10 次） */
+async function recordLoginDevice(){
+  if(!me) return;
+  try{
+    const key=Date.now();
+    let tz='';
+    try{ tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''; }catch(e){}
+    const dev={
+      at:key,
+      ua:String((navigator&&navigator.userAgent)||'').slice(0,180),
+      scr:((typeof screen!=='undefined'&&screen.width)||0)+'x'+((typeof screen!=='undefined'&&screen.height)||0),
+      tz:tz,
+      lang:String((navigator&&navigator.language)||'').slice(0,12)
+    };
+    await set(ref(db,'users/'+me.username+'/loginLog/'+key),dev);
+    await update(ref(db,'users/'+me.username),{lastDevice:dev});
+    const snap=await get(ref(db,'users/'+me.username+'/loginLog'));
+    if(snap.exists()){
+      const ks=Object.keys(snap.val()).sort();
+      if(ks.length>10){ for(const k of ks.slice(0,ks.length-10)){ try{ await remove(ref(db,'users/'+me.username+'/loginLog/'+k)); }catch(e){} } }
+    }
+  }catch(e){}
 }
 async function handleLogout(){
   try{await remove(ref(db,'presence/'+me.username));}catch(e){}
@@ -6475,6 +6499,15 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.16',date:'2026-10-22',changes:[
+'UNO 修好牌面：之前所有牌都顯示成「10」「14」這些內部編號，顏色也全部一樣，功能牌看起來像空白。現在按官方牌面重做，紅黃藍綠清楚分得到，+2、+4、迴轉、禁止都用原本的圖示',
+'貪吃蛇改用虛擬搖桿：按住拖去邊就走邊，不再用四個方向鍵，不會再出現「按左邊先往右行」的感覺',
+'貪吃蛇碰撞修好：判定範圍加大並改為逐點檢查，不再明明撞到卻穿過去；蛇身軌跡中斷時不再拉出一條長線（分叉）',
+'五子棋棋盤加大，並加了「放大」按鈕，手指唔會再按錯隔籬格',
+'飛行棋等房間載入時，超過 10 秒會顯示「重試」，不會再一直轉圈',
+'登入時記錄裝置（瀏覽器、螢幕大小、時區），帳號出事查得到；每次登入保留最近 10 次',
+'新增遊戲事件記錄：每一局幾點開始、有誰玩、幾點結束、誰贏，方便日後查問題',
+]},
 {ver:'v1.38.15',date:'2026-10-19',changes:[
 '積分數字實時同步：聊天框頂部、底部、個人主頁、積分中心四處的數字改由同一個出口更新。兌換兌換碼、買積分商店商品、後台加減分之後，四處會同時跟著變，不會再有一處停在舊分數',
 '積分數字改用等寬字型，位數增減時數字不會左右跳動',
