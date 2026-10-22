@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-JYvom4S8Dfyg9YSuSHJRTvvVDr2XA7N/gpYjukxgwLY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-2NXvL35/3wFjmYN9co1vT4z2bngHEIdv8h3JpU75ZMo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1113,7 +1113,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.16';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.17';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -6499,6 +6499,15 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.17',date:'2026-10-22',changes:[
+'貪吃蛇：滑鼠／手指停在原地時，蛇不會再繞住那一點轉圈',
+'貪吃蛇：AI 自動食豆貼近時會收油，轉彎半徑變細，不會再圍住粒豆轉圈但永遠食唔到',
+'貪吃蛇：豆分兩種顏色 —— 藍色正常分，金色加 5 分（約十粒出一粒）',
+'貪吃蛇：玩家死後掉下的豆會變成該玩家的顏色，一眼看得出是誰的',
+'貪吃蛇：蛇會按長度變粗，越大條越有份量',
+'貪吃蛇：左上積分榜縮細，減少遮擋畫面',
+'新增「再來一局」：遊戲結束後，房主可按一下重開同一間房；所有人都要重新確認入場費，不付就自動離開',
+]},
 {ver:'v1.38.16',date:'2026-10-22',changes:[
 'UNO 修好牌面：之前所有牌都顯示成「10」「14」這些內部編號，顏色也全部一樣，功能牌看起來像空白。現在按官方牌面重做，紅黃藍綠清楚分得到，+2、+4、迴轉、禁止都用原本的圖示',
 '貪吃蛇改用虛擬搖桿：按住拖去邊就走邊，不再用四個方向鍵，不會再出現「按左邊先往右行」的感覺',
