@@ -601,7 +601,7 @@ const roomNet={
         try{ ws.close(); }catch(e){}
         finish(false);
         try{ onPlayConnectionLost(); }catch(e){}
-      },6000);
+      },3500);   /* 3.5 秒拿不到就當連不上，唔好要玩家白等 */
       ws.onopen=()=>{ this.ready=true; this.backoff=0; clearTimeout(to); this.connecting=null;
         for(const rid in this.subs) this.send({t:'rSub',rid});
         res(true);
@@ -2301,7 +2301,7 @@ const lobbyNet={
       let ws;
       try{ ws=new WebSocket(LOBBY_WS_URL); }catch(e){ return finish(false); }
       this.ws=ws; this.gk=gk; this.onSnap=onSnap; this.ready=false;
-      const to=setTimeout(()=>{ if(!this.ready){ try{ws.close();}catch(e){} finish(false); } },7000);
+      const to=setTimeout(()=>{ if(!this.ready){ try{ws.close();}catch(e){} finish(false); } },3500);   /* 同上 */
       ws.onopen=()=>{ try{ ws.send(JSON.stringify({t:'hello',g:gk,nm:me.displayName,c:me.color})); }catch(e){} };
       ws.onmessage=ev=>{
         let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
