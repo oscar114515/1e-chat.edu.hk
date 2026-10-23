@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-bbwLDYr2TJd0yCOSuClofGpOU52Al11fvOA5yrSsPAY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-n/r1I6hESb+1jnP7npuOsTtnM8+8pgNcjkwACdU4NrI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -973,6 +973,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
 .pair-codes b{flex:1;font-size:26px;font-weight:700;letter-spacing:1px;padding:14px 0;
   border-radius:12px;background:var(--bg-input);border:1px solid var(--border-strong);
   font-variant-numeric:tabular-nums}
+.pair-codes.one b{font-size:46px;padding:26px 0;letter-spacing:4px}
 .pair-codes.ask b{cursor:pointer;transition:transform .08s,background .15s}
 .pair-codes.ask b:active{transform:scale(.95);background:var(--accent);color:#0b0d14}
 .pair-hint{font-size:13px;color:var(--text-sub);min-height:20px;margin-bottom:10px}
@@ -1016,7 +1017,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
   <div class="pair-card">
     <div class="pair-t">確認這部裝置</div>
     <div class="pair-s">你已經在其他裝置登入過。<br>請在<b>原本那部手機</b>上，點選下面其中一個數字。</div>
-    <div class="pair-codes" id="pairCodes"></div>
+    <div class="pair-codes one" id="pairCodes"></div>
     <div class="pair-hint" id="pairHint">等待原本的裝置確認…</div>
     <button class="pair-btn" id="pairCancel">取消</button>
     <div class="pair-dev" id="pairDev"></div>
@@ -1025,7 +1026,7 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
 <div id="pairAsk" class="pair-ov hidden">
   <div class="pair-card">
     <div class="pair-t">有人想用你的帳號</div>
-    <div class="pair-s">如果這是你本人，請點選新裝置上顯示的數字。<br>如果不是你，直接按「不是我」。</div>
+    <div class="pair-s">新裝置上會顯示<b>一個 2 位數字</b>，請在下面點選同一個。<br>如果不是你本人，直接按「不是我」。</div>
     <div class="pair-codes ask" id="askCodes"></div>
     <div class="pair-hint" id="askHint"></div>
     <div class="pair-dev" id="askDev"></div>
@@ -1157,7 +1158,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.19';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.20';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1561,15 +1562,18 @@ function ensureDeviceTrusted(u,data){
             until:Date.now()+8*3600*1000});
           return resolve(true);
         }
-        var codes=[];
-        while(codes.length<3){ var n=Math.floor(10+Math.random()*90); if(codes.indexOf(n)<0) codes.push(n); }
-        var ansIdx=Math.floor(Math.random()*3);
+        var code=Math.floor(10+Math.random()*90);
+        var options=[code];
+        while(options.length<3){ var n=Math.floor(10+Math.random()*90); if(options.indexOf(n)<0) options.push(n); }
+        options.sort(function(){ return Math.random()-0.5; });
+        var ansIdx=options.indexOf(code);
         var pid=Date.now();
         await set(ref(db,'users/'+u+'/pairing'),{
-          id:pid, codes:codes, ansIdx:ansIdx, fromDevice:did, fromUa:deviceLabel(),
-          at:pid, status:'pending'
+          id:pid, code:code, options:options, ansIdx:ansIdx, gen:1, wrong:0,
+          fromDevice:did, fromUa:deviceLabel(), at:pid, status:'pending'
         });
-        pairEl('pairCodes').innerHTML=codes.map(function(x){ return '<b>'+x+'</b>'; }).join('');
+        var myGen=1;
+        pairEl('pairCodes').innerHTML='<b>'+code+'</b>';
         pairEl('pairHint').textContent='等待原本的裝置確認…';
         pairEl('pairHint').className='pair-hint';
         pairEl('pairDev').textContent='這部裝置：'+deviceLabel();
@@ -1582,6 +1586,12 @@ function ensureDeviceTrusted(u,data){
             var snap=await get(ref(db,'users/'+u+'/pairing'));
             var pr=snap.exists()?snap.val():null;
             if(!pr||pr.id!==pid) return;
+            if((pr.gen||1)!==myGen){
+              myGen=pr.gen||1;
+              pairEl('pairCodes').innerHTML='<b>'+pr.code+'</b>';
+              pairEl('pairHint').textContent='舊裝置點錯了，數字已更新，請再看一次';
+              pairEl('pairHint').className='pair-hint';
+            }
             if(pr.status==='ok'){
               done=true; clearInterval(pairTimer); pairTimer=null;
               pairEl('pairHint').textContent='已確認，正在登入…';
@@ -1619,9 +1629,11 @@ function watchPairing(){
 }
 function showPairAsk(p){
   var ov=pairEl('pairAsk'); if(!ov) return;
-  pairEl('askCodes').innerHTML=(p.codes||[]).map(function(n,i){ return '<b data-i="'+i+'">'+n+'</b>'; }).join('');
-  pairEl('askHint').textContent='';
-  pairEl('askHint').className='pair-hint';
+  var opts=p.options||p.codes||[];
+  pairEl('askCodes').innerHTML=opts.map(function(n,i){ return '<b data-i="'+i+'">'+n+'</b>'; }).join('');
+  /* 點錯過就把提示留住，不要每次重繪都清空 */
+  if(p.wrong){ pairEl('askHint').textContent='數字不對，已換一組新數字（錯誤 '+p.wrong+'/3）'; pairEl('askHint').className='pair-hint err'; }
+  else { pairEl('askHint').textContent=''; pairEl('askHint').className='pair-hint'; }
   pairEl('askDev').textContent='來自：'+(p.fromUa||'未知裝置');
   ov.classList.remove('hidden');
   Array.prototype.forEach.call(pairEl('askCodes').querySelectorAll('b'),function(b){
@@ -1636,11 +1648,30 @@ function showPairAsk(p){
         }catch(e){}
         pairEl('askHint').textContent='已允許，這部裝置下次可以直接登入';
         pairEl('askHint').className='pair-hint ok';
+        Array.prototype.forEach.call(pairEl('askCodes').querySelectorAll('b'),function(x){ x.onclick=null; });
         setTimeout(function(){ ov.classList.add('hidden'); },1300);
-      }else{
-        pairEl('askHint').textContent='數字不對，再試另一個';
-        pairEl('askHint').className='pair-hint err';
+        return;
       }
+      /* 點錯：換一組全新的數字，新裝置會同步更新；錯三次直接拒絕 */
+      var wrong=(Number(p.wrong)||0)+1;
+      if(wrong>=3){
+        try{ await update(ref(db,'users/'+me.username+'/pairing'),{status:'denied',wrong:wrong}); }catch(e){}
+        pairEl('askHint').textContent='連續三次錯誤，已拒絕這次登入';
+        pairEl('askHint').className='pair-hint err';
+        Array.prototype.forEach.call(pairEl('askCodes').querySelectorAll('b'),function(x){ x.onclick=null; });
+        setTimeout(function(){ ov.classList.add('hidden'); },1800);
+        return;
+      }
+      var code=Math.floor(10+Math.random()*90);
+      var list=[code];
+      while(list.length<3){ var n=Math.floor(10+Math.random()*90); if(list.indexOf(n)<0) list.push(n); }
+      list.sort(function(){ return Math.random()-0.5; });
+      try{
+        await update(ref(db,'users/'+me.username+'/pairing'),{
+          code:code, options:list, ansIdx:list.indexOf(code),
+          gen:(Number(p.gen)||1)+1, wrong:wrong
+        });
+      }catch(e){}
     };
   });
   pairEl('askDeny').onclick=async function(){
@@ -6696,6 +6727,11 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.20',date:'2026-10-23',changes:[
+'修正新裝置確認的顯示：新手機只顯示「一個」2 位數字（大字），舊手機顯示「三個」選項，兩邊一看就分得出哪部是哪部',
+'修正可以亂點試出答案：點錯會即刻換一組全新數字（新手機同步更新），連續錯三次直接拒絕這次登入',
+'舊手機彈窗加說明「新裝置上會顯示一個 2 位數字，請點選同一個」',
+]},
 {ver:'v1.38.19',date:'2026-10-23',changes:[
 '新增「新裝置確認」：每個帳號第一部登入的手機會自動記住；之後用別的手機登入，要在原本那部手機上點選正確數字才進得去（同 Google 的做法）',
 '別人只知道密碼也進不到：新裝置會停在等待畫面，原本的手機會收到「有人想用你的帳號」，可以批准或拒絕',
