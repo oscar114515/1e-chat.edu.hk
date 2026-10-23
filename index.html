@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-n/r1I6hESb+1jnP7npuOsTtnM8+8pgNcjkwACdU4NrI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-VJyBeEWGB1jfTCNdELZPcEUO0VKpDJ9cwC2+mmv+8zE=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -137,15 +137,15 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #bottomNav .nav-item:hover{background:rgba(148,163,184,.08);color:var(--text-main)}
 #bottomNav .nav-item .nav-icon{font-size:18px;line-height:1}
 #bottomNav .nav-item .nav-badge{position:absolute;top:4px;right:calc(50% - 20px);min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:var(--r-1);font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
-#plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-3);padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;animation:panelIn .22s cubic-bezier(.4,0,.2,1)}
-@keyframes panelIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+#plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-3);padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;animation:panelIn .34s cubic-bezier(.34,1.42,.64,1)}
+@keyframes panelIn{0%{opacity:0;transform:translateY(10px) scale(.94)}62%{opacity:1;transform:translateY(-2px) scale(1.012)}100%{opacity:1;transform:none}}
 #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:var(--r-2)}
 #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
 #plusPanel .pi .pic{width:44px;height:44px;border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:var(--info)}
 .pic .ico{width:22px;height:22px}
 #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
 /* ===== 小遊戲 ===== */
-#gamesOverlay{position:fixed;inset:0;background:#0b0d14;z-index:200;animation:panelIn .22s cubic-bezier(.4,0,.2,1)}
+#gamesOverlay{position:fixed;inset:0;background:#0b0d14;z-index:200;animation:panelIn .34s cubic-bezier(.34,1.42,.64,1)}
 #gamesOverlay iframe{width:100%;height:100%;border:0;display:block;outline:none}
 .game-invite{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.28);border-radius:var(--r-2);padding:10px 12px;cursor:pointer}
 .game-invite .gi-title{font-size:14.5px;font-weight:700;margin-bottom:3px}
@@ -194,8 +194,8 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 @keyframes pageInRight{from{opacity:0;transform:translateX(34%) scale(.975)}to{opacity:1;transform:none}}
 @keyframes pageInLeft{from{opacity:.45;transform:translateX(-24%) scale(.955)}to{opacity:1;transform:none}}
 @keyframes ovOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.04)}}
-@keyframes ovIn{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:none}}
-@keyframes barIn{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ovIn{0%{opacity:0;transform:scale(1.06)}68%{transform:scale(.992)}100%{opacity:1;transform:none}}
+@keyframes barIn{0%{opacity:0;transform:translateY(28px) scale(.96)}64%{transform:translateY(-3px) scale(1.008)}100%{opacity:1;transform:none}}
 @keyframes barOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(22px) scale(.95)}}
 @keyframes zoomOutImg{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.87)}}
 @keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.95)}}
@@ -203,8 +203,8 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 @keyframes notifOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-12px)}}
 .anim-in-page{animation:pageInRight .34s cubic-bezier(.32,.72,0,1) both}
 .anim-in-back{animation:pageInLeft .34s cubic-bezier(.32,.72,0,1) both}
-.anim-in-modal{animation:ovIn .26s cubic-bezier(.32,.72,0,1) both}
-.anim-in-bar{animation:barIn .26s cubic-bezier(.32,.72,0,1) both}
+.anim-in-modal{animation:ovIn .34s cubic-bezier(.34,1.42,.64,1) both}
+.anim-in-bar{animation:barIn .36s cubic-bezier(.34,1.42,.64,1) both}
 .anim-in-notif{animation:notifIn .24s cubic-bezier(.32,.72,0,1) both}
 /* 退場一律加 !important，也一律排在進場之後：
    否則同一個元素同時掛著進場與退場 class 時，會由「樣式表順序」而不是「後加的 class」決定，
@@ -767,7 +767,7 @@ body.theme-light .poll-confirm{background:#3b82f6;color:#fff}
 #privateChatScreen .pc-input-bar button.gp-mic.recording{background:#dc2626;color:#fff}
 #groupPlus{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);
   border-radius:var(--r-3);padding:12px;display:grid;grid-template-columns:repeat(3,70px);gap:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:60;animation:panelIn .22s cubic-bezier(.4,0,.2,1)}
+  box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:60;animation:panelIn .34s cubic-bezier(.34,1.42,.64,1)}
 #groupPlus .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:var(--r-2)}
 #groupPlus .pi:hover{background:rgba(56,189,248,.15)}
 #groupPlus .pi .pic{width:42px;height:42px;border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;background:rgba(56,189,248,.2);color:var(--info)}
@@ -984,6 +984,67 @@ body.theme-light #remoteNotice.rn-danger{background:#fee2e2;color:#991b1b;border
 .pair-btn.primary{background:var(--accent);color:#0b0d14}
 .pair-btn:active{opacity:.85}
 .pair-dev{font-size:11.5px;color:var(--text-sub);word-break:break-all;margin-top:10px;opacity:.8}
+
+/* ═══ v1.38.21 交互手感 ═══ */
+/* 按鈕按下：往按的方向沉一點（用 CSS 變數 --px/--py，JS 可選設定） */
+.btn-primary,.btn-ghost,.btn-danger,.btn-warn,.btn-ok{
+  transition:transform .12s cubic-bezier(.34,1.42,.64,1),box-shadow .12s,opacity .12s;
+  transform:perspective(520px) rotateX(calc(var(--py,0) * 1deg)) rotateY(calc(var(--px,0) * 1deg))
+}
+.btn-primary:active,.btn-ghost:active,.btn-danger:active,.btn-warn:active,.btn-ok:active{
+  transform:perspective(520px) rotateX(4deg) translateY(1px) scale(.975);box-shadow:0 1px 4px rgba(0,0,0,.28)
+}
+/* 完成反饋：加 .is-done 會由左至右掃一個打勾 */
+.btn-primary.is-done,.btn-ghost.is-done,.btn-ok.is-done{position:relative;color:transparent!important;overflow:hidden}
+.btn-primary.is-done::after,.btn-ghost.is-done::after,.btn-ok.is-done::after{
+  content:'';position:absolute;left:50%;top:50%;width:13px;height:7px;
+  border-left:2.4px solid var(--text-main);border-bottom:2.4px solid var(--text-main);
+  transform:translate(-50%,-62%) rotate(-45deg) scale(0);border-radius:1px;
+  animation:okMark .34s cubic-bezier(.34,1.56,.64,1) forwards
+}
+@keyframes okMark{to{transform:translate(-50%,-62%) rotate(-45deg) scale(1)}}
+/* 骨架屏 */
+.skeleton{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.11) 37%,rgba(255,255,255,.05) 63%);
+  background-size:400% 100%;animation:shimmer 1.3s ease infinite;border-radius:10px}
+body.theme-light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,.05) 25%,rgba(0,0,0,.10) 37%,rgba(0,0,0,.05) 63%);background-size:400% 100%}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.sk-row{display:flex;align-items:center;gap:11px;padding:11px 12px}
+.sk-av{width:36px;height:36px;border-radius:50%}
+.sk-lines{flex:1;display:flex;flex-direction:column;gap:7px}
+.sk-l1{height:11px;width:52%}
+.sk-l2{height:9px;width:78%}
+
+/* ═══ 新手引導（聚光燈）═══ */
+.ob-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.76);
+  transition:left .3s cubic-bezier(.34,1.42,.64,1),top .3s cubic-bezier(.34,1.42,.64,1),
+             width .3s cubic-bezier(.34,1.42,.64,1),height .3s cubic-bezier(.34,1.42,.64,1);
+  pointer-events:none;z-index:9000}
+.ob-tip{position:fixed;left:50%;transform:translateX(-50%);background:var(--bg-card);
+  border:1px solid var(--border-strong);border-radius:15px;padding:15px 18px;max-width:310px;width:calc(100% - 40px);
+  font-size:13.5px;line-height:1.65;text-align:center;z-index:9001;
+  box-shadow:0 14px 40px rgba(0,0,0,.5);animation:panelIn .3s cubic-bezier(.34,1.42,.64,1)}
+.ob-tip .ob-n{font-size:11px;color:var(--text-sub);margin-bottom:6px;letter-spacing:.4px}
+.ob-tip .ob-b{margin-top:13px;display:flex;gap:8px}
+.ob-tip .ob-b button{flex:1;border:0;border-radius:11px;padding:11px 8px;font-size:13.5px;font-weight:600;cursor:pointer}
+.ob-tip .ob-skip{background:transparent;color:var(--text-sub);border:1px solid var(--border-strong)!important}
+.ob-tip .ob-next{background:var(--accent);color:#0b0d14}
+
+/* ═══ 徽章解鎖（積分里程碑）═══ */
+.badge-pop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:9500;pointer-events:none;animation:badgeFade 2.6s ease forwards}
+.badge-card{position:relative;width:210px;padding:26px 20px 22px;border-radius:20px;text-align:center;
+  background:var(--bg-card);border:1px solid rgba(226,176,74,.5);
+  box-shadow:0 0 0 1px rgba(226,176,74,.18),0 22px 60px rgba(0,0,0,.55);
+  animation:badgeIn .55s cubic-bezier(.34,1.62,.64,1) both}
+.badge-ring{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#ffe9a8,#e2b04a 62%,#a9762a);
+  display:flex;align-items:center;justify-content:center;font-size:30px;color:#4a2f08;
+  box-shadow:0 0 0 0 rgba(226,176,74,.55);animation:badgePulse 1.1s ease-out .35s 2}
+.badge-t{font-size:12px;letter-spacing:2px;color:var(--gold2,var(--gold));margin-bottom:4px}
+.badge-v{font-size:17px;font-weight:600}
+@keyframes badgeIn{0%{opacity:0;transform:scale(.6) translateY(18px)}100%{opacity:1;transform:none}}
+@keyframes badgePulse{0%{box-shadow:0 0 0 0 rgba(226,176,74,.55)}100%{box-shadow:0 0 0 22px rgba(226,176,74,0)}}
+@keyframes badgeFade{0%{opacity:0}12%{opacity:1}82%{opacity:1}100%{opacity:0}}
 </style>
 </head>
 <body>
@@ -1158,7 +1219,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.20';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.21';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1680,6 +1741,49 @@ function showPairAsk(p){
   };
 }
 
+
+/* ═══ 新手引導：第一次登入時用聚光燈指出四個入口 ═══ */
+var OB_STEPS=[
+  {sel:'#msgInput',       t:'在這裡打字跟同學聊天'},
+  {sel:'#plusBtn',        t:'按「＋」可以發圖片、檔案，也可以開小遊戲'},
+  {sel:'.nav-item[data-action="openTools"]', t:'小程式：港鐵、巴士、綠紙產生器'},
+  {sel:'.nav-item[data-action="openMyProfile"]', t:'個人主頁：積分、兌換碼、任務'}
+];
+var obIdx=0, obHole=null, obTip=null;
+function obFinish(){
+  try{ localStorage.setItem('obDone','1'); }catch(e){}
+  if(obHole){ obHole.remove(); obHole=null; }
+  if(obTip){ obTip.remove(); obTip=null; }
+}
+function obShow(i){
+  var st=OB_STEPS[i]; if(!st) return obFinish();
+  var el=document.querySelector(st.sel);
+  if(!el){ obFinish(); return; }        /* 找不到目標（例如未登入的按鈕）就結束 */
+  var r=el.getBoundingClientRect();
+  var pad=8;
+  if(!obHole){ obHole=document.createElement('div'); obHole.className='ob-hole'; document.body.appendChild(obHole); }
+  obHole.style.left=(r.left-pad)+'px';
+  obHole.style.top=(r.top-pad)+'px';
+  obHole.style.width=(r.width+pad*2)+'px';
+  obHole.style.height=(r.height+pad*2)+'px';
+  if(!obTip){ obTip=document.createElement('div'); obTip.className='ob-tip'; document.body.appendChild(obTip); }
+  var below = r.bottom < window.innerHeight*0.55;
+  obTip.style.top = below ? Math.min(r.bottom+18, window.innerHeight-190)+'px'
+                          : Math.max(12, r.top-165)+'px';
+  obTip.innerHTML='<div class="ob-n">'+(i+1)+' / '+OB_STEPS.length+'</div>'
+    +'<div>'+st.t+'</div>'
+    +'<div class="ob-b"><button class="ob-skip">跳過</button>'
+    +'<button class="ob-next">'+(i===OB_STEPS.length-1?'開始用':'下一步')+'</button></div>';
+  obTip.querySelector('.ob-skip').onclick=obFinish;
+  obTip.querySelector('.ob-next').onclick=function(){ obIdx++; obShow(obIdx); };
+}
+function startOnboardingIfNeeded(){
+  try{ if(localStorage.getItem('obDone')) return; }catch(e){ return; }
+  obIdx=0;
+  setTimeout(function(){ obShow(0); },900);
+  window.addEventListener('resize',function(){ if(obHole&&obTip) obShow(obIdx); });
+}
+
 async function handleLogin(uArg,pArg){
   // uArg / pArg 是「網址登入」帶進來的；一般按登入鈕時不會傳，就讀輸入框
   const u=(uArg!==undefined?String(uArg):loginUsername.value).trim().toLowerCase(),
@@ -1752,6 +1856,20 @@ function enterChat(){
   subscribePendingNotices();subscribeRequests();subscribeFeedbacks();subscribeMyRejections();
   subscribeSystemNotices();subscribeThanks();subscribeMeta();subscribeAIModeMap();
   watchPairing();
+  startOnboardingIfNeeded();
+  /* v1.38.21：按鈕懸停時往指標方向微傾（配合 CSS 的 --px/--py） */
+  if(!window.__tiltReady){
+    window.__tiltReady=true;
+    document.addEventListener('pointermove',function(e){
+      try{
+        var b=e.target&&e.target.closest&&e.target.closest('.btn-primary,.btn-ghost,.btn-ok,.btn-danger,.btn-warn');
+        if(!b) return;
+        var r=b.getBoundingClientRect(); if(!r.width||!r.height) return;
+        b.style.setProperty('--px',(((e.clientX-r.left)/r.width-.5)*7).toFixed(2));
+        b.style.setProperty('--py',(((e.clientY-r.top)/r.height-.5)*-7).toFixed(2));
+      }catch(_){}
+    },{passive:true});
+  }
   subscribeMyGroups();
   startHeartbeat();
   countPageLoad();                  // 記一筆開頁次數，用來估算每月下載量
@@ -4220,7 +4338,35 @@ function syncPointNodes(){
    否則一定會漏一兩個（v1.38.15 前的老問題）。
    只改文字、不重建 innerHTML：自動回正每 100ms 叫一次，重建會閃。
    ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══ 徽章解鎖：積分跨過里程碑時彈一次 ═══ */
+var BADGE_MARKS=[1000,5000,10000,50000,100000,500000];
+var _lastPts=null, _badgeBusy=false;
+function checkBadge(v){
+  if(_lastPts===null){ _lastPts=v; return; }
+  var before=_lastPts; _lastPts=v;
+  if(v<=before) return;
+  for(var i=0;i<BADGE_MARKS.length;i++){
+    var m=BADGE_MARKS[i];
+    if(before<m && v>=m){
+      try{ if(localStorage.getItem('badge_'+m)==='1') return; localStorage.setItem('badge_'+m,'1'); }catch(e){}
+      showBadge(m); return;
+    }
+  }
+}
+function showBadge(mark){
+  if(_badgeBusy) return;
+  _badgeBusy=true;
+  var el=document.createElement('div');
+  el.className='badge-pop';
+  el.innerHTML='<div class="badge-card"><div class="badge-ring">★</div>'
+    +'<div class="badge-t">解鎖成就</div><div class="badge-v">積分突破 '+mark.toLocaleString()+'</div></div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ try{ el.remove(); }catch(e){} _badgeBusy=false; },2600);
+}
+
 function paintPoints(v){
+  try{ checkBadge(Number(v)||0); }catch(e){}
   const s=String(v), neg=v<0;
   ['scoreTop','scoreBottom'].forEach(function(id){
     const el=document.getElementById(id);
@@ -6727,6 +6873,16 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.21',date:'2026-10-23',changes:[
+'新增新手引導：第一次登入會用聚光燈逐個指出「聊天框」「＋」「小程式」「個人主頁」，四步走完或隨時跳過',
+'彈窗、面板、底部工具列全部加上回彈動效（先過衝再回彈，唔再硬切）',
+'按鈕同遊戲卡片會跟住手指／滑鼠位置微微傾斜，按落去會向下沉',
+'按鈕完成時會掃一個打勾（例如「加入 AI 玩家」成功後）',
+'載入畫面由「載入中…」改成骨架屏（灰色佔位塊＋掃光）',
+'開房後未有人加入時，會用箭頭指向「＋ 加入 AI 玩家」，唔會再一片空白唔知做咩',
+'遊戲清單改成橫向滑動，鬆手自動吸附對正中間',
+'積分跨過 1000 / 5000 / 10000 / 50000 / 100000 / 500000 時，會彈出徽章解鎖動畫（每個里程碑只彈一次）',
+]},
 {ver:'v1.38.20',date:'2026-10-23',changes:[
 '修正新裝置確認的顯示：新手機只顯示「一個」2 位數字（大字），舊手機顯示「三個」選項，兩邊一看就分得出哪部是哪部',
 '修正可以亂點試出答案：點錯會即刻換一組全新數字（新手機同步更新），連續錯三次直接拒絕這次登入',
