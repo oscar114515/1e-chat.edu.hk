@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="zh-Hant" data-page-node-id="msHCP4qVgJ4qOBssPFJpte">
 <head data-page-node-id="NmzNrjYTh26tndB3wBx2N7">
+<script>
+/* v1.38.23 字體：這行要和 chat.html 的 FONT_CDN 保持一致 */
+var FONT_CDN='';
+try{ if(localStorage.getItem('chat_font')==='sys') document.documentElement.classList.add('font-sys'); }catch(e){}
+(function(){
+  if(!FONT_CDN) return;
+  /* CSSFontFaceRule.style 是唯讀的，改不動；改成插一條新規則指向家中伺服器 */
+  document.addEventListener('DOMContentLoaded',function(){
+    try{
+      var st=document.createElement('style');
+      st.textContent=
+        '@font-face{font-family:"LXGW WenKai Home";font-style:normal;font-weight:400;font-display:swap;'+
+        'src:url("'+FONT_CDN+'") format("woff2");'+
+        'unicode-range:U+2E80-2EFF,U+3000-303F,U+3100-312F,U+31C0-31EF,U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF,U+FE30-FE4F,U+FF00-FFEF}'+
+        "body{font-family:'LXGW WenKai Home','Inter',-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang HK\",\"PingFang TC\",\"Microsoft JhengHei UI\",\"Microsoft JhengHei\",\"Noto Sans CJK TC\",\"Noto Sans TC\",system-ui,sans-serif}";
+      document.head.appendChild(st);
+    }catch(e){}
+  });
+})();
+</script>
 <meta charset="utf-8" data-page-node-id="w5YQFnHuZDeWoU5PqdPbVO">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="yllOB6ZRSWURqeWJQ5Hr6M">
 <title>小遊戲 · 班級聊天室</title>
@@ -12,8 +32,16 @@
   --red:#ef4444;--green:#22c55e;--blue:#3b82f6;--yellow:#eab308;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;
+  src:url('fonts/Inter-latin-var.woff2') format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;
+  src:url('fonts/LXGWWenKaiTC-subset.woff2') format('woff2');
+  unicode-range:U+2E80-2EFF,U+3000-303F,U+3100-312F,U+31C0-31EF,U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF,U+FE30-FE4F,U+FF00-FFEF}
+/* v1.38.23 跟聊天室共用同一個字體偏好：用戶在個人主頁選了「系統字體」，小遊戲也跟著退 */
+html.font-sys body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif}
 html,body{margin:0;padding:0;height:100%}
-body{background:var(--bg);color:var(--text-main);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.5;overscroll-behavior:none}
+body{background:var(--bg);color:var(--text-main);font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif;font-size:15px;line-height:1.5;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
 #app{min-height:100%;display:flex;flex-direction:column}
 .hidden{display:none!important}
 .topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,13,20,.92);backdrop-filter:blur(12px);z-index:20}
@@ -60,22 +88,10 @@ body{background:var(--bg);color:var(--text-main);font-family:-apple-system,Blink
   will-change:transform}
 .gcard:hover{box-shadow:0 10px 26px rgba(0,0,0,.34);border-color:var(--accent)}
 .gcard:active{transform:perspective(620px) rotateX(5deg) scale(.972)}
-/* v1.38.21：遊戲清單橫向吸附輪播 */
-.gsnap{display:flex!important;grid-template-columns:none!important;
-  overflow-x:auto!important;overflow-y:hidden;scroll-snap-type:x proximity;gap:12px;
-  padding:6px 44px 16px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;
-  scroll-behavior:smooth;align-items:stretch}
-.gsnap::-webkit-scrollbar{height:6px}
-.gsnap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:3px}
-.gsnap::-webkit-scrollbar-track{background:transparent}
-.gsnap .gcard{flex:0 0 clamp(148px,44%,220px);scroll-snap-align:center}
-.gsnav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;
-  background:var(--bg-card);border:1px solid var(--border-strong);color:var(--text-main);
-  font-size:19px;line-height:1;cursor:pointer;z-index:6;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.35);
-  transition:transform .14s cubic-bezier(.34,1.42,.64,1),opacity .14s}
-.gsnav:active{transform:translateY(-50%) scale(.9)}
-.gsnav.prev{left:6px}.gsnav.next{right:6px}
+/* v1.38.23：遊戲清單回到上下左右的格狀排列（覆蓋任何殘留的橫向規則） */
+.grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(148px,1fr))!important;
+  gap:12px;overflow:visible!important;flex-wrap:wrap}
+.grid .gcard{flex:none!important;width:auto!important}
 .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.11) 37%,rgba(255,255,255,.05) 63%);
   background-size:400% 100%;animation:shimmer 1.3s ease infinite;border-radius:10px}
 @keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
@@ -534,8 +550,231 @@ body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-
 <script src="lib/opencc-t2cn.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, get, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { getDatabase, ref as _fbRef, push as _fbPush, onValue as _fbOnValue, get as _fbGet, set as _fbSet, update as _fbUpdate, remove as _fbRemove, runTransaction as _fbRunTransaction, onDisconnect as _fbOnDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { Chess } from "./lib/chess.js";
+/* ══════════════════════════════════════════════════════════════════════
+   v1.38.23 房間 WebSocket（回合制遊戲的傳輸層）
+   ──────────────────────────────────────────────────────────────────────
+   為甚麼要這樣做：
+     17 款連線遊戲全都用 `ref(db,'games/'+rid)` 讀寫房間，散在 58 處。
+     逐處改寫等於重寫整個後端，風險極高。
+     這裡的做法是「同介面替身」：`games/` 開頭的路徑回傳虛擬 ref，
+     之後 get/set/update/remove/runTransaction/onValue/onDisconnect
+     自動走 WebSocket，遊戲程式碼一行都不用改。
+     `users/`、`lobbyLive/`、`points` 等照舊走 Firebase。
+   連不上時：整個分流自動失效，全部回到 Firebase（跟以前一模一樣）。
+   ══════════════════════════════════════════════════════════════════════ */
+/* 遊戲伺服器網址來源（三個，先到先得）：
+     ① 網址 ?ws=            —— 測試／臨時切換
+     ② Firebase meta/gamews —— 正式用，管理員在資料庫填一次就全站生效，不必改程式
+     ③ 下面這個常數         —— 最後備援
+   全部為空 = 完全用 Firebase，跟以前一模一樣。 */
+let GAME_WS_URL=(()=>{
+  try{
+    const q=new URLSearchParams(location.search).get('ws');
+    if(q) return q;
+  }catch(e){}
+  return '';
+})();
+
+const roomNet={
+  ws:null, ready:false, connecting:null, cid:1, pend:new Map(),
+  subs:new Map(),          /* rid -> Map(token -> {path, cb}) */
+  backoff:0, dead:false,
+  connect(){
+    if(this.ready) return Promise.resolve(true);
+    if(this.connecting) return this.connecting;
+    if(this.dead||!GAME_WS_URL) return Promise.resolve(false);
+    this.connecting=new Promise(res=>{
+      let ws;
+      try{ ws=new WebSocket(GAME_WS_URL); }catch(e){ this.connecting=null; res(false); return; }
+      this.ws=ws;
+      const to=setTimeout(()=>{
+        try{ ws.close(); }catch(e){}
+        finish(false);
+        try{ onPlayConnectionLost(); }catch(e){}
+      },6000);
+      ws.onopen=()=>{ this.ready=true; this.backoff=0; clearTimeout(to); this.connecting=null;
+        for(const rid in this.subs) this.send({t:'rSub',rid});
+        res(true);
+      };
+      ws.onmessage=ev=>{
+        let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+        if(m.t==='rUpd'){ this.fanout(m.rid, m.v); return; }
+        if(m.t==='rListVal'&&m.list){ this.fanoutList(m.v); return; }
+        if(m.t==='rVal'||m.t==='rTxOk'||m.t==='rListVal'){
+          const p=this.pend.get(m.cid);
+          if(p){ this.pend.delete(m.cid); p(m); }
+          return;
+        }
+      };
+      ws.onclose=()=>{
+        const wasReady=this.ready;
+        this.ready=false; this.ws=null; this.connecting=null;
+        clearTimeout(to);
+        /* 斷線（包括一開始就連不上）：交給判定函式決定要不要賠 */
+        try{ onPlayConnectionLost(); }catch(e){}
+        /* 還有訂閱就想重連；重連失敗幾次就永久降級回 Firebase */
+        if(this.subs.size){
+          this.backoff++;
+          if(this.backoff>4){ this.dead=true; this.subs.clear(); return; }
+          setTimeout(()=>{ if(!this.dead) this.connect(); }, 500*this.backoff);
+        }
+      };
+      ws.onerror=()=>{};
+    });
+    return this.connecting;
+  },
+  send(o){
+    if(this.ready&&this.ws&&this.ws.readyState===1){ try{ this.ws.send(JSON.stringify(o)); }catch(e){} }
+  },
+  async req(o){
+    if(!GAME_WS_URL) return null;
+    const ok=await this.connect();
+    if(!ok||!this.ready) return null;
+    const cid=this.cid++;
+    return new Promise(res=>{
+      this.pend.set(cid,res);
+      o.cid=cid;
+      this.send(o);
+      setTimeout(()=>{ if(this.pend.has(cid)){ this.pend.delete(cid); res(null); } },4000);
+    });
+  },
+  fanout(rid, v){
+    const map=this.subs.get(rid);
+    if(!map) return;
+    for(const it of map.values()){ try{ it.cb(mkSnap(valAt(v, it.path))); }catch(e){} }
+  },
+  listSubs:new Map(),
+  subList(game, cb){
+    const token=Math.random().toString(36).slice(2);
+    this.listSubs.set(token,{game:game||'*',cb});
+    this.connect().then(ok=>{ if(ok) this.send({t:'rListSub', game:game||'*'}); });
+    return ()=>{ this.listSubs.delete(token); };
+  },
+  fanoutList(v){
+    for(const it of this.listSubs.values()){ try{ it.cb(mkSnap(v)); }catch(e){} }
+  },
+  sub(rid, path, cb){
+    let map=this.subs.get(rid);
+    if(!map){ map=new Map(); this.subs.set(rid,map); }
+    const token=Math.random().toString(36).slice(2);
+    map.set(token,{path:path||'',cb});
+    this.connect().then(ok=>{
+      if(ok) this.send({t:'rSub',rid});
+      else if(!this.ready){ /* 連不上就用快照 null 讓畫面不卡住 */ try{ cb(mkSnap(null)); }catch(e){} }
+    });
+    return ()=>{
+      const mp=this.subs.get(rid);
+      if(!mp) return;
+      mp.delete(token);
+      if(!mp.size){ this.subs.delete(rid); this.send({t:'rUnsub',rid}); }
+    };
+  }
+};
+
+function valAt(obj, path){
+  if(!path) return obj===undefined?null:obj;
+  const segs=String(path).split('/').filter(Boolean);
+  let cur=obj;
+  for(const s of segs){
+    if(cur==null||typeof cur!=='object') return null;
+    cur=cur[s];
+    if(cur===undefined) return null;
+  }
+  return cur===undefined?null:cur;
+}
+function mkSnap(v){ return { val(){ return v===undefined?null:v; }, exists(){ return v!==null&&v!==undefined; } }; }
+function isRoomPath(p){ return typeof p==='string'&&(p==='games'||p.indexOf('games/')===0); }
+function parseRoom(p){
+  const segs=String(p).split('/').filter(Boolean);
+  return { rid:segs[1]||'', path:segs.slice(2).join('/'), isList:segs.length<=1 };
+}
+
+/* ── 分流：只有 games/ 走 WebSocket，其餘照舊 Firebase ── */
+function ref(dbOrPath, path){
+  const p=(path===undefined)?dbOrPath:path;
+  if(GAME_WS_URL&&isRoomPath(p)){
+    const r=parseRoom(p);
+    return {__room:true, rid:r.rid, path:r.path, raw:p};
+  }
+  return (path===undefined)?_fbRef(dbOrPath):_fbRef(dbOrPath, path);
+}
+function push(r){
+  /* push(ref(db,'games')) → 在本地產生新房間 id（不必問 Firebase） */
+  if(r&&r.__room&&!r.rid){
+    return { key:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,8) };
+  }
+  return _fbPush(r);
+}
+function onValue(r, cb){
+  if(r&&r.__room){
+    if(r.isList) return roomNet.subList('*', cb);
+    const off=roomNet.sub(r.rid, r.path, cb);
+    /* 先給一次目前值，避免畫面空等 */
+    roomNet.req({t:'rGet', rid:r.rid, path:r.path}).then(m=>{
+      if(m&&m.v!==undefined){ try{ cb(mkSnap(m.v)); }catch(e){} }
+    });
+    return off;
+  }
+  return _fbOnValue(r, cb);
+}
+async function get(r){
+  if(r&&r.__room){
+    const m=await roomNet.req({t:'rGet', rid:r.rid, path:r.path});
+    return mkSnap(m?m.v:null);
+  }
+  return _fbGet(r);
+}
+async function set(r, v){
+  if(r&&r.__room){
+    await roomNet.connect();                    /* 第一次寫入時連線可能還沒建立 */
+    roomNet.send({t:'rSet', rid:r.rid, path:r.path, v:v===undefined?null:v});
+    return;
+  }
+  return _fbSet(r, v);
+}
+async function update(r, patch){
+  if(r&&r.__room){
+    await roomNet.connect();
+    roomNet.send({t:'rUpd', rid:r.rid, patch});
+    return;
+  }
+  return _fbUpdate(r, patch);
+}
+async function remove(r){
+  if(r&&r.__room){
+    await roomNet.connect();
+    roomNet.send({t:'rDel', rid:r.rid, path:r.path});
+    return;
+  }
+  return _fbRemove(r);
+}
+/* 交易：先讀到目前值 → 客戶端算新值 → 伺服器比對後寫入（CAS）。
+   中間若被別人改過就不寫，行為接近 Firebase 的 runTransaction。 */
+async function runTransaction(r, fn){
+  if(r&&r.__room){
+    const cur=(await get(r)).val();
+    let nv;
+    try{ nv=fn(cur); }catch(e){ return {committed:false, snapshot:mkSnap(cur)}; }
+    if(nv===undefined) return {committed:false, snapshot:mkSnap(cur)};
+    const m=await roomNet.req({t:'rTx', rid:r.rid, path:r.path, expected:cur, v:nv});
+    const ok=!!(m&&m.committed);
+    return {committed:ok, snapshot:mkSnap(ok?nv:cur)};
+  }
+  return _fbRunTransaction(r, fn);
+}
+function onDisconnect(r){
+  if(r&&r.__room){
+    return {
+      set(v){ roomNet.connect().then(()=>roomNet.send({t:'rOnDis', rid:r.rid, path:r.path, v:v===undefined?null:v})); return Promise.resolve(); },
+      remove(){ roomNet.connect().then(()=>roomNet.send({t:'rOnDis', rid:r.rid, path:r.path, v:null})); return Promise.resolve(); },
+      cancel(){ roomNet.send({t:'rOnDis', cancel:true}); return Promise.resolve(); }
+    };
+  }
+  return _fbOnDisconnect(r);
+}
+
 // uno-engine 的 UMD 全域名為 Uno；opencc 的 UMD 全域名為 OpenCC
 const UnoEngine = window.Uno || null;
 const OpenCC = window.OpenCC || null;
@@ -772,6 +1011,70 @@ async function givePoints(u,n){
   if(now===base+n) return;                       // 其實已經加了
   try{ await set(ref(db,'users/'+u+'/points'),now+n); }catch(e){}
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   v1.38.23 伺服器故障賠償
+   ──────────────────────────────────────────────────────────────────────
+   規則（用戶定）：**只有伺服器出問題**才賠，客戶端自己斷網不賠。
+   怎麼分得清：
+     · 伺服器每 10 秒寫一次 meta/gamewsBeat
+     · 正常關機會先廣播 bye，並寫 meta/gamewsDown
+     · 斷線時若「心跳停了 45 秒以上」或「5 分鐘內有下線標記」 → 判定伺服器故障
+   賠幾多：入場費 × 10。
+   防濫用：同一個房間只補一次（key 用 rid）、每人每日最多 3 次。
+   ══════════════════════════════════════════════════════════════════════ */
+const COMP_DAILY_MAX=3, COMP_WINDOW=86400000;
+async function serverLooksDown(){
+  try{
+    const d=await get(ref(db,'meta/gamewsDown'));
+    const dv=d.val();
+    if(dv&&dv.at&&Date.now()-Number(dv.at)<300000) return true;
+  }catch(e){}
+  try{
+    const b=await get(ref(db,'meta/gamewsBeat'));
+    const bv=Number(b.val())||0;
+    if(!bv) return false;             /* 從來沒心跳：可能未啟用 WS，不當故障 */
+    if(Date.now()-bv>45000) return true;
+  }catch(e){}
+  return false;
+}
+async function maybeCompensateServerDown(rid, fee){
+  try{
+    if(!GAME_WS_URL||!me||!rid) return;
+    const f=Math.round(Number(fee)||0);
+    if(f<=0) return;
+    const done=await get(ref(db,'compensations/'+me.username+'/'+rid));
+    if(done.exists()) return;                       /* 同一房只補一次 */
+    if(!(await serverLooksDown())) return;          /* 判定唔到係伺服器問題 → 唔賠 */
+    const all=await get(ref(db,'compensations/'+me.username));
+    const obj=all.val()||{};
+    const today=Object.keys(obj).filter(k=>obj[k]&&Date.now()-Number(obj[k].at)<COMP_WINDOW).length;
+    if(today>=COMP_DAILY_MAX){ showNotice('今日伺服器故障賠償已達上限（'+COMP_DAILY_MAX+' 次）',2600); return; }
+    const amount=f*10;
+    await set(ref(db,'compensations/'+me.username+'/'+rid),{fee:f,amount:amount,at:Date.now(),kind:'server_down'});
+    await givePoints(me.username, amount);
+    showNotice('伺服器出問題，已賠償 '+amount+' 積分（入場費 '+f+' × 10）',3600);
+  }catch(e){}
+}
+/* 測試鉤子：只有 stu14 見得到，用來驗證賠償邏輯（不影響一般用戶） */
+try{
+  /* 只在 stu14 手上才真的執行，其他人叫了也不會發積分 */
+  window.__compTest=(rid,fee)=>{
+    try{ if(!me||me.username!=='stu14') return; }catch(e){ return; }
+    return maybeCompensateServerDown(rid,fee);
+  };
+  window.__serverDown=()=>serverLooksDown();
+}catch(e){}
+/* 斷線時呼叫：只有「已經在房間玩」才可能賠 */
+async function onPlayConnectionLost(){
+  try{
+    if(!curRoomId||!curRoom) return;
+    const st=curRoom.status;
+    if(st!=='playing'&&st!=='countdown') return;
+    await maybeCompensateServerDown(curRoomId, curRoom.fee);
+  }catch(e){}
+}
+
 async function nodeExists(path){
   try{ const s=await get(ref(db,path)); return s.exists(); }catch(e){ return false; }
 }
@@ -931,6 +1234,14 @@ async function loadUser(){
     me={username:uname,displayName:u.displayName||uname,color:safeColor(u.color,'#3b82f6'),avatar:u.avatar||'',role:u.role||'student',cls:u.cls||'',seat:u.seat||''};
   }catch(e){ renderNoUser(); return; }
   await loadStats();
+  /* 遊戲伺服器網址：Firebase meta/gamews 有值就用（不必改程式就能切換） */
+  try{
+    if(!GAME_WS_URL){
+      const gs=await get(ref(db,'meta/gamews'));
+      const gv=gs.val();
+      if(typeof gv==='string'&&/^wss?:\/\//i.test(gv.trim())){ GAME_WS_URL=gv.trim(); LOBBY_WS_URL=GAME_WS_URL; }
+    }
+  }catch(e){}
   const rid=params.get('room');
   if(rid){ cameFromInvite=true; joinRoom(rid); return; }
   view='lobby'; render();
@@ -1013,9 +1324,7 @@ function renderLobby(){
     <div class="catbar">${tabs}</div>
     <div class="catdesc">${escapeHtml(cat.d)}</div>
     <div class="wrap" style="padding-top:0">
-      <button class="gsnav prev" id="gsPrev" aria-label="上一頁">‹</button>
-      <button class="gsnav next" id="gsNext" aria-label="下一頁">›</button>
-      <div class="gsnap">${cards}</div>
+      <div class="grid">${cards}</div>
     </div>`;
   appEl.querySelectorAll('.catbar button').forEach(b=>b.onclick=()=>{
     lobbyCat=b.dataset.cat;
@@ -1023,10 +1332,6 @@ function renderLobby(){
     renderLobby();
   });
   appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openGameRooms(el.dataset.g));
-  const gw=appEl.querySelector('.gsnap');
-  const gp=appEl.querySelector('#gsPrev'), gn=appEl.querySelector('#gsNext');
-  if(gw&&gp) gp.onclick=()=>gw.scrollBy({left:-Math.max(180,gw.clientWidth*0.8),behavior:'smooth'});
-  if(gw&&gn) gn.onclick=()=>gw.scrollBy({left:Math.max(180,gw.clientWidth*0.8),behavior:'smooth'});
   const cb=appEl.querySelector('[data-act="close"]'); if(cb) cb.onclick=closeSelf;
 }
 function closeSelf(){
@@ -1457,7 +1762,7 @@ function renderRoom(){
         <button class="btn" data-act="retryRoom">重試</button>
         <button class="btn ghost" data-act="leave">回到大廳</button></div>`;
       const rb=appEl.querySelector('[data-act="retryRoom"]'); if(rb) rb.onclick=()=>location.reload();
-      appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
+      appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveWithAsk);
       return;
     }
     appEl.innerHTML='<div class="wrap" style="padding-top:14px">'
@@ -1521,7 +1826,7 @@ function renderRoom(){
       <button class="btn ghost" data-act="copyRoomLink">複製房間連結</button>
       <button class="btn danger" data-act="leave">離開房間</button>
     </div>`;
-  appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
+  appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveWithAsk);
   const aa=appEl.querySelector('[data-act="addAi"]'); if(aa) aa.onclick=addAiPlayer;
   appEl.querySelectorAll('[data-delai]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); removeAiPlayer(b.dataset.delai); });
   const cr=appEl.querySelector('[data-act="cancelRoom"]'); if(cr) cr.onclick=closeRoom;
@@ -1625,6 +1930,31 @@ async function tryStartGame(){
   // 引擎驅動的遊戲（uno/chess）：只寫「隨機種子」，動作序列從空開始，各端重放得出同一局面
   await update(ref(db,'games/'+id),{startedAt:sNow(),turn:st.turn||null,winner:null,seed:seed,actions:null,state:(r.game==='uno'||r.game==='chess')?null:st.state,players:st.players});
 }
+/* ── 退出確認：遊戲進行中誤觸返回，不要直接退出 ──
+   以前按一下就走：房主一走房間就關、其他人白等，自己也當棄權。
+   現在先問一次，「繼續玩」留在原地，什麼都不變。 */
+function confirmLeaveRoom(){
+  return new Promise(resolve=>{
+    try{
+      const st=curRoom&&curRoom.status;
+      if(st!=='playing'&&st!=='countdown'){ resolve(true); return; }
+      askPay('確定要退出？',
+        [st==='countdown'?'這局正在倒數，你一走就會少一個人。':'這一局還在打，退出就當你棄權，積分不會退。'],
+        '退出','繼續玩').then(resolve).catch(()=>resolve(true));
+    }catch(e){ resolve(true); }
+  });
+}
+function confirmLeaveLobby(){
+  return new Promise(resolve=>{
+    try{
+      if(!lgame||!my||!my.alive){ resolve(true); return; }
+      askPay('確定要退出？',['你正在玩，退出之後這一局的成績就會中止。'],
+        '退出','繼續玩').then(resolve).catch(()=>resolve(true));
+    }catch(e){ resolve(true); }
+  });
+}
+const leaveWithAsk = async () => { if (await confirmLeaveRoom()) leaveRoom(); };
+
 async function leaveRoom(){
   const rid=curRoomId;
   const isHost=!!(curRoom&&curRoom.host===me.username);   // curRoom 等一下會被清掉，先記下來
@@ -1786,7 +2116,11 @@ function renderLobbyGame(){
         <div id="ovBox"></div>
       </div>
     </div>`;
-  const b=appEl.querySelector('[data-act="lbLeave"]'); if(b) b.onclick=()=>leaveLobbyGame();
+  const b=appEl.querySelector('[data-act="lbLeave"]');
+  if(b) b.onclick=async()=>{
+    if(!(await confirmLeaveLobby())) return;
+    leaveLobbyGame();
+  };
   if(lgame) lgame.mount(appEl.querySelector('#cv'));
 }
 
@@ -1937,6 +2271,72 @@ function lobbyIsTouch(){
    吃豆會變長；撞到別人的身體／撞牆就死，身體會散落成豆給人吃。
    場地是正方形，越貼近邊界越紅，牆外最紅。
    ═══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   v1.38.23 大廳 WebSocket
+   ──────────────────────────────────────────────────────────────────────
+   為甚麼要換：Firebase RTDB 每 125ms 要把整條蛇寫進去，所有人互相推送。
+   8Hz + 幾百毫秒延遲，結果就是「別人只剩三五格」「加速時分數亂跳」
+   「本局最長明明是我但別人更高」。那不是在玩遊戲，是在等資料庫。
+   現在：WebSocket 20Hz，伺服器負責食物、吃豆判定、排行榜。
+   連不上（家中伺服器關了／穿透斷了）就自動用回原本的 Firebase 邏輯。
+   ★ 網址填這裡；留空＝完全用 Firebase（跟以前一樣）
+   ══════════════════════════════════════════════════════════════════════ */
+let LOBBY_WS_URL=GAME_WS_URL;   /* 與房間遊戲共用同一個伺服器 */
+const lobbyNet={
+  ws:null, ready:false, id:null, gk:null, onSnap:null, clockOff:0,
+  pend:new Map(), rid:1,
+  connect(gk, me, onSnap){
+    return new Promise(resolve=>{
+      if(!LOBBY_WS_URL) return resolve(false);
+      let done=false;
+      const finish=v=>{ if(!done){ done=true; resolve(v); } };
+      let ws;
+      try{ ws=new WebSocket(LOBBY_WS_URL); }catch(e){ return finish(false); }
+      this.ws=ws; this.gk=gk; this.onSnap=onSnap; this.ready=false;
+      const to=setTimeout(()=>{ if(!this.ready){ try{ws.close();}catch(e){} finish(false); } },7000);
+      ws.onopen=()=>{ try{ ws.send(JSON.stringify({t:'hello',g:gk,nm:me.displayName,c:me.color})); }catch(e){} };
+      ws.onmessage=ev=>{
+        let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+        if(m.t==='welcome'){
+          this.id=m.id; this.ready=true; clearTimeout(to);
+          /* 進場先把場上所有豆一次過畫出來（之後只收增量） */
+          try{ this.onSnap&&this.onSnap({ts:Date.now(),tsAdj:Date.now(),p:{},f:m.food||[],fd:[],lb:[]}); }catch(e){}
+          finish(true);
+        }else if(m.t==='snap'){
+          if(!this.ready) return;
+          const off=Date.now()-m.ts;
+          this.clockOff=this.clockOff?(this.clockOff*0.85+off*0.15):off;
+          m.tsAdj=m.ts+this.clockOff;
+          try{ this.onSnap&&this.onSnap(m); }catch(e){}
+        }else if(m.t==='ate'){
+          const cb=this.pend.get(m.rid);
+          if(cb){ this.pend.delete(m.rid); cb(m); }
+        }else if(m.t==='full'){
+          clearTimeout(to); finish(false);
+        }
+      };
+      ws.onclose=(ev)=>{
+        const was=this.ready;
+        this.ready=false; this.ws=null;
+        finish(false);                       /* 連不上就即刻降級，不用等 7 秒 */
+        if(was&&this.onDown){ try{ this.onDown(); }catch(e){} }   /* 玩到一半斷線：即時切回 Firebase */
+      };
+      ws.onerror=()=>{};
+    });
+  },
+  send(o){ if(this.ready&&this.ws&&this.ws.readyState===1){ try{ this.ws.send(JSON.stringify(o)); }catch(e){} } },
+  eat(fid){
+    if(!this.ready) return Promise.resolve(null);
+    const rid=this.rid++;
+    return new Promise(res=>{
+      this.pend.set(rid,res);
+      this.send({t:'eat',fid,rid});
+      setTimeout(()=>{ if(this.pend.has(rid)){ this.pend.delete(rid); res(null); } },1500);
+    });
+  },
+  close(){ this.ready=false; this.id=null; try{ this.ws&&this.ws.close(); }catch(e){} this.ws=null; this.pend.clear(); }
+};
+
 function createSnakeLobby(){
   const HALF=1020;           /* 正方形場地半邊長（世界單位）→ 場地 2040×2040 */
   const R0=11;               /* 蛇的半寬 */
@@ -1962,6 +2362,34 @@ function createSnakeLobby(){
   let pad={x:0,y:0};         /* 觸控方向鍵按住的絕對方向；0,0 ＝ 沒按 */
   let hudRowsEl=null, hudCardEl=null, stCardEl=null, wrapEl=null, ctlEl=null;
   let cw=0, ch=0;
+  let wsMode=false;          /* true ＝ 走 WebSocket；false ＝ 走 Firebase 舊路徑 */
+
+  /* WS 快照 → 本地 rivals／food（格式與 Firebase 版一致，其餘程式不用改） */
+  function applySnap(s){
+    const seen={};
+    const ts=s.tsAdj||s.ts||Date.now();
+    for(const id in s.p){
+      if(id===lobbyNet.id) continue;
+      const q=s.p[id];
+      const r=rivals[id]||(rivals[id]={h:[],n:0,name:id,color:'#94a3b8',nm:id,dead:false,lastSeen:0});
+      r.nm=q.nm||r.nm; r.color=safeColor(q.c,r.color); r.dead=!!q.d; r.n=q.n||0;
+      r.lastSeen=Date.now();
+      const last=r.h[r.h.length-1];
+      if(!last||ts>last.t) r.h.push({x:q.x,y:q.y,t:ts});
+      if(r.h.length>420) r.h.splice(0,r.h.length-420);
+      seen[id]=1;
+    }
+    for(const id in rivals){ if(!seen[id]) delete rivals[id]; }
+    /* 食物是增量的（伺服器只發新增／被吃的），所以不能整份換掉 */
+    if(s.f&&s.f.length){ for(const a of s.f) food[a[0]]={x:a[1],y:a[2],r:a[3],g:a[4],gold:a[5]}; }
+    if(s.fd&&s.fd.length){ for(const id of s.fd) delete food[id]; }
+    foodReady=true;
+  }
+  /* 放豆：WS 模式交給伺服器（它會驗證與限量），否則走 Firebase */
+  function pushFood(items){
+    if(wsMode){ lobbyNet.send({t:'food',items}); return; }
+    lobbyPushFood(lobbyKey,items);
+  }
 
   if (isSecretUser()) window.__snakeDbg = () => ({ n: my ? Math.round(my.n) : 0, alive: my ? my.alive : false, x: my ? Math.round(my.x) : 0, y: my ? Math.round(my.y) : 0 });
   /* ── 我的蛇 ── */
@@ -2050,7 +2478,7 @@ function createSnakeLobby(){
         c:0,col:safeColor(me.color,'#22c55e')});
     }
     if(my.n>=25) items.push({x:my.x,y:my.y,r:9,g:6,c:0});     /* 大蛇會掉一顆大的 */
-    await lobbyPushFood(lobbyKey,items);
+    pushFood(items);
     /* 記戰績（只加欄位，不動原本的 win/lose 結構） */
     try{
       const st=myStats.snake||{};
@@ -2068,9 +2496,15 @@ function createSnakeLobby(){
       const f=food[id]; if(!f) continue;
       /* 1.5 倍半徑：蛇的轉彎半徑大約 36 單位，用原本 17 的判定會出現「繞住粒豆轉圈永遠食唔到」 */
       if(Math.hypot(f.x-my.x,f.y-my.y) < R0*1.5+(f.r||6)){
-        const got=await lobbyEatFood(lobbyKey,id);
-        if(got){ my.n+=Math.max(1,f.g||1); if(my.n>2600) my.n=2600; }
-        delete food[id];
+        if(wsMode){
+          const res=await lobbyNet.eat(Number(id));
+          if(res&&res.ok){ my.n+=Math.max(1,res.g||f.g||1); if(my.n>2600) my.n=2600; }
+          delete food[id];          /* 別人先吃了就當場移除，不再畫出來 */
+        }else{
+          const got=await lobbyEatFood(lobbyKey,id);
+          if(got){ my.n+=Math.max(1,f.g||1); if(my.n>2600) my.n=2600; }
+          delete food[id];
+        }
       }
     }
   }
@@ -2105,6 +2539,12 @@ function createSnakeLobby(){
   /* ── 網路：只寫自己（沒有 AI，所以不再代寫任何假玩家） ── */
   async function sample(){
     if(!my||!me) return;
+    if(wsMode){
+      lobbyNet.send({t:'me',x:Math.round(my.x),y:Math.round(my.y),a:+my.ang.toFixed(2),
+        n:Math.round(my.n),d:my.alive?0:1,b:boosting?1:0,
+        nm:me.displayName,c:safeColor(me.color,'#22c55e')});
+      return;
+    }
     try{
       await update(ref(db,'lobbyLive/'+lobbyKey+'/'+me.username),{
         x:Math.round(my.x),y:Math.round(my.y),a:+my.ang.toFixed(2),
@@ -2122,7 +2562,7 @@ function createSnakeLobby(){
     if(document.hidden){ lastT=ts; return; }
     const dt=Math.min(0.05,(ts-lastT)/1000||0); lastT=ts;
     const now=sNow();
-    const renderT=now-NET_DELAY;
+    const renderT=(wsMode?Date.now():now)-NET_DELAY;
     if(my&&my.alive){
       /* 轉向：方向鍵（觸控）優先，其餘用滑鼠／手指指向的位置；
          但每秒最多轉 TURN 弧度，所以按「後」不會瞬間反轉，而是繞一個弧。 */
@@ -2160,7 +2600,7 @@ function createSnakeLobby(){
         if(my.n<11.5){ my.n=11.5; boosting=false; }
         /* 加速時沿路掉豆（別人可以吃） */
         if(Math.random()<dt*7){
-          lobbyPushFood(lobbyKey,[{x:my.x+(Math.random()-.5)*18,y:my.y+(Math.random()-.5)*18,r:5,g:1,c:0}]);
+          pushFood([{x:my.x+(Math.random()-.5)*18,y:my.y+(Math.random()-.5)*18,r:5,g:1,c:0}]);
         }
       }
       pushTrail(my.x,my.y);
@@ -2170,7 +2610,7 @@ function createSnakeLobby(){
     } else if(my&&!my.alive){
       if(now>=deadUntil){ spawn(); pushTrail(my.x,my.y); sample(); }
     }
-    if(now-lastSample>125){ lastSample=now; sample(); }
+    if(now-lastSample>(wsMode?60:125)){ lastSample=now; sample(); }
     if(now-lastFoodScan>1400){ lastFoodScan=now; keepFood(); }
     draw(renderT,now);
     tickHud(now);
@@ -2178,6 +2618,7 @@ function createSnakeLobby(){
 
   /** 豆子數量維持住（誰都可以補；多補幾顆不影響遊戲） */
   function keepFood(){
+    if(wsMode) return;                  /* WS 模式：豆由伺服器維持 */
     if(!foodReady) return;              /* 未收到快照就補，會令豆越積越多 */
     const have=Object.keys(food).length;
     if(have>=FOOD_TARGET) return;
@@ -2311,36 +2752,58 @@ function createSnakeLobby(){
     }
   }
 
+  /* Firebase 舊路徑：主路徑是 WebSocket，這裡是連不上／中途斷線時的備援。
+     刻意與 WS 版共用同一個 rivals／food 結構，切換時其餘程式完全不用改。 */
+  function subscribeFirebase(){
+    if(stopLive||stopFood) return;
+    stopLive=onValue(ref(db,'lobbyLive/'+lobbyKey),snap=>{
+      const v=snap.val()||{};
+      const seen={};
+      for(const u in v){
+        if(u===me.username) continue;
+        if(u.indexOf('bot_')===0) continue;      /* 以前的 AI 蛇殘留，直接不理 */
+        const d=v[u]||{};
+        const r=rivals[u]||(rivals[u]={h:[],n:0,name:u,color:'#94a3b8',nm:d.nm||u,dead:false});
+        r.nm=d.nm||r.nm; r.color=safeColor(d.c,r.color); r.dead=!!d.d;
+        r.n=Number(d.n)||0;
+        r.lastSeen=Date.now();
+        const t=Number(d.t)||0;
+        if(t && Date.now()-t>15000){ delete rivals[u]; continue; }
+        const last=r.h[r.h.length-1];
+        if(!last||t>last.t) r.h.push({x:Number(d.x)||0,y:Number(d.y)||0,t:t});
+        if(r.h.length>420) r.h.splice(0,r.h.length-420);
+        seen[u]=1;
+      }
+      for(const u in rivals){ if(!seen[u]&&Date.now()-(rivals[u].lastSeen||0)>9000) delete rivals[u]; }
+    });
+    stopFood=onValue(ref(db,'lobbyFood/'+lobbyKey),snap=>{ food=snap.val()||{}; foodReady=true; });
+  }
+  /* 玩到一半 WS 斷線 → 即時切回 Firebase，不要讓畫面凍結 */
+  function fallbackToFirebase(){
+    if(!wsMode) return;
+    wsMode=false;
+    rivals={};
+    stopLive=null; stopFood=null;
+    try{ lobbyNet.onDown=null; lobbyNet.close(); }catch(e){}
+    try{ showNotice('即時連線中斷，已切換到備援模式'); }catch(e){}
+    try{ onPlayConnectionLost(); }catch(e){}
+    keepFood();
+    subscribeFirebase();
+    sample();
+  }
+
   /* ── 掛載 / 卸載 ── */
   return {
     mounted:false,
     async start(){
       spawn();
-      keepFood();          /* 場上沒豆就補（第一個進來的人負責） */
-      /* 訂閱：別的真人玩家的蛇 */
-      stopLive=onValue(ref(db,'lobbyLive/'+lobbyKey),snap=>{
-        const v=snap.val()||{};
-        const seen={};
-        for(const u in v){
-          if(u===me.username) continue;
-          if(u.indexOf('bot_')===0) continue;      /* 以前的 AI 蛇殘留，直接不理 */
-          const s=v[u]||{};
-          const r=rivals[u]||(rivals[u]={h:[],n:0,name:u,color:'#94a3b8',nm:s.nm||u,dead:false});
-          r.nm=s.nm||r.nm; r.color=safeColor(s.c,r.color); r.dead=!!s.d;
-          r.n=Number(s.n)||0;                       /* 長度一定要讀進來，否則積分榜永遠是 0 */
-          r.lastSeen=Date.now();
-          const t=Number(s.t)||0;
-          /* 超過 15 秒沒有心跳 ＝ 已經離開（關頁／斷網），不要留一條鬼影在場上 */
-          if(t && Date.now()-t>15000){ delete rivals[u]; continue; }
-          const last=r.h[r.h.length-1];
-          if(!last||t>last.t) r.h.push({x:Number(s.x)||0,y:Number(s.y)||0,t:t});
-          if(r.h.length>420) r.h.splice(0,r.h.length-420);
-          seen[u]=1;
-        }
-        for(const u in rivals){ if(!seen[u]&&Date.now()-(rivals[u].lastSeen||0)>9000) delete rivals[u]; }
-      });
-      stopFood=onValue(ref(db,'lobbyFood/'+lobbyKey),snap=>{ food=snap.val()||{}; foodReady=true; });
-      sample();
+      /* 先試 WebSocket（家中伺服器）。連得上就用它，連不上才用 Firebase。 */
+      if(LOBBY_WS_URL&&me){
+        try{ lobbyNet.onDown=fallbackToFirebase; wsMode=await lobbyNet.connect(lobbyKey,me,applySnap); }catch(e){ wsMode=false; }
+      }
+      if(wsMode){ sample(); return; }
+      keepFood();
+      subscribeFirebase();
     },
     mount(canvas){
       cv=canvas; ctx=cv.getContext('2d');
@@ -2420,7 +2883,7 @@ function createSnakeLobby(){
       return {x:Math.round(my.x),y:Math.round(my.y),ang:+my.ang.toFixed(3),n:Math.round(my.n),
         alive:!!(my&&my.alive),half:HALF,band:LOBBY_EDGE_BAND,
         edge:+ARENA.danger(my.x,my.y).toFixed(3),
-        rivals:Object.keys(rivals).length,pad:{x:pad.x,y:pad.y},
+        rivals:Object.keys(rivals).length,ws:wsMode,food:Object.keys(food).length,pad:{x:pad.x,y:pad.y},
         touch:ctlEl?ctlEl.classList.contains('touch'):null,boosting:boosting};
     },
     async stop(){
@@ -2429,8 +2892,10 @@ function createSnakeLobby(){
       if(this._offKey){ try{ this._offKey(); }catch(e){} this._offKey=null; }
       if(stopLive){ try{stopLive();}catch(e){} stopLive=null; }
       if(stopFood){ try{stopFood();}catch(e){} stopFood=null; }
+      const wasWs=wsMode;
+      if(wsMode){ try{ lobbyNet.close(); }catch(e){} wsMode=false; }
       try{
-        await remove(ref(db,'lobbyLive/'+lobbyKey+'/'+me.username));
+        if(!wasWs) await remove(ref(db,'lobbyLive/'+lobbyKey+'/'+me.username));
       }catch(e){}
     }
   };
@@ -3223,7 +3688,7 @@ function soloBar(g){
     <h1>${escapeHtml(g.n)}</h1><span class="hint" style="margin:0;font-size:11.5px">單人 · 其他人可以觀戰</span></div>`;
 }
 function soloBindLeave(){
-  appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
+  appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveWithAsk);
 }
 
 /* ── 2048 ── */
@@ -3880,7 +4345,7 @@ function renderTetris(r,g,spec){
             <button class="btn ghost" style="margin:0" data-act="leave">離開</button>
           </div>
         </div>`;
-      const lb=appEl.querySelectorAll('[data-act="leave"]'); lb.forEach(b=>b.onclick=leaveRoom);
+      const lb=appEl.querySelectorAll('[data-act="leave"]'); lb.forEach(b=>b.onclick=leaveWithAsk);
       tet.setSpec(r.state||{});                 // 必須先讓它進入觀戰模式
       tet.mount(appEl.querySelector('#tetCv'));
     }
@@ -3912,7 +4377,7 @@ function renderTetris(r,g,spec){
           </div>
         </div>
       </div>`;
-    const lb=appEl.querySelectorAll('[data-act="leave"]'); lb.forEach(b=>b.onclick=leaveRoom);
+    const lb=appEl.querySelectorAll('[data-act="leave"]'); lb.forEach(b=>b.onclick=leaveWithAsk);
     const kb=appEl.querySelector('.kbd');
     const bind=(sel,fn)=>{
       const el=appEl.querySelector(sel); if(!el) return;
@@ -4141,7 +4606,7 @@ function renderGame(r,g){
   else if(r.game==='breakout') renderBreakout(r,g,spec);
   else if(r.game==='flappy') renderFlappy(r,g,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
-  const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveRoom;
+  const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveWithAsk;
 }
 function renderEnded(r,g){
   renderEndedInner(r,g);
