@@ -4272,6 +4272,7 @@ async function finishGame(winner, winners){
   const names=playerNames(r);
   const winArr=(winners&&winners.length)?winners:null;
   for(const u of names){
+    if(isAiUser(r,u)) continue;        // AI 不記戰績，否則會在 users 建出沒有名字的節點（後台顯示成 ?）
     const didWin=winArr?winArr.includes(u):(winner===u);
     const isDraw=!winArr&&winner==='draw';
     try{
@@ -5073,6 +5074,7 @@ async function ucFinish(teamWin, r){
   await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true, 'state/teamWin': teamWin });
   const under = st.undercover || [];
   for (const u of playerNames(r)) {
+    if(isAiUser(r,u)) continue;
     const won = (teamWin === 'uc') === under.includes(u);
     try {
       await runTransaction(ref(db, 'users/' + u + '/gameStats/undercover'), c => {
@@ -5415,6 +5417,7 @@ async function picFinish(r){
   if (!res.committed) return;
   await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true });
   for (const u of playerNames(r)) {
+    if(isAiUser(r,u)) continue;
     try {
       await runTransaction(ref(db, 'users/' + u + '/gameStats/pictionary'), c => {
         c = c || {}; const w = Number(c.win) || 0, l = Number(c.lose) || 0, p = Number(c.play) || 0;
@@ -6838,6 +6841,7 @@ async function wwFinish(team, r){
   await update(ref(db, 'games/' + curRoomId), { status: 'ended', 'state/phase': 'end', 'state/revealed': true, 'state/teamWin': team });
   const st = wwState(r), rl = st.roles || {};
   for (const u of playerNames(r)) {
+    if(isAiUser(r,u)) continue;
     const isWolf = rl[u] === 'wolf';
     const won = (team === 'wolf') === isWolf;
     try {
