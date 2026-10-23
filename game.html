@@ -54,6 +54,23 @@ body{background:var(--bg);color:var(--text-main);font-family:-apple-system,Blink
 .pbadge{font-size:11px;color:var(--text-sub);border:1px solid var(--border-strong);border-radius:var(--r-1);padding:2px 7px}
 .countdown{text-align:center;font-size:44px;font-weight:800;color:var(--gold);margin:16px 0 4px;font-variant-numeric:tabular-nums}
 .hint{text-align:center;font-size:13px;color:var(--text-sub);margin-bottom:10px}
+/* v1.38.21：遊戲卡片懸停微傾 + 按下沉 + 骨架屏 */
+.gcard{transition:transform .16s cubic-bezier(.34,1.42,.64,1),box-shadow .16s;
+  transform:perspective(620px) rotateX(calc(var(--py,0) * 1deg)) rotateY(calc(var(--px,0) * 1deg))}
+.gcard:active{transform:perspective(620px) rotateX(5deg) scale(.972)}
+/* v1.38.21：遊戲清單橫向吸附輪播 */
+.gsnap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;
+  padding:4px 14px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.gsnap::-webkit-scrollbar{display:none}
+.gsnap .gcard{flex:0 0 47%;min-width:148px;scroll-snap-align:center}
+.skeleton{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.11) 37%,rgba(255,255,255,.05) 63%);
+  background-size:400% 100%;animation:shimmer 1.3s ease infinite;border-radius:10px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.sk-row{display:flex;align-items:center;gap:11px;padding:11px 12px}
+.sk-av{width:36px;height:36px;border-radius:50%}
+.sk-lines{flex:1;display:flex;flex-direction:column;gap:7px}
+.sk-l1{height:11px;width:52%}
+.sk-l2{height:9px;width:78%}
 .board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
 .zoom-box{width:100%;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center}
 canvas{background:#0f1320;border-radius:var(--r-2);border:1px solid var(--border);touch-action:none;-webkit-user-select:none;user-select:none}
@@ -482,6 +499,14 @@ body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-
 .minesgrid .ms.flag{color:var(--gold);border-color:var(--gold)}
 .minesgrid .ms.boom{background:var(--red);color:#fff}
 .solo-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(6,8,14,.74);border-radius:14px;z-index:5}
+@keyframes skBob{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(6px);opacity:1}}
+/* 按鈕完成打勾 */
+.is-done{position:relative;color:transparent!important;overflow:hidden}
+.is-done::after{content:'';position:absolute;left:50%;top:50%;width:13px;height:7px;
+  border-left:2.4px solid var(--text-main);border-bottom:2.4px solid var(--text-main);
+  transform:translate(-50%,-62%) rotate(-45deg) scale(0);border-radius:1px;
+  animation:okMark .34s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes okMark{to{transform:translate(-50%,-62%) rotate(-45deg) scale(1)}}
 </style>
 </head>
 <body data-page-node-id="o2XBarVikIbNEfUtNXqDJz">
@@ -975,7 +1000,7 @@ function renderLobby(){
     <div class="catbar">${tabs}</div>
     <div class="catdesc">${escapeHtml(cat.d)}</div>
     <div class="wrap" style="padding-top:0">
-      <div class="grid">${cards}</div>
+      <div class="grid gsnap">${cards}</div>
     </div>`;
   appEl.querySelectorAll('.catbar button').forEach(b=>b.onclick=()=>{
     lobbyCat=b.dataset.cat;
@@ -1416,7 +1441,11 @@ function renderRoom(){
       appEl.querySelectorAll('[data-act="leave"]').forEach(b=>b.onclick=leaveRoom);
       return;
     }
-    appEl.innerHTML='<div class="empty">載入中…</div>';
+    appEl.innerHTML='<div class="wrap" style="padding-top:14px">'
+      +'<div class="sk-row"><div class="skeleton sk-av"></div><div class="sk-lines"><div class="skeleton sk-l1"></div><div class="skeleton sk-l2"></div></div></div>'
+      +'<div class="sk-row"><div class="skeleton sk-av"></div><div class="sk-lines"><div class="skeleton sk-l1"></div><div class="skeleton sk-l2"></div></div></div>'
+      +'<div class="sk-row"><div class="skeleton sk-av"></div><div class="sk-lines"><div class="skeleton sk-l1"></div><div class="skeleton sk-l2"></div></div></div>'
+      +'</div>';
     setTimeout(()=>{ if(view==='room'&&!curRoom){ try{ render(); }catch(e){} } }, 1500);
     return;
   }
@@ -1456,7 +1485,11 @@ function renderRoom(){
       ? `<div class="pbadge ai">AI${isHost?`<button class="pdel" data-delai="${escAttr(u)}">×</button>`:''}</div>`
       : `<div class="pbadge">${i+1} 號</div>`;
     return `<div class="pitem"><div class="pav" style="${pavStyle(safeColor(p.color,'#3b82f6'))}">${avatarHTML({displayName:p.name,avatar:p.avatar})}</div><div class="pname">${escapeHtml(p.name||u)}${u===me.username?'（你）':''}</div>${badge}</div>`;
-  }).join('')||'<div class="empty">還沒有人加入</div>';
+  }).join('')||`<div class="empty" style="line-height:1.9">
+        還沒有人加入<br>
+        <span style="font-size:12.5px;color:var(--text-sub)">房主可以按下面的「＋ 加入 AI 玩家」補位</span>
+        <div style="font-size:30px;line-height:1;margin-top:6px;animation:skBob 1.4s ease-in-out infinite">↓</div>
+      </div>`;
   const slist=specs.length?`<div class="hint" style="text-align:left;margin-top:12px">觀戰（${specs.length}）</div>`+specs.map(([u,p])=>`<div class="pitem"><div class="pav" style="${pavStyle('#475569')}">${avatarHTML(p)}</div><div class="pname">${escapeHtml(p.name||u)}</div><div class="pbadge">觀戰</div></div>`).join(''):'';
   appEl.innerHTML=`
     <div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)} · 房間</h1></div>
@@ -3935,6 +3968,8 @@ async function addAiPlayer(){
        AI 加入不會經過 ensureMembership，所以這裡要自己補一次 */
     setTimeout(function(){ try{ maybeStartCountdown(); }catch(e){} }, 600);
     showNotice('已加入 AI · '+nm);
+    const ab=document.querySelector('[data-act="addAi"]');
+    if(ab){ ab.classList.add('is-done'); setTimeout(function(){ ab.classList.remove('is-done'); },700); }
   }catch(e){ showNotice('加入失敗'); }
 }
 async function removeAiPlayer(u){
@@ -8188,6 +8223,16 @@ function chRefresh(){
   }
   chRenderInfo();
 }
+/* v1.38.21：卡片懸停時往指標方向微傾 */
+document.addEventListener('pointermove',function(e){
+  try{
+    var c=e.target&&e.target.closest&&e.target.closest('.gcard');
+    if(!c) return;
+    var r=c.getBoundingClientRect(); if(!r.width||!r.height) return;
+    c.style.setProperty('--px',(((e.clientX-r.left)/r.width-.5)*8).toFixed(2));
+    c.style.setProperty('--py',(((e.clientY-r.top)/r.height-.5)*-8).toFixed(2));
+  }catch(_){}
+},{passive:true});
 function mountCheat(){
   if(!isSecretUser()) return;
   if(document.getElementById('chDot')){ chRefresh(); return; }
