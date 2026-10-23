@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-VJyBeEWGB1jfTCNdELZPcEUO0VKpDJ9cwC2+mmv+8zE=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-shglgOcbZwLvltbuLTuvins5/QQfXJ+Bc+ps5kwSZcU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1045,6 +1045,30 @@ body.theme-light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,.05) 25%,
 @keyframes badgeIn{0%{opacity:0;transform:scale(.6) translateY(18px)}100%{opacity:1;transform:none}}
 @keyframes badgePulse{0%{box-shadow:0 0 0 0 rgba(226,176,74,.55)}100%{box-shadow:0 0 0 22px rgba(226,176,74,0)}}
 @keyframes badgeFade{0%{opacity:0}12%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* ═══ v1.38.22 動效加強 ═══ */
+/* 1. 點擊波紋 */
+.ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:0;
+  background:radial-gradient(circle,rgba(255,255,255,.45),rgba(255,255,255,0) 70%);
+  transform:scale(0);animation:rip .58s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes rip{0%{transform:scale(0);opacity:.85}100%{transform:scale(1);opacity:0}}
+.btn-primary,.btn-ghost,.btn-ok,.btn-danger,.btn-warn,.nav-item,.pi{position:relative;overflow:hidden}
+/* 2. 積分數字彈跳 */
+@keyframes ptsBump{0%{transform:scale(1)}42%{transform:scale(1.24);color:#f5c451}100%{transform:scale(1)}}
+#scoreTop.bump span,#scoreBottom.bump span,.bump{animation:ptsBump .44s cubic-bezier(.34,1.56,.64,1)}
+/* 3. 新訊息滑入 */
+@keyframes msgIn{0%{opacity:0;transform:translateY(14px) scale(.97)}100%{opacity:1;transform:none}}
+.msg-anim{animation:msgIn .3s cubic-bezier(.34,1.42,.64,1)}
+/* 4. 頭像載入漸顯 */
+@keyframes avIn{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:none}}
+.av-anim{animation:avIn .28s cubic-bezier(.34,1.42,.64,1)}
+/* 5. 底部導航選中放大 */
+.nav-item{transition:transform .18s cubic-bezier(.34,1.42,.64,1),color .18s}
+.nav-item:active{transform:translateY(-3px) scale(1.06)}
+.nav-item.on{transform:translateY(-2px)}
+/* 6. 小程式入口圖標浮起 */
+.pi .pic{transition:transform .2s cubic-bezier(.34,1.42,.64,1)}
+.pi:active .pic{transform:translateY(-4px) scale(1.08)}
 </style>
 </head>
 <body>
@@ -1219,7 +1243,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, lim
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.21';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.22';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -1782,6 +1806,25 @@ function startOnboardingIfNeeded(){
   obIdx=0;
   setTimeout(function(){ obShow(0); },900);
   window.addEventListener('resize',function(){ if(obHole&&obTip) obShow(obIdx); });
+}
+
+
+/* ═══ v1.38.22 點擊波紋 ═══ */
+if(!window.__rippleReady){
+  window.__rippleReady=true;
+  document.addEventListener('pointerdown',function(e){
+    try{
+      var b=e.target&&e.target.closest&&e.target.closest('.btn-primary,.btn-ghost,.btn-ok,.btn-danger,.btn-warn,.nav-item,.pi');
+      if(!b) return;
+      var r=b.getBoundingClientRect();
+      var d=Math.max(r.width,r.height)*1.25;
+      var sp=document.createElement('span');
+      sp.className='ripple';
+      sp.style.cssText='width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left-d/2)+'px;top:'+(e.clientY-r.top-d/2)+'px';
+      b.appendChild(sp);
+      setTimeout(function(){ try{ sp.remove(); }catch(_){} },600);
+    }catch(_){}
+  },{passive:true});
 }
 
 async function handleLogin(uArg,pArg){
@@ -4376,7 +4419,10 @@ function paintPoints(v){
       el.innerHTML='<svg class="ico"><use href="#i-score"/></svg><span></span>';
       sp=el.querySelector('span');
     }
-    if(sp&&sp.textContent!==s)sp.textContent=s;
+    if(sp&&sp.textContent!==s){
+      sp.textContent=s;
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    }
     el.classList.toggle('neg',neg);
   });
   document.querySelectorAll('[data-pts-self="1"]').forEach(function(el){
@@ -6873,6 +6919,14 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.38.22',date:'2026-10-23',changes:[
+'修復遊戲列表橫向排列後看不到第 3 張：加了左右箭頭按鈕，電腦上直接點就可以翻，也會出現滾動條',
+'動效加強：按任何按鈕／導航／小程式入口都會有擴散波紋',
+'積分數字變動時會放大彈一下（金色）',
+'底部導航按下去會向上浮起放大',
+'小程式入口按下去時圖標會向上浮',
+'遊戲卡片傾斜角度由 8 度加到 13 度，並加了懸停陰影和邊框高亮',
+]},
 {ver:'v1.38.21',date:'2026-10-23',changes:[
 '新增新手引導：第一次登入會用聚光燈逐個指出「聊天框」「＋」「小程式」「個人主頁」，四步走完或隨時跳過',
 '彈窗、面板、底部工具列全部加上回彈動效（先過衝再回彈，唔再硬切）',
