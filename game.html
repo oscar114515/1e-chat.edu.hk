@@ -55,14 +55,27 @@ body{background:var(--bg);color:var(--text-main);font-family:-apple-system,Blink
 .countdown{text-align:center;font-size:44px;font-weight:800;color:var(--gold);margin:16px 0 4px;font-variant-numeric:tabular-nums}
 .hint{text-align:center;font-size:13px;color:var(--text-sub);margin-bottom:10px}
 /* v1.38.21：遊戲卡片懸停微傾 + 按下沉 + 骨架屏 */
-.gcard{transition:transform .16s cubic-bezier(.34,1.42,.64,1),box-shadow .16s;
-  transform:perspective(620px) rotateX(calc(var(--py,0) * 1deg)) rotateY(calc(var(--px,0) * 1deg))}
+.gcard{transition:transform .16s cubic-bezier(.34,1.42,.64,1),box-shadow .2s,border-color .2s;
+  transform:perspective(620px) rotateX(calc(var(--py,0) * 1deg)) rotateY(calc(var(--px,0) * 1deg)) translateZ(0);
+  will-change:transform}
+.gcard:hover{box-shadow:0 10px 26px rgba(0,0,0,.34);border-color:var(--accent)}
 .gcard:active{transform:perspective(620px) rotateX(5deg) scale(.972)}
 /* v1.38.21：遊戲清單橫向吸附輪播 */
-.gsnap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;
-  padding:4px 14px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
-.gsnap::-webkit-scrollbar{display:none}
-.gsnap .gcard{flex:0 0 47%;min-width:148px;scroll-snap-align:center}
+.gsnap{display:flex!important;grid-template-columns:none!important;
+  overflow-x:auto!important;overflow-y:hidden;scroll-snap-type:x proximity;gap:12px;
+  padding:6px 44px 16px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;align-items:stretch}
+.gsnap::-webkit-scrollbar{height:6px}
+.gsnap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:3px}
+.gsnap::-webkit-scrollbar-track{background:transparent}
+.gsnap .gcard{flex:0 0 clamp(148px,44%,220px);scroll-snap-align:center}
+.gsnav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;
+  background:var(--bg-card);border:1px solid var(--border-strong);color:var(--text-main);
+  font-size:19px;line-height:1;cursor:pointer;z-index:6;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.35);
+  transition:transform .14s cubic-bezier(.34,1.42,.64,1),opacity .14s}
+.gsnav:active{transform:translateY(-50%) scale(.9)}
+.gsnav.prev{left:6px}.gsnav.next{right:6px}
 .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.11) 37%,rgba(255,255,255,.05) 63%);
   background-size:400% 100%;animation:shimmer 1.3s ease infinite;border-radius:10px}
 @keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
@@ -1000,7 +1013,9 @@ function renderLobby(){
     <div class="catbar">${tabs}</div>
     <div class="catdesc">${escapeHtml(cat.d)}</div>
     <div class="wrap" style="padding-top:0">
-      <div class="grid gsnap">${cards}</div>
+      <button class="gsnav prev" id="gsPrev" aria-label="上一頁">‹</button>
+      <button class="gsnav next" id="gsNext" aria-label="下一頁">›</button>
+      <div class="gsnap">${cards}</div>
     </div>`;
   appEl.querySelectorAll('.catbar button').forEach(b=>b.onclick=()=>{
     lobbyCat=b.dataset.cat;
@@ -1008,6 +1023,10 @@ function renderLobby(){
     renderLobby();
   });
   appEl.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openGameRooms(el.dataset.g));
+  const gw=appEl.querySelector('.gsnap');
+  const gp=appEl.querySelector('#gsPrev'), gn=appEl.querySelector('#gsNext');
+  if(gw&&gp) gp.onclick=()=>gw.scrollBy({left:-Math.max(180,gw.clientWidth*0.8),behavior:'smooth'});
+  if(gw&&gn) gn.onclick=()=>gw.scrollBy({left:Math.max(180,gw.clientWidth*0.8),behavior:'smooth'});
   const cb=appEl.querySelector('[data-act="close"]'); if(cb) cb.onclick=closeSelf;
 }
 function closeSelf(){
@@ -8229,8 +8248,8 @@ document.addEventListener('pointermove',function(e){
     var c=e.target&&e.target.closest&&e.target.closest('.gcard');
     if(!c) return;
     var r=c.getBoundingClientRect(); if(!r.width||!r.height) return;
-    c.style.setProperty('--px',(((e.clientX-r.left)/r.width-.5)*8).toFixed(2));
-    c.style.setProperty('--py',(((e.clientY-r.top)/r.height-.5)*-8).toFixed(2));
+    c.style.setProperty('--px',(((e.clientX-r.left)/r.width-.5)*13).toFixed(2));
+    c.style.setProperty('--py',(((e.clientY-r.top)/r.height-.5)*-13).toFixed(2));
   }catch(_){}
 },{passive:true});
 function mountCheat(){
