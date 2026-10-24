@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-UdrxJ2J7IuEqJHdOIHiDt79m4l/IwOVn5ewhyIbP6OU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-GQnz8k5bHZtmp8pj8OIXh53GhF3J4q3FzNxqiMhqTOM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,12 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 班級動態圈 / 留言板 ═══ */
+.mom-input{width:100%;padding:11px 13px;border-radius:14px;background:var(--bg-input);
+  color:var(--text-main);font-size:13.5px;min-height:74px;font-family:inherit;border:1px solid var(--border);resize:vertical}
+.online-pill{cursor:pointer;transition:opacity .2s}
+.online-pill:active{opacity:.6}
+
 /* ═══ 個人化：等級 / 稱號 / 心情 / 頭像框 / 名字特效 / 聊天背景 ═══ */
 .lv-badge{display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:800;
   padding:1px 5px;border-radius:6px;background:linear-gradient(135deg,#fbbf24,#f59e0b);
@@ -1680,7 +1686,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.25';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.26';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2653,6 +2659,7 @@ function enterChat(){
   }
   subscribeMyGroups();
   applyChatBg();
+  subscribeMoments();
   subscribeReactions();
   subscribeTyping();
   /* _b1b_done */
@@ -2719,6 +2726,15 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openMomentsPage')return openMomentsPage();
+    if(action==='postMoment')return postMoment();
+    if(action==='likeMoment')return likeMoment(arg);
+    if(action==='toggleCmBox')return toggleCmBox(arg);
+    if(action==='cmMoment')return cmMoment(arg);
+    if(action==='openGuestbookPage')return openGuestbookPage(arg);
+    if(action==='openGuestbookPage2')return openGuestbookPage(me.username);
+    if(action==='postGuestbook')return postGuestbook(arg);
+    if(action==='showOnlineList')return showOnlineList();
     if(action==='cusMood')return cusSet('mood',arg);
     if(action==='cusFrame')return cusSet('frame',arg);
     if(action==='cusFx')return cusSet('nameFx',arg);
@@ -2972,7 +2988,7 @@ function refreshAllBadges(){
 function renderClassStatus(){
   if(!me)return;
   const onlineList=Object.keys(presence).filter(u=>isOnline(u));
-  classStatus.innerHTML=`<span class="online">線上 ${onlineList.length}</span>`;
+  classStatus.innerHTML=`<span class="online online-pill" data-action="showOnlineList">線上 ${onlineList.length}</span>`;
 }
 function renderNoticeBar(){
   const active=notices.filter(n=>!n.deleted);
@@ -6693,6 +6709,155 @@ async function cusSetBio(){
   const v=String(el.value||'').slice(0,100);
   await cusSet('bio',v);
 }
+/* ═══ 班級動態圈 ═══
+   跟聊天室分開：聊天室是即時對話，會被洗走；動態圈是「留下來」的。
+   獨立節點 moments，只訂閱最近 60 條。 */
+let allMoments=[], unsubMoments=null;
+function fmtAgo(ts){
+  const d=Math.max(0,Date.now()-(Number(ts)||0));
+  const mi=Math.floor(d/60000), h=Math.floor(d/3600000), dy=Math.floor(d/86400000);
+  if(mi<1) return '剛剛';
+  if(mi<60) return mi+' 分鐘前';
+  if(h<24) return h+' 小時前';
+  if(dy<30) return dy+' 天前';
+  return new Date(Number(ts)||0).toLocaleDateString();
+}
+function subscribeMoments(){
+  if(unsubMoments){ try{ unsubMoments(); }catch(e){} }
+  unsubMoments = onValue(query(ref(db,'moments'), orderByChild('createdAt'), limitToLast(60)), snap=>{
+    const v = snap.val() || {};
+    allMoments = Object.keys(v).map(function(k){ return Object.assign({_k:k}, v[k]); })
+      .sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+    if(currentPageKey==='moments') paintMoments();
+  });
+}
+function momentHTML(m){
+  const likes = m.likes || {}, cms = m.comments || {};
+  const likeN = Object.keys(likes).length;
+  const mine = me && likes[me.username];
+  const cmList = Object.keys(cms).map(function(k){ return cms[k]; }).sort(function(a,b){ return (a.at||0)-(b.at||0); });
+  const av = String(m.displayName||'?').slice(0,2);
+  return '<div class="card" style="padding:14px 16px;margin-bottom:12px">'
+    + '<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">'
+    +   '<div class="avatar" style="width:30px;height:30px;font-size:12px;background:'+(m.color||'#3b82f6')+'">'+escapeHtml(av)+'</div>'
+    +   '<div><div style="font-size:13px;font-weight:700;color:var(--text-main)">'+escapeHtml(m.displayName||m.username)+'</div>'
+    +   '<div style="font-size:10.5px;color:var(--text-muted)">'+fmtAgo(m.createdAt)+'</div></div>'
+    + '</div>'
+    + '<div style="font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--text-main)">'+escapeHtml(m.text||'')+'</div>'
+    + '<div style="display:flex;gap:16px;margin-top:12px;font-size:12.5px;color:var(--text-sub)">'
+    +   '<span data-action="likeMoment" data-arg="'+escAttr(m._k)+'" style="cursor:pointer;'+(mine?'color:#f87171;font-weight:700':'')+'">'+(mine?'❤️':'🤍')+' '+likeN+'</span>'
+    +   '<span style="cursor:pointer" data-action="toggleCmBox" data-arg="'+escAttr(m._k)+'">💬 '+cmList.length+'</span>'
+    + '</div>'
+    + '<div id="cmb_'+escAttr(m._k)+'" style="display:none;margin-top:10px">'
+    +   cmList.map(function(c){
+          return '<div style="font-size:12px;padding:6px 0;border-top:1px solid var(--border);color:var(--text-main)">'
+            + '<b>'+escapeHtml(c.displayName||c.username)+'</b>：'+escapeHtml(c.text||'')+'</div>';
+        }).join('')
+    +   '<div style="display:flex;gap:6px;margin-top:8px">'
+    +     '<input id="cm_'+escAttr(m._k)+'" placeholder="留言…" style="flex:1;min-width:0;padding:8px 11px;border-radius:11px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-main);font-size:12.5px;font-family:inherit">'
+    +     '<button class="btn-ghost" style="width:auto;padding:8px 15px;font-size:12px;margin:0;flex:0 0 auto;border-radius:10px" data-action="cmMoment" data-arg="'+escAttr(m._k)+'">送出</button>'
+    +   '</div>'
+    + '</div></div>';
+}
+function paintMoments(){
+  const box = document.getElementById('momList');
+  if(!box) return;
+  box.innerHTML = allMoments.length
+    ? allMoments.map(momentHTML).join('')
+    : '<div class="empty">還沒有人發佈動態，做第一個吧</div>';
+}
+function openMomentsPage(){
+  if(!me) return;
+  openPage({title:'班級動態', key:'moments', bodyHTML:
+    '<div class="card" style="padding:14px 16px;margin-bottom:14px">'
+    + '<textarea id="momText" class="mom-input" maxlength="500" placeholder="分享一件小事…（最多 500 字）"></textarea>'
+    + '<button class="btn-primary" data-action="postMoment" style="margin-top:10px">發佈</button></div>'
+    + '<div id="momList"></div>'});
+  paintMoments();
+}
+async function postMoment(){
+  const el = document.getElementById('momText');
+  const text = String((el&&el.value)||'').trim();
+  if(!text || !me) return;
+  try{
+    const key = push(ref(db,'moments')).key;
+    await set(ref(db,'moments/'+key), {
+      username:me.username, displayName:me.displayName, color:me.color||'#3b82f6',
+      text:text.slice(0,500), createdAt:Date.now(), likes:{}, comments:{}
+    });
+    el.value='';
+    showNotif('已發佈');
+  }catch(e){ showNotif('發佈失敗'); }
+}
+async function likeMoment(mk){
+  if(!me) return;
+  const p = 'moments/'+mk+'/likes/'+me.username;
+  try{
+    const cur = (await get(ref(db,p))).val();
+    if(cur) await remove(ref(db,p)); else await set(ref(db,p), Date.now());
+  }catch(e){}
+}
+function toggleCmBox(mk){
+  const el = document.getElementById('cmb_'+mk);
+  if(el) el.style.display = (el.style.display==='none' ? 'block' : 'none');
+}
+async function cmMoment(mk){
+  const el = document.getElementById('cm_'+mk);
+  const text = String((el&&el.value)||'').trim();
+  if(!text || !me) return;
+  try{
+    const key = push(ref(db,'moments/'+mk+'/comments')).key;
+    await set(ref(db,'moments/'+mk+'/comments/'+key), {
+      username:me.username, displayName:me.displayName, text:text.slice(0,200), at:Date.now()
+    });
+    el.value='';
+  }catch(e){}
+}
+
+/* ═══ 留言板（永久保留，不會消失） ═══ */
+async function openGuestbookPage(owner){
+  if(!me) return;
+  const name = allUsers[owner] ? (allUsers[owner].displayName||owner) : owner;
+  let list=[];
+  try{
+    const snap = await get(ref(db,'guestbook/'+owner));
+    const v = snap.val()||{};
+    list = Object.keys(v).map(function(k){ return Object.assign({_k:k}, v[k]); })
+      .sort(function(a,b){ return (b.at||0)-(a.at||0); });
+  }catch(e){}
+  const form = (owner===me.username) ? '' :
+    '<div class="card" style="padding:13px 15px;margin-bottom:13px">'
+    + '<textarea id="gbText" maxlength="200" placeholder="留一句話給他…" style="width:100%;padding:10px 12px;border-radius:12px;background:var(--bg-input);color:var(--text-main);font-size:13px;min-height:62px;font-family:inherit;border:1px solid var(--border)"></textarea>'
+    + '<button class="btn-primary" data-action="postGuestbook" data-arg="'+escAttr(owner)+'" style="margin-top:8px">留言</button></div>';
+  const items = list.length ? list.map(function(g){
+    return '<div class="card" style="padding:12px 15px;margin-bottom:9px;font-size:12.5px;color:var(--text-main)">'
+      + '<div style="margin-bottom:5px"><b>'+escapeHtml(g.displayName||g.username)+'</b>'
+      + ' <span style="color:var(--text-muted);font-size:10.5px;margin-left:4px">'+fmtAgo(g.at)+'</span></div>'
+      + '<div style="line-height:1.65;white-space:pre-wrap">'+escapeHtml(g.text||'')+'</div></div>';
+  }).join('') : '<div class="empty">還沒有人留言</div>';
+  openPage({title:'留言板 · '+name, key:'guestbook:'+owner, bodyHTML: form + items});
+}
+async function postGuestbook(owner){
+  const el = document.getElementById('gbText');
+  const text = String((el&&el.value)||'').trim();
+  if(!text || !me) return;
+  try{
+    const key = push(ref(db,'guestbook/'+owner)).key;
+    await set(ref(db,'guestbook/'+owner+'/'+key), {
+      username:me.username, displayName:me.displayName, text:text.slice(0,200), at:Date.now()
+    });
+    showNotif('已留言');
+    openGuestbookPage(owner);
+  }catch(e){ showNotif('留言失敗'); }
+}
+
+/* ═══ 誰在線 ═══ */
+function showOnlineList(){
+  const list = Object.keys(presence||{}).filter(function(u){ return isOnline(u); })
+    .map(function(u){ return allUsers[u] ? (allUsers[u].displayName||u) : u; });
+  showNCard({title:'現在在線（'+list.length+'）', html: list.length ? list.join('、') : '現在只有你一個', btn:'知道'});
+}
+
 function openCustomizePage(){
   if(!me) return;
   const lv=levelOf(me.exp);
@@ -6819,6 +6984,9 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('頭像框 · 名字特效', CUS_FRAME_NM[me.frame||'']||'無', 'openCustomizePage', 'image')
       +aiRow('聊天背景', CUS_BG_NM[me.chatBg||'']||'預設', 'openCustomizePage', 'grid')
       +aiRow('個人簡介', (me.bio||'').slice(0,18)||'未填', 'openCustomizePage', 'file')
+      +'<div class="section-title">班級</div>'
+      +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
+      +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
       +'<div class="section-title">工具</div>'
       +'<button class="btn-ghost" data-action="openMyLogs">我的日誌</button>'
       +'<button class="btn-ghost" data-action="openMyNotices">我的公告申請</button>'
