@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-hsDhNdj0kS0juI7q/uTlDpQ9OUZNyxYY+gEojjiew7E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-jEHZYv2cB4i4YWNM7XalT+cdpu45CovRgsCpiO86fbk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -2550,6 +2550,15 @@ document.addEventListener('click',async(e)=>{
     if(action==='openTools')return openToolsPage();
     if(action==='openPoints')return openPointsPage();
     if(action==='doCheckin')return doCheckin();
+    if(action==='openProfileEdit')return openProfileEdit();
+    if(action==='openChangePassword')return openChangePassword();
+    if(action==='openFeedbackPage')return openFeedbackPage();
+    if(action==='openFontPage')return openFontPage();
+    if(action==='applyFontChoice'){
+      var fsel=document.getElementById('fontSelect');
+      if(fsel){ setFontPref(fsel.value); showNotif(fsel.value==='sys'?'已切換為系統字體':'已切換為楷體'); if(fsel.value==='kai'){ try{localStorage.removeItem(FONT_FAIL_KEY);}catch(e){} _fontTried=false; ensureFontLoaded(); } }
+      return;
+    }
     if(action==='redeemCode')return await redeemCode();
     if(action==='buyShopItem')return await buyShopItem(arg);
     if(action==='adminCreateRedeem')return await adminCreateRedeem();
@@ -6282,6 +6291,54 @@ async function maybeShowCheckin(){
 }
 try{ window.showCheckinModal=showCheckinModal; window.maybeShowCheckin=maybeShowCheckin; }catch(e){}
 
+/* ═══ 個人主頁的設定子頁 ═══
+   之前「改密碼 / 頭像 / 反饋」全部鋪在主頁上，一屏塞滿輸入框，用戶會當機。
+   現在主頁只有入口，點進去才看到表單。 */
+function profileSubPage(title, key, html){
+  openPage({title:title, key:key, bodyHTML:html});
+}
+function openProfileEdit(){
+  if(!me) return;
+  var ES=['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'];
+  profileSubPage('頭像與名稱','profileEdit',
+    '<div class="section-title">顯示名稱</div>'
+    +'<div class="form-row"><input type="text" id="editDisplayName" value="'+escapeHtml(me.displayName||'')+'" maxlength="20"></div>'
+    +'<button class="btn-primary" data-action="saveDisplayName">儲存名稱</button>'
+    +'<div class="section-title">頭像</div>'
+    +'<div class="avatar-options">'+ES.map(function(e){return '<div class="av-opt" data-action="pickEmoji" data-arg="'+e+'">'+e+'</div>';}).join('')+'<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div>'
+    +'<input type="file" id="avatarFile" accept="image/*">'
+    +'<label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label>'
+  );
+}
+function openChangePassword(){
+  if(!me) return;
+  profileSubPage('修改密碼','changePwd',
+    '<div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div>'
+    +'<div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div>'
+    +'<div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div>'
+    +'<button class="btn-primary" data-action="savePassword">修改密碼</button>'
+  );
+}
+function openFeedbackPage(){
+  if(!me) return;
+  profileSubPage('問題反饋','feedback',
+    '<div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題…" style="width:100%;padding:11px 13px;border-radius:16px;background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:140px;font-family:inherit"></textarea></div>'
+    +'<button class="btn-primary" data-action="submitFeedback">送出反饋</button>'
+  );
+}
+/* 字體：之後會加更多字體，所以用下拉選單而不是「點一下切換」 */
+function openFontPage(){
+  var cur=(typeof fontPref==='function')?fontPref():'kai';
+  profileSubPage('字體','fontPage',
+    '<div class="section-title">介面字體</div>'
+    +'<div class="form-row"><select id="fontSelect">'
+    +  '<option value="kai"'+(cur==='kai'?' selected':'')+'>霞鶩文楷（手寫楷體）</option>'
+    +  '<option value="sys"'+(cur==='sys'?' selected':'')+'>系統字體</option>'
+    +'</select></div>'
+    +'<button class="btn-primary" data-action="applyFontChoice">套用</button>'
+  );
+}
+
 async function openProfilePage(username,isSelf,fromAdmin){
   /* v1.38.5：這裡第一句就要等網絡。如果等途中用家已經按了返回，
      await 回來之後仍然會把整頁重新寫進 pageRoot —— 看上去就是
@@ -6297,7 +6354,28 @@ async function openProfilePage(username,isSelf,fromAdmin){
   if(isSelf){
     const ck=await loadCheckin();
     if(!navAlive(seq))return;
-    const bodyHTML=checkinCardHTML(ck)+`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">字體</div><div class="about-item" data-action="toggleFont"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-file"/></svg></div><div><div class="ai-title">字體</div><div class="ai-sub" id="fontPrefSub">楷體</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
+    const aiRow=(t,sub,act,ico)=>'<div class="about-item" data-action="'+act+'"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-'+ico+'"/></svg></div><div><div class="ai-title">'+t+'</div>'+(sub?'<div class="ai-sub">'+sub+'</div>':'')+'</div></div><div class="ai-arrow">›</div></div>';
+    const fontName=(typeof fontPref==='function'&&fontPref()==='sys')?'系統字體':'霞鶩文楷';
+    const bodyHTML=checkinCardHTML(ck)
+      +'<div class="section-title">個人資料</div>'
+      +aiRow('頭像與顯示名稱', escapeHtml(me.displayName||''), 'openProfileEdit', 'user')
+      +'<div class="section-title">帳號與安全</div>'
+      +aiRow('修改密碼','', 'openChangePassword', 'settings')
+      +aiRow('問題反饋','', 'openFeedbackPage', 'msg')
+      +'<div class="section-title">偏好</div>'
+      +aiRow('字體', fontName, 'openFontPage', 'file')
+      +'<div class="section-title">工具</div>'
+      +'<button class="btn-ghost" data-action="openMyLogs">我的日誌</button>'
+      +'<button class="btn-ghost" data-action="openMyNotices">我的公告申請</button>'
+      +'<button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button>'
+      +'<button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button>'
+      +'<button class="btn-ghost" data-action="openLoginLink" data-arg="'+escAttr(username)+'">產生一次性登入連結</button>'
+      +'<div class="section-title">關於</div>'
+      +'<div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div>'
+      +aiRow('感謝清單', String(thanksList.length), 'openThanks', 'heart')
+      +aiRow('版本資訊', CURRENT_VERSION, 'openVersion', 'info')
+      +'<a class="about-item" data-action="linkCheck" data-arg="'+ANDROID_APK_URL+'" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>'
+      +(amAdmin?'<button class="btn-ghost" data-action="openUserDetail" data-arg="'+escAttr(username)+'">管理員資料頁（含密碼）</button>':'');
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else if(fromAdmin&&amAdmin){
     /* v1.37：管理員後台點進某人 → 跟一般個人主頁「同一個版面」，
