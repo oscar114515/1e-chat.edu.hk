@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Ji1WlCQg6UKdpNAJj7M19jJqyOHgxOxq5ez3xvsA0Y0=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tvJrdwDkNcwDdKzd0NFXZZVJ7SokvCfegkf1T8CuzrY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,28 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 每日任務 / 轉盤 / 抽卡 ═══ */
+.task-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.task-row:last-child{border-bottom:none}
+.task-dot{width:17px;height:17px;border-radius:50%;border:2px solid var(--border);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.task-dot.done{background:#22c55e;border-color:#22c55e}
+.spin-box{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 0 6px}
+.spin-wheel{width:132px;height:132px;border-radius:50%;position:relative;
+  background:conic-gradient(#f87171 0 45deg,#fbbf24 45deg 90deg,#4ade80 90deg 135deg,#38bdf8 135deg 180deg,
+  #a78bfa 180deg 225deg,#f472b6 225deg 270deg,#fb923c 270deg 315deg,#22d3ee 315deg 360deg);
+  box-shadow:inset 0 0 0 6px rgba(255,255,255,.85),0 8px 24px -8px rgba(0,0,0,.5);
+  transition:transform 2.6s cubic-bezier(.15,.85,.15,1)}
+.spin-needle{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:17px;z-index:2}
+.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 4px}
+.card-cell{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;font-size:9px;text-align:center;padding:4px;border:2px solid var(--border);background:var(--bg-input)}
+.card-cell.own{border-color:rgba(251,191,36,.6);background:rgba(251,191,36,.10)}
+.card-cell .cc-i{font-size:21px;line-height:1;filter:grayscale(1);opacity:.25}
+.card-cell.own .cc-i{filter:none;opacity:1}
+.card-cell.r-SR{border-color:rgba(168,85,247,.55)}
+.card-cell.r-SSR{border-color:rgba(251,191,36,.85);box-shadow:0 0 10px rgba(251,191,36,.35)}
+
 /* ═══ 成長中心：徽章 / 成就 / 排行榜 ═══ */
 .badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:8px 0 4px}
 .badge-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;
@@ -1711,7 +1733,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.1';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2751,6 +2773,13 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openTransferPage')return openTransferPage();
+    if(action==='doTransfer')return doTransfer();
+    if(action==='openDailyPage')return openDailyPage();
+    if(action==='claimDaily')return claimDaily();
+    if(action==='doSpin')return doSpin();
+    if(action==='doDraw')return doDraw();
+    if(action==='openCardsPage')return openCardsPage();
     if(action==='openGrowthPage')return openGrowthPage();
     if(action==='openRankPage')return openRankPage();
     if(action==='rankTab'){
@@ -3197,6 +3226,7 @@ async function sendMessage(){
     try{ cancelQuote(); }catch(e){}
     await writeLog('send','發送訊息：'+text.slice(0,50));
     addExp(1);
+    bumpDaily('msg');
     msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');hideMention();
     scrollToBottom();
     if(hasHtml&&!isAdmin){
@@ -6646,6 +6676,7 @@ async function doCheckin(){
     }
     try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
     addExp(20);
+    bumpDaily('ck');
     /* 額外一份：7 天禮物時加碼（開頭已經撒過一次，這裡補慶祝感） */
     if(bonus){ try{ setTimeout(function(){ confettiBurst(null,{count:90}); }, 420); }catch(e){} }
     try{ var cm=document.getElementById('ckModal'); if(cm){ var mk=document.getElementById('ckMask'); if(mk) mk.remove(); cm.remove(); } }catch(e){}
@@ -6772,6 +6803,210 @@ function badgeCount(exp,ck){
   const u={exp:exp,points:Number(me.points)||0};
   return BADGES.filter(function(b){ return b.need(u,ck||{}); }).length;
 }
+/* ═══ 積分加減 ═══
+   ⚠ chat.html 本身冇 givePoints / takePoints（嗰兩個係 game.html 嘅）。
+   之前 doSpin / doDraw / doTransfer 直接叫佢哋 → ReferenceError 被 try/catch 吞咗，
+   結果「按了完全冇反應，積分又冇變」。下面補一個自己嘅版本。
+   先試交易，失敗（例如值太接近 2^53）就 fallback 讀一次再寫一次。 */
+async function changePoints(u, delta, reason){
+  if(!u||!delta) return false;
+  const path='users/'+u+'/points';
+  try{
+    const res=await runTransaction(ref(db,path), function(cur){
+      if(cur===null||cur===undefined) return null;
+      return Math.max(0, (Number(cur)||0)+delta);
+    });
+    if(res && res.committed){
+      if(me && u===me.username) me.points=Math.max(0, Number(me.points||0)+delta);
+      try{ renderPoints(); }catch(e){}
+      return true;
+    }
+  }catch(e){}
+  try{
+    const cur=(await get(ref(db,path))).val();
+    const nv=Math.max(0,(Number(cur)||0)+delta);
+    await set(ref(db,path), nv);
+    if(me && u===me.username) me.points=nv;
+    try{ renderPoints(); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ═══ 積分轉賬（用戶明確要求：不設上限） ═══ */
+async function openTransferPage(){
+  if(!me) return;
+  const opts = Object.keys(allUsers)
+    .filter(function(u){ return u!==me.username && allUsers[u] && allUsers[u].role!=='ai'; })
+    .sort(function(a,b){ return (allUsers[a].seat||0)-(allUsers[b].seat||0); })
+    .map(function(u){ return '<option value="'+escAttr(u)+'">'+escapeHtml(allUsers[u].displayName||u)+'（'+(allUsers[u].cls||'')+String(allUsers[u].seat||'')+'）</option>'; })
+    .join('');
+  openPage({title:'積分轉賬', key:'transfer', bodyHTML:
+    '<div class="card" style="padding:13px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text-sub);line-height:1.7">'
+    + '目前有 <b style="color:var(--text-main);font-size:15px">'+(Number(me.points)||0)+'</b> 分。轉出去的積分不能收回，請確認對方帳號。'
+    + '</div>'
+    + '<div class="section-title">轉給誰</div><div class="form-row"><select id="tfTo">'+opts+'</select></div>'
+    + '<div class="section-title">金額</div><div class="form-row"><input id="tfAmt" type="number" min="1" placeholder="輸入多少分"></div>'
+    + '<button class="btn-primary" data-action="doTransfer">轉賬</button>'});
+}
+async function doTransfer(){
+  if(!me) return;
+  const sel=document.getElementById('tfTo'), inp=document.getElementById('tfAmt');
+  const to=sel?sel.value:'';
+  const amt=Math.floor(Number(inp?inp.value:0)||0);
+  if(!to){ showNotif('請選擇對象'); return; }
+  if(amt<=0){ showNotif('請輸入正確金額'); return; }
+  if(amt>Number(me.points||0)){ showNotif('積分不足（你有 '+(Number(me.points)||0)+' 分）'); return; }
+  const nm=allUsers[to]?(allUsers[to].displayName||to):to;
+  const ok=await askConfirm({title:'確認轉賬', html:'轉 <b>'+amt+'</b> 分給 <b>'+escapeHtml(nm)+'</b>？轉出後不能收回。', okText:'確定轉'});
+  if(!ok) return;
+  const paid=await changePoints(me.username, -amt, '轉賬');
+  if(!paid){ showNotif('轉賬失敗'); return; }
+  await changePoints(to, amt, '來自 '+(me.displayName||me.username)+' 的轉賬');
+  try{ writeLog('transfer','轉 '+amt+' 分給 '+to); }catch(e){}
+  showNotif('已轉 '+amt+' 分給 '+nm);
+  openTransferPage();
+}
+
+/* ═══ 每日任務 / 每日轉盤 / 抽卡 / 收藏冊 ═══ */
+function todayKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+const DAILY_TASKS=[
+  {k:'msg', n:'發送 3 則訊息', ico:'💬', max:3},
+  {k:'like',n:'給動態點 1 個讚', ico:'❤️', max:1},
+  {k:'ck',  n:'完成今日簽到', ico:'📅', max:1}
+];
+/* 埋點：發訊 / 點讚 / 簽到各呼叫一次。用 increment 避免併發覆蓋。 */
+async function bumpDaily(key){
+  if(!me||!key) return;
+  try{ await update(ref(db,'daily/'+me.username+'/'+todayKey()), { }); }catch(e){}
+  try{
+    const path='daily/'+me.username+'/'+todayKey()+'/'+key;
+    await runTransaction(ref(db,path), function(cur){
+      if(cur===null||cur===undefined) return 1;
+      return Math.min(99, (Number(cur)||0)+1);
+    });
+  }catch(e){}
+}
+async function getDaily(){
+  if(!me) return {};
+  try{ return (await get(ref(db,'daily/'+me.username+'/'+todayKey()))).val()||{}; }catch(e){ return {}; }
+}
+async function claimDaily(){
+  if(!me) return;
+  const d=await getDaily();
+  const all=DAILY_TASKS.every(function(t){ return (Number(d[t.k])||0)>=t.max; });
+  if(!all){ showNotif('還有任務沒完成'); return; }
+  if(d.claimed){ showNotif('今日已領過'); return; }
+  try{
+    await changePoints(me.username, 200, '每日任務');
+    await update(ref(db,'daily/'+me.username+'/'+todayKey()), {claimed:true});
+    showNotif('已領 +200 分');
+    openDailyPage();
+  }catch(e){ showNotif('領取失敗'); }
+}
+async function openDailyPage(){
+  if(!me) return;
+  const d=await getDaily();
+  const rows=DAILY_TASKS.map(function(t){
+    const cur=Math.min(t.max, Number(d[t.k])||0);
+    const done=cur>=t.max;
+    return '<div class="task-row"><div class="task-dot'+(done?' done':'')+'">'+(done?'✓':'')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:12.5px;color:var(--text-main)">'+t.ico+' '+escapeHtml(t.n)+'</div>'
+      + '<div style="font-size:10.5px;color:var(--text-muted);margin-top:2px">'+cur+' / '+t.max+'</div></div></div>';
+  }).join('');
+  const allDone=DAILY_TASKS.every(function(t){ return (Number(d[t.k])||0)>=t.max; });
+  const claimed=!!d.claimed;
+  /* 轉盤 */
+  let spinState={};
+  try{ spinState=(await get(ref(db,'spin/'+me.username))).val()||{}; }catch(e){}
+  const spunToday=(spinState.day===todayKey());
+  openPage({title:'每日', key:'daily', bodyHTML:
+    '<div class="section-title">每日任務（0 點重設）</div>'
+    + '<div class="card" style="padding:4px 16px 12px">'+rows
+    +   '<button class="btn-primary" data-action="claimDaily" style="margin-top:10px;'+(allDone&&!claimed?'':'opacity:.5')+'">'
+    +   (claimed?'今日已領取':'領取 +200 分')+'</button></div>'
+    + '<div class="section-title">每日轉盤</div>'
+    + '<div class="card" style="padding:12px 16px 16px"><div class="spin-box">'
+    +   '<div style="position:relative"><div class="spin-needle">▼</div><div class="spin-wheel" id="spinWheel"></div></div>'
+    +   '<div style="font-size:12px;color:var(--text-sub)" id="spinTip">'+(spunToday?('今日已轉：+'+Number(spinState.prize||0)+' 分'):'每天一次，最多 +500 分')+'</div>'
+    +   '<button class="btn-primary" data-action="doSpin" style="max-width:190px" '+(spunToday?'disabled style="opacity:.5;max-width:190px"':'')+'>'+(spunToday?'明天再來':'轉一次')+'</button>'
+    + '</div></div>'
+    + '<div class="section-title">抽卡</div>'
+    + '<div class="card" style="padding:14px 16px">'
+    +   '<div style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-bottom:10px">100 積分抽一張。普通 60%、稀有 30%、超稀有 8%、傳說 2%。重複會自動換成 50 分。</div>'
+    +   '<button class="btn-primary" data-action="doDraw" style="margin:0">抽一張（100 分）</button>'
+    + '</div>'
+  });
+}
+async function doSpin(){
+  if(!me) return;
+  let st={};
+  try{ st=(await get(ref(db,'spin/'+me.username))).val()||{}; }catch(e){}
+  if(st.day===todayKey()){ showNotif('今日已轉過'); return; }
+  const prizes=[10,10,20,20,50,50,100,500];
+  const prize=prizes[Math.floor(Math.random()*prizes.length)];
+  const wheel=document.getElementById('spinWheel');
+  const idx=prizes.indexOf(prize);
+  if(wheel){ wheel.style.transform='rotate('+(1440+idx*45)+'deg)'; }
+  try{
+    await changePoints(me.username, prize, '每日轉盤');
+    await set(ref(db,'spin/'+me.username), {day:todayKey(), prize:prize, at:Date.now()});
+    const tip=document.getElementById('spinTip');
+    if(tip) tip.textContent='今日已轉：+'+prize+' 分';
+  }catch(e){ showNotif('轉盤失敗'); }
+}
+
+const CARDS=[
+  {k:'c01',n:'熊貓', ico:'🐼',r:'C'},
+  {k:'c02',n:'狐狸', ico:'🦊',r:'C'},
+  {k:'c03',n:'小貓', ico:'🐱',r:'C'},
+  {k:'c04',n:'小狗', ico:'🐶',r:'C'},
+  {k:'c05',n:'兔兔', ico:'🐰',r:'R'},
+  {k:'c06',n:'老虎', ico:'🐯',r:'R'},
+  {k:'c07',n:'獅子', ico:'🦁',r:'R'},
+  {k:'c08',n:'青龍', ico:'🐲',r:'R'},
+  {k:'c09',n:'鳳凰', ico:'🦅',r:'SR'},
+  {k:'c10',n:'獨角獸', ico:'🦄',r:'SR'},
+  {k:'c11',n:'宇宙', ico:'🌌',r:'SSR'},
+  {k:'c12',n:'傳說', ico:'👑',r:'SSR'}
+];
+async function doDraw(){
+  if(!me) return;
+  try{
+    if(Number(me.points||0) < 100){ showNotif('積分不足（需要 100 分）'); return; }
+    const paid=await changePoints(me.username, -100, '抽卡');
+    if(!paid){ showNotif('扣分失敗'); return; }
+    const r=Math.random();
+    let tier = r<0.60?'C' : r<0.90?'R' : r<0.98?'SR':'SSR';
+    const pool=CARDS.filter(function(c){ return c.r===tier; });
+    const card=pool[Math.floor(Math.random()*pool.length)];
+    const have=(await get(ref(db,'cards/'+me.username+'/'+card.k))).val();
+    if(have){
+      await changePoints(me.username, 50, '抽到重複卡');
+      showNCard({title:'抽到重複卡', html:'<div style="text-align:center;font-size:34px;margin:10px 0">'+card.ico+'</div><div style="text-align:center;font-size:13px">'+escapeHtml(card.n)+'（'+card.r+'）已擁有<br>自動換成 <b>50 分</b></div>', btn:'知道'});
+    }else{
+      await set(ref(db,'cards/'+me.username+'/'+card.k), Date.now());
+      showNCard({title:'抽到新卡！', html:'<div style="text-align:center;font-size:44px;margin:10px 0">'+card.ico+'</div><div style="text-align:center;font-size:14px;font-weight:700">'+escapeHtml(card.n)+' · '+card.r+'</div>', btn:'太好了'});
+    }
+  }catch(e){ showNotif('抽卡失敗'); }
+}
+async function openCardsPage(){
+  if(!me) return;
+  let own={};
+  try{ own=(await get(ref(db,'cards/'+me.username))).val()||{}; }catch(e){}
+  const n=Object.keys(own).length;
+  const grid=CARDS.map(function(c){
+    const has=!!own[c.k];
+    return '<div class="card-cell r-'+c.r+(has?' own':'')+'"><div class="cc-i">'+c.ico+'</div><div>'+escapeHtml(c.n)+'</div></div>';
+  }).join('');
+  openPage({title:'收藏冊', key:'cards', bodyHTML:
+    '<div class="card" style="padding:13px 16px;margin-bottom:14px;text-align:center;font-size:13px;color:var(--text-sub)">'
+    + '已收集 <b style="color:var(--text-main);font-size:16px">'+n+'</b> / '+CARDS.length+' 張</div>'
+    + '<div class="card-grid">'+grid+'</div>'});
+}
+
 async function openGrowthPage(){
   if(!me) return;
   let ck={};
@@ -6939,7 +7174,7 @@ async function likeMoment(mk){
   const p = 'moments/'+mk+'/likes/'+me.username;
   try{
     const cur = (await get(ref(db,p))).val();
-    if(cur) await remove(ref(db,p)); else await set(ref(db,p), Date.now());
+    if(cur) await remove(ref(db,p)); else { await set(ref(db,p), Date.now()); bumpDaily('like'); }
   }catch(e){}
 }
 function toggleCmBox(mk){
@@ -7132,6 +7367,9 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +'<div class="section-title">成長</div>'
       +aiRow('成長中心', 'Lv.'+levelOf(me.exp)+'　·　徽章 / 成就 / 數據', 'openGrowthPage', 'score')
       +aiRow('排行榜', '積分 / 簽到 / 等級', 'openRankPage', 'poll')
+      +aiRow('每日任務 · 轉盤', '完成任務 +200 分', 'openDailyPage', 'check')
+      +aiRow('收藏冊', '抽卡收集', 'openCardsPage', 'heart')
+      +aiRow('積分轉賬', '轉分給同學', 'openTransferPage', 'score')
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
@@ -8897,12 +9135,6 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
-{ver:'v1.39.1',date:'2026-10-24',changes:[
-'成長中心：個人主頁 →「成長」→ 成長中心。一頁看到等級、經驗進度、我的數據（經驗／簽到天數／連續天數／積分）',
-'徽章牆：12 個徽章（初次發言、話匣子、話癆、常客、支柱、連續三天、一週簽到、簽到王、小富翁、LV.5、LV.10、LV.20），達成就會亮起來',
-'成就：8 個帶進度條的成就，未完成的會顯示灰色和進度（例：累計 200 點經驗 · 47/200）',
-'排行榜：積分榜／簽到榜／等級榜三個可以切，前 30 名，前三名有金銀銅色',
-]},
 {ver:'v1.39',date:'2026-10-24',changes:[
 '聊天室大更新：點任何一則訊息會彈出操作菜單 —— 六個表情（👍❤️😂😮😢😡）一按即加、三個快捷回覆（哈哈／收到／+1）、引用回覆、複製文字、兩分鐘內撤回自己的訊息',
 '引用回覆：回覆別人的話會帶一小塊原話，點一下就跳回原本那一則，幾十人同時聊天也不會搞亂在回誰',
@@ -8921,6 +9153,13 @@ const VERSION_HISTORY=[
 '按鈕手感：所有按鈕按下去會縮小、放手會彈回，底部導航切換時圖標會彈跳一下',
 '小喆AI 換成會動的表情頭像：會自己左右漂、不定時眨眼，回答完會按內容換表情（開心、驚訝、思考、困惑、想睡），四秒後自己恢復，公共聊天室和私人對話都一樣',
 '遊戲修正：伺服器斷線會即時顯示紅色提示條（以前完全沒反應）；對局中退出不會再卡死（以前兩邊都退不出，只能刷新）；單人遊戲的控制鍵不會再被擠出屏幕外（俄羅斯方塊方向鍵以前完全按不到）；五子棋棋盤會自動縮進手機屏幕，右邊不會再看不到',
+'成長中心：個人主頁 →「成長」→ 成長中心。一頁看到等級、經驗進度、我的數據（經驗／簽到天數／連續天數／積分），下面是 12 個徽章和 8 個帶進度條的成就',
+'徽章牆：初次發言／話匣子／話癆／常客／支柱／連續三天／一週簽到／簽到王／小富翁／LV.5／LV.10／LV.20，達成就會亮起來',
+'排行榜：積分榜／簽到榜／等級榜三個可以切，前 30 名，前三名有金銀銅色',
+'每日任務：三個小任務（發 3 則訊息、給動態點讚、完成簽到），全部完成領 200 分，每天 0 點重設',
+'每日轉盤：每天免費轉一次，10 到 500 分不等，有轉盤動畫',
+'抽卡：100 分抽一張，12 張卡（普通／稀有／超稀有／傳說），重複自動換 50 分；收藏冊記錄你收集了哪幾張',
+'積分轉賬：可以把積分轉給同學（個人主頁 → 積分 → 轉賬），沒有上限，管理員可以查看全部轉賬記錄',
 ]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
