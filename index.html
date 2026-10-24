@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-SX7qf4F/v7tjrjagazhNApZypKyGcdrdqjMzgse2/mI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-hsDhNdj0kS0juI7q/uTlDpQ9OUZNyxYY+gEojjiew7E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -53,7 +53,7 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .dlb:active{transform:scale(.94)}
 .dlb-tip{position:absolute;top:70px;right:18px;font-size:11px;color:#9aa3b2;z-index:3;pointer-events:none}
 @keyframes ncardIn{from{opacity:0;transform:translate(-50%,-46%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-.ncard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(302px,86vw);
+.ncard{position:fixed !important;left:50% !important;top:50% !important;transform:translate(-50%,-50%);width:min(302px,86vw);
   background:#fff;border-radius:15px;padding:17px 18px 15px;z-index:9500;color:#1b1d21;
   box-shadow:0 26px 64px -14px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.04);
   animation:ncardIn .22s cubic-bezier(.3,1.2,.5,1);font-family:inherit}
@@ -65,12 +65,30 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .ncard .nbtn{margin-top:15px;width:100%;padding:11px;border:none;border-radius:11px;background:#111;
   color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
 .ncard .nbtn:active{transform:scale(.98)}
+/* ═══ 七日簽到路線圖 ═══
+   七個圓點中間一條線；已簽的點填金色，第 7 個是禮物。
+   ⚠ 斷簽只會斷「連續天數」，圓點不會清空 —— 用戶要求「之前的成果不要刪」。 */
+.ck-road{display:flex;align-items:center;justify-content:space-between;position:relative;margin:16px 0 6px;padding:0 2px}
+.ck-road::before{content:'';position:absolute;left:15px;right:15px;top:50%;height:2px;margin-top:-1px;
+  background:rgba(148,163,184,.28);border-radius:1px}
+body.theme-light .ck-road::before{background:rgba(15,23,42,.13)}
+.ck-dot{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;
+  border:2px solid rgba(148,163,184,.35);background:#131c30;
+  display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;
+  color:var(--text-muted);transition:all .28s cubic-bezier(.34,1.4,.5,1)}
+body.theme-light .ck-dot{background:#e8ecf3;color:#8a8d91}
+.ck-dot.done{border-color:#fbbf24;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3a2606;
+  box-shadow:0 0 10px rgba(251,191,36,.5)}
+.ck-dot.now{border-color:#38bdf8;color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.16)}
+.ck-dot.big{font-size:15px}
+.ck-dot.done.gift{border-color:#f472b6;background:linear-gradient(135deg,#f472b6,#a78bfa);box-shadow:0 0 12px rgba(244,114,182,.55)}
+
 /* 確認彈窗的雙按鈕（取消／確定），危險操作用紅色 */
 .ncard .nbtn-ghost{background:#eceef2;color:#41454e}
 .ncard .nbtn-danger{background:#e5484d;color:#fff}
 .ncard .ncard-btns{display:flex;gap:9px;margin-top:15px}
 .ncard .ncard-btns .nbtn{margin-top:0;flex:1}
-.ncard-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9499;animation:ncardFade .2s ease}
+.ncard-mask{position:fixed;inset:0;background:rgba(0,0,0,.26);z-index:9499;animation:ncardFade .2s ease}
 @keyframes ncardFade{from{opacity:0}to{opacity:1}}
 /* ═══ 液態玻璃（liquidGlass）═══
    上一版只做了 backdrop-blur → 出來是「磨砂玻璃」，不像液態玻璃。
@@ -2513,6 +2531,7 @@ function enterChat(){
   applyDeepLink();                  // 網址帶了 ?game= / ?room= → 直接進那個小遊戲
   try{ applyLang(); l10nRun(); }catch(e){}   /* v1.38.23：進聊天室後整頁再翻一次 */
   try{ _fontTried=false; ensureFontLoaded(); }catch(e){}   /* 字體：拿不到就退系統 */
+  maybeShowCheckin();                                       /* 每天第一次進站彈簽到 */
 }
 async function writeLog(action,detail){ if(!me)return;const id='log_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);try{await set(ref(db,'logs/'+id),{action,detail,username:me.username,displayName:me.displayName,seat:me.seat,role:me.role,createdAt:Date.now()});}catch(e){} }
 
@@ -6039,11 +6058,14 @@ window.addEventListener('pagehide',function(){
      ③ 退場：一粒一粒淡掉，不是一下全部消失
    另外用 canvas 而不是 DOM —— 90 粒 div 同時動會掉幀，canvas 不會。 */
 function confettiBurst(el, opt){
+  /* 暴露到 window 方便測試與其他頁面呼叫 */
   try{
     opt = opt || {};
     const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-    const cx = r ? (r.left + r.width/2) : window.innerWidth/2;
-    const cy = r ? (r.top + r.height/2) : window.innerHeight*0.4;
+    /* ⚠ 元素如果還未佈局（rect 全 0 或 NaN），cy 會變 NaN → 第一幀全部判定「已飛出畫面」
+       → canvas 立即被刪 → 用戶完全見不到花。所以座標一定要驗證過才用。 */
+    const cx = (r && isFinite(r.left) && isFinite(r.width)) ? (r.left + r.width/2) : window.innerWidth/2;
+    const cy = (r && isFinite(r.top) && isFinite(r.height)) ? (r.top + r.height/2) : window.innerHeight*0.4;
     const cv = document.createElement('canvas');
     const dpr = window.devicePixelRatio || 1;
     cv.width = Math.floor(window.innerWidth*dpr);
@@ -6064,8 +6086,8 @@ function confettiBurst(el, opt){
         x: cx, y: cy,
         vx: Math.cos(ang)*sp,
         vy: Math.sin(ang)*sp,
-        w: 3.5 + Math.random()*5,
-        h: 6 + Math.random()*9,
+        w: 5 + Math.random()*6,
+        h: 9 + Math.random()*10,
         rot: Math.random()*Math.PI*2,
         vr: (Math.random()-0.5)*0.32,
         c: COLORS[i % COLORS.length],
@@ -6074,6 +6096,7 @@ function confettiBurst(el, opt){
       });
     }
     let last = performance.now();
+    const bornAt = last;
     function tick(now){
       const dt = Math.min(2.2, (now-last)/16.7) || 1;
       last = now;
@@ -6094,18 +6117,24 @@ function confettiBurst(el, opt){
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
         ctx.fillStyle = p.c;
+        ctx.shadowColor = p.c;          /* 發光：暗幕上才看得見 */
+        ctx.shadowBlur = 10;
         /* 側向收窄一點，像紙片翻面 */
         ctx.fillRect(-p.w/2, -p.h/2, p.w * Math.abs(Math.cos(p.rot*1.7)), p.h);
+        ctx.shadowBlur = 0;
         ctx.restore();
       }
-      if(alive > 0) requestAnimationFrame(tick);
+      /* 至少存活 450ms：第一幀的存活判定容易受佈局時序影響，
+         之前就是這裡一出錯就立即刪 canvas，等於完全沒有花。 */
+      if(alive > 0 || (now - bornAt) < 450) requestAnimationFrame(tick);
       else { try{ cv.remove(); }catch(e){} }
     }
     requestAnimationFrame(tick);
     /* 保險：5 秒後無論如何都收掉，免得有粒子卡在畫面外永遠不結束 */
     setTimeout(function(){ try{ cv.remove(); }catch(e){} }, 5000);
-  }catch(e){}
+  }catch(e){ try{ window.__cfErr = String(e&&e.stack||e); }catch(_){} }
 }
+try{ window.confettiBurst = confettiBurst; }catch(e){}
 
 /* ═══ 每日簽到 ═══
    規則：每天 +100；連續第 7 天額外 +500（神秘小禮物）。
@@ -6121,41 +6150,80 @@ async function loadCheckin(){
     return snap.exists()?snap.val():{last:'',streak:0,total:0};
   }catch(e){ return {last:'',streak:0,total:0}; }
 }
-function checkinHTML(c){
+/* 路線圖 + 提示文字（個人主頁卡片和彈窗共用同一份，避免兩邊走樣） */
+function ckRoadHTML(c){
+  const today=_dayStr(0);
+  const done=(c&&c.last===today);
+  const cycleRaw=Number(c&&c.cycle)||0;
+  const filled = done ? Math.max(1,cycleRaw) : (cycleRaw>=7 ? 7 : cycleRaw);
+  const nextIdx = done ? -1 : Math.min(7, cycleRaw+1);
+  let road='';
+  for(let d=1; d<=7; d++){
+    const isDone = d<=filled;
+    const isNow = (!done && d===nextIdx);
+    const gift = (d===7);
+    road += '<span class="ck-dot'+(isDone?' done':'')+(isNow?' now':'')+(gift?' big gift':'')+'">'
+          + (gift ? '🎁' : (isDone?'✓':d)) + '</span>';
+  }
+  const tip = done
+    ? '今天已簽到，明天再來。'
+    : (cycleRaw>=7
+        ? '新一輪開始，今天簽到可得 <b style="color:var(--gold)">+100</b>'
+        : (nextIdx===7
+            ? '今天簽到就是第 7 天，<b style="color:#f472b6">神秘小禮物 +500</b>'
+            : '今天簽到可得 <b style="color:var(--gold)">+100</b> 積分'));
+  return '<div class="ck-road">'+road+'</div>'
+       + '<p style="font-size:11.5px;color:var(--text-muted);margin:6px 0 0;line-height:1.6">'+tip+'</p>';
+}
+/* 個人主頁用的卡片版 */
+function checkinCardHTML(c){
   const today=_dayStr(0);
   const done=(c&&c.last===today);
   const streak=Number(c&&c.streak)||0;
-  const nextStreak=done?streak:((c&&c.last===_dayStr(-1))?streak+1:1);
-  const dots=Array.from({length:7},(_,i)=>{
-    const on = done ? i < Math.min(streak,7) : i < Math.min(nextStreak-1,7);
-    return `<span style="width:15px;height:15px;border-radius:50%;display:inline-block;margin-right:4px;
-      background:${on?'#fbbf24':'rgba(148,163,184,.25)'};
-      box-shadow:${on?'0 0 6px rgba(251,191,36,.6)':'none'}"></span>`;
-  }).join('');
-  return `<div class="card" style="padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
-      <span style="font-size:14px;font-weight:700;color:var(--text-main)">每日簽到</span>
-      <span style="font-size:11.5px;color:var(--text-sub)">連續 ${streak} 天</span>
-    </div>
-    <div style="margin-bottom:10px">${dots}</div>
-    <div style="font-size:11.5px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">
-      ${done?'今天已簽到，明天再來。':`今天簽到可得 <b style="color:var(--gold)">+100</b> 積分${nextStreak%7===0?'，<b style="color:#f472b6">第 7 天神秘小禮物 +500</b>':''}`}
-    </div>
-    <button class="btn-primary" data-action="doCheckin" ${done?'disabled style="opacity:.45"':''}>${done?'已簽到':'立即簽到'}</button>
-  </div>`;
+  return '<div class="card" style="padding:16px 18px;margin-bottom:12px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:baseline">'
+    +   '<span style="font-size:14.5px;font-weight:700;color:var(--text-main)">每日簽到</span>'
+    +   '<span style="font-size:11.5px;color:var(--text-sub)">連續 '+streak+' 天</span></div>'
+    + ckRoadHTML(c)
+    + '<button class="btn-primary" data-action="doCheckin" style="margin-top:14px" '+(done?'disabled style="opacity:.45;margin-top:14px"':'')+'>'+(done?'已簽到':'立即簽到')+'</button>'
+    + '</div>';
+}
+function checkinHTML(c, inModal){
+  const done=(c&&c.last==_dayStr(0));
+  const streak=Number(c&&c.streak)||0;
+  return '<div class="ndots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>'
+    + '<h4>每日簽到</h4>'
+    + '<p style="margin-bottom:0">連續 <b>'+streak+'</b> 天'+(done?'　·　今天已完成':'')+'</p>'
+    + ckRoadHTML(c)
+    + (inModal
+        ? '<div class="ncard-btns" style="margin-top:16px">'
+          + '<button class="nbtn nbtn-ghost" data-ckclose="1">稍後</button>'
+          + '<button class="nbtn" data-action="doCheckin" '+(done?'disabled style="opacity:.5"':'')+'>'+(done?'已簽到':'立即簽到')+'</button>'
+          + '</div>'
+        : '');
 }
 async function doCheckin(){
   if(!me) return;
+  /* 立即撒花 —— 之後要 await get/set/runTransaction 三次網絡往返，
+     等到那時（實測約 1 秒）用戶已經以為「按了沒反應」。 */
+  try{
+    var cbtn = document.querySelector('#ckModal [data-action="doCheckin"]') || document.querySelector('[data-action="doCheckin"]');
+    confettiBurst(cbtn, {count:110});
+  }catch(e){ try{ window.__ckErr = String(e&&e.stack||e); }catch(_){} }
   const today=_dayStr(0);
   let c;
   try{ c=(await get(child(ref(db),'checkin/'+me.username))).val()||{}; }catch(e){ c={}; }
   if(c.last===today){ showNCard({title:'今天已經簽到',html:'明天再回來，連續紀錄才不會斷。',btn:'知道'}); return; }
   const streak=(c.last===_dayStr(-1))?(Number(c.streak)||0)+1:1;
-  const bonus=(streak%7===0);
+  /* cycle = 本輪已簽幾格（0–7）。斷簽**不清零**，只斷 streak —— 圓點不會被清空。
+     滿 7 格送禮物，下一次由 1 重新開始新一輪。 */
+  let cycle=Number(c.cycle)||0;
+  cycle = (cycle>=7) ? 1 : cycle+1;
+  const bonus=(cycle===7);
   const reward=bonus?600:100;
   try{
     await set(ref(db,'checkin/'+me.username),{
-      last:today, streak:streak, total:(Number(c.total)||0)+1, at:Date.now()
+      last:today, streak:streak, cycle:cycle, total:(Number(c.total)||0)+1, at:Date.now()
     });
     const pr=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
       const cur=Number(v)||0;
@@ -6166,20 +6234,53 @@ async function doCheckin(){
       await set(ref(db,'users/'+me.username+'/points'),Math.min(cur+reward,9007199254740991));
     }
     try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
-    /* 從「簽到」按鈕本身噴花（按鈕可能已經被白框蓋住，先記住位置） */
-    try{ confettiBurst(document.querySelector('[data-action="doCheckin"]'), {count: bonus?130:90}); }catch(e){}
-    showNCard({
+    /* 額外一份：7 天禮物時加碼（開頭已經撒過一次，這裡補慶祝感） */
+    if(bonus){ try{ setTimeout(function(){ confettiBurst(null,{count:90}); }, 420); }catch(e){} }
+    try{ var cm=document.getElementById('ckModal'); if(cm){ var mk=document.getElementById('ckMask'); if(mk) mk.remove(); cm.remove(); } }catch(e){}
+    setTimeout(function(){ showNCard({
       title: bonus?'第 '+streak+' 天！神秘小禮物':'每日簽到',
       html: bonus
         ? '連續簽到 <b>'+streak+'</b> 天，你拿到神秘小禮物了：<br><b style="font-size:18px">+500</b> 積分<br>加上今日簽到 <b>+100</b>，共 <b>+600</b>'
         : '連續 <b>'+streak+'</b> 天，今日 <b>+100</b> 積分'+(streak%7===6?'<br>明天就第 7 天，有神秘小禮物。':''),
       btn: bonus?'收下禮物':'收下',
       onClose:()=>{ try{ openProfilePage(me.username,true); }catch(e){} }
-    });
+    }); }, 260);
   }catch(e){
     showNCard({title:'簽到失敗',html:escapeHtml(String(e&&e.message||e).slice(0,80)),btn:'知道了'});
   }
 }
+
+/* 彈窗版簽到：進站自動彈、也可以在別處呼叫 */
+function showCheckinModal(ck){
+  try{
+    if(document.getElementById('ckModal')) return;
+    var mask=document.createElement('div'); mask.className='ncard-mask'; mask.id='ckMask';
+    var el=document.createElement('div'); el.className='ncard'; el.id='ckModal';
+    try{ el.removeAttribute('data-lg'); }catch(e){}
+    el.innerHTML=checkinHTML(ck,true);
+    var close=function(){ try{el.remove();mask.remove();}catch(e){} };
+    mask.onclick=close;
+    var b=el.querySelector('[data-ckclose]'); if(b) b.onclick=close;
+    document.body.appendChild(mask); document.body.appendChild(el);
+  }catch(e){}
+}
+/* 每天第一次進聊天室時自動彈一次（用 localStorage 記住今天彈過，
+   就算狂刷新也不會重複彈；已簽到就不彈，免得煩） */
+async function maybeShowCheckin(){
+  try{
+    if(!me) return;
+    var today=_dayStr(0);
+    window.__ckDbg = {today:today, shown:localStorage.getItem('ckShown')||'(none)'};
+    if(localStorage.getItem('ckShown')===today) return;
+    var ck=await loadCheckin();
+    window.__ckDbg.last = ck && ck.last;
+    localStorage.setItem('ckShown', today);
+    if(ck.last===today){ window.__ckDbg.result='already'; return; }
+    window.__ckDbg.result='will_show';
+    setTimeout(function(){ showCheckinModal(ck); }, 1100);   /* 等畫面穩定先彈 */
+  }catch(e){ window.__ckDbg.result='err:'+String(e&&e.message||e); }
+}
+try{ window.showCheckinModal=showCheckinModal; window.maybeShowCheckin=maybeShowCheckin; }catch(e){}
 
 async function openProfilePage(username,isSelf,fromAdmin){
   /* v1.38.5：這裡第一句就要等網絡。如果等途中用家已經按了返回，
@@ -6196,7 +6297,7 @@ async function openProfilePage(username,isSelf,fromAdmin){
   if(isSelf){
     const ck=await loadCheckin();
     if(!navAlive(seq))return;
-    const bodyHTML=checkinHTML(ck)+`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">字體</div><div class="about-item" data-action="toggleFont"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-file"/></svg></div><div><div class="ai-title">字體</div><div class="ai-sub" id="fontPrefSub">楷體</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
+    const bodyHTML=checkinCardHTML(ck)+`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">字體</div><div class="about-item" data-action="toggleFont"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-file"/></svg></div><div><div class="ai-title">字體</div><div class="ai-sub" id="fontPrefSub">楷體</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else if(fromAdmin&&amAdmin){
     /* v1.37：管理員後台點進某人 → 跟一般個人主頁「同一個版面」，
@@ -8845,7 +8946,7 @@ window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
 /* ═══ 液態玻璃自動套用 ═══
    給主要容器掛 data-lg（CSS 用屬性選擇器），連之後新開的頁面都自動生效。 */
 (function(){
-  var SEL='.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,.drawer-inner,.ncard,'+'#pageRoot .card,.fp-body .pi,.fp-body .user-card,.fp-body .tool-card,.fp-body .realname-card,'+'.fp-body .vm-card,.fp-body .think-card,.fp-body .pair-card,.admin-user,.admin-body .card';
+  var SEL='.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,.drawer-inner,'+'#pageRoot .card,.fp-body .pi,.fp-body .user-card,.fp-body .tool-card,.fp-body .realname-card,'+'.fp-body .vm-card,.fp-body .think-card,.fp-body .pair-card,.admin-user,.admin-body .card';
   function dress(root){
     try{
       var list=(root||document).querySelectorAll(SEL);
@@ -8931,6 +9032,7 @@ function showNCard(opt){
   mask.className='ncard-mask';
   const el=document.createElement('div');
   el.className='ncard';
+    try{ el.removeAttribute('data-lg'); }catch(e){}
   el.innerHTML='<div class="ndots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>'
     +'<h4>'+escapeHtml(opt.title||'通知')+'</h4>'
     +'<p>'+(opt.html||escapeHtml(opt.body||''))+'</p>'
