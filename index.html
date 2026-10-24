@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-mX82vgRmzZcg+dSEy1NymynBua7e/zuBhWwOFBe/Jyo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-UdrxJ2J7IuEqJHdOIHiDt79m4l/IwOVn5ewhyIbP6OU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,44 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 個人化：等級 / 稱號 / 心情 / 頭像框 / 名字特效 / 聊天背景 ═══ */
+.lv-badge{display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:800;
+  padding:1px 5px;border-radius:6px;background:linear-gradient(135deg,#fbbf24,#f59e0b);
+  color:#3a2606;vertical-align:middle;margin-left:4px;letter-spacing:.2px}
+.title-tag{font-size:9.5px;padding:1px 6px;border-radius:6px;margin-left:4px;vertical-align:middle;
+  background:rgba(168,85,247,.18);color:#c4b5fd;border:1px solid rgba(168,85,247,.35)}
+body.theme-light .title-tag{background:rgba(168,85,247,.12);color:#7c3aed}
+.mood-emoji{font-size:12px;margin-left:3px;vertical-align:middle}
+/* 頭像框：⚠ .avatar 有 overflow:hidden，用 ::after 的外環會被裁掉（實測完全看不見）。
+   改用 box-shadow 多層外環 —— box-shadow 唔受 overflow 影響。 */
+.avatar.fx-gold{box-shadow:0 0 0 2.5px #f59e0b,0 0 11px rgba(245,158,11,.55)}
+.avatar.fx-fire{box-shadow:0 0 0 2.5px #ef4444,0 0 13px rgba(239,68,68,.6)}
+.avatar.fx-rainbow{box-shadow:0 0 0 2px #f87171,0 0 0 4px #fbbf24,0 0 0 6px #38bdf8,0 0 12px rgba(167,139,250,.6)}
+.avatar.fx-star{box-shadow:0 0 0 2.5px #c7d2fe,0 0 13px rgba(199,210,254,.85)}
+.avatar.fx-ocean{box-shadow:0 0 0 2.5px #38bdf8,0 0 11px rgba(56,189,248,.6)}
+.avatar.fx-neon{box-shadow:0 0 0 2.5px #a3e635,0 0 13px rgba(163,230,53,.6)}
+/* 名字特效 */
+.nm-gold{background:linear-gradient(135deg,#fde68a,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.nm-rainbow{background:linear-gradient(90deg,#f87171,#fbbf24,#4ade80,#38bdf8,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;background-size:200% 100%;animation:nmFlow 4s linear infinite}
+@keyframes nmFlow{to{background-position:200% 0}}
+.nm-glow{color:#93c5fd;text-shadow:0 0 7px rgba(96,165,250,.85),0 0 14px rgba(59,130,246,.5);font-weight:700}
+.nm-fire{background:linear-gradient(180deg,#fbbf24,#ef4444);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+/* 聊天背景 */
+#chatBox.bg-aurora{background:linear-gradient(160deg,rgba(56,189,248,.10),rgba(168,85,247,.10),rgba(244,114,182,.09))}
+#chatBox.bg-sunset{background:linear-gradient(160deg,rgba(251,146,60,.12),rgba(239,68,68,.09))}
+#chatBox.bg-forest{background:linear-gradient(160deg,rgba(74,222,128,.11),rgba(16,185,129,.08))}
+#chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.55),rgba(15,23,42,.75))}
+#chatBox.bg-paper{background:linear-gradient(160deg,rgba(250,250,245,.9),rgba(245,240,230,.9))}
+body.theme-light #chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.14),rgba(15,23,42,.20))}
+/* 個人化頁的選項網格 */
+.cus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:8px 0 4px}
+.cus-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 6px;border-radius:14px;
+  border:2px solid var(--border);background:var(--bg-input);cursor:pointer;transition:all .2s}
+.cus-item.sel{border-color:#60a5fa;background:rgba(59,130,246,.14);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.cus-item .ci-ico{font-size:21px;line-height:1}
+.cus-item .ci-nm{font-size:10.5px;color:var(--text-sub);text-align:center}
+.cus-item .ci-pv{width:34px;height:34px;border-radius:11px;position:relative}
+
 /* ═══ 表情回應 / 引用回覆 / 快捷回覆 ═══ */
 .react-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
 .react{display:inline-flex;align-items:center;gap:3px;padding:2.5px 9px;border-radius:999px;
@@ -1638,11 +1676,11 @@ body.theme-light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,.05) 25%,
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, orderByKey, limitToLast, endAt, get, child, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, orderByKey, limitToLast, endAt, get, child, set, update, remove, runTransaction, onDisconnect, increment } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.24';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.25';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2542,7 +2580,7 @@ async function handleLogin(uArg,pArg){
     if(data.password!==p){loginError.textContent='密碼錯誤';return;}
     const trusted=await ensureDeviceTrusted(u,data);
     if(!trusted){ return; }
-    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0,obDone:(data.obDone===false?false:true)};
+    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0,obDone:(data.obDone===false?false:true),exp:Number(data.exp)||0,mood:data.mood||'',frame:data.frame||'',nameFx:data.nameFx||'',chatBg:data.chatBg||'',bio:data.bio||'',title:data.title||''};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{ syncFontFromUser(data); }catch(e){}
@@ -2614,6 +2652,7 @@ function enterChat(){
     },{passive:true});
   }
   subscribeMyGroups();
+  applyChatBg();
   subscribeReactions();
   subscribeTyping();
   /* _b1b_done */
@@ -2679,6 +2718,13 @@ document.addEventListener('click',async(e)=>{
     if(action==='openChangePassword')return openChangePassword();
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
+    if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='cusMood')return cusSet('mood',arg);
+    if(action==='cusFrame')return cusSet('frame',arg);
+    if(action==='cusFx')return cusSet('nameFx',arg);
+    if(action==='cusBg')return cusSet('chatBg',arg);
+    if(action==='cusTitle')return cusSet('title',arg);
+    if(action==='cusSaveBio')return cusSetBio();
     if(action==='applyFontChoice'){
       var fsel=document.getElementById('fontSelect');
       if(fsel){ setFontPref(fsel.value); showNotif(fsel.value==='sys'?'已切換為系統字體':'已切換為楷體'); if(fsel.value==='kai'){ try{localStorage.removeItem(FONT_FAIL_KEY);}catch(e){} _fontTried=false; ensureFontLoaded(); } }
@@ -3103,6 +3149,7 @@ async function sendMessage(){
     await set(ref(db,'messages/'+msgId),sendObj);
     try{ cancelQuote(); }catch(e){}
     await writeLog('send','發送訊息：'+text.slice(0,50));
+    addExp(1);
     msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');hideMention();
     scrollToBottom();
     if(hasHtml&&!isAdmin){
@@ -4288,7 +4335,14 @@ function render(){
        編號與舉報／管理刪除不再掛在訊息上，改成點一下訊息才彈出來（見 openMsgMenu）。 */
     const chiName=String(m.chiName||'').trim();
     const realNameTag=(chiName&&chiName!==String(m.displayName||m.username))?`<span class="meta-realname">${escapeHtml(chiName)}</span>`:'';
-    const avatarCls=isDeletedUser?'avatar deleted':'avatar';
+    const uinfo=(allUsers[m.username]||m||{});
+    const uvLv=levelOf(uinfo.exp);
+    const uvFrame=uinfo.frame?' fx-'+uinfo.frame:'';
+    const uvNm=uinfo.nameFx?' nm-'+uinfo.nameFx:'';
+    const uvTitle=uinfo.title?'<span class="title-tag">'+escapeHtml(uinfo.title)+'</span>':'';
+    const uvMood=uinfo.mood?'<span class="mood-emoji">'+escapeHtml(uinfo.mood)+'</span>':'';
+    const uvLvHtml=uvLv>1?'<span class="lv-badge">Lv.'+uvLv+'</span>':'';
+    const avatarCls='avatar'+(isDeletedUser?' deleted':'')+uvFrame;
     /* 引用塊：放在氣泡最上面，點一下跳到原訊息 */
     if(m.replyTo&&m.replyTo.id){
       body='<div class="quote" data-action="jumpMsg" data-arg="'+escAttr(m.replyTo.id)+'">'
@@ -4298,7 +4352,7 @@ function render(){
     if(m.recalled){
       return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}</div><div class="bubble" style="background:transparent;border:1px dashed rgba(148,163,184,.4);color:var(--text-muted);font-size:12px;font-style:italic">已撤回一則訊息</div></div></div>`;
     }
-    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
+    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta"><span class="${uvNm.trim()||'nm-none'}">${escapeHtml(m.displayName||m.username)}</span>${uvLvHtml}${uvTitle}${uvMood}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
   }).join('');
   /* v1.38.5：剛從別的頁面返回聊天室時，位置是刻意還原到原處的，
      不應該立刻被「新訊息自動捲到底」搶走，所以鎖 600ms。 */
@@ -6544,6 +6598,7 @@ async function doCheckin(){
       await set(ref(db,'users/'+me.username+'/points'),Math.min(cur+reward,9007199254740991));
     }
     try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
+    addExp(20);
     /* 額外一份：7 天禮物時加碼（開頭已經撒過一次，這裡補慶祝感） */
     if(bonus){ try{ setTimeout(function(){ confettiBurst(null,{count:90}); }, 420); }catch(e){} }
     try{ var cm=document.getElementById('ckModal'); if(cm){ var mk=document.getElementById('ckMask'); if(mk) mk.remove(); cm.remove(); } }catch(e){}
@@ -6598,6 +6653,100 @@ try{ window.showCheckinModal=showCheckinModal; window.maybeShowCheckin=maybeShow
 function profileSubPage(title, key, html){
   openPage({title:title, key:key, bodyHTML:html});
 }
+/* ═══ 個人化：等級 / 稱號 / 心情 / 頭像框 / 名字特效 / 聊天背景 / 簡介 ═══
+   全部集中在同一頁，因為分開做 6 個入口，用戶會找不到（用戶明確反映過）。 */
+const CUS_MOODS=['','😄','😐','😴','🔥','💔','😎','🥲'];
+const CUS_FRAMES=['','gold','fire','rainbow','star','ocean','neon'];
+const CUS_FRAME_NM={'':'無','gold':'金色','fire':'火焰','rainbow':'彩虹','star':'星光','ocean':'海洋','neon':'霓虹'};
+const CUS_FX=['','gold','rainbow','glow','fire'];
+const CUS_FX_NM={'':'無','gold':'金色','rainbow':'彩虹流動','glow':'藍光','fire':'火焰'};
+const CUS_BG=['','aurora','sunset','forest','night','paper'];
+const CUS_BG_NM={'':'預設','aurora':'極光','sunset':'日落','forest':'森林','night':'深夜','paper':'紙張'};
+const CUS_BG_CSS={'':'','aurora':'linear-gradient(160deg,#38bdf8,#a855f7,#f472b6)','sunset':'linear-gradient(160deg,#fb923c,#ef4444)','forest':'linear-gradient(160deg,#4ade80,#10b981)','night':'linear-gradient(160deg,#1e293b,#0f172a)','paper':'linear-gradient(160deg,#fafaf5,#f5f0e6)'};
+const CUS_TITLES=['','新同學','話癆','簽到王','遊戲達人','夜貓子','學霸','潛水員'];
+
+/* 經驗值：發訊 +1、簽到 +20（遊戲在 game.html，之後用 postMessage 補） */
+async function addExp(n){
+  if(!me||!n) return;
+  try{
+    await update(ref(db,'users/'+me.username),{exp:increment(n)});
+    me.exp=Number(me.exp||0)+n;
+  }catch(e){}
+}
+
+function levelOf(exp){ return Math.max(1, Math.floor(Math.sqrt((Number(exp)||0)/40))+1); }
+function expForLevel(lv){ return Math.pow(Math.max(1,lv-1),2)*40; }
+
+async function cusSet(field, val){
+  if(!me) return;
+  try{
+    const patch={}; patch[field]=val;
+    await update(ref(db,'users/'+me.username),patch);
+    me[field]=val;
+    if(field==='chatBg') applyChatBg();
+    showNotif('已更新');
+    render();
+  }catch(e){ showNotif('儲存失敗'); }
+}
+async function cusSetBio(){
+  const el=document.getElementById('cusBio'); if(!el||!me) return;
+  const v=String(el.value||'').slice(0,100);
+  await cusSet('bio',v);
+}
+function openCustomizePage(){
+  if(!me) return;
+  const lv=levelOf(me.exp);
+  const grid=(arr,nmMap,cur,action)=>arr.map(function(k){
+    const sel=k===cur?' sel':'';
+    return '<div class="cus-item'+sel+'" data-action="'+action+'" data-arg="'+escAttr(k)+'">'
+      + '<div class="ci-ico">'+(k?escapeHtml(k):'—')+'</div>'
+      + '<div class="ci-nm">'+escapeHtml(nmMap[k]||nk(k))+'</div></div>';
+  }).join('');
+  const fgrid=CUS_FRAMES.map(function(k){
+    const sel=k===(me.frame||'')?' sel':'';
+    return '<div class="cus-item'+sel+'" data-action="cusFrame" data-arg="'+escAttr(k)+'">'
+      + '<div class="ci-pv" style="background:var(--bg-card);'+ (k?('outline:2.5px solid '+(k==='gold'?'#f59e0b':k==='fire'?'#ef4444':k==='rainbow'?'#a78bfa':k==='star'?'#818cf8':k==='ocean'?'#38bdf8':'#a3e635')):'') +'"></div>'
+      + '<div class="ci-nm">'+escapeHtml(CUS_FRAME_NM[k]||'')+'</div></div>';
+  }).join('');
+  openPage({title:'個人化', key:'customize', bodyHTML:
+    '<div class="section-title">等級</div>'
+    +'<div class="card" style="padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+    +  '<div style="font-size:26px;font-weight:800;color:#fbbf24;line-height:1">Lv.'+lv+'</div>'
+    +  '<div style="flex:1;min-width:0">'
+    +    '<div style="font-size:11.5px;color:var(--text-sub);margin-bottom:5px">經驗 '+Number(me.exp||0)+' / '+expForLevel(lv+1)+'</div>'
+    +    '<div style="height:6px;border-radius:3px;background:rgba(148,163,184,.2);overflow:hidden">'
+    +      '<div style="height:100%;width:'+Math.min(100,Math.round((Number(me.exp||0)/Math.max(1,expForLevel(lv+1)))*100))+'%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:3px"></div>'
+    +    '</div>'
+    +  '</div></div>'
+    +'<div class="section-title">心情</div><div class="cus-grid">'+grid(CUS_MOODS,{'':'無'},me.mood||'','cusMood')+'</div>'
+    +'<div class="section-title">頭像框</div><div class="cus-grid">'+fgrid+'</div>'
+    +'<div class="section-title">名字特效</div><div class="cus-grid">'+grid(CUS_FX,CUS_FX_NM,me.nameFx||'','cusFx')+'</div>'
+    +'<div class="section-title">聊天背景</div><div class="cus-grid">'+CUS_BG.map(function(k){
+        const sel=k===(me.chatBg||'')?' sel':'';
+        return '<div class="cus-item'+sel+'" data-action="cusBg" data-arg="'+escAttr(k)+'">'
+          + '<div class="ci-pv" style="background:'+(CUS_BG_CSS[k]||'var(--bg-card)')+'"></div>'
+          + '<div class="ci-nm">'+escapeHtml(CUS_BG_NM[k])+'</div></div>';
+      }).join('')+'</div>'
+    +'<div class="section-title">稱號</div><div class="cus-grid" style="grid-template-columns:repeat(2,1fr)">'+CUS_TITLES.map(function(t){
+        const sel=t===(me.title||'')?' sel':'';
+        return '<div class="cus-item'+sel+'" data-action="cusTitle" data-arg="'+escAttr(t)+'">'
+          + '<div class="ci-nm" style="font-size:11.5px">'+escapeHtml(t||'無稱號')+'</div></div>';
+      }).join('')+'</div>'
+    +'<div class="section-title">個人簡介</div>'
+    +'<div class="form-row"><textarea id="cusBio" maxlength="100" placeholder="一句話介紹自己（最多 100 字）" style="width:100%;padding:11px 13px;border-radius:16px;background:var(--bg-input);color:var(--text-main);font-size:13.5px;min-height:78px;font-family:inherit">'+escapeHtml(me.bio||'')+'</textarea></div>'
+    +'<button class="btn-primary" data-action="cusSaveBio">儲存簡介</button>'
+  });
+}
+function nk(k){ return k||'無'; }
+function applyChatBg(){
+  try{
+    const cb=document.getElementById('chatBox');
+    if(!cb) return;
+    ['bg-aurora','bg-sunset','bg-forest','bg-night','bg-paper'].forEach(function(c){ cb.classList.remove(c); });
+    if(me&&me.chatBg) cb.classList.add('bg-'+me.chatBg);
+  }catch(e){}
+}
+
 function openProfileEdit(){
   if(!me) return;
   var ES=['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'];
@@ -6665,6 +6814,11 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('問題反饋','', 'openFeedbackPage', 'msg')
       +'<div class="section-title">偏好</div>'
       +aiRow('字體', fontName, 'openFontPage', 'file')
+      +'<div class="section-title">個人化</div>'
+      +aiRow('等級 · 稱號 · 心情', 'Lv.'+levelOf(me.exp)+' '+(me.title||''), 'openCustomizePage', 'star')
+      +aiRow('頭像框 · 名字特效', CUS_FRAME_NM[me.frame||'']||'無', 'openCustomizePage', 'image')
+      +aiRow('聊天背景', CUS_BG_NM[me.chatBg||'']||'預設', 'openCustomizePage', 'grid')
+      +aiRow('個人簡介', (me.bio||'').slice(0,18)||'未填', 'openCustomizePage', 'file')
       +'<div class="section-title">工具</div>'
       +'<button class="btn-ghost" data-action="openMyLogs">我的日誌</button>'
       +'<button class="btn-ghost" data-action="openMyNotices">我的公告申請</button>'
@@ -8886,7 +9040,7 @@ window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
     const data=snap.val();
     if(data.disabled===true){sessionStorage.removeItem('chat_me');return;}
     if(data.banned&&data.banned.type==='severe'){sessionStorage.removeItem('chat_me');return;}
-    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0,obDone:(data.obDone===false?false:true)};
+    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0,obDone:(data.obDone===false?false:true),exp:Number(data.exp)||0,mood:data.mood||'',frame:data.frame||'',nameFx:data.nameFx||'',chatBg:data.chatBg||'',bio:data.bio||'',title:data.title||''};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{ syncFontFromUser(data); }catch(e){}
