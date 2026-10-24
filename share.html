@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>1E 班網站</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 分享預覽專用頁：只有幾 KB，WhatsApp / IG / Telegram 一抓就有卡片。
+     真正的主頁有 800KB，爬蟲抓不完（實測只讀前幾 KB 就斷），所以用這頁做入口。 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="1E 班網站">
+<meta property="og:title" content="1E 班網站 · 我們班的空間">
+<meta property="og:description" content="小遊戲、排行榜、班級動態、農場。144 位同學的班級空間。">
+<meta property="og:image" content="https://oscar114515.github.io/1e-chat.edu.hk/assets/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:url" content="https://oscar114515.github.io/1e-chat.edu.hk/share.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="1E 班網站 · 我們班的空間">
+<meta name="twitter:description" content="小遊戲、排行榜、班級動態、農場。144 位同學的班級空間。">
+<meta name="twitter:image" content="https://oscar114515.github.io/1e-chat.edu.hk/assets/og-card.png">
+<meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
+<style>
+  html,body{margin:0;height:100%;background:#0f172a;color:#e2e8f0;
+    font-family:-apple-system,"PingFang HK","Microsoft JhengHei",system-ui,sans-serif;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+  .t{font-size:17px;font-weight:700}
+  .s{font-size:12.5px;color:#64748b}
+  a{color:#38bdf8;font-size:13px}
+  img{width:132px;border-radius:12px}
+</style>
+</head>
+<body>
+  <img src="assets/og-card.png" alt="1E 班網站">
+  <div class="t">正在進入 1E 班網站…</div>
+  <div class="s">沒有自動跳轉？點下面的連結</div>
+  <a href="index.html">oscar114515.github.io/1e-chat.edu.hk</a>
+  <script>
+    /* 立即跳轉；用 replace 不要讓「返回」回到這頁 */
+    try { location.replace('index.html'); } catch (e) {}
+    setTimeout(function(){ try { location.href = 'index.html'; } catch (e) {} }, 400);
+  </script>
+</body>
+</html>
