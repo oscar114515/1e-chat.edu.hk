@@ -609,6 +609,7 @@ const roomNet={
         res(true);
       };
       ws.onmessage=ev=>{
+        this.lastMsgAt=Date.now();
         let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
         if(m.t==='rUpd'){ this.fanout(m.rid, m.v); return; }
         if(m.t==='rListVal'&&m.list){ this.fanoutList(m.v); return; }
@@ -618,8 +619,19 @@ const roomNet={
           return;
         }
       };
+      /* 房間連接一樣要靠應用層心跳，否則斷電要等 TCP 超時 */
+      this.lastMsgAt=Date.now();
+      if(this._hb) clearInterval(this._hb);
+      var _rs=this;
+      this._hb=setInterval(function(){
+        if(!_rs.ready||!_rs.ws) return;
+        if(Date.now()-(_rs.lastMsgAt||Date.now())>6000){
+          try{ _rs.ws.close(); }catch(e){}
+        }
+      },2000);
       ws.onclose=()=>{
         const wasReady=this.ready;
+        if(this._hb){clearInterval(this._hb);this._hb=null;}
         this.ready=false; this.ws=null; this.connecting=null;
         clearTimeout(to);
         /* 在房間裡斷線 → 立即告訴用戶，不要讓佢對着一個沒反應的棋盤 */
@@ -2360,7 +2372,20 @@ const lobbyNet={
       this._retryArgs={gk:gk, me:me, onSnap:onSnap};
       const to=setTimeout(()=>{ if(!this.ready){ try{ws.close();}catch(e){} finish(false); } },3500);   /* 同上 */
       ws.onopen=()=>{ try{ ws.send(JSON.stringify({t:'hello',g:gk,nm:me.displayName,c:me.color})); }catch(e){} };
+      /* 應用層心跳：伺服器一斷電，TCP 唔會收到 FIN/RST，
+         瀏覽器可能要等 1–2 分鐘才觸發 onclose（用戶實測 1.5 分鐘才彈故障）。
+         所以自己數：正常 20Hz 推送，超過 6 秒一粒訊息都收唔到就當死線，主動關閉觸發重試。 */
+      this.lastMsgAt=Date.now();
+      if(this._hb) clearInterval(this._hb);
+      var _self=this;
+      this._hb=setInterval(function(){
+        if(!_self.ready||!_self.ws) return;
+        if(Date.now()-(_self.lastMsgAt||Date.now())>6000){
+          try{ _self.ws.close(); }catch(e){}
+        }
+      },2000);
       ws.onmessage=ev=>{
+        this.lastMsgAt=Date.now();
         let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
         if(m.t==='welcome'){
           this.id=m.id; this.ready=true; this._retry=0; clearTimeout(to);
@@ -2385,29 +2410,41 @@ const lobbyNet={
         this.ready=false; this.ws=null;
         finish(false);
         if(!was) return;                     /* 一開始就冇連上 → 交返俾呼叫方決定，唔重試 */
-        /* 玩到一半斷線：先自己重試 2 次（每次隔 1.2 秒）。
-           以前係一次抖動就即刻切 Firebase，用戶見到「自家 → 備援」閃一閃。
-           重試都失敗才真正降級。 */
-        this._retry=(this._retry||0)+1;
-        if(this._retry<=2 && this.gk){
-          var self=this, args=this._retryArgs;
-          setTimeout(function(){
-            if(self.ready) return;
-            if(!args) { if(self.onDown){ try{ self.onDown(); }catch(e){} } return; }
-            try{
-              self.connect(args.gk,args.me,args.onSnap).then(function(ok){
-                if(ok){ self._retry=0; }
-                else if(self._retry>2 && self.onDown){ try{ self.onDown(); }catch(e){} }
-              }).catch(function(){});
-            }catch(e){}
-          }, 1200);
-          return;
-        }
+        /* 玩到一半斷線 → 交給統一的重試函式。
+           ⚠ 之前寫錯過一次：connect() 失敗（3.5 秒超時）只會 resolve(false)，
+             唔會再觸發 onclose，所以「失敗一次」之後就乜都唔做：
+             既唔成功、又唔降級 → 徽章永遠卡喺「連線中」（用戶實測）。 */
         this._retry=0;
-        if(this.onDown){ try{ this.onDown(); }catch(e){} }
+        this._tryReconnect();
       };
       ws.onerror=()=>{};
     });
+  },
+  /* 斷線重試：最多 2 次，每次隔 1 秒；全部失敗才真正降級到 Firebase。
+     關鍵：connect() 失敗（超時）也要再叫自己一次，否則會卡死。 */
+  _tryReconnect(){
+    var self=this;
+    if(this._retry>=2){
+      this._retry=0;
+      if(this.onDown){ try{ this.onDown(); }catch(e){} }
+      return;
+    }
+    this._retry++;
+    var args=this._retryArgs;
+    if(!args || !args.gk){
+      this._retry=0;
+      if(this.onDown){ try{ this.onDown(); }catch(e){} }
+      return;
+    }
+    setTimeout(function(){
+      if(self.ready){ self._retry=0; return; }
+      var p;
+      try{ p=self.connect(args.gk,args.me,args.onSnap); }catch(e){ p=Promise.resolve(false); }
+      p.then(function(ok){
+        if(ok){ self._retry=0; return; }
+        self._tryReconnect();            /* 失敗 → 繼續試，直到用完 2 次 */
+      }).catch(function(){ self._tryReconnect(); });
+    }, 1000);
   },
   send(o){ if(this.ready&&this.ws&&this.ws.readyState===1){ try{ this.ws.send(JSON.stringify(o)); }catch(e){} } },
   eat(fid){
@@ -2419,7 +2456,7 @@ const lobbyNet={
       setTimeout(()=>{ if(this.pend.has(rid)){ this.pend.delete(rid); res(null); } },1500);
     });
   },
-  close(){ this.ready=false; this.id=null; try{ this.ws&&this.ws.close(); }catch(e){} this.ws=null; this.pend.clear(); }
+  close(){ this.ready=false; this.id=null; this._retry=0; if(this._hb){clearInterval(this._hb);this._hb=null;} try{ this.ws&&this.ws.close(); }catch(e){} this.ws=null; this.pend.clear(); }
 };
 
 function createSnakeLobby(){
@@ -8885,17 +8922,24 @@ function netStateNow(){
   try{ wsOn=!!((roomNet&&roomNet.ready)||(lobbyNet&&lobbyNet.ready)); }catch(e){}
   const now=Date.now();
   if(wsOn) _netWasWsAt=now;
-  /* 3 秒內曾經連上 → 繼續顯示「連線中」，唔好即刻變備援 */
-  if(!wsOn && _netWasWsAt && (now-_netWasWsAt)<3000){
+  if(wsOn) return {k:'ws',t:'自家伺服器',tip:'已連上你自己的遊戲伺服器'};
+  /* 重試進行中 → 「連線中」；重試用完 → 即刻落「備援」（唔可以一直卡住） */
+  let retrying=false;
+  try{ retrying=(lobbyNet&&lobbyNet._retry>0)||(roomNet&&roomNet.connecting); }catch(e){}
+  if(retrying) return {k:'ws',t:'連線中…',tip:'正在重新連接自設伺服器'};
+  /* 剛斷（3 秒內）→ 都當連線中，避免一閃 */
+  if(_netWasWsAt && (now-_netWasWsAt)<3000){
     return {k:'ws',t:'連線中…',tip:'正在重新連接自設伺服器'};
   }
-  if(wsOn) return {k:'ws',t:'自家伺服器',tip:'已連上你自己的遊戲伺服器'};
   /* 兩個都未連：大廳本來就唔會預連，講「待連線」比講「備援」準確 */
   let everTried=false;
   try{ everTried=!!(lobbyNet&&lobbyNet.gk)||!!(roomNet&&roomNet.subs&&roomNet.subs.size); }catch(e){}
   if(!everTried) return {k:'idle',t:'待連線',tip:'進入遊戲後才會連接自設伺服器'};
   return {k:'fb',t:'備援模式',tip:'連不上自設伺服器，已退回 Firebase 備援'};
 }
+/* 每秒重繪：以前只在 render() 時更新，斷線後徽章會卡在舊狀態（用戶見到一直「連線中」） */
+try{ setInterval(function(){ try{ paintNetBadge(); }catch(e){} }, 1000); }catch(e){}
+
 function paintNetBadge(){
   try{
     const tb=document.querySelector('.topbar');
