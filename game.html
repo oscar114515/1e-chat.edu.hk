@@ -629,21 +629,15 @@ const roomNet={
          用 6 秒超時會把正常空閒誤判成斷線 → 開房的人被自己踢掉 → 永遠顯示「連不上伺服器」。
          （2026-10-24 用戶實測：開房後一直連不上，另一個人卻能加入倒數）
          所以這裡不放心跳，只記 lastMsgAt 供日後除錯；斷線靠 onclose + 重試。 */
-      /* ═══ 應用層心跳（ping/pong）═══
-         房間對局等對手時伺服器完全靜默，單靠 onclose 要等 TCP 超時（實測 90 秒）。
-         但亦唔可以數「幾耐冇收到嘢」（上一版就係咁誤殺正常連線）。
-         所以要主動問：每 5 秒發 ping，伺服器一定回 pong；15 秒收唔到 pong 才判死。 */
+      /* ⚠ 心跳暫時停用（2026-10-24 緊急）
+         症狀：五子棋開房倒數到 7-8 秒就顯示「伺服器連不上」，然後卡在 0 秒。
+         原因：倒數期間房間連接冇遊戲訊息，ping 發出後伺服器似乎冇回 pong，
+               15 秒到就主動 close → 倒數被打斷 → 兩邊都卡住。
+         先止血：移除心跳，回到靠 ws.onclose（TCP 層）判斷。慢但不會誤殺。
+         之後要重做，必須先確認伺服器對「未發 hello 的房間連接」會不會回 pong。 */
       this.lastMsgAt=Date.now();
       this.lastPong=Date.now();
       if(this._hb){ clearInterval(this._hb); this._hb=null; }
-      var _rs=this;
-      this._hb=setInterval(function(){
-        if(!_rs.ready||!_rs.ws||_rs.ws.readyState!==1) return;
-        try{ _rs.ws.send(JSON.stringify({t:'ping'})); }catch(e){}
-        if(Date.now()-(_rs.lastPong||Date.now())>15000){
-          try{ _rs.ws.close(); }catch(e){}
-        }
-      },5000);
       ws.onclose=()=>{
         const wasReady=this.ready;
         if(this._hb){clearInterval(this._hb);this._hb=null;}
