@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-jEHZYv2cB4i4YWNM7XalT+cdpu45CovRgsCpiO86fbk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CKn76SJnwUybCNunu5lFNHaklL7QGmRCLQGqFMmHHEA=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -2385,6 +2385,11 @@ var OB_STEPS=[
 var obIdx=0, obHole=null, obTip=null;
 function obFinish(){
   try{ localStorage.setItem('obDone','1'); }catch(e){}
+  /* 同步寫回 DB，否則管理員無法從後台重置（localStorage 是每台機各自的） */
+  if(me){
+    me.obDone = true;
+    try{ update(ref(db,'users/'+me.username),{obDone:true}); }catch(e){}
+  }
   if(obHole){ obHole.remove(); obHole=null; }
   if(obTip){ obTip.remove(); obTip=null; }
 }
@@ -2411,7 +2416,11 @@ function obShow(i){
   obTip.querySelector('.ob-next').onclick=function(){ obIdx++; obShow(obIdx); };
 }
 function startOnboardingIfNeeded(){
-  try{ if(localStorage.getItem('obDone')) return; }catch(e){ return; }
+  /* 管理員在後台把 obDone 設成 false → 就算這台機看過也要重看一次 */
+  if(!me) return;
+  if(me.obDone !== false){
+    try{ if(localStorage.getItem('obDone')) return; }catch(e){ return; }
+  }
   obIdx=0;
   setTimeout(function(){ obShow(0); },900);
   window.addEventListener('resize',function(){ if(obHole&&obTip) obShow(obIdx); });
@@ -2452,7 +2461,7 @@ async function handleLogin(uArg,pArg){
     if(data.password!==p){loginError.textContent='密碼錯誤';return;}
     const trusted=await ensureDeviceTrusted(u,data);
     if(!trusted){ return; }
-    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0};
+    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0,obDone:(data.obDone===false?false:true)};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{ syncFontFromUser(data); }catch(e){}
@@ -2550,6 +2559,31 @@ document.addEventListener('click',async(e)=>{
     if(action==='openTools')return openToolsPage();
     if(action==='openPoints')return openPointsPage();
     if(action==='doCheckin')return doCheckin();
+    if(action==='ckSet'){
+      if(!me||me.role!=='superadmin')return;
+      const tgt=arg, n=Number(arg2)||0;
+      const cur=(await get(child(ref(db),'checkin/'+tgt))).val()||{};
+      await set(ref(db,'checkin/'+tgt),{
+        last: cur.last||'', cycle: n, streak: n>0?(Number(cur.streak)||0):0,
+        total: Number(cur.total)||0, at: Date.now(), by: me.username
+      });
+      writeLog('adminck','設定 '+tgt+' 簽到次數為 '+n);
+      showNotif('已設為 '+n+' 格');
+      return await renderAdminTab('checkin');
+    }
+    if(action==='ckObReset'){
+      if(!me||me.role!=='superadmin')return;
+      await update(ref(db,'users/'+arg),{obDone:false});
+      writeLog('adminob','重設新手引導 '+arg);
+      showNotif('已設定：'+arg+' 下次進來會重看引導');
+      return await renderAdminTab('checkin');
+    }
+    if(action==='ckObDone'){
+      if(!me||me.role!=='superadmin')return;
+      await update(ref(db,'users/'+arg),{obDone:true});
+      showNotif('已標記為看過引導');
+      return await renderAdminTab('checkin');
+    }
     if(action==='openProfileEdit')return openProfileEdit();
     if(action==='openChangePassword')return openChangePassword();
     if(action==='openFeedbackPage')return openFeedbackPage();
@@ -7025,7 +7059,7 @@ function openAdminPage(tab){
   const isSuper=me.role==='superadmin';
   const accountTab=isSuper?`<button class="tab ${tab==='accounts'?'active':''}" data-action="switchAdminTab" data-arg="accounts">帳號管理</button>`:'';
   beginPage('admin');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='redeem'?'active':''}" data-action="switchAdminTab" data-arg="redeem">兌換碼</button><button class="tab ${tab==='shop'?'active':''}" data-action="switchAdminTab" data-arg="shop">商店</button>`:''}${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button><button class="tab ${tab==='checkin'?'active':''}" data-action="switchAdminTab" data-arg="checkin">次數</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='redeem'?'active':''}" data-action="switchAdminTab" data-arg="redeem">兌換碼</button><button class="tab ${tab==='shop'?'active':''}" data-action="switchAdminTab" data-arg="shop">商店</button>`:''}${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
 /* v1.38.5：記住每個管理分頁各自的捲動位置。
@@ -7041,6 +7075,7 @@ async function renderAdminTab(tab){
     if(sc)adminTabScroll[_adminTab]=sc.scrollTop;
   }
   if(tab==='users')body.innerHTML=renderUserList();
+  else if(tab==='checkin'){ body.innerHTML='<div class="empty">正在載入簽到資料…</div>'; body.innerHTML=await renderCheckinAdmin(); }
   else if(tab==='accounts')body.innerHTML=renderAccountManage();
   else if(tab==='notices')body.innerHTML=renderPendingNotices();
   else if(tab==='requests')body.innerHTML=await renderRequestsList();
@@ -7207,6 +7242,80 @@ async function feedbackDone(key){ const result=prompt('請填寫處理結果：'
    （以前這裡沒有 orderBy，所以日誌頁看起來「只剩很久之前那幾筆」甚至空的）。
    用 orderByKey 按 key 排 —— key 是 log_{13位時間戳}_{隨機}，字典序＝時間序，
    而且不需要在 rules 加 .indexOn。 */
+/* ═══ 後台「次數」分頁 ═══
+   看得到每個人簽到到第幾格、連續幾天、總共簽幾次、最後一次幾時；
+   可以一鍵清零（下輪從頭）、直接補到第 7 格、也可以重設新手引導。 */
+async function renderCheckinAdmin(){
+  const isSuper = me && me.role==='superadmin';
+  let users={}, checks={};
+  try{
+    const [a,b] = await Promise.all([
+      get(child(ref(db),'users')),
+      get(child(ref(db),'checkin'))
+    ]);
+    users = a.val()||{};
+    checks = b.val()||{};
+  }catch(e){
+    return '<div class="empty">讀取失敗：'+escapeHtml(String(e&&e.message||e))+'</div>';
+  }
+  const rows = Object.keys(users).map(function(k){
+    const u = users[k]||{}, c = checks[k]||{};
+    return {
+      k:k,
+      name: u.displayName || k,
+      role: u.role || 'member',
+      cycle: Number(c.cycle)||0,
+      streak: Number(c.streak)||0,
+      total: Number(c.total)||0,
+      last: c.last || '',
+      ob: (u.obDone === false) ? false : true
+    };
+  }).sort(function(x,y){
+    if(y.total !== x.total) return y.total - x.total;
+    return String(x.name).localeCompare(String(y.name));
+  });
+  const today = _dayStr(0);
+  let h = '<div style="font-size:11.5px;color:var(--text-muted);line-height:1.7;margin:0 0 12px">'
+        + '共 '+rows.length+' 人。「格」= 本輪七日進度（滿 7 送禮物後重新開始）。'
+        + '<br>清零只清進度，不會扣已拿到的積分。</div>';
+  h += '<div style="font-size:12.5px">';
+  for(let i=0;i<rows.length;i++){
+    const r = rows[i];
+    const dots = (function(){
+      let o='';
+      for(let d=1; d<=7; d++){
+        const on = d <= r.cycle;
+        o += '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px;background:'
+           + (on?'#fbbf24':'rgba(148,163,184,.28)') + '"></span>';
+      }
+      return o;
+    })();
+    const signed = (r.last === today);
+    h += '<div style="padding:7px 0;border-bottom:1px solid var(--border)">'
+      +   '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +     '<span style="font-weight:700;color:var(--text-main)">'+escapeHtml(r.name)+'</span>'
+      +     '<span style="font-size:10.5px;color:var(--text-muted)">'+escapeHtml(r.k)+'</span>'
+      +     (r.role!=='member'?'<span style="font-size:10px;color:var(--purple-tx)">'+escapeHtml(r.role)+'</span>':'')
+      +     (signed?'<span style="font-size:10px;color:#4ade80">今日已簽</span>':'')
+      +     (r.ob===false?'<span style="font-size:10px;color:#fbbf24">待看引導</span>':'')
+      +     '<span style="margin-left:auto;font-size:11px;color:var(--text-sub);font-variant-numeric:tabular-nums">'
+      +       dots + ' <b>'+r.cycle+'/7</b>　連 '+r.streak+' 天　共 '+r.total+' 次'
+      +     '</span>'
+      +   '</div>'
+      +   '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'
+      +     (isSuper
+              ?   '<button class="btn-ghost" style="margin:0;padding:4px 11px;font-size:11px;width:auto;flex:0 0 auto;border-radius:8px;line-height:1.25;min-height:0" data-action="ckSet" data-arg="'+escAttr(r.k)+'" data-arg2="0">清零</button>'
+                + '<button class="btn-ghost" style="margin:0;padding:4px 11px;font-size:11px;width:auto;flex:0 0 auto;border-radius:8px;line-height:1.25;min-height:0" data-action="ckSet" data-arg="'+escAttr(r.k)+'" data-arg2="7">補到 7</button>'
+              :   '')
+      +     '<button class="btn-ghost" style="margin:0;padding:4px 11px;font-size:11px;width:auto;flex:0 0 auto;border-radius:8px;line-height:1.25;min-height:0" data-action="ckOb'+(r.ob===false?'Done':'Reset')+'" data-arg="'+escAttr(r.k)+'">'
+      +       (r.ob===false?'標記已看過':'讓他重看引導')+'</button>'
+      +   '</div>'
+      + '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
 async function renderAllLogs(){
   let list=[];
   try{
@@ -8509,7 +8618,7 @@ window.addEventListener('load',()=>{ setTimeout(checkVersion,500); });
     const data=snap.val();
     if(data.disabled===true){sessionStorage.removeItem('chat_me');return;}
     if(data.banned&&data.banned.type==='severe'){sessionStorage.removeItem('chat_me');return;}
-    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0};
+    me={username:data.username,displayName:data.displayName||data.username,chiName:data.chiName||'',engName:data.engName||'',seat:data.seat,cls:data.class||'',color:data.color||'#3b82f6',role:data.role||'member',avatar:data.avatar||null,banned:data.banned||null,points:Number(data.points)||0,obDone:(data.obDone===false?false:true)};
     if(data.theme){theme=data.theme;localStorage.setItem('chat_theme',theme);applyTheme();}
     if(data.lang&&['zh-Hant','zh-Hans','en'].includes(data.lang)){lang=data.lang;localStorage.setItem('chat_lang',lang);applyLang();}
     try{ syncFontFromUser(data); }catch(e){}
