@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kFG8zdjuIe61AaSPFIe76zI9DoiJr54uqsw9/DSeu1A=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-SX7qf4F/v7tjrjagazhNApZypKyGcdrdqjMzgse2/mI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -65,6 +65,11 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .ncard .nbtn{margin-top:15px;width:100%;padding:11px;border:none;border-radius:11px;background:#111;
   color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
 .ncard .nbtn:active{transform:scale(.98)}
+/* 確認彈窗的雙按鈕（取消／確定），危險操作用紅色 */
+.ncard .nbtn-ghost{background:#eceef2;color:#41454e}
+.ncard .nbtn-danger{background:#e5484d;color:#fff}
+.ncard .ncard-btns{display:flex;gap:9px;margin-top:15px}
+.ncard .ncard-btns .nbtn{margin-top:0;flex:1}
 .ncard-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9499;animation:ncardFade .2s ease}
 @keyframes ncardFade{from{opacity:0}to{opacity:1}}
 /* ═══ 液態玻璃（liquidGlass）═══
@@ -171,6 +176,24 @@ body.theme-light [data-lg]::after{
     rgba(255,255,255,.55) 90%, rgba(255,255,255,1) 100%);
 }
 
+/* ═══ 按鈕手感 ═══
+   只加 transform 不夠——真正的「手感」是三段：
+   按下（快速縮小 .955 + 壓暗）→ 放開（彈性曲線回彈，會輕微過衝）→ 静止。
+   transition 用 1.5 過衝曲線，所以放手時會「彈一下」而不是死板地回到原位。 */
+.btn-primary,.btn-ghost,.btn-ok,.btn-danger,.btn-warn,.nav-item,.av-opt,.about-item,.pi{
+  transition:transform .24s cubic-bezier(.34,1.5,.5,1),box-shadow .2s ease,filter .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-primary:active,.btn-ghost:active,.btn-ok:active,.btn-danger:active,.btn-warn:active{
+  transform:scale(.955);
+  filter:brightness(.9);
+  transition-duration:.07s;
+}
+@media (prefers-reduced-motion:reduce){
+  .btn-primary,.btn-ghost,.btn-ok,.btn-danger,.btn-warn{transition:none}
+  .btn-primary:active,.btn-ghost:active,.btn-ok:active,.btn-danger:active,.btn-warn:active{transform:none;filter:none}
+}
+
 /* ═══ 按鈕玻璃化：保留主按鈕的藍色辨識度，只加玻璃高光 ═══ */
 .btn-primary{
   background:linear-gradient(140deg, rgba(59,130,246,.62), rgba(37,99,235,.40)) !important;
@@ -234,6 +257,16 @@ body.theme-light #navPill{background:linear-gradient(180deg,rgba(59,130,246,.20)
   border:1px solid rgba(59,130,246,.26);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 10px -6px rgba(15,23,42,.35)}
 #bottomNav .nav-item{z-index:1}
+/* 選中圖標：切換時彈一下（放大 → 回彈），比單純變色有生命 */
+#bottomNav .nav-item.on{color:var(--text-main)}
+#bottomNav .nav-item.on .nav-icon{animation:navPop .38s cubic-bezier(.34,1.56,.5,1)}
+@keyframes navPop{
+  0%{transform:scale(1) rotate(0)}
+  42%{transform:scale(1.26) translateY(-3px) rotate(-5deg)}
+  100%{transform:scale(1) translateY(0) rotate(0)}
+}
+@media (prefers-reduced-motion:reduce){#bottomNav .nav-item.on .nav-icon{animation:none}}
+
 @keyframes ldrb{0%,100%{height:6px;opacity:.45}50%{height:20px;opacity:1}}
 .ldr{display:inline-flex;align-items:flex-end;gap:3.5px;height:22px;vertical-align:middle;margin-right:9px}
 .ldr i{display:block;width:3.5px;border-radius:2px;background:#4285f4;animation:ldrb 1.05s infinite ease-in-out}
@@ -5252,7 +5285,7 @@ async function buyShopItem(id){
     const stock=(it.stock==null||it.stock==='')?null:Number(it.stock);
     if(stock!==null&&stock<=0){ showNotif('這個商品已經換完'); loadShopAndHistory(seq); return; }
     if(pointsOf(me)<cost){ showNotif('積分不足，還差 '+(cost-pointsOf(me))+' 分'); return; }
-    if(!confirm('確定用 '+cost+' 分兌換「'+(it.name||'')+'」？'))return;
+    if(!(await askConfirm({title:'兌換確認',html:'確定用 '+cost+' 分兌換「'+(it.name||'')+'」？'})))return;
     /* 先扣分（最關鍵的一步），扣不到就整個取消 */
     try{ await get(ref(db,'users/'+me.username+'/points')); }catch(e){}
     const pr=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
@@ -5393,7 +5426,7 @@ async function adminCreateShop(){
 }
 async function adminDeleteShop(id){
   if(me.role!=='superadmin'||!id)return;
-  if(!confirm('下架這個商品？已經兌換過的紀錄會保留。'))return;
+  if(!(await askConfirm({title:'下架商品',html:'下架這個商品？已經兌換過的紀錄會保留。',danger:true,okText:'下架'})))return;
   await remove(ref(db,'shop/'+id));
   try{ writeLog('shopdel','下架商品 '+id); }catch(e){}
   renderAdminTab('shop');
@@ -5999,6 +6032,81 @@ window.addEventListener('pagehide',function(){
   }catch(e){}
 });
 
+/* ═══ 撒花粒子 ═══
+   照小紅書那個教學的重點做，它特別提醒了大部分人做錯的三件事：
+     ① 來源：從「按鈕本身」噴出，不是從螢幕中間炸開
+     ② 物理：先衝上去（初速向上）再翻著面飄落，有空氣阻力（越落越慢）
+     ③ 退場：一粒一粒淡掉，不是一下全部消失
+   另外用 canvas 而不是 DOM —— 90 粒 div 同時動會掉幀，canvas 不會。 */
+function confettiBurst(el, opt){
+  try{
+    opt = opt || {};
+    const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+    const cx = r ? (r.left + r.width/2) : window.innerWidth/2;
+    const cy = r ? (r.top + r.height/2) : window.innerHeight*0.4;
+    const cv = document.createElement('canvas');
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.floor(window.innerWidth*dpr);
+    cv.height = Math.floor(window.innerHeight*dpr);
+    cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9600';
+    document.body.appendChild(cv);
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr,dpr);
+
+    const COLORS = opt.colors || ['#fbbf24','#f472b6','#38bdf8','#4ade80','#a78bfa','#fb923c','#f43f5e'];
+    const N = opt.count || 96;
+    const P = [];
+    for(let i=0;i<N;i++){
+      /* 主要向上扇開（-90° 加減 46°），少數向兩側，看起來像禮花筒 */
+      const ang = -Math.PI/2 + (Math.random()-0.5)*1.55;
+      const sp = 7 + Math.random()*9.5;
+      P.push({
+        x: cx, y: cy,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        w: 3.5 + Math.random()*5,
+        h: 6 + Math.random()*9,
+        rot: Math.random()*Math.PI*2,
+        vr: (Math.random()-0.5)*0.32,
+        c: COLORS[i % COLORS.length],
+        life: 1,
+        fade: 0.006 + Math.random()*0.009     /* 每粒淡出速度不同 → 逐粒消失 */
+      });
+    }
+    let last = performance.now();
+    function tick(now){
+      const dt = Math.min(2.2, (now-last)/16.7) || 1;
+      last = now;
+      ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+      let alive = 0;
+      for(let i=0;i<P.length;i++){
+        const p = P[i];
+        p.vy += 0.30*dt;                 /* 重力 */
+        p.vx *= 0.991;                   /* 空氣阻力：越落越慢 */
+        p.vy *= 0.991;
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+        p.rot += p.vr*dt;
+        p.life -= p.fade*dt;
+        if(p.life > 0 && p.y < window.innerHeight + 60) alive++;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.c;
+        /* 側向收窄一點，像紙片翻面 */
+        ctx.fillRect(-p.w/2, -p.h/2, p.w * Math.abs(Math.cos(p.rot*1.7)), p.h);
+        ctx.restore();
+      }
+      if(alive > 0) requestAnimationFrame(tick);
+      else { try{ cv.remove(); }catch(e){} }
+    }
+    requestAnimationFrame(tick);
+    /* 保險：5 秒後無論如何都收掉，免得有粒子卡在畫面外永遠不結束 */
+    setTimeout(function(){ try{ cv.remove(); }catch(e){} }, 5000);
+  }catch(e){}
+}
+
 /* ═══ 每日簽到 ═══
    規則：每天 +100；連續第 7 天額外 +500（神秘小禮物）。
    用本地日期（香港 UTC+8），不是 UTC —— 用 toISOString() 會令晚上 8 點後算成明天。
@@ -6058,6 +6166,8 @@ async function doCheckin(){
       await set(ref(db,'users/'+me.username+'/points'),Math.min(cur+reward,9007199254740991));
     }
     try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
+    /* 從「簽到」按鈕本身噴花（按鈕可能已經被白框蓋住，先記住位置） */
+    try{ confettiBurst(document.querySelector('[data-action="doCheckin"]'), {count: bonus?130:90}); }catch(e){}
     showNCard({
       title: bonus?'第 '+streak+' 天！神秘小禮物':'每日簽到',
       html: bonus
@@ -6661,7 +6771,7 @@ async function purgeMedia(key){
   const m=snap.val()||{};
   const before=bytesOf(m);
   const label=m.type==='image'?'圖片':(m.type==='voice'?'語音':(m.type==='file'?'檔案':'媒體'));
-  if(!confirm('確定清除這則'+label+'？（約 '+fmtBytes(before)+'）'))return;
+  if(!(await askConfirm({title:'清除媒體',html:'確定清除這則'+label+'？（約 '+fmtBytes(before)+'）',danger:true,okText:'清除'})))return;
   try{
     await update(ref(db,'messages/'+key),{
       type:'text',text:'（'+label+'已由管理員清除，釋出 '+fmtBytes(before)+'）',
@@ -6685,7 +6795,7 @@ async function purgeOldMedia(){
   });
   if(!targets.length){showNotif('30 天前沒有可清除的媒體');return;}
   const total=targets.reduce((s,k)=>s+bytesOf(msgs[k]),0);
-  if(!confirm('要清除 '+targets.length+' 則 30 天前的媒體嗎？\n合計約 '+fmtBytes(total)+'\n（訊息與文字會保留）'))return;
+  if(!(await askConfirm({title:'批量清除媒體',html:'要清除 '+targets.length+' 則 30 天前的媒體嗎？\n合計約 '+fmtBytes(total)+'\n（訊息與文字會保留）',danger:true,okText:'清除'})))return;
   let done=0;
   for(const k of targets){
     try{
@@ -6852,7 +6962,7 @@ function generateUniqueColor(existing){
 }
 async function disableAccount(username){ if(me.role!=='superadmin')return;await update(ref(db,'users/'+username),{disabled:true});await writeLog('account','停用帳號 '+username);showNotif('已停用');openUserDetail(username); }
 async function enableAccount(username){ if(me.role!=='superadmin')return;await update(ref(db,'users/'+username),{disabled:false});await writeLog('account','恢復帳號 '+username);showNotif('已恢復');openUserDetail(username); }
-async function deleteAccount(username){ if(me.role!=='superadmin')return;if(!confirm('確定要徹底刪除？'))return;await remove(ref(db,'users/'+username));await remove(ref(db,'presence/'+username));await remove(ref(db,'aiMode/'+username));await remove(ref(db,'aiPrivateChat/'+username));await writeLog('account','徹底刪除帳號 '+username);showNotif('已刪除');closePage();openAdminPage('users'); }
+async function deleteAccount(username){ if(me.role!=='superadmin')return;if(!(await askConfirm({title:'刪除帳號',html:'確定要「徹底刪除」？這個動作無法復原。',danger:true,okText:'刪除'})))return;await remove(ref(db,'users/'+username));await remove(ref(db,'presence/'+username));await remove(ref(db,'aiMode/'+username));await remove(ref(db,'aiPrivateChat/'+username));await writeLog('account','徹底刪除帳號 '+username);showNotif('已刪除');closePage();openAdminPage('users'); }
 function renderPendingNotices(){
   if(!pendingNotices||pendingNotices.length===0)return `<div class="empty">暫無待審核公告</div>`;
   return pendingNotices.map(p=>{
@@ -7359,7 +7469,7 @@ async function clearGroupNotice(){
 }
 async function leaveGroup(groupKey){
   if(!me)return;
-  if(!confirm('確定要退出群聊「'+groupKey+'」？'))return;
+  if(!(await askConfirm({title:'退出群聊',html:'確定要退出群聊「'+groupKey+'」？',danger:true,okText:'退出'})))return;
   try{
     await remove(ref(db,'groups/'+groupKey+'/members/'+me.username));
     await writeLog('group','退出群聊 '+groupKey);
@@ -8783,6 +8893,16 @@ window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
     if(!animate) pill.style.transition='none';
     pill.style.transform='translateX('+(i*100)+'%)';
     if(!animate) requestAnimationFrame(()=>{ if(pill) pill.style.transition=''; });
+    /* 同步選中樣式；先移除再加（強制 reflow）讓彈跳動畫每次都重播 */
+    list.forEach(function(x,j){
+      if(j===i){
+        x.classList.remove('on');
+        void x.offsetWidth;
+        x.classList.add('on');
+      }else{
+        x.classList.remove('on');
+      }
+    });
     cur=i;
   }
   function boot(){
@@ -8823,6 +8943,41 @@ function showNCard(opt){
   return el;
 }
 try{ window.showNCard=showNCard; }catch(e){}
+
+/* ═══ 確認彈窗（取代原生 confirm） ═══
+   原生 confirm 在手機 WebView 很醜、樣式跟網站完全不一樣，而且會阻塞整頁。
+   這個版本回傳 Promise<boolean>，呼叫點寫 if(!(await askConfirm(...)))return; 即可。
+   ⚠ 只能是 async 函式呼叫（原生 confirm 是同步的，換成這個就不能同步等）。 */
+function askConfirm(opt){
+  return new Promise(function(resolve){
+    var o = (typeof opt==='string') ? {html:opt} : (opt||{});
+    var mask=document.createElement('div'); mask.className='ncard-mask';
+    var el=document.createElement('div'); el.className='ncard';
+    var body=String(o.html||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    /* 允許呼叫方自己傳已經安全的 html（有 <b> 之類），用 rawHtml 區分 */
+    if(o.rawHtml) body=String(o.rawHtml);
+    el.innerHTML='<div class="ndots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>'
+      +'<h4>'+String(o.title||'確認').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</h4>'
+      +'<p>'+body+'</p>'
+      +'<div class="ncard-btns">'
+      +  '<button class="nbtn nbtn-ghost" data-x="0">'+String(o.cancelText||'取消')+'</button>'
+      +  '<button class="nbtn'+(o.danger?' nbtn-danger':'')+'" data-x="1">'+String(o.okText||'確定')+'</button>'
+      +'</div>';
+    document.body.appendChild(mask);
+    document.body.appendChild(el);
+    var done=false;
+    function fin(v){
+      if(done) return; done=true;
+      try{ el.remove(); mask.remove(); }catch(e){}
+      resolve(!!v);
+    }
+    el.querySelector('[data-x="0"]').onclick=function(){ fin(false); };
+    el.querySelector('[data-x="1"]').onclick=function(){ fin(true); };
+    mask.onclick=function(){ fin(false); };
+    try{ el.querySelector('[data-x="'+(o.danger?1:1)+'"]').focus(); }catch(e){}
+  });
+}
+try{ window.askConfirm=askConfirm; }catch(e){}
 
 /* ═══ 載入動畫自動套用 ═══
    用戶要求：任何要等的地方都要有載入動畫，唔好讓用戶對住空白畫面。
