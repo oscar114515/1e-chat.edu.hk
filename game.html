@@ -434,6 +434,10 @@ body.theme-light .seg button.sel{color:#fff}
 .gcard.playing{border-color:var(--gold);box-shadow:0 0 0 1px rgba(226,176,74,.35) inset}
 
 /* ══ v1.40 canvas 類遊戲的版面（大廳自由／單人）══ */
+.dpad{width:56px;height:50px;border-radius:14px;border:1px solid var(--border-strong);
+  background:var(--bg-input);color:var(--text-main);font-size:19px;font-family:inherit;cursor:pointer;
+  transition:transform .12s ease,background .12s ease}
+.dpad.on{transform:scale(.92);background:rgba(59,130,246,.22)}
 .cstage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
 /* 小恐龍：白底像素畫布，夜晚整塊反色（同 Chrome 一樣）。
    畫面只有 4:1，手機直立時上下會留一大片空，所以加一層很淡的光暈，
@@ -3914,7 +3918,11 @@ function render2048(r,g,spec){
         <div class="g2048" id="g2048Board">${'<div class="c"></div>'.repeat(16)}</div>
         <div class="solo-ov" id="g2048Over" hidden></div>
       </div>
-      <div style="display:flex;justify-content:center;margin-top:12px">
+      <div id="g2048dpad" style="display:grid;grid-template-columns:repeat(3,56px);gap:7px;justify-content:center;margin-top:14px">
+        <div></div><button class="dpad" data-d="0">↑</button><div></div>
+        <button class="dpad" data-d="3">←</button><button class="dpad" data-d="2">↓</button><button class="dpad" data-d="1">→</button>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:10px">
         <button class="btn ghost" id="g2048New" style="max-width:140px">重新開始</button>
       </div>
     </div>`;
@@ -3932,6 +3940,13 @@ function render2048(r,g,spec){
     if(Math.abs(dx)>Math.abs(dy)) move(dx>0?1:3); else move(dy>0?2:0);
   });
   board.addEventListener('pointercancel',()=>{ sw=false; });
+  /* 手機很多人不知道要滑動，所以加實體方向鍵 */
+  appEl.querySelectorAll('.dpad').forEach(function(b){
+    b.onclick=function(){ move(Number(b.dataset.d)); };
+    b.onpointerdown=function(e){ e.preventDefault(); b.classList.add('on'); };
+    b.onpointerup=function(){ b.classList.remove('on'); };
+    b.onpointerleave=function(){ b.classList.remove('on'); };
+  });
   soloEng._key=e=>{
     const m={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3};
     if(m[e.key]!==undefined){ e.preventDefault(); move(m[e.key]); }
