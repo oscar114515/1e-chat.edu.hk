@@ -42,7 +42,7 @@ try{ if(localStorage.getItem('chat_font')==='sys') document.documentElement.clas
 html.font-sys body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif}
 html,body{margin:0;padding:0;height:100%}
 body{background:var(--bg);color:var(--text-main);font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif;font-size:15px;line-height:1.5;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
-#app{min-height:100%;display:flex;flex-direction:column}
+#app{height:100vh;height:100dvh;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden}/* ⚠ 以前係 min-height:100% → 容器跟內容撐高，.cstage 的 flex:1 等於冇作用，俄羅斯方塊等遊戲的控制按鈕被推出屏幕外（用戶實測「UI 組件點不了」）。改成固定視口高度 + 子層 flex:1 + min-height:0，棋盤自己縮，按鈕永遠在畫面內。 */
 .hidden{display:none!important}
 .topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,13,20,.92);backdrop-filter:blur(12px);z-index:20}
 /* v1.38.23 連線狀態徽章：玩家一眼睇到「而家用邊個伺服器」 */
@@ -5009,9 +5009,17 @@ let gomokuZoom=1;   // 1 / 1.5 / 2，重繪後要記住
 function drawGomoku(r,g,bar,spec){
   const S=15,C=26,PAD=20,W=C*(S-1)+PAD*2; // 404：格距由 23 加到 26，手指冇咁易按錯
   const zw=Math.round(W*gomokuZoom);
+  /* ⚠ 棋盤本身 404px（15 格 x 26px + 邊距），但手機屏幕只有 390px
+     → 右邊一整排格線看不到，用戶實測「棋盤小了看不到盡頭」。
+     未放大時改成跟容器寬（最多 404px），自動縮到屏幕內；
+     只有用戶主動放大（1.5x / 2x）才用固定像素 + 橫向滾動。
+     點擊座標一直是用 rect.width 換算，所以縮放後仍然準確。 */
+  const cvStyle = (gomokuZoom<=1)
+    ? ('width:100%;max-width:'+W+'px;display:block;margin:0 auto')
+    : ('width:'+zw+'px;max-width:none');
   appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div>
    <div class="wrap"><div class="board-wrap">${bar}
-   <div class="zoom-box"><canvas id="cv" width="${W}" height="${W}" style="width:${zw}px;max-width:none"></canvas></div>
+   <div class="zoom-box"><canvas id="cv" width="${W}" height="${W}" style="${cvStyle}"></canvas></div>
    <div class="side"><button class="chip" id="zmBtn">${gomokuZoom>=2?'還原':'放大'}</button></div>
    <div class="hint">五子連線者勝</div></div></div>`;
   const cv=appEl.querySelector('#cv'),ctx=cv.getContext('2d');
