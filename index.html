@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-sK1HBNo7DuKwDRr/8sMskTf3Kc4o76Vs6IV6BFQ4qpg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-FHQ4cxVgF5SIG6h7mPeyTAnw0M/xGTsHn52H3IkF4l4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -27,6 +27,71 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 載入動畫（彩色豎條；全站所有「正在…」自動套用） ═══ */
+/* ═══ 白框小通知卡（macOS 三點） ═══
+   之後要加「七天簽到」之類，直接 showNCard({title:'...',html:'...'}) 就彈出來。 */
+/* ═══ 圖片檢視頁的下載按鈕（深色方塊，角落光暈） ═══ */
+.dlb{position:absolute;top:18px;right:18px;width:47px;height:47px;border-radius:11px;
+  background:linear-gradient(150deg,#33353b,#1c1e22);border:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 9px 20px -6px rgba(0,0,0,.85);
+  text-decoration:none;z-index:3;transition:transform .15s}
+.dlb::after{content:'';position:absolute;inset:-45%;pointer-events:none;
+  background:radial-gradient(circle at 28% 18%,rgba(140,170,255,.22),transparent 62%)}
+.dlb svg{width:21px;height:21px;stroke:#cdd5e3;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:2}
+.dlb:active{transform:scale(.94)}
+.dlb-tip{position:absolute;top:70px;right:18px;font-size:11px;color:#9aa3b2;z-index:3;pointer-events:none}
+@keyframes ncardIn{from{opacity:0;transform:translate(-50%,-46%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.ncard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(302px,86vw);
+  background:#fff;border-radius:15px;padding:17px 18px 15px;z-index:9500;color:#1b1d21;
+  box-shadow:0 26px 64px -14px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.04);
+  animation:ncardIn .22s cubic-bezier(.3,1.2,.5,1);font-family:inherit}
+.ncard .ndots{display:flex;gap:6px;margin-bottom:13px}
+.ncard .ndots i{width:10px;height:10px;border-radius:50%;display:block}
+.ncard h4{font-size:15px;font-weight:800;margin:0 0 7px;letter-spacing:-.2px}
+.ncard p{font-size:12.5px;line-height:1.7;color:#4b5160;margin:0}
+.ncard p b{color:#111}
+.ncard .nbtn{margin-top:15px;width:100%;padding:11px;border:none;border-radius:11px;background:#111;
+  color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
+.ncard .nbtn:active{transform:scale(.98)}
+.ncard-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9499;animation:ncardFade .2s ease}
+@keyframes ncardFade{from{opacity:0}to{opacity:1}}
+@keyframes ldrb{0%,100%{height:6px;opacity:.45}50%{height:20px;opacity:1}}
+.ldr{display:inline-flex;align-items:flex-end;gap:3.5px;height:22px;vertical-align:middle;margin-right:9px}
+.ldr i{display:block;width:3.5px;border-radius:2px;background:#4285f4;animation:ldrb 1.05s infinite ease-in-out}
+.ldr i:nth-child(2){background:#34a853;animation-delay:.12s}
+.ldr i:nth-child(3){background:#fbbc04;animation-delay:.24s}
+.ldr i:nth-child(4){background:#4285f4;animation-delay:.36s}
+.ldr i:nth-child(5){background:#ea4335;animation-delay:.48s}
+.empty.ldr-wrap{display:flex;align-items:center;justify-content:center;gap:2px;min-height:44px}
+.ldr-inline{display:inline-flex;align-items:flex-end;gap:3px;height:16px;vertical-align:-3px;margin-right:6px}
+.ldr-inline i{width:3px;border-radius:2px;background:#4285f4;animation:ldrb 1.05s infinite ease-in-out}
+.ldr-inline i:nth-child(2){background:#34a853;animation-delay:.12s}
+.ldr-inline i:nth-child(3){background:#fbbc04;animation-delay:.24s}
+.ldr-inline i:nth-child(4){background:#ea4335;animation-delay:.36s}
+@media (prefers-reduced-motion: reduce){.ldr i,.ldr-inline i{animation-duration:2.4s}}
+/* ═══ 內凹軟質輸入框（全站，含登入頁） ═══
+   做法：無邊框 + 雙向 inset 陰影（左上暗、右下亮）造出「凹落去」的錯覺。
+   深色主題的亮面要很淡（.04），否則會變成一條白邊。 */
+:root{--neu-in:inset 3px 3px 7px rgba(0,0,0,.45),inset -3px -3px 6px rgba(255,255,255,.045)}
+body.theme-light{--neu-in:inset 3px 3px 9px rgba(0,0,0,.17),inset -3px -3px 9px rgba(255,255,255,1)}
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([type=submit]):not([type=button]),
+textarea{
+  border:1px solid transparent !important;
+  background:var(--bg-input) !important;
+  box-shadow:var(--neu-in) !important;
+  border-radius:999px !important;          /* 同 Uiverse 那個一樣，單行輸入框做膠囊 */
+  transition:box-shadow .18s ease,background .18s ease;
+}
+textarea{border-radius:16px !important;box-shadow:var(--neu-in) !important;border:1px solid transparent !important;background:var(--bg-input) !important}
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([type=submit]):not([type=button]):focus,
+textarea:focus{
+  box-shadow:var(--neu-in),0 0 0 2px rgba(59,130,246,.28) !important;
+}
+body.theme-light input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([type=submit]):not([type=button]):focus,
+body.theme-light textarea:focus{
+  box-shadow:var(--neu-in),0 0 0 2px rgba(37,99,235,.35) !important;
+}
 /* v1.38.23 UI 修正：淺色主題下「AI 模式／審核類型」選中的按鈕是橙字橙底，
    對比不足看不清；淺色時改用深橙棕字。 */
 body.theme-light .ban-type-btn.selected.light{color:#7c2d12}
@@ -3885,7 +3950,22 @@ async function sendMedia(type,payload){
 }
 function fileToBase64(file){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('fail'));r.readAsDataURL(file);}); }
 function compressImage(file,maxW,maxH,quality){ return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;const ratio=Math.min(maxW/w,maxH/h,1);w=Math.round(w*ratio);h=Math.round(h*ratio);const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);resolve(canvas.toDataURL('image/jpeg',quality));};img.onerror=()=>reject(new Error('load fail'));img.src=ev.target.result;};reader.onerror=()=>reject(new Error('read fail'));reader.readAsDataURL(file);}); }
-function viewImage(url){ const u=String(url==null?'':url);if(!/^(data:image\/|https?:\/\/)/i.test(u))return;const div=document.createElement('div');div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';div.innerHTML=`<img src="${escAttr(u)}" style="max-width:100%;max-height:100%;object-fit:contain">`;div.classList.add('anim-in-modal');div.onclick=()=>{div.onclick=null;animOut(div,'anim-out-zoom',200);};document.body.appendChild(div); }
+function viewImage(url){
+  const u=String(url==null?'':url);
+  if(!/^(data:image\/|https?:\/\/)/i.test(u)) return;
+  const ext=(u.match(/^data:image\/(\w+)/i)||[])[1]||'png';
+  const name='chat-'+new Date().toISOString().slice(0,10)+'-'+Date.now().toString().slice(-6)+'.'+ext;
+  const div=document.createElement('div');
+  div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.innerHTML='<img src="'+escAttr(u)+'" style="max-width:100%;max-height:100%;object-fit:contain">'
+    +'<a class="dlb" href="'+escAttr(u)+'" download="'+escAttr(name)+'" title="下載這張圖">'
+    +'<svg viewBox="0 0 24 24"><path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14"/></svg></a>';
+  div.classList.add('anim-in-modal');
+  const dl=div.querySelector('.dlb');
+  if(dl) dl.addEventListener('click',e=>e.stopPropagation());   /* 按下載不要順便關掉 */
+  div.onclick=()=>{ div.onclick=null; animOut(div,'anim-out-zoom',200); };
+  document.body.appendChild(div);
+}
 
 /* ===== v1.10 語音錄音 =====
    v1.37：錄音器改成「看目標」——recTarget 是 'main'（公共聊天室）還是 'group'（私人群聊）。
@@ -8398,6 +8478,67 @@ try{
 /* 測試用唯讀鉤子 */
 window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
   state:()=>({layer:!!okraLayer,alive:okraAlive,ready:okraReady,myAt:okraMyAt,why:okraWhy.slice()})};
+
+/* ═══ 白框小通知卡 ═══
+   用法：showNCard({title:'每日簽到', html:'連續 <b>3</b> 天，今日 +100 積分', btn:'收下'})
+   之後加簽到、成就、小禮物都用這一個，不用再寫新的彈窗。 */
+function showNCard(opt){
+  opt=opt||{};
+  const mask=document.createElement('div');
+  mask.className='ncard-mask';
+  const el=document.createElement('div');
+  el.className='ncard';
+  el.innerHTML='<div class="ndots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>'
+    +'<h4>'+escapeHtml(opt.title||'通知')+'</h4>'
+    +'<p>'+(opt.html||escapeHtml(opt.body||''))+'</p>'
+    +'<button class="nbtn">'+escapeHtml(opt.btn||'知道了')+'</button>';
+  document.body.appendChild(mask);
+  document.body.appendChild(el);
+  const close=()=>{ try{el.remove();mask.remove();}catch(e){} if(typeof opt.onClose==='function'){try{opt.onClose();}catch(e){}} };
+  el.querySelector('.nbtn').onclick=close;
+  mask.onclick=close;
+  return el;
+}
+try{ window.showNCard=showNCard; }catch(e){}
+
+/* ═══ 載入動畫自動套用 ═══
+   用戶要求：任何要等的地方都要有載入動畫，唔好讓用戶對住空白畫面。
+   這裡不逐處改字串，用觀察器：凡 .empty 裡寫「正在…」「載入中」
+   就自動換成彩色豎條 + 原本文字。之後新增任何頁面都自動生效。 */
+(function(){
+  var BARS='<span class="ldr"><i></i><i></i><i></i><i></i><i></i></span>';
+  var RX=/^(正在|載入中|載入…)/;
+  function dress(el){
+    if(!el||el.dataset.ldr) return;
+    var t=(el.textContent||'').trim();
+    if(!t||t.length>40) return;
+    if(!RX.test(t)) return;
+    el.dataset.ldr='1';
+    el.classList.add('ldr-wrap');
+    el.innerHTML=BARS+'<span>'+t+'</span>';
+  }
+  function scan(root){
+    try{ (root||document).querySelectorAll('.empty').forEach(dress); }catch(e){}
+  }
+  function boot(){
+    scan(document);
+    try{
+      new MutationObserver(function(muts){
+        for(var i=0;i<muts.length;i++){
+          var ns=muts[i].addedNodes||[];
+          for(var j=0;j<ns.length;j++){
+            var n=ns[j];
+            if(n.nodeType!==1) continue;
+            if(n.classList&&n.classList.contains('empty')) dress(n);
+            else if(n.querySelectorAll) scan(n);
+          }
+        }
+      }).observe(document.body,{childList:true,subtree:true});
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
 
 initRemote();
 </script>
