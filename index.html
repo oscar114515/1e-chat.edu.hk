@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-PRl1v4e2cJaA1Us8zm87UuKiNVlcDgLk/l3IVPi8mxU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-LOetI85wJL6z7Mk/pmUHXZIviuH4NyPOXBh5zIa+Ajk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -28,9 +28,9 @@ body.theme-light{background:
   src:url('fonts/LXGWWenKaiTC-subset.woff2') format('woff2');
   unicode-range:U+2E80-2EFF,U+3000-303F,U+3100-312F,U+31C0-31EF,U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF,U+FE30-FE4F,U+FF00-FFEF}
 body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif;background:
-    radial-gradient(58% 46% at 14% 6%, rgba(59,130,246,.30), transparent 72%),
-    radial-gradient(52% 42% at 88% 88%, rgba(168,85,247,.24), transparent 72%),
-    radial-gradient(46% 38% at 62% 46%, rgba(34,211,238,.12), transparent 78%),
+    radial-gradient(62% 50% at 12% 4%, rgba(59,130,246,.48), transparent 70%),
+    radial-gradient(56% 46% at 90% 90%, rgba(168,85,247,.40), transparent 70%),
+    radial-gradient(48% 40% at 60% 48%, rgba(34,211,238,.22), transparent 76%),
     var(--bg-app);
   background-attachment:fixed;
   color:var(--text-main);overflow:hidden;height:100vh;height:100dvh;transition:background var(--dur-3) ease,color var(--dur-3) ease;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -67,22 +67,84 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .ncard .nbtn:active{transform:scale(.98)}
 .ncard-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9499;animation:ncardFade .2s ease}
 @keyframes ncardFade{from{opacity:0}to{opacity:1}}
-/* ═══ 液態玻璃面板 ═══
-   做法：半透明底（變數已改）+ backdrop-filter 模糊背後的彩色光暈
-   + 頂部 1px 高光內陰影（這就是「玻璃邊」的來源）。
-   ⚠ 只加在「有定位背景」的容器上；訊息氣泡本身是彩色實心，加了也看不出，
-     所以不動它，免得整個聊天區變灰。 */
-.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,aside.side,.drawer-inner{
-  -webkit-backdrop-filter:blur(18px) saturate(150%);
-  backdrop-filter:blur(18px) saturate(150%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 0 -1px 0 rgba(255,255,255,.04);
+/* ═══ 液態玻璃（liquidGlass）═══
+   上一版只做了 backdrop-blur → 出來是「磨砂玻璃」，不像液態玻璃。
+   真正像 Apple Liquid Glass 要靠三樣東西，缺一不可：
+     ① 6 層 inset 陰影：兩對對角（2px 與 6px）造出「玻璃有厚度」的邊緣高光
+     ② 45° 對角漸層反光（::after）：左上、右下各一道白光，這就是「鏡面」
+     ③ border:double 雙線邊：看起來像玻璃斷面，單線邊會很塑膠
+   背景必須幾乎透明（.045），否則看不見背後的光暈折射。 */
+[data-lg]{
+  position:relative;
+  background:linear-gradient(140deg, rgba(130,170,255,.11), rgba(30,45,85,.16)) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(190%);
+  backdrop-filter:blur(14px) saturate(190%);
+  border:1px double rgba(155,195,255,.20) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(175,208,255,.42),
+    inset -2px 2px 1px -1px rgba(175,208,255,.42),
+    inset 6px -6px 1px -6px rgba(175,208,255,.22),
+    inset -6px 6px 1px -6px rgba(175,208,255,.22),
+    inset 0 0 3px rgba(0,0,0,.5),
+    0 8px 24px -10px rgba(0,0,0,.62) !important;
 }
-.card{border:1px solid rgba(255,255,255,.10)}
-body.theme-light .card{border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 8px 24px -14px rgba(15,23,42,.28)}
-.sheet .inner{border:1px solid rgba(255,255,255,.12);border-radius:20px}
-body.theme-light .sheet .inner{border:1px solid rgba(255,255,255,.9)}
-.topbar,#bottomNav{border-color:rgba(255,255,255,.09)}
-body.theme-light .topbar,body.theme-light #bottomNav{border-color:rgba(15,23,42,.07)}
+[data-lg]::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+  background:linear-gradient(45deg,
+    rgba(190,220,255,.20) 0%, rgba(190,220,255,.06) 10%,
+    transparent 28%, transparent 72%,
+    rgba(190,220,255,.06) 90%, rgba(190,220,255,.20) 100%);
+  mix-blend-mode:screen;
+}
+/* 用 isolation 建層疊上下文，內容自然在反光層之上，不必逐個子元素設 z-index
+   （之前用 `> *{position:relative}` 會破壞卡片內既有嘅絕對定位元素） */
+[data-lg]{isolation:isolate}
+
+/* 淺色主題：白光改成淡藍灰，否則白底上看不見 */
+body.theme-light [data-lg]{
+  background:rgba(255,255,255,.55) !important;
+  border:1px double rgba(255,255,255,.95) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255,255,255,1),
+    inset -2px 2px 1px -1px rgba(255,255,255,1),
+    inset 6px -6px 1px -6px rgba(160,180,215,.55),
+    inset -6px 6px 1px -6px rgba(160,180,215,.55),
+    inset 0 0 2px rgba(15,23,42,.10),
+    0 8px 24px -12px rgba(15,23,42,.35) !important;
+}
+body.theme-light [data-lg]::after{
+  background:linear-gradient(45deg,
+    rgba(255,255,255,.95) 0%, rgba(255,255,255,.4) 9%,
+    transparent 28%, transparent 72%,
+    rgba(255,255,255,.4) 91%, rgba(255,255,255,.95) 100%);
+  mix-blend-mode:normal;
+}
+
+/* 按鈕類做完整版（含折射內框） */
+.btn-primary.btn-lg,[data-lgbtn]{
+  --tr:25%;
+  position:relative;overflow:hidden;isolation:isolate;
+  background:rgba(255,255,255,.07) !important;
+  border:1px double rgba(255,255,255,.16) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255,255,255,.85),
+    inset -2px 2px 1px -1px rgba(255,255,255,.85),
+    inset 6px -6px 1px -6px rgba(255,255,255,.45),
+    inset -6px 6px 1px -6px rgba(255,255,255,.45),
+    inset 0 0 2px rgba(0,0,0,.55),
+    0 5px 14px -5px rgba(0,0,0,.6) !important;
+}
+[data-lgbtn]::before{
+  content:'';position:absolute;z-index:1;top:35%;left:50%;transform:translateX(-50%);
+  width:calc(100% - 10px);height:calc(100% - 10px);border-radius:inherit;
+  border:1px solid rgba(0,0,0,.55);filter:blur(7px);pointer-events:none;
+}
+[data-lgbtn]::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  background:linear-gradient(45deg,rgba(255,255,255,.55) 0%,transparent var(--tr),transparent calc(100% - var(--tr)),rgba(255,255,255,.55) 100%);
+  mix-blend-mode:screen;
+}
+[data-lgbtn] > *{position:relative;z-index:3}
 
 /* ═══ 底部導航：玻璃膠囊滑動 ═══ */
 #bottomNav{position:relative;isolation:isolate;background:rgba(13,19,33,.62)}
@@ -92,7 +154,7 @@ body.theme-light #bottomNav{background:rgba(252,253,255,.78)}
   border:1px solid rgba(165,205,255,.46);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 -1px 0 rgba(255,255,255,.12),0 5px 16px -6px rgba(0,0,0,.55);
   transition:transform .34s cubic-bezier(.34,1.28,.5,1),width .3s ease;
-  pointer-events:none;z-index:0}
+  pointer-events:none;z-index:2}
 body.theme-light #navPill{background:linear-gradient(180deg,rgba(59,130,246,.20),rgba(59,130,246,.08));
   border:1px solid rgba(59,130,246,.26);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 10px -6px rgba(15,23,42,.35)}
@@ -8519,6 +8581,38 @@ try{
 /* 測試用唯讀鉤子 */
 window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
   state:()=>({layer:!!okraLayer,alive:okraAlive,ready:okraReady,myAt:okraMyAt,why:okraWhy.slice()})};
+
+/* ═══ 液態玻璃自動套用 ═══
+   給主要容器掛 data-lg（CSS 用屬性選擇器），連之後新開的頁面都自動生效。 */
+(function(){
+  var SEL='.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,.drawer-inner,.ncard';
+  function dress(root){
+    try{
+      var list=(root||document).querySelectorAll(SEL);
+      for(var i=0;i<list.length;i++){
+        if(!list[i].dataset.lg) list[i].dataset.lg='';
+      }
+    }catch(e){}
+  }
+  function boot(){
+    dress(document);
+    try{
+      new MutationObserver(function(ms){
+        for(var i=0;i<ms.length;i++){
+          var ns=ms[i].addedNodes||[];
+          for(var j=0;j<ns.length;j++){
+            var n=ns[j];
+            if(n.nodeType!==1) continue;
+            if(n.matches && n.matches(SEL)) n.dataset.lg='';
+            else dress(n);
+          }
+        }
+      }).observe(document.body,{childList:true,subtree:true});
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
 
 /* ═══ 底部導航膠囊 ═══
    點哪個就滑到哪；視窗尺寸變了會重算。預設停在第一個（聊天）。 */
