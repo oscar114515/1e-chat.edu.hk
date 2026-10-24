@@ -2,15 +2,20 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-FHQ4cxVgF5SIG6h7mPeyTAnw0M/xGTsHn52H3IkF4l4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-PRl1v4e2cJaA1Us8zm87UuKiNVlcDgLk/l3IVPi8mxU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
 :root{
-  --r-0:4px;--r-1:8px;--r-2:12px;--r-3:16px;--dur-1:120ms;--dur-2:200ms;--dur-3:280ms;--dur-4:480ms;--ease-out:cubic-bezier(.22,1,.36,1);--ease-inout:cubic-bezier(.4,0,.2,1);--gold:#fbbf24;--warn-tx:#fca5a5;--ok-tx:#4ade80;--danger:#f87171;--info:#38bdf8;--pink-tx:#f472b6;--purple-tx:#a78bfa;--orange-tx:#fdba74;--white-warm:#fff9ec;--bg-app:#0f172a;--bg-header:linear-gradient(90deg,#1e293b,#0f172a);--bg-card:#1e293b;--bg-input:rgba(15,23,42,.6);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
-body.theme-light{--bg-app:#f0f2f5;--bg-header:linear-gradient(90deg,#ffffff,#f8fafc);--bg-card:#ffffff;--bg-input:#f0f2f5;--text-main:#1c1e21;--text-sub:#65676b;--text-muted:#8a8d91;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15)}
-/* v1.38.23 字體：英數用 Inter（本地 48KB 可變字體，只吃 latin），中文交系統字體。
+  --r-0:4px;--r-1:8px;--r-2:12px;--r-3:16px;--dur-1:120ms;--dur-2:200ms;--dur-3:280ms;--dur-4:480ms;--ease-out:cubic-bezier(.22,1,.36,1);--ease-inout:cubic-bezier(.4,0,.2,1);--gold:#fbbf24;--warn-tx:#fca5a5;--ok-tx:#4ade80;--danger:#f87171;--info:#38bdf8;--pink-tx:#f472b6;--purple-tx:#a78bfa;--orange-tx:#fdba74;--white-warm:#fff9ec;--bg-app:#0f172a;--bg-header:linear-gradient(90deg,rgba(30,41,59,.72),rgba(15,23,42,.62));--bg-card:rgba(30,41,59,.55);--bg-input:rgba(15,23,42,.45);--text-main:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;--border:rgba(148,163,184,.15);--border-strong:rgba(148,163,184,.3);--primary:#3b82f6;--primary-2:#2563eb;--ai:#66ccff}
+body.theme-light{--bg-app:#eef1f6;--bg-header:linear-gradient(90deg,rgba(255,255,255,.78),rgba(248,250,252,.7));--bg-card:rgba(255,255,255,.62);--bg-input:rgba(240,242,245,.85);--text-main:#1c1e21;--text-sub:#65676b;--text-muted:#8a8d91;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15)}
+
+body.theme-light{background:
+    radial-gradient(58% 46% at 14% 6%, rgba(96,165,250,.30), transparent 72%),
+    radial-gradient(52% 42% at 88% 88%, rgba(192,132,252,.22), transparent 72%),
+    radial-gradient(46% 38% at 62% 46%, rgba(34,211,238,.12), transparent 78%),
+    var(--bg-app);background-attachment:fixed}/* v1.38.23 字體：英數用 Inter（本地 48KB 可變字體，只吃 latin），中文交系統字體。
    為甚麼不全站自帶中文字體：一套繁體中文字最少 4–6MB，全班 144 人每天開頁，
    Firebase 每月 10GB 下載量會被字體吃光，而且手機首次載入要等好幾秒。
    Inter 只覆蓋英文數字，中文自動 fallback，兩者都不犧牲。 */
@@ -22,7 +27,13 @@ body.theme-light{--bg-app:#f0f2f5;--bg-header:linear-gradient(90deg,#ffffff,#f8f
 @font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;
   src:url('fonts/LXGWWenKaiTC-subset.woff2') format('woff2');
   unicode-range:U+2E80-2EFF,U+3000-303F,U+3100-312F,U+31C0-31EF,U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF,U+FE30-FE4F,U+FF00-FFEF}
-body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif;background:var(--bg-app);color:var(--text-main);overflow:hidden;height:100vh;height:100dvh;transition:background var(--dur-3) ease,color var(--dur-3) ease;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang HK","PingFang TC","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans CJK TC","Noto Sans TC",system-ui,sans-serif;background:
+    radial-gradient(58% 46% at 14% 6%, rgba(59,130,246,.30), transparent 72%),
+    radial-gradient(52% 42% at 88% 88%, rgba(168,85,247,.24), transparent 72%),
+    radial-gradient(46% 38% at 62% 46%, rgba(34,211,238,.12), transparent 78%),
+    var(--bg-app);
+  background-attachment:fixed;
+  color:var(--text-main);overflow:hidden;height:100vh;height:100dvh;transition:background var(--dur-3) ease,color var(--dur-3) ease;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
@@ -56,6 +67,36 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .ncard .nbtn:active{transform:scale(.98)}
 .ncard-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:9499;animation:ncardFade .2s ease}
 @keyframes ncardFade{from{opacity:0}to{opacity:1}}
+/* ═══ 液態玻璃面板 ═══
+   做法：半透明底（變數已改）+ backdrop-filter 模糊背後的彩色光暈
+   + 頂部 1px 高光內陰影（這就是「玻璃邊」的來源）。
+   ⚠ 只加在「有定位背景」的容器上；訊息氣泡本身是彩色實心，加了也看不出，
+     所以不動它，免得整個聊天區變灰。 */
+.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,aside.side,.drawer-inner{
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 0 -1px 0 rgba(255,255,255,.04);
+}
+.card{border:1px solid rgba(255,255,255,.10)}
+body.theme-light .card{border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 8px 24px -14px rgba(15,23,42,.28)}
+.sheet .inner{border:1px solid rgba(255,255,255,.12);border-radius:20px}
+body.theme-light .sheet .inner{border:1px solid rgba(255,255,255,.9)}
+.topbar,#bottomNav{border-color:rgba(255,255,255,.09)}
+body.theme-light .topbar,body.theme-light #bottomNav{border-color:rgba(15,23,42,.07)}
+
+/* ═══ 底部導航：玻璃膠囊滑動 ═══ */
+#bottomNav{position:relative;isolation:isolate;background:rgba(13,19,33,.62)}
+body.theme-light #bottomNav{background:rgba(252,253,255,.78)}
+#navPill{position:absolute;top:5px;left:0;height:calc(100% - 10px);width:20%;border-radius:13px;
+  background:linear-gradient(180deg,rgba(150,192,255,.38),rgba(110,150,235,.18));
+  border:1px solid rgba(165,205,255,.46);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 -1px 0 rgba(255,255,255,.12),0 5px 16px -6px rgba(0,0,0,.55);
+  transition:transform .34s cubic-bezier(.34,1.28,.5,1),width .3s ease;
+  pointer-events:none;z-index:0}
+body.theme-light #navPill{background:linear-gradient(180deg,rgba(59,130,246,.20),rgba(59,130,246,.08));
+  border:1px solid rgba(59,130,246,.26);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 10px -6px rgba(15,23,42,.35)}
+#bottomNav .nav-item{z-index:1}
 @keyframes ldrb{0%,100%{height:6px;opacity:.45}50%{height:20px;opacity:1}}
 .ldr{display:inline-flex;align-items:flex-end;gap:3.5px;height:22px;vertical-align:middle;margin-right:9px}
 .ldr i{display:block;width:3.5px;border-radius:2px;background:#4285f4;animation:ldrb 1.05s infinite ease-in-out}
@@ -8478,6 +8519,44 @@ try{
 /* 測試用唯讀鉤子 */
 window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
   state:()=>({layer:!!okraLayer,alive:okraAlive,ready:okraReady,myAt:okraMyAt,why:okraWhy.slice()})};
+
+/* ═══ 底部導航膠囊 ═══
+   點哪個就滑到哪；視窗尺寸變了會重算。預設停在第一個（聊天）。 */
+(function(){
+  let pill=null, nav=null, cur=-1;
+  function items(){ return nav?Array.prototype.slice.call(nav.querySelectorAll('.nav-item')):[]; }
+  function moveTo(i,animate){
+    const list=items();
+    if(!list.length) return;
+    i=Math.max(0,Math.min(list.length-1,i));
+    if(!pill){
+      pill=document.createElement('div');
+      pill.id='navPill';
+      nav.insertBefore(pill,nav.firstChild);
+    }
+    const w=100/list.length;
+    pill.style.width=w+'%';
+    if(!animate) pill.style.transition='none';
+    pill.style.transform='translateX('+(i*100)+'%)';
+    if(!animate) requestAnimationFrame(()=>{ if(pill) pill.style.transition=''; });
+    cur=i;
+  }
+  function boot(){
+    nav=document.getElementById('bottomNav');
+    if(!nav) return;
+    moveTo(0,false);
+    nav.addEventListener('click',function(e){
+      const it=e.target.closest?e.target.closest('.nav-item'):null;
+      if(!it) return;
+      const list=items();
+      const i=list.indexOf(it);
+      if(i>=0) moveTo(i,true);
+    },true);
+    window.addEventListener('resize',function(){ if(cur>=0) moveTo(cur,false); });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
 
 /* ═══ 白框小通知卡 ═══
    用法：showNCard({title:'每日簽到', html:'連續 <b>3</b> 天，今日 +100 積分', btn:'收下'})
