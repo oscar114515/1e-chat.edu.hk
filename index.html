@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-GQnz8k5bHZtmp8pj8OIXh53GhF3J4q3FzNxqiMhqTOM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-3kux/9j0Fvc/fXmmuOfeIB6a4tEl1ScHMO3O6Eo9Mkc=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1686,7 +1686,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.26';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -8749,6 +8749,25 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39',date:'2026-10-24',changes:[
+'聊天室大更新：點任何一則訊息會彈出操作菜單 —— 六個表情（👍❤️😂😮😢😡）一按即加、三個快捷回覆（哈哈／收到／+1）、引用回覆、複製文字、兩分鐘內撤回自己的訊息',
+'引用回覆：回覆別人的話會帶一小塊原話，點一下就跳回原本那一則，幾十人同時聊天也不會搞亂在回誰',
+'打字中提示：有同學正在輸入時，聊天框底部會顯示「某某 正在輸入 ⋯」，不用白等',
+'個人化系統：個人主頁多一個「個人化」入口，一頁搞定七樣 —— 等級（發訊 +1、簽到 +20）、心情 emoji、頭像框（七款）、名字特效（五款）、聊天背景（六款）、稱號（八款）、個人簡介（100 字）',
+'等級與稱號會顯示在聊天室名字旁邊，頭像框會套在頭像外面（彩虹、火焰、霓虹等）',
+'班級動態圈：個人主頁 → 班級 → 班級動態。可以發佈文字（500 字）、點讚、留言。跟聊天室不同，不會被新訊息洗走',
+'留言板：同學可以在你主頁留一句話，永久保留',
+'誰在線：頂部「線上 N」現在點得開，會列出全部在線同學的名字',
+'每日簽到改版：七個圓點連成一條路線圖，簽過變金色，第七格是禮物。斷簽不會清空之前的成果，只斷「連續天數」',
+'每天第一次進網站會自動彈出簽到卡；簽完有彩紙特效（不會擋住文字），白卡會遲 260 毫秒才彈，先讓你看清楚花',
+'個人主頁改成入口式：改密碼、頭像、問題反饋、字體全部收進子頁，主頁只留入口，不會再一屏塞滿輸入框',
+'字體改成下拉選單（將來加更多字體不用改程式）',
+'管理員後台多了「次數」分頁：看得到每個人簽到到第幾格、連續幾天、總共幾次；可以一鍵清零、直接補到第 7 格、也可以讓某個同學下次進來重看新手引導（用過的同學都可以重置）',
+'確認彈窗全部統一：兌換碼、下架商品、清除媒體、刪除帳號、退出群聊六個地方的原生彈窗換成網站風格',
+'按鈕手感：所有按鈕按下去會縮小、放手會彈回，底部導航切換時圖標會彈跳一下',
+'小喆AI 換成會動的表情頭像：會自己左右漂、不定時眨眼，回答完會按內容換表情（開心、驚訝、思考、困惑、想睡），四秒後自己恢復，公共聊天室和私人對話都一樣',
+'遊戲修正：伺服器斷線會即時顯示紅色提示條（以前完全沒反應）；對局中退出不會再卡死（以前兩邊都退不出，只能刷新）；單人遊戲的控制鍵不會再被擠出屏幕外（俄羅斯方塊方向鍵以前完全按不到）；五子棋棋盤會自動縮進手機屏幕，右邊不會再看不到',
+]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
 '英文翻譯補齊主要介面：頂部、底部導航、個人主頁、小程式清單、群聊、按鈕同提示都有英文，聊天內容維持原樣唔會亂譯',
