@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-LOetI85wJL6z7Mk/pmUHXZIviuH4NyPOXBh5zIa+Ajk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-qDyz6nUiY0r8k/wBXG12q/BsWfiZc8VtNYBQgUmOKKY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -118,6 +118,24 @@ body.theme-light [data-lg]::after{
     transparent 28%, transparent 72%,
     rgba(255,255,255,.4) 91%, rgba(255,255,255,.95) 100%);
   mix-blend-mode:normal;
+}
+
+/* 列表行（個人主頁的分項）：只做淡玻璃，不套 6 層高光——
+   一頁有二十幾行，每行都高光會非常吵。 */
+.fp-body .pi[data-lg],.admin-user[data-lg]{
+  background:rgba(255,255,255,.05) !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10) !important;
+  /* ⚠ 這裡刻意不加 backdrop-filter：後台一次有 147 個 .pi，
+     每個都做 GPU 模糊會令舊手機直接卡死（實測要避免）。
+     靠半透明底透出背景色，視覺上夠像玻璃片。 */
+  backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
+}
+.fp-body .pi[data-lg]::after,.admin-user[data-lg]::after{display:none !important}
+body.theme-light .fp-body .pi[data-lg],body.theme-light .admin-user[data-lg]{
+  background:rgba(255,255,255,.55) !important;
+  border:1px solid rgba(255,255,255,.9) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,1) !important;
 }
 
 /* 按鈕類做完整版（含折射內框） */
@@ -8585,7 +8603,7 @@ window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
 /* ═══ 液態玻璃自動套用 ═══
    給主要容器掛 data-lg（CSS 用屬性選擇器），連之後新開的頁面都自動生效。 */
 (function(){
-  var SEL='.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,.drawer-inner,.ncard';
+  var SEL='.card,.sheet .inner,.fp-header,.topbar,#bottomNav,.fp-body .card,.drawer-inner,.ncard,'+'#pageRoot .card,.fp-body .pi,.fp-body .user-card,.fp-body .tool-card,.fp-body .realname-card,'+'.fp-body .vm-card,.fp-body .think-card,.fp-body .pair-card,.admin-user,.admin-body .card';
   function dress(root){
     try{
       var list=(root||document).querySelectorAll(SEL);
