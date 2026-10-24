@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-3kux/9j0Fvc/fXmmuOfeIB6a4tEl1ScHMO3O6Eo9Mkc=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Ji1WlCQg6UKdpNAJj7M19jJqyOHgxOxq5ez3xvsA0Y0=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,31 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 成長中心：徽章 / 成就 / 排行榜 ═══ */
+.badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:8px 0 4px}
+.badge-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;
+  background:var(--bg-input);border:1px solid var(--border);text-align:center}
+.badge-cell.on{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.10)}
+.badge-cell .bc-i{font-size:22px;line-height:1;filter:grayscale(1);opacity:.35}
+.badge-cell.on .bc-i{filter:none;opacity:1}
+.badge-cell .bc-n{font-size:9.5px;color:var(--text-sub);line-height:1.25}
+.badge-cell.on .bc-n{color:var(--text-main)}
+.ach-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.ach-row:last-child{border-bottom:none}
+.ach-bar{flex:1;height:5px;border-radius:3px;background:rgba(148,163,184,.2);overflow:hidden}
+.ach-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#3b82f6);border-radius:3px}
+.rank-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rank-no{width:22px;font-weight:800;color:var(--text-muted);text-align:center;font-variant-numeric:tabular-nums}
+.rank-no.top1{color:#fbbf24}
+.rank-no.top2{color:#cbd5e1}
+.rank-no.top3{color:#f59e0b}
+.rank-val{margin-left:auto;font-weight:700;color:var(--text-main);font-variant-numeric:tabular-nums}
+.rank-tab{display:flex;gap:7px;margin-bottom:12px}
+.rank-tab button{flex:1;padding:8px 0;font-size:12px;border-radius:11px;border:1px solid var(--border);
+  background:var(--bg-input);color:var(--text-sub);cursor:pointer;font-family:inherit}
+.rank-tab button.sel{background:rgba(59,130,246,.16);border-color:rgba(96,165,250,.55);color:#93c5fd;font-weight:700}
+body.theme-light .rank-tab button.sel{color:#1d4ed8}
+
 /* ═══ 班級動態圈 / 留言板 ═══ */
 .mom-input{width:100%;padding:11px 13px;border-radius:14px;background:var(--bg-input);
   color:var(--text-main);font-size:13.5px;min-height:74px;font-family:inherit;border:1px solid var(--border);resize:vertical}
@@ -1686,7 +1711,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.1';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2726,6 +2751,12 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openGrowthPage')return openGrowthPage();
+    if(action==='openRankPage')return openRankPage();
+    if(action==='rankTab'){
+      document.querySelectorAll('.rank-tab button').forEach(function(b){ b.classList.toggle('sel', b.dataset.arg===arg); });
+      return paintRank(arg);
+    }
     if(action==='openMomentsPage')return openMomentsPage();
     if(action==='postMoment')return postMoment();
     if(action==='likeMoment')return likeMoment(arg);
@@ -6709,6 +6740,120 @@ async function cusSetBio(){
   const v=String(el.value||'').slice(0,100);
   await cusSet('bio',v);
 }
+/* ═══ 成長中心：徽章 / 成就 / 個人數據 / 排行榜 ═══
+   徽章與成就**不存 DB**，全部即時由 exp / 簽到記錄 / 積分算出來。
+   這樣不用寫入、不會有一堆計時任務，也不會因為漏寫而對不上。 */
+const BADGES=[
+  {k:'first',  n:'初次發言', ico:'💬', need:function(u,c){ return (u.exp||0)>=1; }},
+  {k:'chat10', n:'話匣子',   ico:'🗣️', need:function(u,c){ return (u.exp||0)>=10; }},
+  {k:'chat50', n:'話癆',     ico:'📣', need:function(u,c){ return (u.exp||0)>=50; }},
+  {k:'chat200',n:'常客',     ico:'🏠', need:function(u,c){ return (u.exp||0)>=200; }},
+  {k:'chat600',n:'支柱',     ico:'🏛️', need:function(u,c){ return (u.exp||0)>=600; }},
+  {k:'ck3',    n:'連續三天', ico:'🔥', need:function(u,c){ return (c.streak||0)>=3; }},
+  {k:'ck7',    n:'一週簽到', ico:'📅', need:function(u,c){ return (c.total||0)>=7; }},
+  {k:'ck30',   n:'簽到王',   ico:'👑', need:function(u,c){ return (c.total||0)>=30; }},
+  {k:'rich',   n:'小富翁',   ico:'💰', need:function(u,c){ return (u.points||0)>=5000; }},
+  {k:'lv5',    n:'LV.5',    ico:'⭐', need:function(u,c){ return levelOf(u.exp)>=5; }},
+  {k:'lv10',   n:'LV.10',   ico:'🌟', need:function(u,c){ return levelOf(u.exp)>=10; }},
+  {k:'lv20',   n:'LV.20',   ico:'💫', need:function(u,c){ return levelOf(u.exp)>=20; }}
+];
+const ACHS=[
+  {n:'發出第一則訊息', ico:'💬', cur:function(u,c){ return u.exp||0; }, max:1},
+  {n:'累計 50 點經驗', ico:'📈', cur:function(u,c){ return u.exp||0; }, max:50},
+  {n:'累計 200 點經驗', ico:'📊', cur:function(u,c){ return u.exp||0; }, max:200},
+  {n:'累計 500 點經驗', ico:'🚀', cur:function(u,c){ return u.exp||0; }, max:500},
+  {n:'簽到 7 天',      ico:'📅', cur:function(u,c){ return c.total||0; }, max:7},
+  {n:'簽到 30 天',     ico:'👑', cur:function(u,c){ return c.total||0; }, max:30},
+  {n:'連續簽到 7 天',   ico:'🔥', cur:function(u,c){ return c.streak||0; }, max:7},
+  {n:'升到 LV.10',     ico:'🌟', cur:function(u,c){ return levelOf(u.exp); }, max:10}
+];
+function badgeCount(exp,ck){
+  if(!me) return 0;
+  const u={exp:exp,points:Number(me.points)||0};
+  return BADGES.filter(function(b){ return b.need(u,ck||{}); }).length;
+}
+async function openGrowthPage(){
+  if(!me) return;
+  let ck={};
+  try{ ck=(await get(ref(db,'checkin/'+me.username))).val()||{}; }catch(e){}
+  const lv=levelOf(me.exp);
+  const u={exp:Number(me.exp)||0, points:Number(me.points)||0};
+  const badges=BADGES.map(function(b){
+    const on=b.need(u,ck);
+    return '<div class="badge-cell'+(on?' on':'')+'"><div class="bc-i">'+b.ico+'</div><div class="bc-n">'+escapeHtml(b.n)+'</div></div>';
+  }).join('');
+  const ach=ACHS.map(function(a){
+    const cur=Math.max(0,Number(a.cur(u,ck))||0);
+    const pct=Math.min(100,Math.round((cur/a.max)*100));
+    const done=cur>=a.max;
+    return '<div class="ach-row">'
+      + '<div style="width:22px;text-align:center;font-size:16px;'+(done?'':'filter:grayscale(1);opacity:.4')+'">'+a.ico+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:12px;margin-bottom:4px;color:var(--text-main)">'+escapeHtml(a.n)
+      + (done?' <span style="color:#4ade80;font-size:10.5px">已完成</span>':'')+'</div>'
+      + '<div class="ach-bar"><i style="width:'+pct+'%"></i></div></div>'
+      + '<div style="font-size:11px;color:var(--text-muted);min-width:44px;text-align:right;font-variant-numeric:tabular-nums">'+cur+'/'+a.max+'</div>'
+      + '</div>';
+  }).join('');
+  const onCount=badgeCount(me.exp,ck);
+  openPage({title:'成長中心', key:'growth', bodyHTML:
+    '<div class="card" style="padding:15px 17px;margin-bottom:14px;display:flex;align-items:center;gap:13px">'
+    +  '<div style="font-size:29px;font-weight:800;color:#fbbf24;line-height:1">Lv.'+lv+'</div>'
+    +  '<div style="flex:1;min-width:0">'
+    +    '<div style="font-size:11.5px;color:var(--text-sub);margin-bottom:5px">經驗 '+u.exp+' / '+expForLevel(lv+1)+'　·　已解鎖 '+onCount+'/'+BADGES.length+' 個徽章</div>'
+    +    '<div style="height:6px;border-radius:3px;background:rgba(148,163,184,.2);overflow:hidden"><div style="height:100%;width:'+Math.min(100,Math.round((u.exp/Math.max(1,expForLevel(lv+1)))*100))+'%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:3px"></div></div>'
+    +  '</div></div>'
+    + '<div class="section-title">我的數據</div>'
+    + '<div class="card" style="padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-around;text-align:center">'
+    +   '<div><div style="font-size:19px;font-weight:800;color:var(--text-main)">'+u.exp+'</div><div style="font-size:10.5px;color:var(--text-muted);margin-top:3px">經驗</div></div>'
+    +   '<div><div style="font-size:19px;font-weight:800;color:var(--text-main)">'+Number(ck.total||0)+'</div><div style="font-size:10.5px;color:var(--text-muted);margin-top:3px">簽到天數</div></div>'
+    +   '<div><div style="font-size:19px;font-weight:800;color:var(--text-main)">'+Number(ck.streak||0)+'</div><div style="font-size:10.5px;color:var(--text-muted);margin-top:3px">連續天數</div></div>'
+    +   '<div><div style="font-size:19px;font-weight:800;color:var(--text-main)">'+u.points+'</div><div style="font-size:10.5px;color:var(--text-muted);margin-top:3px">積分</div></div>'
+    + '</div>'
+    + '<div class="section-title">徽章牆</div><div class="badge-grid">'+badges+'</div>'
+    + '<div class="section-title">成就</div><div class="card" style="padding:4px 15px">'+ach+'</div>'
+    + '<div style="height:6px"></div>'
+  });
+}
+
+/* ═══ 排行榜 ═══ */
+let _rankCache=null;
+async function openRankPage(){
+  if(!me) return;
+  openPage({title:'排行榜', key:'rank', bodyHTML:
+    '<div class="rank-tab">'
+    + '<button class="sel" data-action="rankTab" data-arg="points">積分</button>'
+    + '<button data-action="rankTab" data-arg="checkin">簽到</button>'
+    + '<button data-action="rankTab" data-arg="level">等級</button>'
+    + '</div><div id="rankBody"><div class="empty">正在載入…</div></div>'});
+  await paintRank('points');
+}
+async function paintRank(kind){
+  const box=document.getElementById('rankBody'); if(!box) return;
+  try{
+    if(!_rankCache){
+      const [us,ck]=await Promise.all([ get(ref(db,'users')), get(ref(db,'checkin')) ]);
+      _rankCache={ users:us.val()||{}, checkin:ck.val()||{} };
+    }
+    const {users,checkin}=_rankCache;
+    const rows=Object.keys(users).filter(function(k){ return users[k] && users[k].role!=='ai'; }).map(function(k){
+      const u=users[k], c=checkin[k]||{};
+      return { k:k, name:(u.displayName||k), exp:Number(u.exp)||0, pts:Number(u.points)||0,
+               ck:Number(c.total)||0, lv:levelOf(u.exp), banned:!!u.banned };
+    });
+    const key = kind==='points'?'pts' : (kind==='checkin'?'ck':'exp');
+    rows.sort(function(a,b){ return (b[key]||0)-(a[key]||0); });
+    const top=rows.slice(0,30);
+    box.innerHTML = top.map(function(r,i){
+      const no=i+1;
+      const cls = no===1?'top1':no===2?'top2':no===3?'top3':'';
+      const val = kind==='points'?r.pts : (kind==='checkin'?r.ck+' 天':'Lv.'+r.lv);
+      return '<div class="rank-row"><div class="rank-no '+cls+'">'+no+'</div>'
+        + '<div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(r.name)+'</div>'
+        + '<div class="rank-val">'+escapeHtml(String(val))+'</div></div>';
+    }).join('') || '<div class="empty">暫時沒有資料</div>';
+  }catch(e){ box.innerHTML='<div class="empty">載入失敗</div>'; }
+}
+
 /* ═══ 班級動態圈 ═══
    跟聊天室分開：聊天室是即時對話，會被洗走；動態圈是「留下來」的。
    獨立節點 moments，只訂閱最近 60 條。 */
@@ -6984,6 +7129,9 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('頭像框 · 名字特效', CUS_FRAME_NM[me.frame||'']||'無', 'openCustomizePage', 'image')
       +aiRow('聊天背景', CUS_BG_NM[me.chatBg||'']||'預設', 'openCustomizePage', 'grid')
       +aiRow('個人簡介', (me.bio||'').slice(0,18)||'未填', 'openCustomizePage', 'file')
+      +'<div class="section-title">成長</div>'
+      +aiRow('成長中心', 'Lv.'+levelOf(me.exp)+'　·　徽章 / 成就 / 數據', 'openGrowthPage', 'score')
+      +aiRow('排行榜', '積分 / 簽到 / 等級', 'openRankPage', 'poll')
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
@@ -8749,6 +8897,12 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.1',date:'2026-10-24',changes:[
+'成長中心：個人主頁 →「成長」→ 成長中心。一頁看到等級、經驗進度、我的數據（經驗／簽到天數／連續天數／積分）',
+'徽章牆：12 個徽章（初次發言、話匣子、話癆、常客、支柱、連續三天、一週簽到、簽到王、小富翁、LV.5、LV.10、LV.20），達成就會亮起來',
+'成就：8 個帶進度條的成就，未完成的會顯示灰色和進度（例：累計 200 點經驗 · 47/200）',
+'排行榜：積分榜／簽到榜／等級榜三個可以切，前 30 名，前三名有金銀銅色',
+]},
 {ver:'v1.39',date:'2026-10-24',changes:[
 '聊天室大更新：點任何一則訊息會彈出操作菜單 —— 六個表情（👍❤️😂😮😢😡）一按即加、三個快捷回覆（哈哈／收到／+1）、引用回覆、複製文字、兩分鐘內撤回自己的訊息',
 '引用回覆：回覆別人的話會帶一小塊原話，點一下就跳回原本那一則，幾十人同時聊天也不會搞亂在回誰',
