@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-owxjQAxlm5sOnnkJdNKp26soMHu3yn1VNQ289E8+orU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-H5hqfwLFuTD2abkQmmOENaktSxEc5+mwvUqjWEZRYTM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -730,6 +730,30 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #bottomNav .nav-item .nav-icon{font-size:18px;line-height:1}
 #bottomNav .nav-item .nav-badge{position:absolute;top:4px;right:calc(50% - 20px);min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:var(--r-1);font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
 /* plusPanel 實色：原本 background 用 --bg-card（rgba(30,41,59,.55) 半透明），壓在 --bg-app #0f172a 上面顏色幾乎一樣，用戶睇唔出有面板。改成實色 + 明顯邊框 + 玻璃模糊。 */
+/* ═══ 彈層（轉賬 / 紅包用）═══
+   ⚠ chat.html 本身冇 .sheet 樣式（嗰個係 game.html 嘅）。
+   我加轉賬/紅包時直接用了 className='sheet'，結果只係一個裸 div，
+   被擠到頁面最底，用戶點完完全見唔到嘢。下面補齊。 */
+.sheet{position:fixed;inset:0;z-index:9996;background:rgba(0,0,0,.62);
+  display:flex;align-items:center;justify-content:center;padding:22px;
+  animation:sheetFade .22s ease}
+@keyframes sheetFade{from{opacity:0}to{opacity:1}}
+.sheet .inner{width:100%;max-width:340px;background:#1e293b;border:1px solid rgba(148,163,184,.28);
+  border-radius:22px;padding:20px 18px;box-shadow:0 26px 64px -22px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.05);
+  animation:sheetPop .3s cubic-bezier(.34,1.4,.5,1);max-height:88vh;overflow-y:auto}
+body.theme-light .sheet{background:rgba(15,23,42,.42)}
+body.theme-light .sheet .inner{background:#ffffff;border-color:rgba(15,23,42,.12);
+  box-shadow:0 26px 64px -22px rgba(15,23,42,.35)}
+@keyframes sheetPop{from{transform:scale(.9) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.sheet .inner h3{font-size:16.5px;margin:0 0 7px;color:var(--text-main);font-weight:800}
+.sheet .desc{font-size:12px;color:var(--text-sub);margin:0 0 12px;line-height:1.7}
+.sheet .inner .btn{display:block;width:100%;margin-top:9px;padding:11px;border-radius:13px;border:none;
+  font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;background:rgba(148,163,184,.18);color:var(--text-main)}
+.sheet .inner .btn:active{transform:scale(.97)}
+.sheet .inner .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text-sub)}
+.sheet .inner input,.sheet .inner select{color-scheme:dark}
+body.theme-light .sheet .inner input,body.theme-light .sheet .inner select{color-scheme:light}
+
 #plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:#1e293b;border:1px solid rgba(148,163,184,.38);border-radius:var(--r-3);padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 18px 48px -14px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:50;animation:panelIn .34s cubic-bezier(.34,1.42,.64,1)}
 body.theme-light #plusPanel{background:#ffffff;border-color:rgba(15,23,42,.16);box-shadow:0 18px 48px -14px rgba(15,23,42,.30),0 0 0 1px rgba(15,23,42,.04)}
 @keyframes panelIn{0%{opacity:0;transform:translateY(10px) scale(.94)}62%{opacity:1;transform:translateY(-2px) scale(1.012)}100%{opacity:1;transform:none}}
@@ -7440,7 +7464,12 @@ function openTransferSheet(){
   if(!me) return;
   closePlus();
   const opts=Object.keys(allUsers)
-    .filter(function(u){ return u!==me.username && allUsers[u] && allUsers[u].role!=='ai'; })
+    .filter(function(u){
+      /* 排自己、排 AI（AI 舊資料冇 role 欄位，所以用帳號名一齊認） */
+      if(!allUsers[u] || u===me.username || u===AI_NAME) return false;
+      if(allUsers[u].role==='ai') return false;
+      return true;
+    })
     .sort(function(a,b){ return (allUsers[a].seat||0)-(allUsers[b].seat||0); })
     .map(function(u){
       const x=allUsers[u];
@@ -7839,7 +7868,7 @@ async function changePoints(u, delta, reason){
 async function openTransferPage(){
   if(!me) return;
   const opts = Object.keys(allUsers)
-    .filter(function(u){ return u!==me.username && allUsers[u] && allUsers[u].role!=='ai'; })
+    .filter(function(u){ return allUsers[u] && u!==me.username && u!==AI_NAME && allUsers[u].role!=='ai'; })
     .sort(function(a,b){ return (allUsers[a].seat||0)-(allUsers[b].seat||0); })
     .map(function(u){ return '<option value="'+escAttr(u)+'">'+escapeHtml(allUsers[u].displayName||u)+'（'+(allUsers[u].cls||'')+String(allUsers[u].seat||'')+'）</option>'; })
     .join('');
@@ -10216,6 +10245,8 @@ const VERSION_HISTORY=[
 '已知取捨：公共聊天室不做「已讀狀態」—— 144 人每人每次上線都要寫一次已讀時間，統計成本太高而且會引起「你讀了為什麼不回」的爭執；這個功能只適合私聊，等私聊做完再加',
 '已知取捨：連勝加成要先改 game.html（遊戲結束要回傳勝負給聊天室），下一輪補',
 '＋ 選單背景修正：原本面板用半透明底色（rgba(30,41,59,.55)）壓在深色頁面上，顏色幾乎一樣，看上去像沒有面板。現在改成實色（深色 #1e293b／淺色純白）＋ 明顯邊框＋雙層陰影＋玻璃模糊，圖示底也加了描邊',
+'修復：轉賬和紅包點開沒反應 —— chat.html 本來沒有 .sheet 樣式（那個是 game.html 的），我加彈窗時直接用了 className="sheet"，結果只是一個裸 div 被擠到頁面最底部，看上去像「點了沒反應」。已補齊全屏遮罩 + 居中卡片 + 彈出動畫',
+'修復：轉賬下拉名單只顯示小喆AI —— 舊資料的 AI 沒有 role 欄位，過濾不掉；現在用帳號名一齊認，144 個同學正常列出',
 ]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
