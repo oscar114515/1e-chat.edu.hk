@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-vEVka46M5y8OnikCkTbYZkUwmv+lhuPBtIUjZPXcf2g=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Nqz40hZYHA/7ySKRgItjTCXIT8mTsgPrabGW6LEFFY4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,41 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 轉賬 / 紅包 ═══ */
+.tf-card{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:15px;
+  background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(245,158,11,.12));
+  border:1px solid rgba(251,191,36,.45);min-width:170px;max-width:230px}
+.tf-card .tf-i{font-size:24px;line-height:1}
+.tf-card .tf-t{font-size:13px;font-weight:800;color:#fbbf24}
+.tf-card .tf-s{font-size:10.5px;color:var(--text-sub);margin-top:2px}
+.rp-card{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:15px;
+  background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;min-width:190px;max-width:240px;
+  box-shadow:0 8px 22px -10px rgba(220,38,38,.7);cursor:pointer;position:relative;overflow:hidden}
+.rp-card.done{background:linear-gradient(135deg,#64748b,#475569);box-shadow:none;cursor:default}
+.rp-card .rp-i{font-size:25px;line-height:1}
+.rp-card .rp-t{font-size:13.5px;font-weight:800}
+.rp-card .rp-s{font-size:10.5px;opacity:.9;margin-top:2px}
+.rp-card:active{transform:scale(.97)}
+/* 開紅包彈層 */
+#rpOpen{position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.72);display:flex;
+  align-items:center;justify-content:center;padding:24px;animation:rpFade .25s ease}
+@keyframes rpFade{from{opacity:0}to{opacity:1}}
+#rpOpen .rp-box{width:100%;max-width:300px;border-radius:26px;padding:26px 22px 22px;text-align:center;
+  background:linear-gradient(160deg,#dc2626,#991b1b);color:#fff;position:relative;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.8);animation:rpPop .38s cubic-bezier(.34,1.5,.5,1)}
+@keyframes rpPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+#rpOpen .rp-amt{font-size:38px;font-weight:900;letter-spacing:-1px;margin:14px 0 6px;
+  animation:rpAmt .5s cubic-bezier(.34,1.6,.5,1) .15s both}
+@keyframes rpAmt{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+#rpOpen .rp-from{font-size:11.5px;opacity:.85}
+#rpOpen .rp-note{font-size:12.5px;opacity:.9;margin-top:10px}
+#rpOpen .rp-close{margin-top:18px;width:100%;padding:11px;border-radius:13px;border:none;
+  background:rgba(255,255,255,.18);color:#fff;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer}
+/* 撒花 */
+#rpConfetti{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+#rpConfetti i{position:absolute;font-size:15px;animation:rpFall 1.6s ease-out forwards}
+@keyframes rpFall{from{transform:translateY(0) rotate(0);opacity:1}to{transform:translateY(70vh) rotate(480deg);opacity:0}}
+
 /* ═══ 狀態簽名 / 每日一句 / 金句 / 節日特效 / AI 快捷 ═══ */
 .status-line{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-sub);
   background:rgba(148,163,184,.12);border:1px solid var(--border);border-radius:999px;padding:3px 10px;margin:6px 0 2px}
@@ -1725,6 +1760,8 @@ body.theme-light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,.05) 25%,
       <div class="pi" data-action="pickImage"><div class="pic"><svg class="ico"><use href="#i-image"/></svg></div><div class="pit">圖片</div></div>
       <div class="pi" data-action="pickFile"><div class="pic"><svg class="ico"><use href="#i-file"/></svg></div><div class="pit">檔案</div></div>
     <div class="pi" data-action="pickLocation"><div class="pic"><svg class="ico"><use href="#i-pin"/></svg></div><div class="pit">位置</div></div>
+    <div class="pi" data-action="openTransferSheet"><div class="pic" style="color:#fbbf24">¥</div><div class="pit">轉賬</div></div>
+    <div class="pi" data-action="openRedPacketSheet"><div class="pic" style="color:#ef4444">🧧</div><div class="pit">紅包</div></div>
     <div class="pi" data-action="openPollCreate"><div class="pic"><svg class="ico"><use href="#i-poll"/></svg></div><div class="pit">投票</div></div>
     <div class="pi" data-action="openNoticeCreate"><div class="pic"><svg class="ico"><use href="#i-megaphone"/></svg></div><div class="pit">公告</div></div>
     <div class="pi" data-action="openGames"><div class="pic"><svg class="ico"><use href="#i-gamepad"/></svg></div><div class="pit">小遊戲</div></div>
@@ -2801,6 +2838,23 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openTransferSheet')return openTransferSheet();
+    if(action==='openRedPacketSheet')return openRedPacketSheet();
+    if(action==='claimRedPacket')return claimRedPacket(arg);
+    if(action==='openTransferDetail'){
+      const m=allMsgs().find(function(x){return x.id===arg;});
+      if(m){
+        const mine=(m.username===me.username);
+        showNCard({title:mine?'轉賬詳情':'收到轉賬', html:
+          '<div style="font-size:13px;line-height:2">'
+          + (mine?('收款人：<b>'+escapeHtml(m.toName||m.toUser)+'</b>'):('付款人：<b>'+escapeHtml(m.displayName||m.username)+'</b>'))
+          + '<br>金額：<b style="color:#fbbf24;font-size:17px">'+Number(m.amount||0)+' 分</b>'
+          + (m.note?('<br>備註：'+escapeHtml(m.note)):'')
+          + '<br>時間：'+fmtAgo(m.createdAt)
+          + '</div>', btn:'知道'});
+      }
+      return;
+    }
     if(action==='openStatusPage')return openStatusPage();
     if(action==='saveStatus')return saveStatus();
     if(action==='openQuoteWall')return openQuoteWall();
@@ -4438,6 +4492,28 @@ function render(){
       }else{
         body=`<div class="game-invite" data-action="openGameInvite" data-arg="${escAttr(m.roomId||'')}"><div class="gi-title">對局邀請 · ${gname}</div><div class="gi-sub">點擊進入房間（${Number(m.minP)||2}–${Number(m.maxP)||2} 人）</div><div class="gi-btn">加入對局</div></div><button class="gi-copy" data-action="copyRoomLink" data-arg="${escAttr(m.roomId||'')}">複製房間連結</button>`;
       }
+    }
+    else if(m.type==='transfer'){
+      const isMine=(m.username===me.username), isTarget=(m.toUser===me.username);
+      if(!isMine&&!isTarget){
+        /* 用戶要求：轉賬只有雙方看到，其他人完全不顯示 */
+        return '';
+      }
+      body='<div class="tf-card" data-action="openTransferDetail" data-arg="'+escAttr(m.id)+'">'
+        + '<div class="tf-i">¥</div><div style="min-width:0">'
+        + '<div class="tf-t">'+(isMine?'轉給 ':'收到 ')+escapeHtml(isMine?(m.toName||m.toUser):(m.displayName||m.username))+'</div>'
+        + '<div class="tf-s">'+(isMine?'-':'+')+Number(m.amount||0)+' 分'+(m.note?('　'+escapeHtml(m.note)):'')+'</div>'
+        + '</div></div>';
+    }
+    else if(m.type==='redpacket'){
+      const claims=m.claims||{};
+      const mine=claims[me.username];
+      const finished=Number(m.leftCount||0)<=0;
+      body='<div class="rp-card'+(finished&&!mine?' done':'')+'" '+(mine||finished?'':'data-action="claimRedPacket"')+' data-arg="'+escAttr(m.id)+'">'
+        + '<div class="rp-i">🧧</div><div style="min-width:0">'
+        + '<div class="rp-t">'+escapeHtml(m.note||'恭喜發財')+'</div>'
+        + '<div class="rp-s">'+(mine?('你搶到 '+Number(mine)+' 分'):(finished?'已搶完':'點開拆紅包'))+(Number(m.count)>1?('　剩 '+Number(m.leftCount||0)+'/'+Number(m.count)):'')+'</div>'
+        + '</div></div>';
     }
     else if(m.encrypted&&!isAI)body=renderEncryptedBody(m);
     else{
@@ -6846,6 +6922,138 @@ function badgeCount(exp,ck){
   const u={exp:exp,points:Number(me.points)||0};
   return BADGES.filter(function(b){ return b.need(u,ck||{}); }).length;
 }
+/* ═══════════════ 轉賬 / 紅包（「＋」菜單進入） ═══════════════ */
+function openTransferSheet(){
+  if(!me) return;
+  closePlus();
+  const opts=Object.keys(allUsers)
+    .filter(function(u){ return u!==me.username && allUsers[u] && allUsers[u].role!=='ai'; })
+    .sort(function(a,b){ return (allUsers[a].seat||0)-(allUsers[b].seat||0); })
+    .map(function(u){
+      const x=allUsers[u];
+      return '<option value="'+escAttr(u)+'">'+escapeHtml(x.displayName||u)+'（'+(x.cls||'')+String(x.seat||'')+'）</option>';
+    }).join('');
+  const d=document.createElement('div'); d.className='sheet'; d.id='tfSheet';
+  d.innerHTML='<div class="inner"><h3>轉賬給同學</h3>'
+    + '<div class="desc">只有你和對方看得到這筆轉賬，其他人看不到。</div>'
+    + '<div style="margin:10px 0"><select id="tfTo" style="width:100%;padding:11px 13px;border-radius:13px;background:var(--bg-input);color:var(--text-main);font-size:13.5px;font-family:inherit;border:1px solid var(--border)">'+opts+'</select></div>'
+    + '<div style="margin:10px 0"><input id="tfAmt" type="number" min="1" placeholder="金額（分）" style="width:100%;padding:11px 13px;border-radius:13px;background:var(--bg-input);color:var(--text-main);font-size:15px;font-family:inherit;border:1px solid var(--border)"></div>'
+    + '<div style="margin:10px 0"><input id="tfNote" maxlength="30" placeholder="備註（選填，例：還你錢）" style="width:100%;padding:11px 13px;border-radius:13px;background:var(--bg-input);color:var(--text-main);font-size:13px;font-family:inherit;border:1px solid var(--border)"></div>'
+    + '<div style="font-size:11.5px;color:var(--text-muted);text-align:center;margin:8px 0 4px">你有 '+Number(me.points||0)+' 分</div>'
+    + '<button class="btn" id="tfGo" style="background:linear-gradient(135deg,#f59e0b,#d97706)">確認轉賬</button>'
+    + '<button class="btn ghost" id="tfCancel">取消</button></div>';
+  document.body.appendChild(d);
+  d.onclick=e=>{ if(e.target===d) d.remove(); };
+  d.querySelector('#tfCancel').onclick=()=>d.remove();
+  d.querySelector('#tfGo').onclick=async()=>{
+    const to=d.querySelector('#tfTo').value;
+    const amt=Math.floor(Number(d.querySelector('#tfAmt').value)||0);
+    const note=String(d.querySelector('#tfNote').value||'').trim().slice(0,30);
+    if(!to||amt<=0){ showNotif('請選人並輸入金額'); return; }
+    if(amt>Number(me.points||0)){ showNotif('積分不足'); return; }
+    d.remove();
+    const ok=await askConfirm({title:'確認轉賬', html:'轉 <b>'+amt+'</b> 分給 <b>'+escapeHtml(allUsers[to].displayName||to)+'</b>？', okText:'確定轉'});
+    if(!ok) return;
+    const paid=await changePoints(me.username,-amt,'轉賬');
+    if(!paid){ showNotif('轉賬失敗'); return; }
+    await changePoints(to, amt, '來自 '+(me.displayName||me.username)+' 的轉賬');
+    try{
+      const id=await nextMsgId();
+      await set(ref(db,'messages/'+id),{id:id,username:me.username,displayName:me.displayName,color:me.color||'#3b82f6',avatar:me.avatar,role:me.role,
+        text:'',type:'transfer',toUser:to,toName:(allUsers[to].displayName||to),amount:amt,note:note,
+        createdAt:Date.now(),deleted:false});
+      try{ writeLog('transfer','轉 '+amt+' 分給 '+to); }catch(e){}
+    }catch(e){}
+    showNotif('已轉 '+amt+' 分');
+  };
+}
+function openRedPacketSheet(){
+  if(!me) return;
+  closePlus();
+  const d=document.createElement('div'); d.className='sheet'; d.id='rpSheet';
+  d.innerHTML='<div class="inner"><h3>發紅包</h3>'
+    + '<div class="desc">全班都看到這個紅包，點擊就能拆。份數分完就沒了。</div>'
+    + '<div style="margin:10px 0"><input id="rpTotal" type="number" min="1" placeholder="總金額（分）" style="width:100%;padding:12px 14px;border-radius:13px;background:var(--bg-input);color:var(--text-main);font-size:17px;font-weight:700;font-family:inherit;border:1px solid var(--border)"></div>'
+    + '<div style="margin:10px 0"><input id="rpCount" type="number" min="1" value="5" placeholder="份數" style="width:100%;padding:11px 13px;border-radius:13px;background:var(--bg-input);color:var(--text-main);font-size:13.5px;font-family:inherit;border:1px solid var(--border)"></div>'
+    + '<div style="margin:10px 0"><input id="rpNote" maxlength="24" value="恭喜發財" placeholder="祝福語" style="width:100%;padding:11px 13px;border-radius:13px;background:var(--bg-input);color:var(--text-main);font-size:13px;font-family:inherit;border:1px solid var(--border)"></div>'
+    + '<div style="font-size:11.5px;color:var(--text-muted);text-align:center;margin:8px 0 4px">你有 '+Number(me.points||0)+' 分</div>'
+    + '<button class="btn" id="rpGo" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">塞進紅包</button>'
+    + '<button class="btn ghost" id="rpCancel">取消</button></div>';
+  document.body.appendChild(d);
+  d.onclick=e=>{ if(e.target===d) d.remove(); };
+  d.querySelector('#rpCancel').onclick=()=>d.remove();
+  d.querySelector('#rpGo').onclick=async()=>{
+    const total=Math.floor(Number(d.querySelector('#rpTotal').value)||0);
+    const count=Math.max(1,Math.min(50,Math.floor(Number(d.querySelector('#rpCount').value)||1)));
+    const note=String(d.querySelector('#rpNote').value||'').trim().slice(0,24)||'恭喜發財';
+    if(total<count){ showNotif('總金額不能少於份數（每份至少 1 分）'); return; }
+    if(total>Number(me.points||0)){ showNotif('積分不足'); return; }
+    d.remove();
+    const paid=await changePoints(me.username,-total,'發紅包');
+    if(!paid){ showNotif('扣分失敗'); return; }
+    try{
+      const id=await nextMsgId();
+      await set(ref(db,'messages/'+id),{id:id,username:me.username,displayName:me.displayName,color:me.color||'#3b82f6',avatar:me.avatar,role:me.role,
+        text:'',type:'redpacket',total:total,count:count,left:total,leftCount:count,note:note,
+        createdAt:Date.now(),deleted:false});
+      showNotif('紅包已發');
+    }catch(e){ showNotif('發紅包失敗'); }
+  };
+}
+async function claimRedPacket(msgId){
+  if(!me) return;
+  const m=allMsgs().find(function(x){ return x.id===msgId; });
+  if(!m) return;
+  const claims=m.claims||{};
+  if(claims[me.username]){ showRpOpen(claims[me.username], m); return; }
+  if(Number(m.leftCount||0)<=0){ showNotif('紅包已被搶完'); return; }
+  /* 二八隨機：先取 1~2 倍平均值，但不超過剩餘 */
+  const left=Number(m.left)||0, cnt=Number(m.leftCount)||1;
+  const maxTake = Math.max(1, left-(cnt-1));
+  let amt;
+  if(cnt===1) amt=left;
+  else{
+    const avg=left/cnt;
+    amt=Math.min(maxTake, Math.max(1, Math.round(avg*(0.6+Math.random()*1.1))));
+  }
+  try{
+    const done=await runTransaction(ref(db,'messages/'+msgId), function(cur){
+      if(!cur||Number(cur.leftCount)<=0) return cur;
+      if(cur.claims&&cur.claims[me.username]) return cur;
+      const a=Math.min(Number(cur.left)||0, amt);
+      const nc=Object.assign({}, cur.claims||{}); nc[me.username]=a;
+      return Object.assign({}, cur, { left:Number(cur.left)-a, leftCount:Number(cur.leftCount)-1, claims:nc });
+    });
+    if(!done||!done.committed){ showNotif('手慢了，紅包沒了'); return; }
+    const nv=done.snapshot.val()||{};
+    const got=(nv.claims&&nv.claims[me.username])||amt;
+    await changePoints(me.username, got, '拆紅包');
+    showRpOpen(got, nv);
+  }catch(e){ showNotif('拆紅包失敗'); }
+}
+function showRpOpen(amount, msg){
+  const old=document.getElementById('rpOpen'); if(old) old.remove();
+  const d=document.createElement('div'); d.id='rpOpen';
+  d.innerHTML='<div class="rp-box"><div style="font-size:40px">🧧</div>'
+    + '<div style="font-size:13px;opacity:.9">'+(msg&&msg.note?escapeHtml(msg.note):'恭喜發財')+'</div>'
+    + '<div class="rp-amt">'+Number(amount||0)+' 分</div>'
+    + '<div class="rp-from">來自 '+(msg&&msg.displayName?escapeHtml(msg.displayName):'')+'</div>'
+    + (msg&&Number(msg.leftCount)>0 ? '<div class="rp-note">還剩 '+Number(msg.leftCount)+' 個</div>' : '<div class="rp-note">紅包已搶完</div>')
+    + '<button class="rp-close">收下</button></div>';
+  document.body.appendChild(d);
+  d.querySelector('.rp-close').onclick=()=>d.remove();
+  d.onclick=e=>{ if(e.target===d) d.remove(); };
+  /* 撒花 */
+  const c=document.createElement('div'); c.id='rpConfetti';
+  const emo=['🎉','✨','🧧','💰','🎊'];
+  let html='';
+  for(let i=0;i<22;i++){
+    html+='<i style="left:'+(Math.random()*100)+'%;top:'+(Math.random()*20)+'%;animation-delay:'+(Math.random()*0.4).toFixed(2)+'s">'+emo[i%emo.length]+'</i>';
+  }
+  c.innerHTML=html; document.body.appendChild(c);
+  setTimeout(()=>{ try{ c.remove(); }catch(e){} }, 2000);
+}
+
 /* ═══════════════ 狀態簽名（24 小時自動消失） ═══════════════ */
 function statusText(u){
   const st=u&&u.status;
@@ -7652,7 +7860,6 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('排行榜', '積分 / 簽到 / 等級', 'openRankPage', 'poll')
       +aiRow('每日任務 · 轉盤', '完成任務 +200 分', 'openDailyPage', 'check')
       +aiRow('收藏冊', '抽卡收集', 'openCardsPage', 'heart')
-      +aiRow('積分轉賬', '轉分給同學', 'openTransferPage', 'score')
       +'<div class="section-title">更多</div>'
       +aiRow('今日狀態', statusText(me)||'未設定（24 小時消失）', 'openStatusPage', 'bell')
       +aiRow('金句牆', allQuotes.length+' 句', 'openQuoteWall', 'heart')
@@ -9448,7 +9655,7 @@ const VERSION_HISTORY=[
 '每日任務：三個小任務（發 3 則訊息、給動態點讚、完成簽到），全部完成領 200 分，每天 0 點重設',
 '每日轉盤：每天免費轉一次，10 到 500 分不等，有轉盤動畫',
 '抽卡：100 分抽一張，12 張卡（普通／稀有／超稀有／傳說），重複自動換 50 分；收藏冊記錄你收集了哪幾張',
-'積分轉賬：可以把積分轉給同學（個人主頁 → 積分 → 轉賬），沒有上限，管理員可以查看全部轉賬記錄',
+'積分轉賬與紅包：都移入聊天室輸入框的「＋」菜單（像微信）—— 轉賬可以選人、填金額、加備註，只有你和對方看得到；紅包可以設總額、份數、祝福語，發出去全班都看到，點擊拆開會有金額彈層和撒花動畫',
 '今日狀態簽名：個人主頁 → 更多 → 今日狀態。寫一句話（60 字內），24 小時後自動消失，個人主頁會顯示',
 '金句牆：點任何一則訊息 →「標為金句」，好笑的句子會收進金句牆（個人主頁 → 更多 → 金句牆）',
 '每日一句：班級動態頁最上面每天換一句話，30 句輪替（按日期自動換，不用手動維護）',
