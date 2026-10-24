@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CKn76SJnwUybCNunu5lFNHaklL7QGmRCLQGqFMmHHEA=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-/u1PNAZD7zwWb2hla28WRzCdw7o1NQ1EgPk17z56m0M=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,54 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 小喆AI 動態表情頭像 ═══
+   參考 Grok Bot 的「會動的眼睛 + 情緒狀態機」，但完全自己實作（原倉庫素材歸 xAI，不可再分發）。
+   三層：① 球體徑向漸層（左上高光）② 兩隻眼睛 ③ 情緒用 data-mood 換眼睛形狀。
+   平時 idle 會慢慢左右漂、不時眨眼；回答完會按內容換表情，幾秒後自己回 idle。 */
+.ai-face{
+  width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 34% 28%, #c2e4ff 0%, #5aa8ff 46%, #1b52c4 100%);
+  box-shadow:inset -3px -4px 8px rgba(0,20,60,.35), inset 3px 4px 8px rgba(255,255,255,.35);
+}
+.ai-face::after{  /* 左上反光，讓球看起來有厚度 */
+  content:'';position:absolute;left:16%;top:11%;width:42%;height:30%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.75),rgba(255,255,255,0) 70%);
+  filter:blur(1px);pointer-events:none;
+}
+.ai-face .ai-eyes{position:absolute;inset:0;transition:transform .45s cubic-bezier(.34,1.3,.5,1)}
+.ai-face .ai-eye{
+  position:absolute;top:35%;width:7px;height:12.5px;border-radius:50%;background:#08111f;
+  transform-origin:center;transition:transform .3s cubic-bezier(.34,1.3,.5,1),width .3s,height .3s;
+  animation:aiBlink 4.3s infinite;
+}
+.ai-face .ai-eye:nth-child(1){left:31.5%}
+.ai-face .ai-eye:nth-child(2){left:56%;animation-delay:.14s}
+@keyframes aiBlink{0%,92%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.08)}}
+/* idle：眼睛慢慢漂（自己動，跟滑鼠無關） */
+.ai-face[data-mood="idle"] .ai-eyes{animation:aiDrift 6.6s ease-in-out infinite}
+@keyframes aiDrift{
+  0%,100%{transform:translate(0,0)}
+  22%{transform:translate(2.6px,-1.3px)}
+  49%{transform:translate(.8px,1.5px)}
+  76%{transform:translate(-2.4px,-.7px)}
+}
+/* thinking：往上看、縮小 */
+.ai-face[data-mood="thinking"] .ai-eyes{transform:translate(1px,-3px)}
+.ai-face[data-mood="thinking"] .ai-eye{width:6px;height:10px}
+/* happy：瞇眼笑 */
+.ai-face[data-mood="happy"] .ai-eye{height:4.5px;width:8.5px;border-radius:5px}
+.ai-face[data-mood="happy"] .ai-eyes{animation:aiHappyBounce .9s ease-in-out infinite}
+@keyframes aiHappyBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+/* surprised：瞪大 */
+.ai-face[data-mood="surprised"] .ai-eye{width:9.5px;height:15px}
+/* confused：一高一低 */
+.ai-face[data-mood="confused"] .ai-eye:nth-child(1){transform:translateY(-2.2px);height:10px}
+.ai-face[data-mood="confused"] .ai-eye:nth-child(2){transform:translateY(1.8px);height:13.5px}
+/* sleepy：半閉 */
+.ai-face[data-mood="sleepy"] .ai-eye{height:2.6px;width:9px;border-radius:4px}
+/* 頭像氣泡裡的尺寸由父容器決定；聊天氣泡的頭像本來就係細圓 */
+.msg .ai-face,.pc-body .ai-face{border-radius:50%}
+
 /* ═══ 載入動畫（彩色豎條；全站所有「正在…」自動套用） ═══ */
 /* ═══ 白框小通知卡（macOS 三點） ═══
    之後要加「七天簽到」之類，直接 showNCard({title:'...',html:'...'}) 就彈出來。 */
@@ -3226,6 +3274,7 @@ ${me.displayName}: ${text}`;
     if(actionMatch){ try{actionCmd=JSON.parse(actionMatch[1]);cleanContent=content.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/,'').trim();}catch(e){} }
     const finalText=cleanContent.trim();
     if(thinkingKey){await update(ref(db,'messages/'+thinkingKey),{text:finalText,reasoning:aiRes.reasoning||'',thinking:false,sponsor:true,createdAt:Date.now()});}
+    setAiMood(detectAiMood(finalText));   /* 頭像跟著回答的情緒變 */
     try{ await push(ref(db,'aiMemory/messages'),{from:me.displayName||me.username,fromName:me.displayName||me.username,text,aiReply:finalText,time:Date.now()}); }catch(e){}
     trimAIMemory().catch(()=>{});
     if(actionCmd&&isAdmin){ showAIConfirm(actionCmd,me); }
@@ -4141,7 +4190,42 @@ function safeColor(v,fallback){
   if(/^[a-zA-Z]{3,20}$/.test(s))return s;
   return fallback||'#3b82f6';
 }
+/* ═══ 小喆AI 表情頭像 ═══ */
+try{ window.avatarHTML_ai=function(m){return avatarHTML(m);}; }catch(e){}
+function aiFaceHTML(){
+  const mood = (typeof window!=='undefined' && window.__aiMood) ? window.__aiMood : 'idle';
+  return '<div class="ai-face" data-mood="'+mood+'">'
+       +   '<span class="ai-eyes"><i class="ai-eye"></i><i class="ai-eye"></i></span>'
+       + '</div>';
+}
+/* 換表情；4.2 秒後自己回 idle（用戶要求「平時自己動」，不是一直定格） */
+function setAiMood(mood){
+  try{
+    window.__aiMood = mood || 'idle';
+    const els = document.querySelectorAll('.ai-face');
+    for(let i=0;i<els.length;i++) els[i].dataset.mood = window.__aiMood;
+    clearTimeout(window.__aiMoodT);
+    if(window.__aiMood !== 'idle'){
+      window.__aiMoodT = setTimeout(function(){ setAiMood('idle'); }, 4200);
+    }
+  }catch(e){}
+}
+/* 從回覆文字猜情緒。比改 prompt 穩：唔需要 AI 配合輸出額外標記 */
+try{ window.aiFaceHTML=aiFaceHTML; window.setAiMood=setAiMood; }catch(e){}
+
+function detectAiMood(text){
+  const t = String(text||'');
+  if(!t) return 'idle';
+  if(/抱歉|不好意思|對不起|無法|不能幫|做不到/.test(t)) return 'confused';
+  if(/哈哈|開心|太好了|恭喜|太棒|好棒|讚|😄|😊|🎉|👍/.test(t)) return 'happy';
+  if(/！{1,}|真的|竟然|居然|哇|驚訝/.test(t)) return 'surprised';
+  if(/讓我|想想|查一下|稍等|思考|我睇睇|等我/.test(t)) return 'thinking';
+  return 'idle';
+}
+try{ window.detectAiMood=detectAiMood; window.aiFaceHTML=aiFaceHTML; window.setAiMood=setAiMood; }catch(e){}
+
 function avatarHTML(m){
+  if(m && m.role==='ai') return aiFaceHTML();   /* 小喆AI 用會動的表情球，不用文字 */
   const raw=m&&m.avatar;
   if(raw){
     const s=String(raw);
@@ -7881,6 +7965,7 @@ async function submitAIPrivateMessage(){
       if(actionMatch){ try{actionCmd=JSON.parse(actionMatch[1]);finalText=content.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/,'').trim();}catch(e){finalText=content;} }
       if(!actionMatch)finalText=content.trim();
       await update(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{text:finalText,thinking:false,reasoning:aiRes.reasoning||'',sponsor:true,createdAt:Date.now()});
+      setAiMood(detectAiMood(finalText));
       if(actionCmd&&isAdmin){ showAIConfirm(actionCmd,me); }
     }
     else{await update(ref(db,'aiPrivateChat/'+me.username+'/'+thinkKey),{text:'抱歉，我現在有點忙',thinking:false});finalText='抱歉，我現在有點忙';}
