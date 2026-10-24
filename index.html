@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-cBFVIbUivSsk7w6ZCrE+Qm5dEJEahXj1UQnv5/yHJUg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-qOYKmFkhb5GWg0Zv0Bd0SFe8MSzemxOVl/uMXqHWKO0=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -1263,7 +1263,7 @@ body.theme-light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,.05) 25%,
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, limitToLast, endAt, get, child, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, orderByKey, limitToLast, endAt, get, child, set, update, remove, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
@@ -5891,6 +5891,158 @@ function usageBar(pct){
   const p=Math.max(0,Math.min(100,Number(pct)||0));
   return `<div style="height:9px;border-radius:var(--r-1);background:var(--bg-input);overflow:hidden;margin:7px 0 3px"><div style="height:100%;width:${p.toFixed(2)}%;border-radius:var(--r-1);background:${usageColor(p)}"></div></div>`;
 }
+/* ═══ 自設遊戲伺服器：實時狀態卡 ═══
+   伺服器每 10 秒把 meta/gamewsInfo（自己的 uptime、人數、房間、記憶體…）
+   和 meta/gamewsBeat（心跳）寫進 Firebase，這裡只負責讀與顯示。
+   好處：不用直連伺服器（免 CORS、免混合內容），伺服器掛了也能看到「最後一次」的數字。 */
+let usageLiveTimer=null;
+function stopUsageLive(){ if(usageLiveTimer){ clearInterval(usageLiveTimer); usageLiveTimer=null; } }
+
+const SRV_OWNER_FALLBACK='梁喆的 NAS';
+
+/* 判斷伺服器狀態，順便把「為甚麼連不上」講清楚（用戶要的錯誤碼） */
+function srvJudge(info, beat, down){
+  const now=Date.now();
+  const b=Number(beat)||0;
+  const ageSec=b?Math.round((now-b)/1000):null;
+  if(!b) return {k:'off', label:'從未連線', code:'NO_DATA', detail:'冇任何心跳紀錄，可能從未啟動過', age:null};
+  if(down&&down.at&&now-Number(down.at)<86400000){
+    const d=Math.round((now-Number(down.at))/1000);
+    return {k:'off', label:'已關機', code:'SHUTDOWN', detail:'伺服器正常關機（'+d+' 秒前發出下線通知）', age:ageSec};
+  }
+  if(ageSec>120) return {k:'off', label:'離線', code:'TIMEOUT', detail:'心跳停了 '+ageSec+' 秒（超過 120 秒判定離線）', age:ageSec};
+  if(ageSec>45) return {k:'warn', label:'心跳遲緩', code:'DELAY', detail:'心跳已 '+ageSec+' 秒沒更新（正常 10 秒一次）', age:ageSec};
+  if(!info) return {k:'warn', label:'在線（資料未齊）', code:'NO_INFO', detail:'有心跳但讀不到狀態，等一下會補上', age:ageSec};
+  return {k:'on', label:'在線', code:'OK', detail:'心跳正常（'+ageSec+' 秒前）', age:ageSec};
+}
+function fmtUptime(sec){
+  const n=Number(sec)||0;
+  if(n<60) return n+' 秒';
+  if(n<3600) return Math.floor(n/60)+' 分 '+(n%60)+' 秒';
+  const h=Math.floor(n/3600), m=Math.floor((n%3600)/60);
+  if(h<24) return h+' 小時 '+m+' 分';
+  return Math.floor(h/24)+' 日 '+(h%24)+' 小時';
+}
+const SRV_COLOR={on:'#22c55e',warn:'#f59e0b',off:'#ef4444'};
+
+/* 一條帶顏色的小進度條 */
+function srvBar(pct){
+  const p=Math.max(0,Math.min(100,Number(pct)||0));
+  const c=p>=85?'#ef4444':(p>=60?'#f59e0b':'#22c55e');
+  return `<div style="height:5px;border-radius:3px;background:var(--bg-input);overflow:hidden;margin:4px 0 8px">
+    <div style="height:100%;width:${p.toFixed(1)}%;background:${c}"></div></div>`;
+}
+function fmtGB(bytes){ return (Number(bytes||0)/1073741824).toFixed(1)+' GB'; }
+
+/* 機器資源：CPU／記憶體／硬碟／正在跑的程式 */
+function sysBlockHTML(sys){
+  if(!sys) return `<div style="font-size:11.5px;color:var(--text-muted);margin:8px 0">正在採集機器數據…（伺服器每 10 秒上報一次）</div>`;
+  const cpu=Number(sys.cpu)||0;
+  const memPct=Number(sys.memPct)||0;
+  const disks=sys.disk||{};
+  const procs=(sys.procs||[]);
+  const cpuColor=cpu>=85?'#ef4444':(cpu>=60?'#f59e0b':'#22c55e');
+
+  let h=`<div class="section-title" style="margin-top:4px">機器資源</div>`;
+  h+=`<div style="display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:var(--text-sub)">CPU（${sys.cores||0} 核）</span>
+        <span style="color:${cpuColor};font-weight:700;font-variant-numeric:tabular-nums">${cpu}%</span></div>`;
+  h+=srvBar(cpu);
+
+  h+=`<div style="display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:var(--text-sub)">記憶體</span>
+        <span style="color:var(--text-main);font-weight:600;font-variant-numeric:tabular-nums">${sys.memUsedMB||0} / ${sys.memTotalMB||0} MB（${memPct}%）</span></div>`;
+  h+=srvBar(memPct);
+
+  for(const d of Object.keys(disks)){
+    const x=disks[d];
+    h+=`<div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:var(--text-sub)">硬碟 ${d}</span>
+          <span style="color:var(--text-main);font-weight:600;font-variant-numeric:tabular-nums">${fmtGB(x.used)} / ${fmtGB(x.total)}（${x.pct}%）</span></div>`;
+    h+=srvBar(x.pct);
+  }
+
+  h+=`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0">
+        <span style="color:var(--text-sub)">系統已運行</span>
+        <span style="color:var(--text-main);font-weight:600">${fmtUptime(sys.osUptime)}</span></div>`;
+
+  h+=`<div class="section-title" style="margin-top:10px">正在運行的程式（${sys.procCount||0} 個）</div>`;
+  if(!procs.length){
+    h+=`<div style="font-size:11.5px;color:var(--text-muted)">尚未採集完成（每 30 秒更新一次）</div>`;
+  }else{
+    h+=`<div style="font-size:11.5px;color:var(--text-sub);line-height:1.75">`;
+    for(const p of procs){
+      const mb=Math.round((Number(p.memKB)||0)/1024);
+      h+=`<div style="display:flex;justify-content:space-between;gap:10px">
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.name||'?')}
+              <span style="color:var(--text-muted)">· ${p.pid||'—'}</span></span>
+            <span style="font-variant-numeric:tabular-nums;color:var(--text-main)">${mb} MB</span></div>`;
+    }
+    h+=`</div>`;
+    h+=`<div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">按記憶體排序，只列前 10 個</div>`;
+  }
+  return h;
+}
+
+
+function srvCardHTML(info, beat, down){
+  const st=srvJudge(info, beat, down);
+  const c=SRV_COLOR[st.k]||'#94a3b8';
+  const owner=(info&&info.owner)||SRV_OWNER_FALLBACK;
+  const host=(info&&info.host)||'—';
+  const row=(a,b)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0">
+      <span style="color:var(--text-sub)">${a}</span>
+      <span style="color:var(--text-main);font-variant-numeric:tabular-nums;font-weight:600">${b}</span></div>`;
+  return `<div id="srvCard" class="card" style="background:var(--bg-card);border:1px solid ${c}55;border-radius:var(--r-2);padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="width:9px;height:9px;border-radius:50%;background:${c};box-shadow:0 0 8px ${c}"></span>
+      <span style="font-size:13px;font-weight:700;color:var(--text-main)">遊戲伺服器</span>
+      <span style="margin-left:auto;font-size:11px;font-weight:700;color:${c};background:${c}1a;border:1px solid ${c}44;padding:2px 8px;border-radius:999px">${st.label}</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">
+      ${escapeHtml(owner)} · <span style="font-family:monospace">${escapeHtml(host)}</span>
+    </div>
+    ${row('狀態碼',`<span style="color:${c}">${st.code}</span>`)}
+    ${row('說明',escapeHtml(st.detail))}
+    ${info?row('運行時間',fmtUptime(info.uptime)):''}
+    ${info?row('在線玩家（大廳）',(info.players??0)+' 人'):''}
+    ${info?row('回合制房間',(info.rooms??0)+' 間'):''}
+    ${info?row('場上豆子',(info.lobbyFood??0)+' 粒'):''}
+    ${info?row('記憶體 / PID',(info.memMB??0)+' MB · '+(info.pid??'—')):''}
+    ${info?row('Node / 平台',escapeHtml((info.node||'—')+' · '+(info.platform||'—'))):''}
+    ${info?row('版本',escapeHtml(info.version||'—')):''}
+    ${row('心跳回報',info?new Date(info.at||0).toLocaleTimeString('zh-TW'):'—')}
+    ${info?sysBlockHTML(info.sys):''}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+      每 3 秒自動更新。伺服器關掉時這裡會顯示 SHUTDOWN／TIMEOUT，
+      遊戲會自動退回 Firebase，不會玩不了。
+    </div>
+  </div>`;
+}
+async function readSrvState(){
+  let info=null, beat=0, down=null;
+  try{
+    const [a,b,c]=await Promise.all([
+      get(child(ref(db),'meta/gamewsInfo')),
+      get(child(ref(db),'meta/gamewsBeat')),
+      get(child(ref(db),'meta/gamewsDown'))
+    ]);
+    info=a.exists()?a.val():null;
+    beat=b.exists()?b.val():0;
+    down=c.exists()?c.val():null;
+  }catch(e){}
+  return {info,beat,down};
+}
+async function refreshSrvCard(){
+  const el=document.getElementById('srvCard');
+  if(!el) return;
+  const st=await readSrvState();
+  const tmp=document.createElement('div');
+  tmp.innerHTML=srvCardHTML(st.info,st.beat,st.down);
+  const fresh=tmp.firstElementChild;
+  if(fresh) el.replaceWith(fresh);
+}
+
 function usageCard(title,big,sub,pct,note){
   return `<div class="card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-2);padding:14px 16px;margin-bottom:12px">
     <div style="font-size:12px;color:var(--text-sub);letter-spacing:.4pt;margin-bottom:6px">${title}</div>
@@ -5981,6 +6133,10 @@ async function renderUsageTab(body){
 
   let html='';
 
+  /* 最上面先放「伺服器現在怎樣」——這是用戶最想一眼看到的 */
+  const srv=await readSrvState();
+  html+=srvCardHTML(srv.info, srv.beat, srv.down);
+
   html+=`<div class="section-title">額度</div>`;
   html+=usageCard('儲存用量（整個資料庫）',
     `${fmtBytes(scan.total)} <span style="font-size:14px;color:var(--text-muted);font-weight:600">/ 1 GB</span>`,
@@ -6063,6 +6219,16 @@ async function renderUsageTab(body){
   </div>`;
 
   body.innerHTML=html;
+
+  /* 數值實時更新：伺服器卡每 3 秒、整頁用量每 20 秒 */
+  stopUsageLive();
+  let tick=0;
+  usageLiveTimer=setInterval(async()=>{
+    if(!document.getElementById('srvCard')){ stopUsageLive(); return; }   // 離開用量頁就停
+    tick++;
+    try{ await refreshSrvCard(); }catch(e){}
+    if(tick%7===0){ try{ await renderUsageTab(document.getElementById('adminBody')); }catch(e){} }
+  },3000);
 }
 
 /* ═══ v1.18 Google 官方用量（真實數字） ═══
@@ -6239,6 +6405,7 @@ function openAdminPage(tab){
 let _adminTab=null;
 const adminTabScroll={};
 async function renderAdminTab(tab){
+  try{ stopUsageLive(); }catch(e){}          /* 換分頁就停掉用量頁的自動刷新 */
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.arg===tab));
   const body=document.getElementById('adminBody');if(!body)return;
   if(_adminTab&&_adminTab!==tab){
@@ -6408,7 +6575,24 @@ function renderFeedbacksList(){
 }
 async function feedbackProcess(key){ await update(ref(db,'feedbacks/'+key),{status:'processing',processedAt:Date.now(),processedBy:me.username}); const f=feedbacks[key]; if(f&&f.fromUser){await pushSystemNotice(f.fromUser,{type:'feedback_processing',title:'反饋正在處理',body:'你提交的問題反饋正在處理中，請耐心等候。',createdAt:Date.now(),read:false});} showNotif('已標記處理中');renderAdminTab('feedbacks'); }
 async function feedbackDone(key){ const result=prompt('請填寫處理結果：');if(!result)return;await update(ref(db,'feedbacks/'+key),{status:'done',result,doneAt:Date.now(),doneBy:me.username}); const f=feedbacks[key]; if(f&&f.fromUser){await pushSystemNotice(f.fromUser,{type:'feedback_done',title:'反饋已處理',body:'你的問題反饋已處理完成。\n處理結果：'+result,createdAt:Date.now(),read:false});} showNotif('已處理完成');renderAdminTab('feedbacks'); }
-async function renderAllLogs(){ const snap=await get(query(ref(db,'logs'),limitToLast(300)));const val=snap.val()||{};const list=Object.values(val).sort((a,b)=>b.createdAt-a.createdAt);if(list.length===0)return `<div class="empty">暫無紀錄</div>`;return `<div class="term-log">${list.map(l=>`<div class="tl t-${String(l.action||'').replace(/[^a-zA-Z]/g,'')}"><span class="t-time">[${new Date(l.createdAt).toLocaleString('zh-TW')}]</span> <span class="t-act">[${escapeHtml(l.action)}]</span> <span class="t-user">[${escapeHtml(l.displayName||l.username)}]</span> ${escapeHtml(l.detail||l.action)}</div>`).join('')}</div>`; }
+/* v1.38.23 修：limitToLast 一定要搭 orderBy，否則查詢直接回空
+   （以前這裡沒有 orderBy，所以日誌頁看起來「只剩很久之前那幾筆」甚至空的）。
+   用 orderByKey 按 key 排 —— key 是 log_{13位時間戳}_{隨機}，字典序＝時間序，
+   而且不需要在 rules 加 .indexOn。 */
+async function renderAllLogs(){
+  let list=[];
+  try{
+    const snap=await get(query(ref(db,'logs'), orderByKey(), limitToLast(300)));
+    const val=snap.val()||{};
+    list=Object.values(val).filter(x=>x&&typeof x==='object').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  }catch(e){ return `<div class="empty">讀取日誌失敗：${escapeHtml(String(e&&e.message||e).slice(0,80))}</div>`; }
+  if(list.length===0)return `<div class="empty">暫無紀錄</div>`;
+  const first=list[list.length-1], last=list[0];
+  const fmt=t=>new Date(t||0).toLocaleString('zh-TW');
+  return `<div style="font-size:11.5px;color:var(--text-muted);margin:0 0 8px">
+      顯示最近 ${list.length} 筆（${fmt(first.createdAt)} → ${fmt(last.createdAt)}）
+    </div>` + `<div class="term-log">${list.map(l=>`<div class="tl t-${String(l.action||'').replace(/[^a-zA-Z]/g,'')}"><span class="t-time">[${fmt(l.createdAt)}]</span> <span class="t-act">[${escapeHtml(l.action)}]</span> <span class="t-user">[${escapeHtml(l.displayName||l.username)}]</span> ${escapeHtml(l.detail||l.action)}</div>`).join('')}</div>`;
+}
 async function renderGroupsAdmin(){
   const snap=await get(ref(db,'groups'));
   if(!snap.exists())return `<div class="empty">暫無群聊</div>`;
