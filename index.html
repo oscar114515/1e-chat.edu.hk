@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tvJrdwDkNcwDdKzd0NFXZZVJ7SokvCfegkf1T8CuzrY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-vEVka46M5y8OnikCkTbYZkUwmv+lhuPBtIUjZPXcf2g=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,26 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 狀態簽名 / 每日一句 / 金句 / 節日特效 / AI 快捷 ═══ */
+.status-line{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-sub);
+  background:rgba(148,163,184,.12);border:1px solid var(--border);border-radius:999px;padding:3px 10px;margin:6px 0 2px}
+.dq-card{padding:13px 16px;border-radius:16px;margin-bottom:14px;
+  background:linear-gradient(140deg,rgba(56,189,248,.12),rgba(168,85,247,.10));border:1px solid var(--border)}
+.dq-text{font-size:13.5px;line-height:1.75;color:var(--text-main)}
+.dq-from{font-size:11px;color:var(--text-muted);margin-top:7px;text-align:right}
+.quote-item{padding:13px 16px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:10px}
+.quote-txt{font-size:13.5px;line-height:1.7;color:var(--text-main)}
+.quote-meta{font-size:10.5px;color:var(--text-muted);margin-top:7px}
+.ai-quick{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.ai-quick button{padding:8px 13px;font-size:12px;border-radius:11px;border:1px solid var(--border);
+  background:var(--bg-input);color:var(--text-main);cursor:pointer;font-family:inherit}
+.ai-quick button:active{transform:scale(.95)}
+.empty{padding:30px 16px;text-align:center;line-height:1.9}
+/* 節日特效 */
+#festive{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden}
+#festive i{position:absolute;top:-24px;font-size:15px;animation:fall linear infinite;opacity:.85}
+@keyframes fall{to{transform:translateY(105vh) rotate(320deg)}}
+
 /* ═══ 每日任務 / 轉盤 / 抽卡 ═══ */
 .task-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
 .task-row:last-child{border-bottom:none}
@@ -2707,6 +2727,14 @@ function enterChat(){
   subscribeMyGroups();
   applyChatBg();
   subscribeMoments();
+  subscribeQuotes();
+  try{
+    const lastSeen=Number(localStorage.getItem('lastSeenAt')||0);
+    if(me) me.lastSeen=lastSeen;
+    localStorage.setItem('lastSeenAt', String(Date.now()));
+  }catch(e){}
+  applyFestive();
+  setTimeout(function(){ try{ checkBirthdayOnce(); }catch(e){} }, 2600);
   subscribeReactions();
   subscribeTyping();
   /* _b1b_done */
@@ -2773,6 +2801,18 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openStatusPage')return openStatusPage();
+    if(action==='saveStatus')return saveStatus();
+    if(action==='openQuoteWall')return openQuoteWall();
+    if(action==='markQuote')return markQuote(arg);
+    if(action==='openAiQuickPage')return openAiQuickPage();
+    if(action==='aiQuick'){
+      const a=AI_QUICK_ACTIONS[Number(arg)];
+      if(a){ aiQuickFill(a.p); showNotif('已填入輸入框，去 AI 聊天繼續打'); }
+      return;
+    }
+    if(action==='exportMyData')return exportMyData();
+    if(action==='askPushPermission')return askPushPermission();
     if(action==='openTransferPage')return openTransferPage();
     if(action==='doTransfer')return doTransfer();
     if(action==='openDailyPage')return openDailyPage();
@@ -4173,6 +4213,7 @@ function openMsgMenu(msgId){
   }).join('')}</div>`;
   if(!m.deleted) rows+=`<button class="mm-btn" data-mm="quote">引用回覆</button>`;
   if(m.text&&String(m.text).trim()) rows+=`<button class="mm-btn" data-mm="copyText">複製文字</button>`;
+  if(m.text&&String(m.text).trim().length>=6&&!m.deleted) rows+=`<button class="mm-btn" data-mm="quoteIt">標為金句</button>`;
   if(isMe&&!isAI&&!m.deleted&&(Date.now()-(m.createdAt||0)<120000)) rows+=`<button class="mm-btn" data-mm="recall">撤回這則（2 分鐘內）</button>`;
   if(!isMe&&!isAI)rows+=`<button class="mm-btn danger" data-mm="reportMsg">舉報這則訊息</button>`;
   if(isMe&&!isAI&&!m.deleted)rows+=`<button class="mm-btn" data-mm="requestDeleteMsg">請求刪除</button>`;
@@ -4198,6 +4239,7 @@ function openMsgMenu(msgId){
         return;
       }
       if(a==='recall'){ closeMsgMenu(); recallMsg(msgId); return; }
+      if(a==='quoteIt'){ closeMsgMenu(); markQuote(msgId); return; }
       closeMsgMenu();
       const fn={reportMsg,requestDeleteMsg,adminDeleteMsg,adminDeleteAIMsg,restoreMsg,purgeMsg}[a];
       if(typeof fn==='function'){ try{ fn(msgId); }catch(e){} }
@@ -4363,7 +4405,7 @@ function render(){
   renderPoints();
   const suppress=suppressScrollToBottom;suppressScrollToBottom=false;
   const src=allMsgs();
-  if(src.length===0){chatBox.innerHTML=`<div class="empty">還沒有訊息，說點什麼吧！</div>`;return;}
+  if(src.length===0){chatBox.innerHTML=`<div class="empty">還沒有訊息，說點什麼吧！<div style="font-size:34px;margin-top:12px">💬</div></div>`;return;}
   const usersLoaded=Object.keys(allUsers).length>0;
   const atBottom=chatBox.scrollHeight-chatBox.scrollTop-chatBox.clientHeight<120;
   const isAdmin=me.role==='superadmin'||me.role==='admin';
@@ -6677,6 +6719,7 @@ async function doCheckin(){
     try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
     addExp(20);
     bumpDaily('ck');
+    afterCheckinBonuses();
     /* 額外一份：7 天禮物時加碼（開頭已經撒過一次，這裡補慶祝感） */
     if(bonus){ try{ setTimeout(function(){ confettiBurst(null,{count:90}); }, 420); }catch(e){} }
     try{ var cm=document.getElementById('ckModal'); if(cm){ var mk=document.getElementById('ckMask'); if(mk) mk.remove(); cm.remove(); } }catch(e){}
@@ -6803,6 +6846,243 @@ function badgeCount(exp,ck){
   const u={exp:exp,points:Number(me.points)||0};
   return BADGES.filter(function(b){ return b.need(u,ck||{}); }).length;
 }
+/* ═══════════════ 狀態簽名（24 小時自動消失） ═══════════════ */
+function statusText(u){
+  const st=u&&u.status;
+  if(!st||!st.text) return '';
+  if(Date.now()-(Number(st.at)||0) > 86400000) return '';   /* 24 小時後自動過期 */
+  return st.text;
+}
+async function saveStatus(){
+  const el=document.getElementById('statusInput');
+  if(!el||!me) return;
+  const v=String(el.value||'').trim().slice(0,60);
+  try{
+    await update(ref(db,'users/'+me.username),{status:{text:v,at:Date.now()}});
+    me.status={text:v,at:Date.now()};
+    showNotif(v?'狀態已更新（24 小時後消失）':'狀態已清除');
+    render();
+  }catch(e){ showNotif('儲存失敗'); }
+}
+
+/* ═══════════════ 每日一句（30 句輪替，按日期取） ═══════════════ */
+const DAILY_QUOTES=[
+  ['把每一天當成最後一天來活，但像還有永遠一樣去學。',''],
+  ['你現在偷的懶，都會變成以後打自己的巴掌。',''],
+  ['數學不會背叛你，不會就是不會。',''],
+  ['早睡不會死人，遲到才會。',''],
+  ['朋友是那個知道你所有缺點還願意坐你旁邊的人。',''],
+  ['不必急，中一才剛開始，但也不要停。',''],
+  ['你可以平凡，但不要讓自己習慣平凡。',''],
+  ['所有的「來不及」，都是從「等一下」開始的。',''],
+  ['今天的太陽照不到明天的你，所以要自己發光。',''],
+  ['認真聽一節課，比補習三小時有用。',''],
+  ['不要因為走得太慢就放棄，烏龜也贏過兔子。',''],
+  ['真正的自由，是有能力選擇不做什麼。',''],
+  ['你討厭的現在，是未來的你回不去的從前。',''],
+  ['失敗不是終點，只是「此路不通」的路牌。',''],
+  ['世界很大，但你的第一步在校門口。',''],
+  ['少一點抱怨，多一點完成。',''],
+  ['不要跟別人比，跟昨天的自己比。',''],
+  ['現在流的汗，是將來不必流的淚。',''],
+  ['別人怎麼看你，跟你實際是誰，是兩件事。',''],
+  ['先做完，再做好。',''],
+  ['你不是不夠好，你只是還沒做完。',''],
+  ['每天進步 1%，一年後是 37 倍。',''],
+  ['把難題拆開，就沒有難題。',''],
+  ['真正的朋友不會讓你一個人面對。',''],
+  ['休息不是偷懶，是為了走更遠。',''],
+  ['不確定的事，先做了才知道。',''],
+  ['你可以慢，但不要站著。',''],
+  ['成績是副產品，習慣才是主產品。',''],
+  ['今天不想做的事，明天只會更難。',''],
+  ['你比自己以為的更能撐。','']
+];
+function dailyQuote(){
+  const d=new Date();
+  const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+  return DAILY_QUOTES[doy % DAILY_QUOTES.length];
+}
+
+/* ═══════════════ 金句牆 ═══════════════ */
+let allQuotes=[], unsubQuotes=null;
+function subscribeQuotes(){
+  if(unsubQuotes){ try{ unsubQuotes(); }catch(e){} }
+  unsubQuotes=onValue(ref(db,'quotes'), snap=>{
+    const v=snap.val()||{};
+    allQuotes=Object.keys(v).map(function(k){ return Object.assign({_k:k},v[k]); })
+      .sort(function(a,b){ return (b.at||0)-(a.at||0); });
+  });
+}
+async function markQuote(msgId){
+  const m=allMsgs().find(function(x){ return x.id===msgId; });
+  if(!m||!m.text||!me) return;
+  try{
+    const key=push(ref(db,'quotes')).key;
+    await set(ref(db,'quotes/'+key),{text:String(m.text).slice(0,120),by:m.displayName||m.username,byU:m.username,at:Date.now(),byQuoter:me.username});
+    showNotif('已加入金句牆');
+  }catch(e){ showNotif('加入失敗'); }
+}
+function openQuoteWall(){
+  if(!me) return;
+  const list=allQuotes.slice(0,60);
+  openPage({title:'金句牆', key:'quotes', bodyHTML:
+    (list.length ? list.map(function(q){
+      return '<div class="quote-item"><div class="quote-txt">'+escapeHtml(q.text)+'</div>'
+        + '<div class="quote-meta">—— '+escapeHtml(q.by||'')+' · '+fmtAgo(q.at)+'</div></div>';
+    }).join('') : '<div class="empty">還沒有人標記金句<div style="font-size:30px;margin-top:10px">💬</div></div>')
+  });
+}
+
+/* ═══════════════ 生日提醒 ═══════════════ */
+function todayMD(){
+  const d=new Date();
+  return String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function todaysBirthdays(){
+  const md=todayMD();
+  return Object.keys(allUsers||{}).filter(function(u){
+    const b=allUsers[u]&&allUsers[u].birthday;
+    return b && String(b).slice(-5)===md;
+  }).map(function(u){ return allUsers[u].displayName||u; });
+}
+function checkBirthdayOnce(){
+  try{
+    if(localStorage.getItem('bdaySeen')===todayMD()) return;
+    const list=todaysBirthdays();
+    if(!list.length) return;
+    localStorage.setItem('bdaySeen', todayMD());
+    showNCard({title:'🎂 今日生日', html:'今天是 <b>'+escapeHtml(list.join('、'))+'</b> 的生日！<br><span style="font-size:12px;color:var(--text-sub)">去留言板寫句生日快樂吧</span>', btn:'去寫'});
+  }catch(e){}
+}
+
+/* ═══════════════ 數據導出 ═══════════════ */
+async function exportMyData(){
+  if(!me) return;
+  try{
+    const [ck, cards, spin, users] = await Promise.all([
+      get(ref(db,'checkin/'+me.username)).then(function(x){ return x.val()||{}; }).catch(function(){ return {}; }),
+      get(ref(db,'cards/'+me.username)).then(function(x){ return x.val()||{}; }).catch(function(){ return {}; }),
+      get(ref(db,'spin/'+me.username)).then(function(x){ return x.val()||{}; }).catch(function(){ return {}; }),
+      get(ref(db,'users/'+me.username)).then(function(x){ return x.val()||{}; }).catch(function(){ return {}; })
+    ]);
+    const myMsgs=allMsgs().filter(function(m){ return m.username===me.username; })
+      .map(function(m){ return {text:m.text||'', createdAt:m.createdAt||0}; });
+    const out={ 導出時間:new Date().toISOString(), 帳號:me.username, 顯示名稱:me.displayName,
+      積分:Number(users.points)||0, 經驗:Number(users.exp)||0, 等級:levelOf(users.exp),
+      簽到:ck, 卡片:cards, 轉盤:spin, 最近訊息:myMsgs.slice(-500) };
+    const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='1e-chat-'+me.username+'-'+todayKey()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    showNotif('已導出');
+  }catch(e){ showNotif('導出失敗'); }
+}
+
+/* ═══════════════ 瀏覽器推送 ═══════════════ */
+async function askPushPermission(){
+  try{
+    if(!('Notification' in window)){ showNotif('這個瀏覽器不支援通知'); return; }
+    if(Notification.permission==='granted'){ showNotif('通知已開啟'); return; }
+    if(Notification.permission==='denied'){ showNotif('通知被封鎖，請到瀏覽器設定開啟'); return; }
+    const r=await Notification.requestPermission();
+    showNotif(r==='granted'?'通知已開啟':'已取消');
+  }catch(e){ showNotif('設定失敗'); }
+}
+function pushNotify(title, body){
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted') return;
+    if(document.visibilityState==='visible') return;   /* 正在看就不用彈 */
+    new Notification(title,{body:body,icon:'assets/icon-192.png'});
+  }catch(e){}
+}
+
+/* ═══════════════ 節日特效 ═══════════════ */
+function applyFestive(){
+  try{
+    const old=document.getElementById('festive'); if(old) old.remove();
+    const d=new Date(), m=d.getMonth()+1, day=d.getDate();
+    let emoji='', n=0;
+    if(m===12 && day>=20) { emoji='❄️'; n=26; }
+    else if(m===1 && day<=3) { emoji='🎉'; n=22; }
+    else if(m===10 && day>=25) { emoji='🎃'; n=18; }
+    else if(m===2 && day>=10 && day<=16) { emoji='🧧'; n=18; }
+    else if(m===9 && day>=10 && day<=18) { emoji='🥮'; n=16; }
+    if(!emoji) return;
+    const box=document.createElement('div'); box.id='festive';
+    let html='';
+    for(let i=0;i<n;i++){
+      html+='<i style="left:'+(Math.random()*100)+'%;animation-duration:'+(5+Math.random()*6).toFixed(1)
+        +'s;animation-delay:-'+(Math.random()*6).toFixed(1)+'s;font-size:'+(11+Math.random()*10).toFixed(0)+'px">'+emoji+'</i>';
+    }
+    box.innerHTML=html;
+    document.body.appendChild(box);
+  }catch(e){}
+}
+
+/* ═══════════════ AI 快捷按鈕 ═══════════════ */
+const AI_QUICK_ACTIONS=[
+  {t:'幫我寫', p:'幫我寫一段文字。我要寫的是：'},
+  {t:'翻譯', p:'幫我把下面這段翻成規範書面中文（如果是中文就翻成英文）：'},
+  {t:'總結今天', p:'幫我看一下今日聊天室主要在講什麼，用 5 點總結。'},
+  {t:'解釋', p:'用中一學生聽得懂的方式解釋這個概念：'}
+];
+function aiQuickFill(text){
+  try{
+    if(!msgInput) return;
+    msgInput.value=text;
+    msgInput.focus();
+    msgInput.dispatchEvent(new Event('input',{bubbles:true}));
+  }catch(e){}
+}
+
+/* ═══════════════ 狀態簽名頁 / AI 快捷頁 ═══════════════ */
+function openStatusPage(){
+  if(!me) return;
+  const cur=statusText(me);
+  openPage({title:'今日狀態', key:'status', bodyHTML:
+    '<div class="card" style="padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text-sub);line-height:1.7">'
+    + '寫一句現在的狀態，24 小時後自動消失。例：「今日數學考到傻 😵」「終於考完 🎉」</div>'
+    + '<div class="form-row"><input id="statusInput" maxlength="60" value="'+escAttr(cur)+'" placeholder="一句話…"></div>'
+    + '<button class="btn-primary" data-action="saveStatus">儲存</button>'
+  });
+}
+function openAiQuickPage(){
+  openPage({title:'AI 快捷', key:'aiquick', bodyHTML:
+    '<div class="card" style="padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text-sub);line-height:1.7">'
+    + '點一下就把開頭文字填進輸入框（要去 AI 聊天才看到），你接著打自己的內容。</div>'
+    + '<div class="ai-quick" style="flex-direction:column">'
+    + AI_QUICK_ACTIONS.map(function(a,i){
+        return '<button style="text-align:left;padding:11px 14px" data-action="aiQuick" data-arg="'+i+'">'+escapeHtml(a.t)
+          + '<div style="font-size:10.5px;color:var(--text-muted);margin-top:3px">'+escapeHtml(a.p.slice(0,34))+'…</div></button>';
+      }).join('')
+    + '</div>'
+  });
+}
+
+/* ═══════════════ 首簽 / 回歸獎勵 ═══════════════ */
+async function afterCheckinBonuses(){
+  if(!me) return;
+  try{
+    const td=todayKey();
+    const firstRef=ref(db,'checkinFirst/'+td);
+    const cur=(await get(firstRef)).val();
+    if(!cur){
+      await set(firstRef, {username:me.username, name:me.displayName, at:Date.now()});
+      await changePoints(me.username, 200, '今日首簽');
+      showNCard({title:'⚡ 今日首簽', html:'你是今天第一個簽到的，額外 <b>+200 分</b>！', btn:'太好了'});
+    }
+  }catch(e){}
+  try{
+    const last=Number(me.lastSeen||0);
+    if(last && Date.now()-last > 7*86400000){
+      await changePoints(me.username, 300, '歡迎回來');
+      showNCard({title:'歡迎回來', html:'好久沒見！送你 <b>+300 分</b>，還有一個「我都回來了」的心情。', btn:'多謝'});
+    }
+  }catch(e){}
+}
+
 /* ═══ 積分加減 ═══
    ⚠ chat.html 本身冇 givePoints / takePoints（嗰兩個係 game.html 嘅）。
    之前 doSpin / doDraw / doTransfer 直接叫佢哋 → ReferenceError 被 try/catch 吞咗，
@@ -7148,8 +7428,10 @@ function paintMoments(){
 }
 function openMomentsPage(){
   if(!me) return;
+  const dq=dailyQuote();
   openPage({title:'班級動態', key:'moments', bodyHTML:
-    '<div class="card" style="padding:14px 16px;margin-bottom:14px">'
+    '<div class="dq-card"><div class="dq-text">「'+escapeHtml(dq[0])+'」</div><div class="dq-from">— 每日一句</div></div>'
+    + '<div class="card" style="padding:14px 16px;margin-bottom:14px">'
     + '<textarea id="momText" class="mom-input" maxlength="500" placeholder="分享一件小事…（最多 500 字）"></textarea>'
     + '<button class="btn-primary" data-action="postMoment" style="margin-top:10px">發佈</button></div>'
     + '<div id="momList"></div>'});
@@ -7352,6 +7634,7 @@ async function openProfilePage(username,isSelf,fromAdmin){
     const aiRow=(t,sub,act,ico)=>'<div class="about-item" data-action="'+act+'"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-'+ico+'"/></svg></div><div><div class="ai-title">'+t+'</div>'+(sub?'<div class="ai-sub">'+sub+'</div>':'')+'</div></div><div class="ai-arrow">›</div></div>';
     const fontName=(typeof fontPref==='function'&&fontPref()==='sys')?'系統字體':'霞鶩文楷';
     const bodyHTML=checkinCardHTML(ck)
+      +(statusText(me)?('<div style="margin:0 0 12px"><span class="status-line">💭 '+escapeHtml(statusText(me))+'</span></div>'):'')
       +'<div class="section-title">個人資料</div>'
       +aiRow('頭像與顯示名稱', escapeHtml(me.displayName||''), 'openProfileEdit', 'user')
       +'<div class="section-title">帳號與安全</div>'
@@ -7370,6 +7653,12 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('每日任務 · 轉盤', '完成任務 +200 分', 'openDailyPage', 'check')
       +aiRow('收藏冊', '抽卡收集', 'openCardsPage', 'heart')
       +aiRow('積分轉賬', '轉分給同學', 'openTransferPage', 'score')
+      +'<div class="section-title">更多</div>'
+      +aiRow('今日狀態', statusText(me)||'未設定（24 小時消失）', 'openStatusPage', 'bell')
+      +aiRow('金句牆', allQuotes.length+' 句', 'openQuoteWall', 'heart')
+      +aiRow('AI 快捷', '幫寫 / 翻譯 / 總結', 'openAiQuickPage', 'bot')
+      +aiRow('數據導出', '下載自己的紀錄', 'exportMyData', 'download')
+      +aiRow('開啟通知', ('Notification' in window && Notification.permission==='granted')?'已開啟':'未開啟', 'askPushPermission', 'bell')
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
@@ -9160,6 +9449,17 @@ const VERSION_HISTORY=[
 '每日轉盤：每天免費轉一次，10 到 500 分不等，有轉盤動畫',
 '抽卡：100 分抽一張，12 張卡（普通／稀有／超稀有／傳說），重複自動換 50 分；收藏冊記錄你收集了哪幾張',
 '積分轉賬：可以把積分轉給同學（個人主頁 → 積分 → 轉賬），沒有上限，管理員可以查看全部轉賬記錄',
+'今日狀態簽名：個人主頁 → 更多 → 今日狀態。寫一句話（60 字內），24 小時後自動消失，個人主頁會顯示',
+'金句牆：點任何一則訊息 →「標為金句」，好笑的句子會收進金句牆（個人主頁 → 更多 → 金句牆）',
+'每日一句：班級動態頁最上面每天換一句話，30 句輪替（按日期自動換，不用手動維護）',
+'生日提醒：到同學生日的當天，進網站會彈「今日生日」提示（生日要自己填在 users/{帳號}/birthday，格式 MM-DD）',
+'AI 快捷：個人主頁 → 更多 → AI 快捷，四個一鍵開頭：幫我寫、翻譯、總結今天、解釋概念，點一下填進輸入框',
+'數據導出：個人主頁 → 更多 → 數據導出，把自己的積分、經驗、簽到、卡片、最近 500 則訊息下載成 JSON 檔',
+'瀏覽器通知：個人主頁 → 更多 → 開啟通知，之後有人 @ 你、發公告會彈手機通知（要自己按允許）',
+'首簽獎勵：每天第一個簽到的人額外 +200 分，會彈「⚡ 今日首簽」',
+'回歸獎勵：超過 7 天沒上線，下次簽到時送 +300 分和「歡迎回來」提示',
+'節日特效：聖誕節下雪、新年彩帶、萬聖節南瓜、農曆年紅包、中秋月餅，按日期自動出現，不用開關',
+'空狀態插畫：沒訊息、沒金句、沒留言時不再是乾巴巴一行字，會有圖示和文案',
 ]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
