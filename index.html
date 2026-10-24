@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Nqz40hZYHA/7ySKRgItjTCXIT8mTsgPrabGW6LEFFY4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-TSvm1d1gJyxMcPKEFEOR6x5okoIMYOc9H1jrArcBtHg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,15 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 表情包 / 手勢提示 ═══ */
+.sticker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:8px 0 4px}
+.sticker-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:26px;
+  border-radius:13px;background:var(--bg-input);border:1px solid var(--border);cursor:pointer;
+  transition:transform .15s cubic-bezier(.34,1.5,.5,1)}
+.sticker-cell:active{transform:scale(.85)}
+.msg .bubble .sticker-big{font-size:46px;line-height:1.15;display:block;text-align:center}
+.msg .bubble.sticker-bubble{background:transparent!important;padding:0!important;box-shadow:none!important}
+
 /* ═══ 轉賬 / 紅包 ═══ */
 .tf-card{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:15px;
   background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(245,158,11,.12));
@@ -1762,6 +1771,7 @@ body.theme-light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,.05) 25%,
     <div class="pi" data-action="pickLocation"><div class="pic"><svg class="ico"><use href="#i-pin"/></svg></div><div class="pit">位置</div></div>
     <div class="pi" data-action="openTransferSheet"><div class="pic" style="color:#fbbf24">¥</div><div class="pit">轉賬</div></div>
     <div class="pi" data-action="openRedPacketSheet"><div class="pic" style="color:#ef4444">🧧</div><div class="pit">紅包</div></div>
+    <div class="pi" data-action="openStickerPage"><div class="pic">😎</div><div class="pit">表情包</div></div>
     <div class="pi" data-action="openPollCreate"><div class="pic"><svg class="ico"><use href="#i-poll"/></svg></div><div class="pit">投票</div></div>
     <div class="pi" data-action="openNoticeCreate"><div class="pic"><svg class="ico"><use href="#i-megaphone"/></svg></div><div class="pit">公告</div></div>
     <div class="pi" data-action="openGames"><div class="pic"><svg class="ico"><use href="#i-gamepad"/></svg></div><div class="pit">小遊戲</div></div>
@@ -2765,6 +2775,8 @@ function enterChat(){
   applyChatBg();
   subscribeMoments();
   subscribeQuotes();
+  subscribeFollows();
+  bindChatGestures();
   try{
     const lastSeen=Number(localStorage.getItem('lastSeenAt')||0);
     if(me) me.lastSeen=lastSeen;
@@ -2838,6 +2850,9 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openStickerPage')return openStickerPage();
+    if(action==='sendSticker')return sendSticker(arg);
+    if(action==='toggleFollow')return toggleFollow(arg);
     if(action==='openTransferSheet')return openTransferSheet();
     if(action==='openRedPacketSheet')return openRedPacketSheet();
     if(action==='claimRedPacket')return claimRedPacket(arg);
@@ -4269,6 +4284,7 @@ function openMsgMenu(msgId){
   if(m.text&&String(m.text).trim()) rows+=`<button class="mm-btn" data-mm="copyText">複製文字</button>`;
   if(m.text&&String(m.text).trim().length>=6&&!m.deleted) rows+=`<button class="mm-btn" data-mm="quoteIt">標為金句</button>`;
   if(isMe&&!isAI&&!m.deleted&&(Date.now()-(m.createdAt||0)<120000)) rows+=`<button class="mm-btn" data-mm="recall">撤回這則（2 分鐘內）</button>`;
+  if(!isMe&&!isAI)rows+=`<button class="mm-btn" data-mm="follow">${myFollows[m.username]?'取消關注此同學':'關注此同學'}</button>`;
   if(!isMe&&!isAI)rows+=`<button class="mm-btn danger" data-mm="reportMsg">舉報這則訊息</button>`;
   if(isMe&&!isAI&&!m.deleted)rows+=`<button class="mm-btn" data-mm="requestDeleteMsg">請求刪除</button>`;
   if(isAdmin&&!isAI&&!m.deleted)rows+=`<button class="mm-btn danger" data-mm="adminDeleteMsg">管理刪除</button>`;
@@ -4294,6 +4310,7 @@ function openMsgMenu(msgId){
       }
       if(a==='recall'){ closeMsgMenu(); recallMsg(msgId); return; }
       if(a==='quoteIt'){ closeMsgMenu(); markQuote(msgId); return; }
+      if(a==='follow'){ closeMsgMenu(); toggleFollow(m.username); return; }
       closeMsgMenu();
       const fn={reportMsg,requestDeleteMsg,adminDeleteMsg,adminDeleteAIMsg,restoreMsg,purgeMsg}[a];
       if(typeof fn==='function'){ try{ fn(msgId); }catch(e){} }
@@ -4477,7 +4494,7 @@ function render(){
     const shownColor=safeColor(isAI?AI_COLOR:(msgIsAdmin?'#8b5cf6':m.color),'#3b82f6');
     const userExists=allUsers[m.username];
     const isDeletedUser=!isAI&&!userExists&&usersLoaded;
-    if(isAI&&m.thinking){ return `<div class="msg thinking"><div class="avatar" style="background:${AI_COLOR}">AI</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble">小喆AI 正在思考<span class="thinking-dots"><span></span><span></span><span></span></span></div></div></div>`; }
+    if(isAI&&m.thinking){ return `<div class="msg thinking"><div class="avatar">${aiFaceHTML()}</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble">小喆AI 正在思考<span class="thinking-dots"><span></span><span></span><span></span></span></div></div></div>`; }
     let body='';
     if(m.type==='image'){const iu=String(m.imageUrl==null?'':m.imageUrl);body=`<img class="msg-img" src="${escAttr(iu)}" data-action="viewImage" data-arg="${escAttr(iu)}">`;}
     else if(m.type==='file')body=`<div class="file-msg"><span class="fi">[F]</span><div style="flex:1;min-width:0"><div class="fn">${escapeHtml(m.fileName||'file')}</div><div class="fs">${formatSize(m.fileSize||0)}</div></div></div>`;
@@ -4492,6 +4509,9 @@ function render(){
       }else{
         body=`<div class="game-invite" data-action="openGameInvite" data-arg="${escAttr(m.roomId||'')}"><div class="gi-title">對局邀請 · ${gname}</div><div class="gi-sub">點擊進入房間（${Number(m.minP)||2}–${Number(m.maxP)||2} 人）</div><div class="gi-btn">加入對局</div></div><button class="gi-copy" data-action="copyRoomLink" data-arg="${escAttr(m.roomId||'')}">複製房間連結</button>`;
       }
+    }
+    else if(m.type==='sticker'){
+      body='<span class="sticker-big">'+escapeHtml(m.text||'')+'</span>';
     }
     else if(m.type==='transfer'){
       const isMine=(m.username===me.username), isTarget=(m.toUser===me.username);
@@ -4547,7 +4567,7 @@ function render(){
     if(m.recalled){
       return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}</div><div class="bubble" style="background:transparent;border:1px dashed rgba(148,163,184,.4);color:var(--text-muted);font-size:12px;font-style:italic">已撤回一則訊息</div></div></div>`;
     }
-    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta"><span class="${uvNm.trim()||'nm-none'}">${escapeHtml(m.displayName||m.username)}</span>${uvLvHtml}${uvTitle}${uvMood}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
+    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta"><span class="${uvNm.trim()||'nm-none'}">${escapeHtml(m.displayName||m.username)}</span>${uvLvHtml}${uvTitle}${uvMood}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble${m.type==='sticker'?' sticker-bubble':''}" style="background:${m.type==='sticker'?'transparent':shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
   }).join('');
   /* v1.38.5：剛從別的頁面返回聊天室時，位置是刻意還原到原處的，
      不應該立刻被「新訊息自動捲到底」搶走，所以鎖 600ms。 */
@@ -4657,7 +4677,11 @@ function detectAiMood(text){
 try{ window.detectAiMood=detectAiMood; window.aiFaceHTML=aiFaceHTML; window.setAiMood=setAiMood; }catch(e){}
 
 function avatarHTML(m){
-  if(m && m.role==='ai') return aiFaceHTML();   /* 小喆AI 用會動的表情球，不用文字 */
+  /* 小喆AI 用會動的表情球。
+     ⚠ 唔可以只靠 m.role==='ai'：舊訊息（2026 年之前）冇寫 role 欄位，
+     只靠 role 判斷會令佢哋 fallback 去預設分支，結果顯示「AI」兩個字。
+     所以連 username / avatar 都一齊認。 */
+  if(m && (m.role==='ai' || m.username===AI_NAME || (typeof m.avatar==='string' && m.avatar==='AI'))) return aiFaceHTML();
   const raw=m&&m.avatar;
   if(raw){
     const s=String(raw);
@@ -6922,6 +6946,71 @@ function badgeCount(exp,ck){
   const u={exp:exp,points:Number(me.points)||0};
   return BADGES.filter(function(b){ return b.need(u,ck||{}); }).length;
 }
+/* ═══════════════ 表情包庫 ═══════════════ */
+const STICKERS=['😂','🤣','😍','🥰','😎','🤔','😭','😡','🥺','🤯','😴','🤤',
+  '👻','💀','🔥','💯','👍','👎','🙏','👏','🎉','❤️','💔','✨',
+  '🐼','🦊','🐱','🐶','🐯','🦁','🐸','🐵'];
+function openStickerPage(){
+  if(!me) return;
+  closePlus();
+  openPage({title:'表情包', key:'stickers', bodyHTML:
+    '<div class="card" style="padding:13px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text-sub);line-height:1.7">'
+    + '點一下就發到聊天室，會用大字顯示。</div>'
+    + '<div class="sticker-grid">'+STICKERS.map(function(e){
+        return '<div class="sticker-cell" data-action="sendSticker" data-arg="'+escAttr(e)+'">'+e+'</div>';
+      }).join('')+'</div>'});
+}
+async function sendSticker(emoji){
+  if(!me||!emoji) return;
+  try{
+    const id=await nextMsgId();
+    await set(ref(db,'messages/'+id),{id:id,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',
+      seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,
+      text:emoji,type:'sticker',createdAt:Date.now(),deleted:false});
+    setTimeout(function(){ try{ popPage(); }catch(e){} }, 320);
+  }catch(e){ showNotif('發送失敗'); }
+}
+
+/* ═══════════════ 好友關注 ═══════════════ */
+let myFollows={};
+function subscribeFollows(){
+  if(!me) return;
+  onValue(ref(db,'follows/'+me.username), snap=>{ myFollows=snap.val()||{}; });
+}
+async function toggleFollow(target){
+  if(!me||!target||target===me.username) return;
+  const p='follows/'+me.username+'/'+target;
+  try{
+    const cur=(await get(ref(db,p))).val();
+    if(cur){ await remove(ref(db,p)); myFollows[target]=null; delete myFollows[target]; showNotif('已取消關注'); }
+    else { await set(ref(db,p),Date.now()); myFollows[target]=Date.now(); showNotif('已關注'); }
+    try{ render(); }catch(e){}
+  }catch(e){ showNotif('操作失敗'); }
+}
+
+/* ═══════════════ 快捷手勢（聊天室左右滑） ═══════════════ */
+function bindChatGestures(){
+  try{
+    const box=document.getElementById('chatBox');
+    if(!box||box.dataset.gesture) return;
+    box.dataset.gesture='1';
+    let sx=0, sy=0, st=0;
+    box.addEventListener('touchstart',function(e){
+      const t=e.touches[0]; if(!t) return;
+      sx=t.clientX; sy=t.clientY; st=Date.now();
+    },{passive:true});
+    box.addEventListener('touchend',function(e){
+      const t=e.changedTouches[0]; if(!t) return;
+      if(Date.now()-st>600) return;
+      const dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)<76) return;
+      if(Math.abs(dx)<Math.abs(dy)*1.6) return;   /* 直向滑動＝捲動，不攔 */
+      if(dx<0){ try{ openMomentsPage(); }catch(err){} }       /* 左滑 → 班級動態 */
+      else { try{ if(typeof openPointsPage==='function') openPointsPage(); }catch(err){} }  /* 右滑 → 積分 */
+    },{passive:true});
+  }catch(e){}
+}
+
 /* ═══════════════ 轉賬 / 紅包（「＋」菜單進入） ═══════════════ */
 function openTransferSheet(){
   if(!me) return;
@@ -9258,7 +9347,7 @@ function renderAIPrivate(){
       const isMe=m.username===me.username;
       const isAI=m.role==='ai';
       const time=new Date(m.createdAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-      if(isAI&&m.thinking){return `<div class="msg thinking"><div class="avatar" style="background:${AI_COLOR}">AI</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble">小喆AI 正在思考<span class="thinking-dots"><span></span><span></span><span></span></span></div></div></div>`;}
+      if(isAI&&m.thinking){return `<div class="msg thinking"><div class="avatar">${aiFaceHTML()}</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble">小喆AI 正在思考<span class="thinking-dots"><span></span><span></span><span></span></span></div></div></div>`;}
       const color=safeColor(isAI?AI_COLOR:me.color,'#3b82f6');
       const av=isAI?'AI':escapeHtml((me.displayName||me.username).charAt(0).toUpperCase());
       const iu=String(m.imageUrl==null?'':m.imageUrl);
@@ -9667,6 +9756,10 @@ const VERSION_HISTORY=[
 '回歸獎勵：超過 7 天沒上線，下次簽到時送 +300 分和「歡迎回來」提示',
 '節日特效：聖誕節下雪、新年彩帶、萬聖節南瓜、農曆年紅包、中秋月餅，按日期自動出現，不用開關',
 '空狀態插畫：沒訊息、沒金句、沒留言時不再是乾巴巴一行字，會有圖示和文案',
+'表情包庫：聊天室「＋」→「表情包」，32 個大表情點一下就發，訊息會用大字顯示（氣泡透明）',
+'好友關注：點任何同學的訊息 →「關注此同學」，之後可以取消',
+'快捷手勢：在聊天室內容區左滑 → 班級動態，右滑 → 積分中心（上下滑仍然是捲動，不會誤觸）',
+'小喆AI 頭像修正：舊訊息沒有 role 欄位，之前會退回顯示「AI」兩個字，現在認 username 和 avatar，全部都是會動的表情球',
 ]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
