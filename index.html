@@ -138,6 +138,63 @@ body.theme-light .fp-body .pi[data-lg],body.theme-light .admin-user[data-lg]{
   box-shadow:inset 0 1px 0 rgba(255,255,255,1) !important;
 }
 
+/* ═══ 關鍵：把「實色底」改成半透明，否則玻璃後面是死黑色，光暈透不出來 ═══
+   掃描發現 .fullPage（所有全頁面容器）同 #chatBox 都是 rgb(15,23,42) 實色，
+   蓋住 body 的三層光暈 → 所有子頁面睇落去都係「純黑」，玻璃等於白做。 */
+.fullPage{background:rgba(11,16,28,.52) !important;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#chatBox{background:transparent !important}
+.group-item{background:rgba(255,255,255,.045) !important;border:1px solid rgba(255,255,255,.07) !important}
+body.theme-light .fullPage{background:rgba(255,255,255,.62) !important}
+body.theme-light .group-item{background:rgba(255,255,255,.66) !important;border:1px solid rgba(255,255,255,.9) !important}
+
+/* ═══ 淺色主題加強：之前偏「霧面白卡」，光暈同高光都要推高 ═══ */
+body.theme-light{background:
+    radial-gradient(62% 50% at 12% 4%, rgba(96,165,250,.42), transparent 70%),
+    radial-gradient(56% 46% at 90% 90%, rgba(192,132,252,.34), transparent 70%),
+    radial-gradient(48% 40% at 60% 48%, rgba(34,211,238,.20), transparent 76%),
+    var(--bg-app);background-attachment:fixed}
+body.theme-light [data-lg]{
+  background:linear-gradient(140deg, rgba(255,255,255,.62), rgba(226,236,255,.46)) !important;
+  border:1px double rgba(255,255,255,1) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255,255,255,1),
+    inset -2px 2px 1px -1px rgba(255,255,255,1),
+    inset 6px -6px 1px -6px rgba(120,150,210,.65),
+    inset -6px 6px 1px -6px rgba(120,150,210,.65),
+    inset 0 0 3px rgba(15,23,42,.12),
+    0 10px 26px -14px rgba(15,23,42,.45) !important;
+}
+body.theme-light [data-lg]::after{
+  background:linear-gradient(45deg,
+    rgba(255,255,255,1) 0%, rgba(255,255,255,.55) 10%,
+    transparent 30%, transparent 70%,
+    rgba(255,255,255,.55) 90%, rgba(255,255,255,1) 100%);
+}
+
+/* ═══ 按鈕玻璃化：保留主按鈕的藍色辨識度，只加玻璃高光 ═══ */
+.btn-primary{
+  background:linear-gradient(140deg, rgba(59,130,246,.62), rgba(37,99,235,.40)) !important;
+  border:1px double rgba(170,205,255,.42) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(220,235,255,.65),
+    inset -2px 2px 1px -1px rgba(220,235,255,.65),
+    inset 5px -5px 1px -5px rgba(220,235,255,.30),
+    inset -5px 5px 1px -5px rgba(220,235,255,.30),
+    inset 0 0 3px rgba(0,0,0,.35),
+    0 6px 16px -8px rgba(0,0,0,.55) !important;
+}
+body.theme-light .btn-primary{
+  background:linear-gradient(140deg, rgba(59,130,246,.88), rgba(37,99,235,.72)) !important;
+  border:1px double rgba(255,255,255,.85) !important;
+}
+.btn-ghost,.btn-ok,.btn-danger,.btn-warn{
+  border-width:1px !important;border-style:double !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30),0 4px 12px -8px rgba(0,0,0,.5) !important;
+}
+body.theme-light .btn-ghost,body.theme-light .btn-ok{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 3px 10px -8px rgba(15,23,42,.4) !important;
+}
+
 /* 按鈕類做完整版（含折射內框） */
 .btn-primary.btn-lg,[data-lgbtn]{
   --tr:25%;
