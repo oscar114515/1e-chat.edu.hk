@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-qDyz6nUiY0r8k/wBXG12q/BsWfiZc8VtNYBQgUmOKKY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kFG8zdjuIe61AaSPFIe76zI9DoiJr54uqsw9/DSeu1A=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -2497,6 +2497,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='logout')return await handleLogout();
     if(action==='openTools')return openToolsPage();
     if(action==='openPoints')return openPointsPage();
+    if(action==='doCheckin')return doCheckin();
     if(action==='redeemCode')return await redeemCode();
     if(action==='buyShopItem')return await buyShopItem(arg);
     if(action==='adminCreateRedeem')return await adminCreateRedeem();
@@ -5998,6 +5999,78 @@ window.addEventListener('pagehide',function(){
   }catch(e){}
 });
 
+/* ═══ 每日簽到 ═══
+   規則：每天 +100；連續第 7 天額外 +500（神秘小禮物）。
+   用本地日期（香港 UTC+8），不是 UTC —— 用 toISOString() 會令晚上 8 點後算成明天。
+   記錄在 checkin/{username}：{last:'YYYY-MM-DD', streak:N, total:N, at:ts} */
+function _dayStr(offset){
+  const d=new Date(Date.now()+(offset||0)*86400000);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+async function loadCheckin(){
+  try{
+    const snap=await get(child(ref(db),'checkin/'+me.username));
+    return snap.exists()?snap.val():{last:'',streak:0,total:0};
+  }catch(e){ return {last:'',streak:0,total:0}; }
+}
+function checkinHTML(c){
+  const today=_dayStr(0);
+  const done=(c&&c.last===today);
+  const streak=Number(c&&c.streak)||0;
+  const nextStreak=done?streak:((c&&c.last===_dayStr(-1))?streak+1:1);
+  const dots=Array.from({length:7},(_,i)=>{
+    const on = done ? i < Math.min(streak,7) : i < Math.min(nextStreak-1,7);
+    return `<span style="width:15px;height:15px;border-radius:50%;display:inline-block;margin-right:4px;
+      background:${on?'#fbbf24':'rgba(148,163,184,.25)'};
+      box-shadow:${on?'0 0 6px rgba(251,191,36,.6)':'none'}"></span>`;
+  }).join('');
+  return `<div class="card" style="padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <span style="font-size:14px;font-weight:700;color:var(--text-main)">每日簽到</span>
+      <span style="font-size:11.5px;color:var(--text-sub)">連續 ${streak} 天</span>
+    </div>
+    <div style="margin-bottom:10px">${dots}</div>
+    <div style="font-size:11.5px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">
+      ${done?'今天已簽到，明天再來。':`今天簽到可得 <b style="color:var(--gold)">+100</b> 積分${nextStreak%7===0?'，<b style="color:#f472b6">第 7 天神秘小禮物 +500</b>':''}`}
+    </div>
+    <button class="btn-primary" data-action="doCheckin" ${done?'disabled style="opacity:.45"':''}>${done?'已簽到':'立即簽到'}</button>
+  </div>`;
+}
+async function doCheckin(){
+  if(!me) return;
+  const today=_dayStr(0);
+  let c;
+  try{ c=(await get(child(ref(db),'checkin/'+me.username))).val()||{}; }catch(e){ c={}; }
+  if(c.last===today){ showNCard({title:'今天已經簽到',html:'明天再回來，連續紀錄才不會斷。',btn:'知道'}); return; }
+  const streak=(c.last===_dayStr(-1))?(Number(c.streak)||0)+1:1;
+  const bonus=(streak%7===0);
+  const reward=bonus?600:100;
+  try{
+    await set(ref(db,'checkin/'+me.username),{
+      last:today, streak:streak, total:(Number(c.total)||0)+1, at:Date.now()
+    });
+    const pr=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
+      const cur=Number(v)||0;
+      return Math.min(cur+reward,9007199254740991);
+    });
+    if(!pr.committed){                       /* 交易失敗就 fallback 一次（見 MEMORY 的 runTransaction 坑） */
+      const cur=Number((await get(child(ref(db),'users/'+me.username+'/points'))).val())||0;
+      await set(ref(db,'users/'+me.username+'/points'),Math.min(cur+reward,9007199254740991));
+    }
+    try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
+    showNCard({
+      title: bonus?'第 '+streak+' 天！神秘小禮物':'每日簽到',
+      html: bonus
+        ? '連續簽到 <b>'+streak+'</b> 天，你拿到神秘小禮物了：<br><b style="font-size:18px">+500</b> 積分<br>加上今日簽到 <b>+100</b>，共 <b>+600</b>'
+        : '連續 <b>'+streak+'</b> 天，今日 <b>+100</b> 積分'+(streak%7===6?'<br>明天就第 7 天，有神秘小禮物。':''),
+      btn: bonus?'收下禮物':'收下',
+      onClose:()=>{ try{ openProfilePage(me.username,true); }catch(e){} }
+    });
+  }catch(e){
+    showNCard({title:'簽到失敗',html:escapeHtml(String(e&&e.message||e).slice(0,80)),btn:'知道了'});
+  }
+}
+
 async function openProfilePage(username,isSelf,fromAdmin){
   /* v1.38.5：這裡第一句就要等網絡。如果等途中用家已經按了返回，
      await 回來之後仍然會把整頁重新寫進 pageRoot —— 看上去就是
@@ -6011,7 +6084,9 @@ async function openProfilePage(username,isSelf,fromAdmin){
   const heroHTML=profileTopHTML(u,!!isSelf);
   const amAdmin=me&&(me.role==='superadmin'||me.role==='admin');
   if(isSelf){
-    const bodyHTML=`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">字體</div><div class="about-item" data-action="toggleFont"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-file"/></svg></div><div><div class="ai-title">字體</div><div class="ai-sub" id="fontPrefSub">楷體</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
+    const ck=await loadCheckin();
+    if(!navAlive(seq))return;
+    const bodyHTML=checkinHTML(ck)+`<div class="section-title">修改顯示名稱</div><div class="form-row"><input type="text" id="editDisplayName" value="${escapeHtml(me.displayName)}" maxlength="20"></div><button class="btn-primary" data-action="saveDisplayName">儲存</button><div class="section-title">修改頭像</div><div class="avatar-options">${['😀','😎','🤓','🐱','🐶','🦊','🐼','🐯','🦁','🐸','👽','🤖','🔥','⭐','⚡','🎮','⚽','🎸','🚀','🍕'].map(e=>`<div class="av-opt" data-action="pickEmoji" data-arg="${e}">${e}</div>`).join('')}<div class="av-opt" data-action="pickEmoji" data-arg="">x</div></div><input type="file" id="avatarFile" accept="image/*"><label class="upload-btn" for="avatarFile">上傳 / 從相簿選</label><div class="section-title">修改密碼</div><div class="form-row"><input type="password" id="oldPwd" placeholder="目前密碼"></div><div class="form-row"><input type="password" id="newPwd1" placeholder="新密碼"></div><div class="form-row"><input type="password" id="newPwd2" placeholder="再次輸入"></div><button class="btn-primary" data-action="savePassword">修改密碼</button><div class="section-title">問題反饋</div><div class="form-row"><textarea id="profileFb" placeholder="描述你遇到的問題..." style="width:100%;padding:11px 13px;border-radius:var(--r-1);border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-main);font-size:14px;min-height:80px"></textarea></div><button class="btn-primary" data-action="submitFeedback">送出反饋</button><div style="height:6px"></div><button class="btn-ghost" data-action="openMyLogs">我的日誌</button><button class="btn-ghost" data-action="openMyNotices">我的公告申請</button><button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button><button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button><button class="btn-ghost" data-action="openLoginLink" data-arg="${escAttr(username)}">產生一次性登入連結</button><div class="section-title">字體</div><div class="about-item" data-action="toggleFont"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-file"/></svg></div><div><div class="ai-title">字體</div><div class="ai-sub" id="fontPrefSub">楷體</div></div></div><div class="ai-arrow">›</div></div><div class="section-title">關於</div><div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div><div class="about-item" data-action="openThanks"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-heart"/></svg></div><div><div class="ai-title">感謝清單</div><div class="ai-sub">${thanksList.length}</div></div></div><div class="ai-arrow">›</div></div><div class="about-item" data-action="openVersion"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-info"/></svg></div><div><div class="ai-title">版本資訊</div><div class="ai-sub">${CURRENT_VERSION}</div></div></div><div class="ai-arrow">›</div></div><a class="about-item" data-action="linkCheck" data-arg="${ANDROID_APK_URL}" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>${amAdmin?`<button class="btn-ghost" data-action="openUserDetail" data-arg="${escAttr(username)}">管理員資料頁（含密碼）</button>`:''}`;
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else if(fromAdmin&&amAdmin){
     /* v1.37：管理員後台點進某人 → 跟一般個人主頁「同一個版面」，
