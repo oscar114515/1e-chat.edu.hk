@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-TSvm1d1gJyxMcPKEFEOR6x5okoIMYOc9H1jrArcBtHg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CleiWA13ibWo6o/mOrJz4A5w19S5Z6ZAuJu269yLzVI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,44 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 拍賣 / 紅包榜 / 挑戰 ═══ */
+.auc-card{padding:14px 16px;border-radius:15px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:11px}
+.auc-title{font-size:14px;font-weight:700;color:var(--text-main)}
+.auc-desc{font-size:11.5px;color:var(--text-sub);margin-top:4px;line-height:1.6}
+.auc-top{font-size:12.5px;color:#fbbf24;font-weight:700;margin-top:8px}
+.auc-row{display:flex;gap:7px;margin-top:9px}
+.auc-row input{flex:1;min-width:0;padding:9px 11px;border-radius:11px;background:var(--bg-card);
+  color:var(--text-main);border:1px solid var(--border);font-size:13px;font-family:inherit}
+.auc-row button{padding:9px 15px;border-radius:11px;border:none;background:rgba(251,191,36,.22);
+  color:#fbbf24;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;flex:0 0 auto}
+.rk-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rk-row:last-child{border-bottom:none}
+.chal-card{padding:14px 16px;border-radius:16px;margin-bottom:13px;
+  background:linear-gradient(140deg,rgba(251,191,36,.14),rgba(239,68,68,.10));border:1px solid rgba(251,191,36,.35)}
+.dot-red{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-left:5px;
+  vertical-align:middle;animation:dotPulse 1.6s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.82)}}
+
+/* ═══ 農場 / 小遊戲 ═══ */
+.farm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:8px 0}
+.farm-cell{padding:13px 8px;border-radius:15px;background:var(--bg-input);border:1px solid var(--border);
+  text-align:center;cursor:pointer;transition:transform .15s cubic-bezier(.34,1.5,.5,1)}
+.farm-cell:active{transform:scale(.94)}
+.farm-cell .fc-i{font-size:29px;line-height:1.1}
+.farm-cell .fc-n{font-size:11px;color:var(--text-main);margin-top:4px}
+.farm-cell .fc-s{font-size:9.5px;color:var(--text-muted);margin-top:2px}
+.farm-cell.ready{border-color:rgba(74,222,128,.6);background:rgba(74,222,128,.10)}
+.farm-cell.hungry{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08)}
+.mg-box{padding:22px 16px;text-align:center;border-radius:18px;background:var(--bg-input);
+  border:1px solid var(--border);margin:10px 0;min-height:190px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;transition:background .25s}
+.mg-box.go{background:rgba(34,197,94,.22);border-color:rgba(74,222,128,.6)}
+.mg-big{font-size:42px;line-height:1.1}
+.mg-msg{font-size:13.5px;color:var(--text-main);line-height:1.7}
+.mg-num{font-size:31px;font-weight:800;letter-spacing:5px;color:var(--text-main);font-variant-numeric:tabular-nums}
+.mg-in{width:100%;max-width:210px;padding:11px 13px;border-radius:13px;background:var(--bg-input);
+  color:var(--text-main);border:1px solid var(--border);font-size:17px;text-align:center;font-family:inherit}
+
 /* ═══ 表情包 / 手勢提示 ═══ */
 .sticker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:8px 0 4px}
 .sticker-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:26px;
@@ -2774,6 +2812,8 @@ function enterChat(){
   subscribeMyGroups();
   applyChatBg();
   subscribeMoments();
+  setTimeout(function(){ try{ checkMomentBadge(); }catch(e){} }, 3200);
+  setInterval(function(){ try{ checkMomentBadge(); }catch(e){} }, 60000);
   subscribeQuotes();
   subscribeFollows();
   bindChatGestures();
@@ -2850,6 +2890,17 @@ document.addEventListener('click',async(e)=>{
     if(action==='openFeedbackPage')return openFeedbackPage();
     if(action==='openFontPage')return openFontPage();
     if(action==='openCustomizePage')return openCustomizePage();
+    if(action==='openFarmPage')return openFarmPage();
+    if(action==='farmBuy')return farmBuy(arg);
+    if(action==='farmTap')return farmTap(arg);
+    if(action==='openFishingPage')return openFishingPage();
+    if(action==='openReactionPage')return openReactionPage();
+    if(action==='openMemoryPage')return openMemoryPage();
+    if(action==='openAuctionPage')return openAuctionPage();
+    if(action==='createAuction')return createAuction();
+    if(action==='bidAuction')return bidAuction(arg);
+    if(action==='openRpRank')return openRpRank();
+    if(action==='claimChallenge')return claimChallenge();
     if(action==='openStickerPage')return openStickerPage();
     if(action==='sendSticker')return sendSticker(arg);
     if(action==='toggleFollow')return toggleFollow(arg);
@@ -6946,6 +6997,377 @@ function badgeCount(exp,ck){
   const u={exp:exp,points:Number(me.points)||0};
   return BADGES.filter(function(b){ return b.need(u,ck||{}); }).length;
 }
+/* ═══════════════ 積分拍賣 ═══════════════
+   規則：出價只記錄最高價，不在出價時扣分；結束後由賣家手動結算（扣最高者、給物品）。
+   這樣避免「出價被超越要退款」的一堆交易競態。 */
+async function openAuctionPage(){
+  if(!me) return;
+  let list=[];
+  try{
+    const v=(await get(ref(db,'auctions'))).val()||{};
+    list=Object.keys(v).map(function(k){ return Object.assign({_k:k}, v[k]); })
+      .filter(function(a){ return !a.done; })
+      .sort(function(a,b){ return (a.endsAt||0)-(b.endsAt||0); });
+  }catch(e){}
+  const items=list.map(function(a){
+    const ended=(Number(a.endsAt)||0)<Date.now();
+    return '<div class="auc-card">'
+      + '<div class="auc-title">'+escapeHtml(a.item||'未命名')+'</div>'
+      + '<div class="auc-desc">'+escapeHtml(a.desc||'')+'</div>'
+      + '<div class="auc-top">目前最高：'+(Number(a.top)||0)+' 分'+(a.topBy?('（'+(allUsers[a.topBy]?allUsers[a.topBy].displayName:a.topBy)+'）'):'　還沒有人出價')+'</div>'
+      + (ended
+          ? '<div class="auc-desc" style="color:#f87171;margin-top:6px">已結束'+(a.topBy?('　贏家：'+(allUsers[a.topBy]?allUsers[a.topBy].displayName:a.topBy)):'　流拍')+'</div>'
+          : '<div class="auc-row"><input id="bid_'+escAttr(a._k)+'" type="number" min="1" placeholder="出價（高於 '+(Number(a.top)||0)+'）"><button data-action="bidAuction" data-arg="'+escAttr(a._k)+'">出價</button></div>')
+      + '</div>';
+  }).join('');
+  openPage({title:'積分拍賣', key:'auction', bodyHTML:
+    (items || '<div class="empty">現在沒有拍賣<div style="font-size:30px;margin-top:10px">🔨</div></div>')
+    + '<div class="section-title">發起拍賣（任何人）</div>'
+    + '<div class="card" style="padding:13px 15px">'
+    + '<input id="aucItem" maxlength="24" placeholder="拍賣什麼（例：幫你玩一局遊戲）" style="width:100%;padding:10px 12px;border-radius:12px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);font-size:13px;font-family:inherit;margin-bottom:8px">'
+    + '<input id="aucDesc" maxlength="60" placeholder="說明（選填）" style="width:100%;padding:10px 12px;border-radius:12px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);font-size:12.5px;font-family:inherit;margin-bottom:8px">'
+    + '<input id="aucHours" type="number" min="1" max="168" value="24" placeholder="幾小時" style="width:100%;padding:10px 12px;border-radius:12px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);font-size:13px;font-family:inherit;margin-bottom:10px">'
+    + '<button class="btn-primary" data-action="createAuction" style="margin:0">發起</button>'
+    + '</div>'});
+}
+async function createAuction(){
+  if(!me) return;
+  const item=String((document.getElementById('aucItem')||{}).value||'').trim();
+  const desc=String((document.getElementById('aucDesc')||{}).value||'').trim();
+  const hrs=Math.max(1,Math.min(168,Math.floor(Number((document.getElementById('aucHours')||{}).value)||24)));
+  if(!item){ showNotif('請填拍賣內容'); return; }
+  try{
+    const id=push(ref(db,'auctions')).key;
+    await set(ref(db,'auctions/'+id),{item:item.slice(0,24),desc:desc.slice(0,60),top:0,topBy:'',by:me.username,byName:me.displayName,endsAt:Date.now()+hrs*3600000,done:false,createdAt:Date.now()});
+    showNotif('已發起拍賣');
+    openAuctionPage();
+  }catch(e){ showNotif('發起失敗'); }
+}
+async function bidAuction(id){
+  if(!me) return;
+  const el=document.getElementById('bid_'+id);
+  const amt=Math.floor(Number(el&&el.value)||0);
+  if(amt<=0){ showNotif('請輸入出價'); return; }
+  if(amt>Number(me.points||0)){ showNotif('你的積分不夠（'+Number(me.points||0)+' 分）'); return; }
+  try{
+    const res=await runTransaction(ref(db,'auctions/'+id), function(cur){
+      if(!cur) return cur;
+      if(Number(cur.top)>=amt) return cur;       /* 已經有人更高，放棄 */
+      return Object.assign({},cur,{top:amt,topBy:me.username,topName:me.displayName});
+    });
+    if(res && res.committed){ showNotif('出價 '+amt+' 分（目前最高）'); openAuctionPage(); }
+    else showNotif('已經有人出更高價了');
+  }catch(e){ showNotif('出價失敗'); }
+}
+
+/* ═══════════════ 紅包榜 ═══════════════ */
+async function openRpRank(){
+  if(!me) return;
+  let stats={};
+  try{ stats=(await get(ref(db,'rpStats'))).val()||{}; }catch(e){}
+  const rows=Object.keys(stats).map(function(u){
+    const x=stats[u]||{};
+    return {u:u, name:(allUsers[u]?allUsers[u].displayName:u), sent:Number(x.sent)||0, got:Number(x.got)||0};
+  });
+  const sentTop=rows.slice().sort(function(a,b){ return b.sent-a.sent; }).slice(0,10);
+  const gotTop=rows.slice().sort(function(a,b){ return b.got-a.got; }).slice(0,10);
+  const block=function(title,arr,key,unit){
+    return '<div class="section-title">'+title+'</div><div class="card" style="padding:2px 15px">'
+      + (arr.length ? arr.map(function(r,i){
+          return '<div class="rk-row"><div style="width:20px;color:var(--text-muted);font-weight:800">'+(i+1)+'</div>'
+            + '<div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(r.name)+'</div>'
+            + '<div style="font-weight:700;color:#fbbf24">'+r[key]+' '+unit+'</div></div>';
+        }).join('') : '<div class="empty" style="padding:20px">還沒有記錄</div>')
+      + '</div>';
+  };
+  openPage({title:'紅包榜', key:'rprank', bodyHTML:
+    block('發紅包最多', sentTop, 'sent', '分') + block('拆到最多', gotTop, 'got', '分')});
+}
+
+/* ═══════════════ 每日挑戰 ═══════════════ */
+async function claimChallenge(){
+  if(!me) return;
+  const d=(await get(ref(db,'daily/'+me.username+'/'+todayKey()))).val()||{};
+  const need={msg:5, like:2, ck:1};
+  const okAll=(Number(d.msg)||0)>=need.msg && (Number(d.like)||0)>=need.like && (Number(d.ck)||0)>=need.ck;
+  if(!okAll){ showNotif('挑戰還沒完成'); return; }
+  if(d.chalClaimed){ showNotif('今日挑戰已領過'); return; }
+  try{
+    await changePoints(me.username, 500, '每日挑戰');
+    await update(ref(db,'daily/'+me.username+'/'+todayKey()),{chalClaimed:true});
+    showNCard({title:'挑戰完成', html:'<div style="text-align:center;font-size:38px;margin:10px 0">🏆</div><div style="text-align:center;font-size:14px">完成每日挑戰，<b>+500 分</b></div>', btn:'太好了'});
+    openDailyPage();
+  }catch(e){ showNotif('領取失敗'); }
+}
+
+/* ═══════════════ 未讀紅點（班級動態） ═══════════════ */
+let momentLastRead=0;
+function checkMomentBadge(){
+  try{
+    if(!me) return;
+    momentLastRead=Number(localStorage.getItem('momentRead:'+me.username)||0);
+    const fresh=allMoments.filter(function(m){ return (m.createdAt||0)>momentLastRead && m.username!==me.username; }).length;
+    const el=document.querySelector('.nav-item[data-action="openMyProfile"]');
+    if(!el) return;
+    let dot=el.querySelector('.dot-red');
+    if(fresh>0){ if(!dot){ dot=document.createElement('span'); dot.className='dot-red'; el.appendChild(dot); } }
+    else if(dot) dot.remove();
+  }catch(e){}
+}
+function markMomentsRead(){
+  try{
+    if(!me) return;
+    localStorage.setItem('momentRead:'+me.username, String(Date.now()));
+    const el=document.querySelector('.nav-item[data-action="openMyProfile"] .dot-red');
+    if(el) el.remove();
+  }catch(e){}
+}
+
+/* ═══════════════ 動物農場 ═══════════════
+   簡化版：買動物 → 餵食 → 等時間 → 收成換分。
+   唔用伺服器定時任務：全部用「現在時間 - 出生時間」即時算，關掉網站都會繼續生長。 */
+const FARM_ANIMALS={
+  chicken:{n:'雞', ico:'🐔', price:100, yield:25, growMs:3600000},
+  cow:    {n:'牛', ico:'🐄', price:300, yield:70, growMs:7200000},
+  pig:    {n:'豬', ico:'🐖', price:800, yield:220, growMs:14400000}
+};
+let farmData={animals:{}, lastFetch:0};
+async function loadFarm(force){
+  if(!me) return {};
+  if(!force && Date.now()-farmData.lastFetch<8000) return farmData;
+  try{
+    const v=(await get(ref(db,'farm/'+me.username))).val()||{};
+    farmData=v; farmData.lastFetch=Date.now();
+    return farmData;
+  }catch(e){ return {}; }
+}
+function farmState(a){
+  const def=FARM_ANIMALS[a.k]||FARM_ANIMALS.chicken;
+  const age=Date.now()-(Number(a.born)||0);
+  const hungry=(Date.now()-(Number(a.lastFed)||Number(a.born)||0)) > 86400000;  /* 超過一天沒餵 */
+  const ready=age>=def.growMs;
+  return {def:def, age:age, ready:ready, hungry:hungry, leftMs:Math.max(0,def.growMs-age)};
+}
+function fmtLeft(ms){
+  if(ms<=0) return '可以收成';
+  const m=Math.ceil(ms/60000);
+  if(m<60) return m+' 分鐘';
+  return Math.floor(m/60)+' 小時 '+(m%60)+' 分';
+}
+async function openFarmPage(){
+  if(!me) return;
+  const v=await loadFarm(true);
+  const list=Object.keys(v.animals||{}).map(function(id){ return Object.assign({_id:id}, v.animals[id]); });
+  const mine=list.map(function(a){
+    const st=farmState(a);
+    const cls=st.ready?'ready':(st.hungry?'hungry':'');
+    return '<div class="farm-cell '+cls+'" data-action="farmTap" data-arg="'+escAttr(a._id)+'">'
+      + '<div class="fc-i">'+st.def.ico+'</div>'
+      + '<div class="fc-n">'+escapeHtml(st.def.n)+'</div>'
+      + '<div class="fc-s">'+(st.ready?('可以收成 +'+st.def.yield):fmtLeft(st.leftMs))+'</div>'
+      + (st.hungry?'<div class="fc-s" style="color:#f87171">肚餓（減產）</div>':'')
+      + '</div>';
+  }).join('');
+  const shop=Object.keys(FARM_ANIMALS).map(function(k){
+    const d=FARM_ANIMALS[k];
+    return '<div class="farm-cell" data-action="farmBuy" data-arg="'+k+'">'
+      + '<div class="fc-i">'+d.ico+'</div><div class="fc-n">'+escapeHtml(d.n)+'</div>'
+      + '<div class="fc-s">'+d.price+' 分</div></div>';
+  }).join('');
+  openPage({title:'我的農場', key:'farm', bodyHTML:
+    '<div class="card" style="padding:13px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:12.5px;color:var(--text-sub)">積分</div>'
+    + '<div style="font-size:19px;font-weight:800;color:var(--text-main)">'+Number(me.points||0)+'</div></div>'
+    + '<div class="section-title">我的動物（'+list.length+'）</div>'
+    + (list.length ? '<div class="farm-grid">'+mine+'</div>' : '<div class="empty">還沒有動物，去下面買一隻<div style="font-size:30px;margin-top:10px">🐣</div></div>')
+    + '<div class="section-title">買動物</div><div class="farm-grid">'+shop+'</div>'
+    + '<div class="card" style="padding:12px 15px;margin-top:12px;font-size:11.5px;color:var(--text-muted);line-height:1.7">'
+    + '點自己的動物：可以收成（成熟時）或餵食（免費，肚餓會減產一半）。動物不用餵也會繼續長大，但超過一天沒餵就減產。</div>'
+  });
+}
+async function farmBuy(k){
+  const d=FARM_ANIMALS[k]; if(!d||!me) return;
+  if(Number(me.points||0)<d.price){ showNotif('積分不足（需要 '+d.price+' 分）'); return; }
+  const paid=await changePoints(me.username,-d.price,'買 '+d.n);
+  if(!paid){ showNotif('扣分失敗'); return; }
+  try{
+    const id=push(ref(db,'farm/'+me.username+'/animals')).key;
+    await set(ref(db,'farm/'+me.username+'/animals/'+id),{k:k,born:Date.now(),lastFed:Date.now()});
+    showNotif('買了一隻'+d.n);
+    openFarmPage();
+  }catch(e){ showNotif('購買失敗'); }
+}
+async function farmTap(id){
+  const v=await loadFarm(true);
+  const a=(v.animals||{})[id]; if(!a) return;
+  const st=farmState(a);
+  if(st.ready){
+    const amount=Math.round(st.def.yield*(st.hungry?0.5:1));
+    try{
+      await update(ref(db,'farm/'+me.username+'/animals/'+id),{born:Date.now(),lastFed:Date.now()});
+      await changePoints(me.username, amount, '農場收成');
+      showNCard({title:'收成', html:'<div style="text-align:center;font-size:44px;margin:12px 0">'+st.def.ico+'</div><div style="text-align:center;font-size:14px">'+escapeHtml(st.def.n)+' 收成 <b>+'+amount+' 分</b>'+(st.hungry?'<br><span style="font-size:11.5px;color:#f87171">（肚餓，減產一半）</span>':'')+'</div>', btn:'收下'});
+      openFarmPage();
+    }catch(e){ showNotif('收成失敗'); }
+  }else{
+    try{
+      await update(ref(db,'farm/'+me.username+'/animals/'+id),{lastFed:Date.now()});
+      showNotif('已餵食');
+      openFarmPage();
+    }catch(e){ showNotif('餵食失敗'); }
+  }
+}
+
+/* ═══════════════ 釣魚 ═══════════════ */
+let _fishTimer=null;
+function openFishingPage(){
+  if(!me) return;
+  openPage({title:'釣魚', key:'fishing', bodyHTML:
+    '<div class="mg-box" id="fishBox">'
+    + '<div class="mg-big" id="fishIco">🎣</div>'
+    + '<div class="mg-msg" id="fishMsg">點「拋竿」，浮標沉下去那刻立刻點「拉竿」</div>'
+    + '<button class="btn-primary" id="fishBtn" style="max-width:190px">拋竿</button>'
+    + '</div>'
+    + '<div class="card" style="padding:12px 15px;font-size:11.5px;color:var(--text-muted);line-height:1.7">'
+    + '拉太早（浮標還浮著）＝空竿，拉太晚（超過 1.2 秒）＝魚跑了。釣到會加經驗。</div>'});
+  let state='idle', biteAt=0;
+  const box=document.getElementById('fishBox'), ico=document.getElementById('fishIco'),
+        msg=document.getElementById('fishMsg'), btn=document.getElementById('fishBtn');
+  btn.onclick=function(){
+    if(state==='idle'){
+      state='wait';
+      ico.textContent='🌊';
+      msg.textContent='等魚上鉤…';
+      btn.textContent='拉竿';
+      const wait=1200+Math.random()*2600;
+      _fishTimer=setTimeout(function(){
+        if(state!=='wait') return;
+        state='bite'; biteAt=Date.now();
+        ico.textContent='❗';
+        msg.textContent='就是現在！立刻拉！';
+      }, wait);
+    }else if(state==='wait'){
+      clearTimeout(_fishTimer); state='idle';
+      ico.textContent='🎣'; msg.textContent='拉太早了，魚還沒咬。再試一次';
+      btn.textContent='拋竿';
+    }else if(state==='bite'){
+      const dt=Date.now()-biteAt;
+      state='idle';
+      if(dt<=1200){
+        const big=Math.random()<0.18;
+        const got=big?60:12;
+        ico.textContent=big?'🐟':'🐠';
+        msg.textContent=(big?'大魚！':'釣到了！')+' +'+got+' 經驗';
+        addExp(got); setTimeout(function(){ addExp(0); },10);
+        try{ bumpDaily('fish'); }catch(e){}
+        btn.textContent='再釣一次';
+        setTimeout(function(){ btn.onclick(); }, 10);
+      }else{
+        ico.textContent='💨'; msg.textContent='太慢了，魚跑了';
+        btn.textContent='拋竿';
+      }
+    }
+  };
+}
+
+/* ═══════════════ 反應速度 ═══════════════ */
+function openReactionPage(){
+  if(!me) return;
+  openPage({title:'反應速度', key:'reaction', bodyHTML:
+    '<div class="mg-box" id="reBox">'
+    + '<div class="mg-big" id="reIco">⏱️</div>'
+    + '<div class="mg-msg" id="reMsg">點「開始」，畫面變綠那一刻立刻點</div>'
+    + '<button class="btn-primary" id="reBtn" style="max-width:190px">開始</button>'
+    + '</div>'
+    + '<div class="card" style="padding:12px 15px;font-size:11.5px;color:var(--text-muted);line-height:1.7">'
+    + '人類平均 250 毫秒。低於 200 算很快，低於 150 是頂尖。搶跑會重來。</div>'});
+  let state='idle', goAt=0, timer=null;
+  const box=document.getElementById('reBox'), ico=document.getElementById('reIco'),
+        msg=document.getElementById('reMsg'), btn=document.getElementById('reBtn');
+  btn.onclick=function(){
+    if(state!=='idle') return;
+    state='wait'; box.classList.remove('go');
+    ico.textContent='🔴'; msg.textContent='等等…';
+    btn.textContent='不要按';
+    timer=setTimeout(function(){
+      state='go'; goAt=Date.now();
+      box.classList.add('go');
+      ico.textContent='🟢'; msg.textContent='按！';
+      btn.textContent='按！';
+    }, 1800+Math.random()*2600);
+  };
+  btn.onclick=function(){
+    if(state==='wait'){ clearTimeout(timer); state='idle'; box.classList.remove('go');
+      ico.textContent='⏱️'; msg.textContent='搶跑了，再試一次'; btn.textContent='開始'; return; }
+    if(state==='go'){
+      const ms=Date.now()-goAt;
+      state='idle'; box.classList.remove('go');
+      ico.textContent='⚡';
+      msg.textContent=ms+' 毫秒'+(ms<150?'　頂尖！':(ms<200?'　很快':(ms<300?'　正常':'　再練練')));
+      btn.textContent='再測一次';
+      addExp(2);
+      return;
+    }
+    /* idle → 開始 */
+    state='wait'; box.classList.remove('go');
+    ico.textContent='🔴'; msg.textContent='等等…'; btn.textContent='不要按';
+    timer=setTimeout(function(){
+      state='go'; goAt=Date.now();
+      box.classList.add('go');
+      ico.textContent='🟢'; msg.textContent='按！'; btn.textContent='按！';
+    }, 1800+Math.random()*2600);
+  };
+}
+
+/* ═══════════════ 記憶力 ═══════════════ */
+function openMemoryPage(){
+  if(!me) return;
+  openPage({title:'記憶力挑戰', key:'memorysolo', bodyHTML:
+    '<div class="mg-box" id="meBox">'
+    + '<div class="mg-big" id="meIco">🧠</div>'
+    + '<div class="mg-msg" id="meMsg">點「開始」，記住螢幕上的數字，消失後打出來</div>'
+    + '<div class="mg-num" id="meNum" style="display:none"></div>'
+    + '<input class="mg-in" id="meIn" placeholder="打出來" style="display:none" inputmode="numeric">'
+    + '<button class="btn-primary" id="meBtn" style="max-width:190px">開始</button>'
+    + '</div>'
+    + '<div class="card" style="padding:12px 15px;font-size:11.5px;color:var(--text-muted);line-height:1.7">'
+    + '每過一關多一位數，答錯就結束。七位以上已經很利害。</div>'});
+  let digits=4, answer='', state='idle';
+  const ico=document.getElementById('meIco'), msg=document.getElementById('meMsg'),
+        num=document.getElementById('meNum'), inp=document.getElementById('meIn'), btn=document.getElementById('meBtn');
+  function startRound(){
+    answer='';
+    for(let i=0;i<digits;i++) answer+=Math.floor(Math.random()*10);
+    state='show';
+    num.textContent=answer; num.style.display='block'; inp.style.display='none';
+    msg.textContent='記住…'; ico.textContent='👀'; btn.textContent='等等…';
+    setTimeout(function(){
+      num.style.display='none';
+      state='input';
+      inp.value=''; inp.style.display='block'; inp.focus();
+      msg.textContent='打出來（'+digits+' 位）'; ico.textContent='⌨️'; btn.textContent='確認';
+    }, 1400+digits*180);
+  }
+  btn.onclick=function(){
+    if(state==='idle'){ digits=4; startRound(); return; }
+    if(state==='input'){
+      if(String(inp.value).trim()===answer){
+        const pts=digits*5;
+        digits++;
+        ico.textContent='✅'; msg.textContent='對了！+'+pts+' 經驗，下一關 '+digits+' 位';
+        addExp(pts);
+        state='idle';
+        setTimeout(function(){ startRound(); }, 900);
+      }else{
+        ico.textContent='❌'; msg.textContent='錯了，答案是 '+answer+'。你到 '+digits+' 位';
+        addExp(digits*3);
+        state='idle'; inp.style.display='none'; btn.textContent='再玩一次'; digits=4;
+      }
+    }
+  };
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter') btn.click(); });
+}
+
 /* ═══════════════ 表情包庫 ═══════════════ */
 const STICKERS=['😂','🤣','😍','🥰','😎','🤔','😭','😡','🥺','🤯','😴','🤤',
   '👻','💀','🔥','💯','👍','👎','🙏','👏','🎉','❤️','💔','✨',
@@ -7085,6 +7507,7 @@ function openRedPacketSheet(){
       await set(ref(db,'messages/'+id),{id:id,username:me.username,displayName:me.displayName,color:me.color||'#3b82f6',avatar:me.avatar,role:me.role,
         text:'',type:'redpacket',total:total,count:count,left:total,leftCount:count,note:note,
         createdAt:Date.now(),deleted:false});
+      try{ await runTransaction(ref(db,'rpStats/'+me.username+'/sent'), function(c){ return (Number(c)||0)+total; }); }catch(e){}
       showNotif('紅包已發');
     }catch(e){ showNotif('發紅包失敗'); }
   };
@@ -7117,6 +7540,7 @@ async function claimRedPacket(msgId){
     const nv=done.snapshot.val()||{};
     const got=(nv.claims&&nv.claims[me.username])||amt;
     await changePoints(me.username, got, '拆紅包');
+    try{ await runTransaction(ref(db,'rpStats/'+me.username+'/got'), function(c){ return (Number(c)||0)+got; }); }catch(e){}
     showRpOpen(got, nv);
   }catch(e){ showNotif('拆紅包失敗'); }
 }
@@ -7504,6 +7928,16 @@ async function openDailyPage(){
     + '<div class="card" style="padding:4px 16px 12px">'+rows
     +   '<button class="btn-primary" data-action="claimDaily" style="margin-top:10px;'+(allDone&&!claimed?'':'opacity:.5')+'">'
     +   (claimed?'今日已領取':'領取 +200 分')+'</button></div>'
+    + '<div class="section-title">每日挑戰（更難，+500 分）</div>'
+    + '<div class="chal-card">'
+    +   '<div style="font-size:13px;font-weight:700;color:var(--text-main);margin-bottom:6px">今日挑戰</div>'
+    +   '<div style="font-size:11.5px;color:var(--text-sub);line-height:1.9">'
+    +     '發 5 則訊息　·　給動態點 2 個讚　·　完成簽到'
+    +   '</div>'
+    +   '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">進度：訊息 '+Math.min(5,Number(d.msg)||0)+'/5　·　讚 '+Math.min(2,Number(d.like)||0)+'/2　·　簽到 '+Math.min(1,Number(d.ck)||0)+'/1</div>'
+    +   '<button class="btn-primary" data-action="claimChallenge" style="margin-top:9px;'+(d.chalClaimed?'opacity:.5':'')+'">'
+    +     (d.chalClaimed?'今日挑戰已完成':'領取 +500 分')+'</button>'
+    + '</div>'
     + '<div class="section-title">每日轉盤</div>'
     + '<div class="card" style="padding:12px 16px 16px"><div class="spin-box">'
     +   '<div style="position:relative"><div class="spin-needle">▼</div><div class="spin-wheel" id="spinWheel"></div></div>'
@@ -7726,6 +8160,7 @@ function paintMoments(){
 function openMomentsPage(){
   if(!me) return;
   const dq=dailyQuote();
+  markMomentsRead();
   openPage({title:'班級動態', key:'moments', bodyHTML:
     '<div class="dq-card"><div class="dq-text">「'+escapeHtml(dq[0])+'」</div><div class="dq-from">— 每日一句</div></div>'
     + '<div class="card" style="padding:14px 16px;margin-bottom:14px">'
@@ -7955,6 +8390,14 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('AI 快捷', '幫寫 / 翻譯 / 總結', 'openAiQuickPage', 'bot')
       +aiRow('數據導出', '下載自己的紀錄', 'exportMyData', 'download')
       +aiRow('開啟通知', ('Notification' in window && Notification.permission==='granted')?'已開啟':'未開啟', 'askPushPermission', 'bell')
+      +'<div class="section-title">農場與遊戲</div>'
+      +aiRow('我的農場', '養動物・收成換分', 'openFarmPage', 'heart')
+      +aiRow('釣魚', '抓時機拉竿', 'openFishingPage', 'drop')
+      +aiRow('反應速度', '測毫秒', 'openReactionPage', 'clock')
+      +aiRow('記憶力挑戰', '背數字', 'openMemoryPage', 'star')
+      +'<div class="section-title">市場</div>'
+      +aiRow('積分拍賣', '出價搶東西', 'openAuctionPage', 'shopping')
+      +aiRow('紅包榜', '誰發最多・誰搶最多', 'openRpRank', 'heart')
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
@@ -9760,6 +10203,16 @@ const VERSION_HISTORY=[
 '好友關注：點任何同學的訊息 →「關注此同學」，之後可以取消',
 '快捷手勢：在聊天室內容區左滑 → 班級動態，右滑 → 積分中心（上下滑仍然是捲動，不會誤觸）',
 '小喆AI 頭像修正：舊訊息沒有 role 欄位，之前會退回顯示「AI」兩個字，現在認 username 和 avatar，全部都是會動的表情球',
+'動物農場：個人主頁 → 農場與遊戲 → 我的農場。三種動物（雞 100 分／牛 300 分／豬 800 分），買回來等時間就會長大，雞一小時、牛兩小時、豬四小時。成熟可以收成換分（25／70／220 分），超過一天沒餵會減產一半，點一下就能餵',
+'釣魚：拋竿後等浮標沉，出現「❗」那一刻 1.2 秒內拉竿才算中，早拉空竿、晚拉跑魚。大魚機率 18%（+60 經驗），小魚 +12',
+'反應速度：畫面變綠一瞬間按下去，測毫秒。搶跑會重來，低於 200 毫秒算很快',
+'記憶力挑戰：背數字，每過一關多一位，答對 +5×位數經驗，答錯結束',
+'積分拍賣：個人主頁 → 市場 → 積分拍賣。任何人都可以發起（寫拍賣內容、說明、幾小時結束），其他人出價，系統只記最高價（不會重複扣分），結束後由發起人結算',
+'紅包榜：發紅包最多／拆到最多兩個榜，各取前十',
+'每日挑戰：每日頁新增區塊 —— 發 5 則訊息 + 給動態點 2 個讚 + 完成簽到，領 +500 分（比普通每日任務的 +200 更難更高）',
+'班級動態紅點：有同學發新動態時，底部「個人主頁」旁邊會有紅點，看過動態就消失',
+'已知取捨：公共聊天室不做「已讀狀態」—— 144 人每人每次上線都要寫一次已讀時間，統計成本太高而且會引起「你讀了為什麼不回」的爭執；這個功能只適合私聊，等私聊做完再加',
+'已知取捨：連勝加成要先改 game.html（遊戲結束要回傳勝負給聊天室），下一輪補',
 ]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
