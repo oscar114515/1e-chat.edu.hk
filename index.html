@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-/u1PNAZD7zwWb2hla28WRzCdw7o1NQ1EgPk17z56m0M=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-mX82vgRmzZcg+dSEy1NymynBua7e/zuBhWwOFBe/Jyo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -38,6 +38,39 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
    統一改成次要文字色，兩種主題都讀得到。 */
 input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
+/* ═══ 表情回應 / 引用回覆 / 快捷回覆 ═══ */
+.react-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.react{display:inline-flex;align-items:center;gap:3px;padding:2.5px 9px;border-radius:999px;
+  background:rgba(148,163,184,.14);border:1px solid rgba(148,163,184,.24);font-size:11.5px;cursor:pointer;
+  transition:transform .18s cubic-bezier(.34,1.4,.5,1);user-select:none}
+.react:active{transform:scale(.9)}
+.react.mine{background:rgba(59,130,246,.22);border-color:rgba(96,165,250,.55);color:#93c5fd}
+body.theme-light .react{background:rgba(15,23,42,.05);border-color:rgba(15,23,42,.1)}
+body.theme-light .react.mine{background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.45);color:#1d4ed8}
+.quote{font-size:11.5px;color:var(--text-muted);border-left:3px solid rgba(148,163,184,.5);
+  padding:2px 0 2px 8px;margin-bottom:6px;line-height:1.5;cursor:pointer;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
+.quote b{color:var(--text-sub);font-weight:600}
+/* 訊息菜單裡的 emoji 條與快捷回覆 */
+.mm-react{display:flex;gap:6px;padding:0 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.mm-react button{flex:1;font-size:21px;background:rgba(148,163,184,.12);border:none;border-radius:11px;
+  padding:7px 0;cursor:pointer;transition:transform .18s cubic-bezier(.34,1.5,.5,1);font-family:inherit}
+.mm-react button:active{transform:scale(.86)}
+.mm-quick{display:flex;gap:6px;margin:2px 0 9px}
+.mm-quick button{flex:1;padding:8px 0;font-size:12.5px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg-input);color:var(--text-main);cursor:pointer;font-family:inherit;
+  transition:transform .18s cubic-bezier(.34,1.5,.5,1)}
+.mm-quick button:active{transform:scale(.94)}
+/* 打字中 */
+.typing-line{font-size:11px;color:var(--text-muted);padding:3px 14px 0;height:16px;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:opacity .2s}
+.typing-dots-inline{display:inline-flex;gap:2px;vertical-align:middle;margin-left:3px}
+.typing-dots-inline i{width:3.5px;height:3.5px;border-radius:50%;background:var(--text-muted);
+  animation:typeBounce 1.1s infinite}
+.typing-dots-inline i:nth-child(2){animation-delay:.15s}
+.typing-dots-inline i:nth-child(3){animation-delay:.3s}
+@keyframes typeBounce{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-3px);opacity:1}}
+
 /* ═══ 小喆AI 動態表情頭像 ═══
    參考 Grok Bot 的「會動的眼睛 + 情緒狀態機」，但完全自己實作（原倉庫素材歸 xAI，不可再分發）。
    三層：① 球體徑向漸層（左上高光）② 兩隻眼睛 ③ 情緒用 data-mood 換眼睛形狀。
@@ -1609,7 +1642,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.38.23';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.38.24';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2581,6 +2614,9 @@ function enterChat(){
     },{passive:true});
   }
   subscribeMyGroups();
+  subscribeReactions();
+  subscribeTyping();
+  /* _b1b_done */
   startHeartbeat();
   countPageLoad();                  // 記一筆開頁次數，用來估算每月下載量
   setTimeout(checkUsageWarning,3000);   // 超級管理員才會有反應
@@ -2607,6 +2643,13 @@ document.addEventListener('click',async(e)=>{
     if(action==='openTools')return openToolsPage();
     if(action==='openPoints')return openPointsPage();
     if(action==='doCheckin')return doCheckin();
+    if(action==='toggleReact')return toggleReaction(arg,arg2);
+    if(action==='cancelQuote')return cancelQuote();
+    if(action==='jumpMsg'){
+      const t=document.querySelector('.msg[data-msgid="'+arg+'"]');
+      if(t){ t.scrollIntoView({block:'center',behavior:'smooth'}); t.style.transition='background .3s'; t.style.background='rgba(96,165,250,.18)'; setTimeout(function(){ t.style.background=''; },900); }
+      return;
+    }
     if(action==='ckSet'){
       if(!me||me.role!=='superadmin')return;
       const tgt=arg, n=Number(arg2)||0;
@@ -3055,7 +3098,10 @@ async function sendMessage(){
        兩種鍵名可以並存，前面的聊天記錄一則都不會少。 */
     const msgId=await nextMsgId();
     const isAdmin=me.role==='superadmin'||me.role==='admin';
-    await set(ref(db,'messages/'+msgId),{id:msgId,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,hasHtml:hasHtml,htmlCheckStatus:(hasHtml&&!isAdmin)?'checking':'ok',createdAt:Date.now(),deleted:false});
+    const sendObj={id:msgId,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,text,type:'text',encrypted:isEncrypted,hasHtml:hasHtml,htmlCheckStatus:(hasHtml&&!isAdmin)?'checking':'ok',createdAt:Date.now(),deleted:false};
+    if(replyToMsg&&replyToMsg.id){ sendObj.replyTo={id:replyToMsg.id,name:replyToMsg.name,text:replyToMsg.text}; }
+    await set(ref(db,'messages/'+msgId),sendObj);
+    try{ cancelQuote(); }catch(e){}
     await writeLog('send','發送訊息：'+text.slice(0,50));
     msgInput.value='';encCheckbox.checked=false;encToggle.classList.remove('active');hideMention();
     scrollToBottom();
@@ -3089,6 +3135,7 @@ async function checkHtmlMessage(msgId,text){
   }catch(e){ console.error('HTML check error',e); }
 }
 msgInput.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&mentionPopup.classList.contains('hidden')){e.preventDefault();sendMessage();} });
+msgInput.addEventListener('input',function(){ try{ pingTyping(); }catch(e){} });
 msgInput.addEventListener('input',()=>{ const val=msgInput.value,cursor=msgInput.selectionStart;const at=val.slice(0,cursor).match(/@([a-zA-Z0-9_]*)$/);if(!at){hideMention();return;}showMentionPopup(at[1].toLowerCase()); });
 function showMentionPopup(kw){
   const list=Object.values(allUsers).filter(u=>u.username!==me.username).filter(u=>!kw||u.username.toLowerCase().includes(kw)||(u.displayName||'').toLowerCase().includes(kw)).slice(0,8);
@@ -3990,6 +4037,19 @@ function openMsgMenu(msgId){
   const isAI=m.role==='ai';
   const old=document.getElementById('msgMenu'); if(old)old.remove();
   let rows=`<div class="mm-id">訊息編號：${escapeHtml(m.id)}</div>`;
+  /* 表情條：任何人任何訊息都能按（包括 AI） */
+  rows+=`<div class="mm-react">${REACT_EMOJIS.map(function(e){
+    const r=allReactions[m.id]&&allReactions[m.id][e];
+    const mine=r&&me&&r[me.username];
+    return '<button data-mm="react" data-emoji="'+e+'" style="'+(mine?'background:rgba(59,130,246,.28);box-shadow:inset 0 0 0 1.5px rgba(96,165,250,.6)':'')+'">'+e+'</button>';
+  }).join('')}</div>`;
+  /* 快捷回覆：一鍵發送（會帶上引用，知道你在回哪句） */
+  rows+=`<div class="mm-quick">${['哈哈','收到','+1'].map(function(t){
+    return '<button data-mm="quick" data-text="'+t+'">'+t+'</button>';
+  }).join('')}</div>`;
+  if(!m.deleted) rows+=`<button class="mm-btn" data-mm="quote">引用回覆</button>`;
+  if(m.text&&String(m.text).trim()) rows+=`<button class="mm-btn" data-mm="copyText">複製文字</button>`;
+  if(isMe&&!isAI&&!m.deleted&&(Date.now()-(m.createdAt||0)<120000)) rows+=`<button class="mm-btn" data-mm="recall">撤回這則（2 分鐘內）</button>`;
   if(!isMe&&!isAI)rows+=`<button class="mm-btn danger" data-mm="reportMsg">舉報這則訊息</button>`;
   if(isMe&&!isAI&&!m.deleted)rows+=`<button class="mm-btn" data-mm="requestDeleteMsg">請求刪除</button>`;
   if(isAdmin&&!isAI&&!m.deleted)rows+=`<button class="mm-btn danger" data-mm="adminDeleteMsg">管理刪除</button>`;
@@ -4004,6 +4064,16 @@ function openMsgMenu(msgId){
   div.querySelectorAll('[data-mm]').forEach(b=>{
     b.onclick=()=>{
       const a=b.dataset.mm;
+      /* 表情與快捷回覆唔關菜單，按下就做 */
+      if(a==='react'){ try{ toggleReaction(msgId,b.dataset.emoji); }catch(e){} closeMsgMenu(); return; }
+      if(a==='quick'){ closeMsgMenu(); try{ startQuote(msgId); }catch(e){} quickReplyText(b.dataset.text); return; }
+      if(a==='quote'){ closeMsgMenu(); startQuote(msgId); return; }
+      if(a==='copyText'){
+        closeMsgMenu();
+        try{ navigator.clipboard.writeText(String(m.text||'')).then(function(){showNotif('已複製');},function(){showNotif('複製失敗');}); }catch(e){}
+        return;
+      }
+      if(a==='recall'){ closeMsgMenu(); recallMsg(msgId); return; }
       closeMsgMenu();
       const fn={reportMsg,requestDeleteMsg,adminDeleteMsg,adminDeleteAIMsg,restoreMsg,purgeMsg}[a];
       if(typeof fn==='function'){ try{ fn(msgId); }catch(e){} }
@@ -4011,6 +4081,110 @@ function openMsgMenu(msgId){
   });
 }
 function closeMsgMenu(){ const el=document.getElementById('msgMenu'); if(el)el.remove(); }
+
+/* ═══ 表情回應 / 引用回覆 / 撤回 / 快捷回覆 / 打字中 ═══ */
+let allReactions={}, unsubReactions=null, replyToMsg=null, _typingSent=0;
+const REACT_EMOJIS=['👍','❤️','😂','😮','😢','😡'];
+
+function subscribeReactions(){
+  if(unsubReactions){ try{ unsubReactions(); }catch(e){} }
+  unsubReactions = onValue(ref(db,'reactions'), snap=>{
+    allReactions = snap.val() || {};
+    try{ render(); }catch(e){}
+  });
+}
+async function toggleReaction(msgId, emoji){
+  if(!me) return;
+  const path = 'reactions/'+msgId+'/'+emoji+'/'+me.username;
+  try{
+    const cur = (await get(ref(db,path))).val();
+    if(cur) await remove(ref(db,path));
+    else await set(ref(db,path), Date.now());
+  }catch(e){ showNotif('操作失敗'); }
+}
+function reactionsHTML(msgId){
+  const r = allReactions[msgId];
+  if(!r || !me) return '';
+  const items = Object.keys(r).map(function(e){
+    const us = Object.keys(r[e]||{});
+    if(!us.length) return '';
+    const mine = us.indexOf(me.username) >= 0;
+    return '<span class="react'+(mine?' mine':'')+'" data-action="toggleReact" data-arg="'+escAttr(msgId)+'" data-arg2="'+escAttr(e)+'">'
+         + e + ' ' + us.length + '</span>';
+  }).filter(Boolean);
+  return items.length ? ('<div class="react-row">'+items.join('')+'</div>') : '';
+}
+function startQuote(msgId){
+  const m = allMsgs().find(function(x){ return x.id===msgId; });
+  if(!m) return;
+  replyToMsg = { id:msgId, name:(m.displayName||m.username), text:(String(m.text||'').slice(0,60) || '[非文字訊息]') };
+  showQuoteBar();
+  try{ msgInput.focus(); }catch(e){}
+}
+function showQuoteBar(){
+  const old = document.getElementById('quoteBar'); if(old) old.remove();
+  if(!replyToMsg) return;
+  const d = document.createElement('div');
+  d.id = 'quoteBar';
+  d.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 11px;margin:0 10px 6px;'
+    + 'background:rgba(148,163,184,.12);border-left:3px solid #60a5fa;border-radius:9px;'
+    + 'font-size:11.5px;color:var(--text-sub)';
+  d.innerHTML = '<div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+    + '回覆 <b>'+escapeHtml(replyToMsg.name)+'</b>：'+escapeHtml(replyToMsg.text)+'</div>'
+    + '<button style="background:none;border:none;color:var(--text-muted);font-size:17px;cursor:pointer;padding:0 4px;font-family:inherit" data-action="cancelQuote">×</button>';
+  const inp = document.getElementById('msgInput');
+  if(inp && inp.parentElement) inp.parentElement.parentElement.insertBefore(d, inp.parentElement);
+}
+function cancelQuote(){
+  replyToMsg = null;
+  const old = document.getElementById('quoteBar'); if(old) old.remove();
+}
+async function recallMsg(msgId){
+  const m = allMsgs().find(function(x){ return x.id===msgId; });
+  if(!m || !me || m.username!==me.username) return;
+  if(Date.now()-(m.createdAt||0) > 120000){ showNotif('超過 2 分鐘，不能撤回'); return; }
+  const ok = await askConfirm({title:'撤回訊息',html:'這則訊息會從所有人那邊消失，只留下「已撤回一則訊息」。',danger:true,okText:'撤回'});
+  if(!ok) return;
+  try{
+    await update(ref(db,'messages/'+msgId),{deleted:true,recalled:true,text:'',type:'text',imageUrl:null,fileName:null});
+    showNotif('已撤回');
+  }catch(e){ showNotif('撤回失敗'); }
+}
+async function quickReplyText(t){
+  if(!me) return;
+  try{ msgInput.value = t; await sendMessage(); }catch(e){}
+}
+/* 打字中：送出一個時間戳，5 秒內有效。唔用 onDisconnect，因為每人最後一次打字就會自然過期。 */
+function pingTyping(){
+  if(!me) return;
+  const now = Date.now();
+  if(now - _typingSent < 2500) return;      /* 節流：2.5 秒最多寫一次 */
+  _typingSent = now;
+  try{ set(ref(db,'typing/'+me.username), now); }catch(e){}
+}
+let allTyping={};
+function subscribeTyping(){
+  onValue(ref(db,'typing'), snap=>{ allTyping = snap.val()||{}; paintTypingLine(); });
+}
+function paintTypingLine(){
+  let el = document.getElementById('typingLine');
+  if(!el){
+    el = document.createElement('div'); el.id='typingLine'; el.className='typing-line';
+    const box = document.getElementById('chatBox');
+    if(box && box.parentElement) box.parentElement.insertBefore(el, box.nextSibling);
+    return;
+  }
+  if(!me){ el.textContent=''; return; }
+  const now = Date.now();
+  const names = Object.keys(allTyping||{})
+    .filter(function(u){ return u!==me.username && (now-(allTyping[u]||0))<5000; })
+    .map(function(u){ const us=allUsers[u]; return us&&us.displayName?us.displayName:u; });
+  if(!names.length){ el.innerHTML=''; return; }
+  const label = names.length===1 ? (names[0]+' 正在輸入') : (names.length+' 人正在輸入');
+  el.innerHTML = label + '<span class="typing-dots-inline"><i></i><i></i><i></i></span>';
+}
+setInterval(function(){ try{ paintTypingLine(); }catch(e){} }, 1500);
+
 /* ═══ v1.37 往前翻頁（載入更早的訊息）═══
    為什麼要有這個：主聊天室為了省流量只訂閱最新 MSG_WINDOW 則，
    可是以前整頁沒有任何入口可以往前翻，所以看到的第一則就固定停在窗口邊界
@@ -4115,7 +4289,16 @@ function render(){
     const chiName=String(m.chiName||'').trim();
     const realNameTag=(chiName&&chiName!==String(m.displayName||m.username))?`<span class="meta-realname">${escapeHtml(chiName)}</span>`:'';
     const avatarCls=isDeletedUser?'avatar deleted':'avatar';
-    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}</div></div>`;
+    /* 引用塊：放在氣泡最上面，點一下跳到原訊息 */
+    if(m.replyTo&&m.replyTo.id){
+      body='<div class="quote" data-action="jumpMsg" data-arg="'+escAttr(m.replyTo.id)+'">'
+        + '<b>'+escapeHtml(m.replyTo.name||'')+'</b> '+escapeHtml(m.replyTo.text||'')+'</div>'+body;
+    }
+    /* 已撤回：整則換成一句灰字 */
+    if(m.recalled){
+      return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}</div><div class="bubble" style="background:transparent;border:1px dashed rgba(148,163,184,.4);color:var(--text-muted);font-size:12px;font-style:italic">已撤回一則訊息</div></div></div>`;
+    }
+    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble" style="background:${shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
   }).join('');
   /* v1.38.5：剛從別的頁面返回聊天室時，位置是刻意還原到原處的，
      不應該立刻被「新訊息自動捲到底」搶走，所以鎖 600ms。 */
