@@ -619,16 +619,13 @@ const roomNet={
           return;
         }
       };
-      /* 房間連接一樣要靠應用層心跳，否則斷電要等 TCP 超時 */
+      /* ⚠ roomNet 唔可以照樣用 6 秒心跳！
+         伺服器對房間對局只會在「狀態有變化」時推送（rSnap），等待對手、對手思考時完全靜默。
+         用 6 秒超時會把正常空閒誤判成斷線 → 開房的人被自己踢掉 → 永遠顯示「連不上伺服器」。
+         （2026-10-24 用戶實測：開房後一直連不上，另一個人卻能加入倒數）
+         所以這裡不放心跳，只記 lastMsgAt 供日後除錯；斷線靠 onclose + 重試。 */
       this.lastMsgAt=Date.now();
-      if(this._hb) clearInterval(this._hb);
-      var _rs=this;
-      this._hb=setInterval(function(){
-        if(!_rs.ready||!_rs.ws) return;
-        if(Date.now()-(_rs.lastMsgAt||Date.now())>6000){
-          try{ _rs.ws.close(); }catch(e){}
-        }
-      },2000);
+      if(this._hb){ clearInterval(this._hb); this._hb=null; }
       ws.onclose=()=>{
         const wasReady=this.ready;
         if(this._hb){clearInterval(this._hb);this._hb=null;}
