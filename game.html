@@ -50,6 +50,7 @@ body{background:var(--bg);color:var(--text-main);font-family:'LXGW WenKai TC','I
 .netbadge.ws{background:rgba(34,197,94,.16);color:#22c55e;border:1px solid rgba(34,197,94,.4)}
 .netbadge.fb{background:rgba(245,158,11,.16);color:#f59e0b;border:1px solid rgba(245,158,11,.4)}
 .netbadge.off{background:rgba(148,163,184,.14);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.netbadge.idle{background:rgba(148,163,184,.10);color:#94a3b8;border:1px solid rgba(148,163,184,.22)}
 body.theme-light .netbadge.ws{color:#15803d;border-color:rgba(21,128,61,.4)}
 body.theme-light .netbadge.fb{color:#b45309;border-color:rgba(180,83,9,.4)}
 body.theme-light .netbadge.off{color:#64748b;border-color:rgba(100,116,139,.35)}
@@ -2356,12 +2357,13 @@ const lobbyNet={
       let ws;
       try{ ws=new WebSocket(LOBBY_WS_URL); }catch(e){ return finish(false); }
       this.ws=ws; this.gk=gk; this.onSnap=onSnap; this.ready=false;
+      this._retryArgs={gk:gk, me:me, onSnap:onSnap};
       const to=setTimeout(()=>{ if(!this.ready){ try{ws.close();}catch(e){} finish(false); } },3500);   /* 同上 */
       ws.onopen=()=>{ try{ ws.send(JSON.stringify({t:'hello',g:gk,nm:me.displayName,c:me.color})); }catch(e){} };
       ws.onmessage=ev=>{
         let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
         if(m.t==='welcome'){
-          this.id=m.id; this.ready=true; clearTimeout(to);
+          this.id=m.id; this.ready=true; this._retry=0; clearTimeout(to);
           /* 進場先把場上所有豆一次過畫出來（之後只收增量） */
           try{ this.onSnap&&this.onSnap({ts:Date.now(),tsAdj:Date.now(),p:{},f:m.food||[],fd:[],lb:[]}); }catch(e){}
           finish(true);
@@ -2381,8 +2383,28 @@ const lobbyNet={
       ws.onclose=(ev)=>{
         const was=this.ready;
         this.ready=false; this.ws=null;
-        finish(false);                       /* 連不上就即刻降級，不用等 7 秒 */
-        if(was&&this.onDown){ try{ this.onDown(); }catch(e){} }   /* 玩到一半斷線：即時切回 Firebase */
+        finish(false);
+        if(!was) return;                     /* 一開始就冇連上 → 交返俾呼叫方決定，唔重試 */
+        /* 玩到一半斷線：先自己重試 2 次（每次隔 1.2 秒）。
+           以前係一次抖動就即刻切 Firebase，用戶見到「自家 → 備援」閃一閃。
+           重試都失敗才真正降級。 */
+        this._retry=(this._retry||0)+1;
+        if(this._retry<=2 && this.gk){
+          var self=this, args=this._retryArgs;
+          setTimeout(function(){
+            if(self.ready) return;
+            if(!args) { if(self.onDown){ try{ self.onDown(); }catch(e){} } return; }
+            try{
+              self.connect(args.gk,args.me,args.onSnap).then(function(ok){
+                if(ok){ self._retry=0; }
+                else if(self._retry>2 && self.onDown){ try{ self.onDown(); }catch(e){} }
+              }).catch(function(){});
+            }catch(e){}
+          }, 1200);
+          return;
+        }
+        this._retry=0;
+        if(this.onDown){ try{ this.onDown(); }catch(e){} }
       };
       ws.onerror=()=>{};
     });
@@ -8855,11 +8877,23 @@ setInterval(()=>{
 },1200);
 
 /* ===== 連線狀態徽章 ===== */
+/* 徽章狀態：加 3 秒緩衝，避免連線抖一下就「自家 → 備援」閃一閃 */
+let _netWasWsAt=0;
 function netStateNow(){
+  if(!GAME_WS_URL && !LOBBY_WS_URL) return {k:'off',t:'Firebase',tip:'未設定自設伺服器，使用 Firebase'};
   let wsOn=false;
-  try{ wsOn=(roomNet&&roomNet.ready)||(lobbyNet&&lobbyNet.ready); }catch(e){}
+  try{ wsOn=!!((roomNet&&roomNet.ready)||(lobbyNet&&lobbyNet.ready)); }catch(e){}
+  const now=Date.now();
+  if(wsOn) _netWasWsAt=now;
+  /* 3 秒內曾經連上 → 繼續顯示「連線中」，唔好即刻變備援 */
+  if(!wsOn && _netWasWsAt && (now-_netWasWsAt)<3000){
+    return {k:'ws',t:'連線中…',tip:'正在重新連接自設伺服器'};
+  }
   if(wsOn) return {k:'ws',t:'自家伺服器',tip:'已連上你自己的遊戲伺服器'};
-  if(!GAME_WS_URL) return {k:'off',t:'Firebase',tip:'未設定自設伺服器，使用 Firebase'};
+  /* 兩個都未連：大廳本來就唔會預連，講「待連線」比講「備援」準確 */
+  let everTried=false;
+  try{ everTried=!!(lobbyNet&&lobbyNet.gk)||!!(roomNet&&roomNet.subs&&roomNet.subs.size); }catch(e){}
+  if(!everTried) return {k:'idle',t:'待連線',tip:'進入遊戲後才會連接自設伺服器'};
   return {k:'fb',t:'備援模式',tip:'連不上自設伺服器，已退回 Firebase 備援'};
 }
 function paintNetBadge(){
