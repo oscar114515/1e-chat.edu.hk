@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CleiWA13ibWo6o/mOrJz4A5w19S5Z6ZAuJu269yLzVI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-owxjQAxlm5sOnnkJdNKp26soMHu3yn1VNQ289E8+orU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班級聊天室 v1.35</title>
 <style>
@@ -729,11 +729,13 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #bottomNav .nav-item:hover{background:rgba(148,163,184,.08);color:var(--text-main)}
 #bottomNav .nav-item .nav-icon{font-size:18px;line-height:1}
 #bottomNav .nav-item .nav-badge{position:absolute;top:4px;right:calc(50% - 20px);min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:var(--r-1);font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700}
-#plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--r-3);padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;animation:panelIn .34s cubic-bezier(.34,1.42,.64,1)}
+/* plusPanel 實色：原本 background 用 --bg-card（rgba(30,41,59,.55) 半透明），壓在 --bg-app #0f172a 上面顏色幾乎一樣，用戶睇唔出有面板。改成實色 + 明顯邊框 + 玻璃模糊。 */
+#plusPanel{position:absolute;bottom:calc(100% + 8px);left:12px;background:#1e293b;border:1px solid rgba(148,163,184,.38);border-radius:var(--r-3);padding:14px;display:grid;grid-template-columns:repeat(3,72px);gap:12px;box-shadow:0 18px 48px -14px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:50;animation:panelIn .34s cubic-bezier(.34,1.42,.64,1)}
+body.theme-light #plusPanel{background:#ffffff;border-color:rgba(15,23,42,.16);box-shadow:0 18px 48px -14px rgba(15,23,42,.30),0 0 0 1px rgba(15,23,42,.04)}
 @keyframes panelIn{0%{opacity:0;transform:translateY(10px) scale(.94)}62%{opacity:1;transform:translateY(-2px) scale(1.012)}100%{opacity:1;transform:none}}
 #plusPanel .pi{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px;border-radius:var(--r-2)}
 #plusPanel .pi:hover{background:rgba(56,189,248,.15)}
-#plusPanel .pi .pic{width:44px;height:44px;border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.2);color:var(--info)}
+#plusPanel .pi .pic{width:44px;height:44px;border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(56,189,248,.22);border:1px solid rgba(56,189,248,.30);color:var(--info)}
 .pic .ico{width:22px;height:22px}
 #plusPanel .pi .pit{font-size:11px;color:var(--text-sub)}
 /* ===== 小遊戲 ===== */
@@ -10213,6 +10215,7 @@ const VERSION_HISTORY=[
 '班級動態紅點：有同學發新動態時，底部「個人主頁」旁邊會有紅點，看過動態就消失',
 '已知取捨：公共聊天室不做「已讀狀態」—— 144 人每人每次上線都要寫一次已讀時間，統計成本太高而且會引起「你讀了為什麼不回」的爭執；這個功能只適合私聊，等私聊做完再加',
 '已知取捨：連勝加成要先改 game.html（遊戲結束要回傳勝負給聊天室），下一輪補',
+'＋ 選單背景修正：原本面板用半透明底色（rgba(30,41,59,.55)）壓在深色頁面上，顏色幾乎一樣，看上去像沒有面板。現在改成實色（深色 #1e293b／淺色純白）＋ 明顯邊框＋雙層陰影＋玻璃模糊，圖示底也加了描邊',
 ]},
 {ver:'v1.38.23',date:'2026-10-23',changes:[
 '語言選擇終於真的有用：以前只翻譯二十幾個字，一選简体或 English，畫面大部分仍然是繁體。現在整個畫面逐個字掃過去，簡體中文 100% 覆蓋，唔會再有繁體字漏低',
