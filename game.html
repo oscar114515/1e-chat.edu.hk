@@ -993,7 +993,7 @@ const GAMES=[
  {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:false,c:'#ef4444',ab:'車',ic:'i-race'},
  {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:false,c:'#f59e0b',ab:'王',ic:'i-king'},
  {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
- {k:'fish',n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚'},
+ {k:'fish', n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚', ok:true},
  {k:'bombzone',n:'炸彈人',cat:'lobby',min:1,max:0,ok:false,c:'#f97316',ab:'爆'},
  {k:'sumo', n:'相撲推擠',cat:'lobby',min:1,max:0,ok:false,c:'#78716c',ab:'角', ok:true},
  {k:'paint',n:'塗地大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#ec4899',ab:'色'},
@@ -2981,7 +2981,280 @@ function createTagLobby(){
   };
 }
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby };
+/* ═══ 大魚吃小魚（fish）—— 藍色海洋 ═══
+   自己吃小魚變大；比對大過自己太多的玩家會被吃掉（扣分）。
+   小魚各自本地生成（唔同步），只有玩家位置同步 —— 省流量又唔會搶食。 */
+function createFishLobby(){
+  const R=240, K=0.55;
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0,r:12,facing:1};
+  let others={}, liveRef=null, unsubLive=null;
+  let fishes=[], bubbles=[], myScore=0, lastPush=0, lastT=0, shake=0;
+  let keys={x:0,y:0}, eating=0;
+  let unbind=null;
+
+  function w2s(x,y){
+    const s=Math.min(cw/(R*2.2), ch/(R*2.2*K));
+    return {sx:cw/2+x*s, sy:ch/2+y*s*K, s};
+  }
+  function spawnFish(){
+    const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.88;
+    const size=3.5+Math.random()*5.5;
+    return {x:Math.cos(a)*r, y:Math.sin(a)*r,
+      r:size, vx:(Math.random()-.5)*22, vy:(Math.random()-.5)*22,
+      hue:Math.random()<.5?195:35, ph:Math.random()*6.283};
+  }
+
+  function drawWater(){
+    /* 藍色海洋：上淺下深 */
+    const g=ctx.createLinearGradient(0,0,0,ch);
+    g.addColorStop(0,'#0c4a6e'); g.addColorStop(.45,'#0a3a58'); g.addColorStop(1,'#04202f');
+    ctx.fillStyle=g; ctx.fillRect(0,0,cw,ch);
+    /* 水面光斑 */
+    const lg=ctx.createRadialGradient(cw*0.3,0,10,cw*0.3,0,ch*0.75);
+    lg.addColorStop(0,'rgba(125,211,252,.28)'); lg.addColorStop(1,'rgba(125,211,252,0)');
+    ctx.fillStyle=lg; ctx.fillRect(0,0,cw,ch);
+    const lg2=ctx.createRadialGradient(cw*0.75,ch*0.08,8,cw*0.75,ch*0.08,ch*0.55);
+    lg2.addColorStop(0,'rgba(56,189,248,.18)'); lg2.addColorStop(1,'rgba(56,189,248,0)');
+    ctx.fillStyle=lg2; ctx.fillRect(0,0,cw,ch);
+  }
+
+  function drawBounds(){
+    const c=w2s(0,0), s=c.s;
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.strokeStyle='rgba(125,211,252,.28)'; ctx.lineWidth=Math.max(2,s*3); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s*0.985,R*s*K*0.985,0,0,7);
+    ctx.strokeStyle='rgba(56,189,248,.12)'; ctx.lineWidth=1.2; ctx.stroke();
+  }
+
+  /* 畫一條魚（側面 + 尾鰭擺動 + 投影）*/
+  function drawFish(x,y,rad,hue,isMe,facing,label,alpha){
+    const p=w2s(x,y), s=p.s;
+    const rr=rad*s;
+    const t=performance.now()/1000;
+    const wig=Math.sin(t*6+rad)*0.28;
+    ctx.save();
+    ctx.globalAlpha=alpha==null?1:alpha;
+    /* 水底投影 */
+    ctx.beginPath(); ctx.ellipse(p.sx,p.sy+rr*0.5,rr*0.9,rr*0.35,0,0,7);
+    ctx.fillStyle='rgba(0,20,35,.35)'; ctx.filter='blur(4px)'; ctx.fill(); ctx.filter='none';
+
+    ctx.translate(p.sx,p.sy);
+    ctx.scale(facing<0?-1:1,1);
+    const body=isMe?'#38bdf8':('hsl('+hue+',72%,58%)');
+    const dark=isMe?'#0284c7':('hsl('+hue+',72%,38%)');
+    /* 尾鰭 */
+    ctx.beginPath();
+    ctx.moveTo(-rr*0.8,0);
+    ctx.lineTo(-rr*1.5, -rr*0.55+wig*rr*0.4);
+    ctx.lineTo(-rr*1.5,  rr*0.55+wig*rr*0.4);
+    ctx.closePath();
+    ctx.fillStyle=dark; ctx.fill();
+    /* 身體（徑向漸變做立體）*/
+    const bg=ctx.createRadialGradient(-rr*0.2,-rr*0.35,rr*0.1,0,0,rr*1.05);
+    bg.addColorStop(0,'#e0f2fe'); bg.addColorStop(.35,body); bg.addColorStop(1,dark);
+    ctx.beginPath(); ctx.ellipse(0,0,rr,rr*0.68,0,0,7);
+    ctx.fillStyle=bg; ctx.fill();
+    /* 背鰭 */
+    ctx.beginPath();
+    ctx.moveTo(-rr*0.15,-rr*0.6);
+    ctx.quadraticCurveTo(rr*0.15,-rr*1.15,rr*0.45,-rr*0.45);
+    ctx.closePath(); ctx.fillStyle=dark; ctx.fill();
+    /* 眼 */
+    ctx.beginPath(); ctx.arc(rr*0.45,-rr*0.16,rr*0.17,0,7); ctx.fillStyle='#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(rr*0.5,-rr*0.16,rr*0.085,0,7); ctx.fillStyle='#0b1220'; ctx.fill();
+    /* 光澤 */
+    ctx.beginPath(); ctx.ellipse(-rr*0.1,-rr*0.35,rr*0.42,rr*0.16,-0.35,0,7);
+    ctx.fillStyle='rgba(255,255,255,.35)'; ctx.fill();
+    ctx.restore();
+
+    if(label){
+      ctx.globalAlpha=alpha==null?1:alpha;
+      ctx.font='600 '+Math.max(9,s*11)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle=isMe?'rgba(186,230,253,.95)':'rgba(255,255,255,.75)';
+      ctx.fillText(label,p.sx,p.sy-rr-7);
+      ctx.globalAlpha=1;
+    }
+  }
+
+  function step(dt){
+    const acc=1250;
+    meP.vx+=keys.x*acc*dt; meP.vy+=keys.y*acc*dt;
+    const fr=Math.pow(0.0025,dt); meP.vx*=fr; meP.vy*=fr;
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+    if(Math.abs(keys.x)>0.1) meP.facing=keys.x>0?1:-1;
+    else if(Math.abs(meP.vx)>8) meP.facing=meP.vx>0?1:-1;
+
+    /* 邊界（圓）*/
+    const d=Math.hypot(meP.x,meP.y);
+    if(d>R-meP.r*0.5 && d>0.01){
+      const nx=meP.x/d, ny=meP.y/d;
+      meP.x=nx*(R-meP.r*0.5); meP.y=ny*(R-meP.r*0.5);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }
+      meP.vx*=0.85; meP.vy*=0.85;
+    }
+
+    /* 小魚游動 */
+    fishes.forEach(f=>{
+      f.x+=f.vx*dt; f.y+=f.vy*dt;
+      const fd=Math.hypot(f.x,f.y);
+      if(fd>R*0.94){ f.vx*=-1; f.vy*=-1; f.x*=0.95; f.y*=0.95; }
+      /* 被玩家追著跑（小魚會逃）*/
+      const dx=f.x-meP.x, dy=f.y-meP.y, dd=Math.hypot(dx,dy);
+      if(dd<70&&dd>0.1){ f.vx+=dx/dd*26*dt*10; f.vy+=dy/dd*26*dt*10; }
+      /* 吃 */
+      if(dd < meP.r*0.95){
+        f.dead=true;
+        meP.r=Math.min(46, meP.r+f.r*0.09);
+        myScore++;
+        eating=0.22;
+        for(let i=0;i<3;i++) bubbles.push({x:f.x,y:f.y,vx:(Math.random()-.5)*30,vy:-30-Math.random()*20,r:1.5+Math.random()*2.5,t:1});
+      }
+    });
+    fishes=fishes.filter(f=>!f.dead);
+    while(fishes.length<34) fishes.push(spawnFish());
+
+    /* 玩家互吃：大過對方 15% 就食得 */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      const rr=o.r||12;
+      const dd=Math.hypot(meP.x-o.x,meP.y-o.y);
+      if(dd < (meP.r+rr)*0.55 && meP.r > rr*1.15 && eating<=0){
+        meP.r=Math.min(46,meP.r+rr*0.22); myScore+=3; eating=0.5; shake=6;
+        for(let i=0;i<6;i++) bubbles.push({x:o.x,y:o.y,vx:(Math.random()-.5)*40,vy:-40-Math.random()*30,r:2+Math.random()*3,t:1});
+      }
+    }
+
+    /* 氣泡 */
+    bubbles.forEach(b=>{ b.x+=b.vx*dt; b.y+=b.vy*dt; b.t-=dt*0.9; });
+    bubbles=bubbles.filter(b=>b.t>0);
+    if(eating>0) eating-=dt;
+    if(shake>0) shake-=dt*30;
+
+    if(liveRef&&running){
+      const now=Date.now();
+      if(now-lastPush>60){
+        lastPush=now;
+        try{ set(liveRef,{x:Math.round(meP.x),y:Math.round(meP.y),r:Math.round(meP.r*10)/10,
+          name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),score:myScore,at:now}); }catch(e){}
+      }
+    }
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+    drawWater();
+    drawBounds();
+
+    /* 小魚（按大小排，小的先畫）*/
+    [...fishes].sort((a,b)=>a.r-b.r).forEach(f=>drawFish(f.x,f.y,f.r,f.hue,false,1,null,null));
+
+    /* 其他玩家 */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      drawFish(o.x,o.y,o.r||12,200,false,1,o.name,0.9);
+    }
+    /* 自己 */
+    drawFish(meP.x,meP.y,meP.r,200,true,meP.facing,me.displayName||me.username,1);
+
+    /* 氣泡 */
+    bubbles.forEach(b=>{
+      const p=w2s(b.x,b.y), s=p.s;
+      ctx.beginPath(); ctx.arc(p.sx,p.sy,b.r*s,0,7);
+      ctx.strokeStyle='rgba(186,230,253,'+(b.t*0.5)+')'; ctx.lineWidth=1.2; ctx.stroke();
+    });
+    ctx.restore();
+
+    /* HUD */
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle='rgba(224,242,254,.92)';
+    ctx.fillText('🐟 '+myScore+'　大小 '+Math.round(meP.r), 16, 28);
+  }
+
+  function loop(t){
+    if(!running) return;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('fish',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const setK=(x,y)=>{keys.x=x;keys.y=y;};
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A')setK(-1,0);
+      else if(k==='ArrowRight'||k==='d'||k==='D')setK(1,0);
+      else if(k==='ArrowUp'||k==='w'||k==='W')setK(0,-1);
+      else if(k==='ArrowDown'||k==='s'||k==='S')setK(0,1);
+      else return;
+      e.preventDefault();
+    };
+    const onUp=()=>setK(0,0);
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    let tid=null,ox=0,oy=0;
+    cv.addEventListener('touchstart',e=>{const t0=e.changedTouches[0];tid=t0.identifier;ox=t0.clientX;oy=t0.clientY;e.preventDefault();},{passive:false});
+    cv.addEventListener('touchmove',e=>{for(const t0 of e.changedTouches){if(t0.identifier!==tid)continue;const dx=t0.clientX-ox,dy=t0.clientY-oy;const m=Math.hypot(dx,dy)||1;setK(dx/m,dy/m);}e.preventDefault();},{passive:false});
+    cv.addEventListener('touchend',e=>{for(const t0 of e.changedTouches){if(t0.identifier===tid){tid=null;setK(0,0);}}});
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      meP={x:0,y:0,vx:0,vy:0,r:12,facing:1};
+      fishes=[]; for(let i=0;i<34;i++) fishes.push(spawnFish());
+      liveRef=ref(db,'lobbyLive/fish/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/fish'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(2,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){ const kill=mountDPad(host,(x,y)=>{keys.x=x;keys.y=y;}); const oldUn=unbind;
+        unbind=()=>{try{kill();}catch(e){} oldUn();}; }
+      draw();
+    },
+    tickHud(){
+      const el=document.getElementById('stCard');
+      if(el) el.innerHTML='<div style="font-size:11px;color:var(--text-sub)">吃到</div>'
+        +'<div style="font-size:22px;font-weight:800">'+myScore+'</div>';
+    },
+    debug(){ return {x:meP.x,y:meP.y,r:meP.r,score:myScore,fishes:fishes.length,others:Object.keys(others||{})}; },
+    probe(x,y){ return Math.hypot(x,y)<=R; }
+  };
+}
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
