@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-PTqlR0GcgC5E5bMbClk4ufI5v7oK3uOBIrMRhPERd08=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-YxFGG5ZR0Z23Z3aEADT0jXLsz3lmnelJk9EQtOLdjGk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -10838,6 +10838,9 @@ const VERSION_HISTORY=[
 '收款後氣泡變灰：照微訊 —— 轉賬按了「收款」之後，聊天室那條氣泡整塊變淺灰（連金額同「已收款」都轉灰白）；紅包自己領過或者已領完，一樣變淺灰，紅色小方塊都褪色',
 '轉賬紅包去掉外層氣泡：以前成個橙卡被聊天氣泡的底色（每人自訂顏色）框住，睇落去似紫色邊。現在這兩種訊息用「裸卡片」，外層氣泡唔再上色、冇內距、冇圓角',
 'AI 思考動畫換新：以前係三個點跳，現在變成一顆紫色光球旋轉（靠多層內陰影做出立體感），中間「思考中」三個字逐個亮。公共聊天室同私人對話都一樣',
+'下拉框全部去原生樣式：11 個下拉選單本來在安卓上會彈出系統白底大列表，同深色主題撞到七彩。現在統一改色系、自繪箭頭、聚焦時青色描邊',
+'消息輸入框加聚焦效果：打字時邊框會亮起青色光暈、底色微微偏藍，佔位字自動淡出，一眼就知自己正在輸入',
+'加密勾選由圓點改方框勾：以前只是一個紅點，看不出「已勾選」。現在是方框，勾選時紅底白色打勾，還帶彈一下的動畫',
 '私人 AI 發送鍵換新：由「送出」兩個字變成帶星星圖標的按鈕，星星會閃、SEND 四個字母逐個亮。只用在私人 AI 對話，其他地方的發送鍵不變',
 '⚠ 修復：所有遊戲都進不去 —— 自設伺服器（wss://oscar-nas...）現在連不上，而所有房間操作都走那條連線，所以建房永遠卡住不返回（不是新遊戲的問題，原本的五子棋、2048 一樣開不了）。已把 meta/gamews 清空，全部改回 Firebase，遊戲立即恢復正常',
 '⚠ 再修：即使自設伺服器掛掉，遊戲也不應該玩不了。以前重試 4 次後雖然會「切換備援模式」，但只是打個招呼，實際所有房間操作仍然走去連死線 → 照樣卡死。現在降級時會真正清掉 WS 位址，同時 set/update 在降級後直接寫 Firebase —— 伺服器關機也能玩，只是慢一點',
