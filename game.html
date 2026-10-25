@@ -967,7 +967,7 @@ const GAMES=[
  /* ── 大廳自由（沒有房主，點進去就玩）── */
  {k:'snake',n:'貪吃蛇',cat:'lobby',min:1,max:0,ok:true,c:'#22c55e',ab:'蛇',ic:'i-snake'},
  {k:'agar',n:'球球大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#38bdf8',ab:'球',ic:'i-ball'},
- {k:'tag',n:'鬼抓人',cat:'lobby',min:1,max:0,ok:false,c:'#f472b6',ab:'鬼',ic:'i-tag'},
+ {k:'tag', n:'鬼抓人',cat:'lobby',min:1,max:0,ok:false,c:'#f472b6',ab:'鬼',ic:'i-tag', ok:true},
  {k:'dotrush',n:'搶豆競速',cat:'lobby',min:1,max:0,ok:false,c:'#fbbf24',ab:'豆',ic:'i-dot'},
  {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:false,c:'#a855f7',ab:'彈',ic:'i-dodge'},
  {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:false,c:'#ef4444',ab:'車',ic:'i-race'},
@@ -2561,7 +2561,276 @@ function createSumoLobby(){
   };
 }
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby };
+/* ═══ 鬼抓人（tag）—— 一人当鬼，追到就换鬼 ═══
+   渲染延续相撲那套偽 3D：斜投影地面 + 徑向漸變球 + 橢圓投影。
+   同步：位置寫 lobbyLive/tag/p/{u}，鬼寫 lobbyLive/tag/meta/ghost。
+        判定由「鬼自己」算（他離誰最近），抓到就寫 ghost=對方。 */
+function createTagLobby(){
+  const R=230, PR=15, K=0.55;
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0};
+  let others={};                 /* u → {x,y,name,color,at} */
+  let ghosts={};                 /* u → true   誰是鬼（可多於一個） */
+  let myScore=0, myGhost=false, lastCatch=0;
+  let liveRef=null, metaRef=null, unsubLive=null, unsubMeta=null;
+  let keys={x:0,y:0}, lastT=0, lastPush=0, shake=0;
+  let popups=[], grace=0;        /* grace：剛換鬼後 1.2 秒無敵，避免連環抓 */
+  let trail=[];                  /* 鬼的殘影 */
+
+  function w2s(x,y){
+    const s=Math.min(cw/(R*2.35), ch/(R*2.35*K))*1.0;
+    return {sx:cw/2+x*s, sy:ch/2+y*s*K, s};
+  }
+  function spawn(){ const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.7; return {x:Math.cos(a)*r,y:Math.sin(a)*r}; }
+
+  function drawField(){
+    const c=w2s(0,0), s=c.s;
+    /* 地面陰影 */
+    ctx.save(); ctx.beginPath();
+    ctx.ellipse(c.sx,c.sy+s*16,R*s*1.08,R*s*K*1.08,0,0,7);
+    ctx.fillStyle='rgba(0,0,0,.4)'; ctx.filter='blur(12px)'; ctx.fill(); ctx.restore();
+
+    /* 地面：徑向漸變 + 斜格 */
+    const g=ctx.createRadialGradient(c.sx,c.sy-s*24,12,c.sx,c.sy,R*s);
+    g.addColorStop(0,'#1f2c3d'); g.addColorStop(.62,'#16202e'); g.addColorStop(1,'#0b1119');
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7); ctx.fillStyle=g; ctx.fill();
+
+    ctx.save(); ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7); ctx.clip();
+    ctx.strokeStyle='rgba(120,160,210,.075)'; ctx.lineWidth=1;
+    for(let gx=-R;gx<=R;gx+=46){ const a=w2s(gx,-R),b=w2s(gx,R); ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);ctx.stroke(); }
+    for(let gy=-R;gy<=R;gy+=46){ const a=w2s(-R,gy),b=w2s(R,gy); ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);ctx.stroke(); }
+    ctx.restore();
+
+    /* 邊界：有鬼時轉紅 */
+    const anyGhost=Object.keys(ghosts).length>0;
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.strokeStyle=anyGhost?'rgba(248,113,113,.9)':'rgba(56,189,248,.55)';
+    ctx.lineWidth=Math.max(2,s*3.4); ctx.stroke();
+  }
+
+  function drawBall(x,y,color,r,label,isGhost,isMe){
+    const p=w2s(x,y), s=p.s, rr=r*s;
+    /* 投影 */
+    ctx.beginPath(); ctx.ellipse(p.sx,p.sy+rr*0.55,rr*0.95,rr*0.42,0,0,7);
+    ctx.fillStyle=isGhost?'rgba(248,113,113,.35)':'rgba(0,0,0,.42)';
+    ctx.filter='blur(4px)'; ctx.fill(); ctx.filter='none';
+    /* 鬼光環 */
+    if(isGhost){
+      const hg=ctx.createRadialGradient(p.sx,p.sy,rr*0.6,p.sx,p.sy,rr*2.4);
+      hg.addColorStop(0,'rgba(248,113,113,.45)'); hg.addColorStop(1,'rgba(248,113,113,0)');
+      ctx.beginPath(); ctx.arc(p.sx,p.sy,rr*2.4,0,7); ctx.fillStyle=hg; ctx.fill();
+    }
+    /* 球體 */
+    const g=ctx.createRadialGradient(p.sx-rr*.35,p.sy-rr*.45,rr*.1,p.sx,p.sy,rr*1.05);
+    g.addColorStop(0,'#fff'); g.addColorStop(.28,color); g.addColorStop(1,'rgba(0,0,0,.55)');
+    ctx.beginPath(); ctx.arc(p.sx,p.sy,rr,0,7); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.sx,p.sy,rr,0,7);
+    ctx.strokeStyle=isMe?'rgba(56,189,248,.95)':(isGhost?'rgba(255,180,180,.8)':'rgba(255,255,255,.22)');
+    ctx.lineWidth=isMe?2.6:1.3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.sx-rr*.32,p.sy-rr*.4,rr*.18,0,7); ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fill();
+    if(label){
+      ctx.font='600 '+Math.max(10,s*12.5)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle=isGhost?'#fca5a5':'rgba(255,255,255,.92)';
+      ctx.fillText((isGhost?'👻 ':'')+label,p.sx,p.sy-rr-7);
+    }
+  }
+
+  function step(dt){
+    const acc=1500;
+    meP.vx+=keys.x*acc*dt; meP.vy+=keys.y*acc*dt;
+    const fr=Math.pow(0.0018,dt); meP.vx*=fr; meP.vy*=fr;
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+
+    /* 牆：只去向外分量（同 sumo 一致，唔會繞圈）*/
+    const d=Math.hypot(meP.x,meP.y);
+    if(d>R-PR*0.4&&d>0.01){
+      const nx=meP.x/d, ny=meP.y/d;
+      meP.x=nx*(R-PR*0.4); meP.y=ny*(R-PR*0.4);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }
+      meP.vx*=0.84; meP.vy*=0.84;
+    }
+
+    if(grace>0) grace-=dt;
+    if(shake>0) shake-=dt*32;
+    popups.forEach(p=>p.t-=dt*1.1); popups=popups.filter(p=>p.t>0);
+
+    /* 鬼：追最近的人，並判定抓到 */
+    if(myGhost&&grace<=0){
+      let best=null,bd=1e9;
+      for(const u in others){
+        const o=others[u]; if(!o||typeof o.x!=='number'||ghosts[u]) continue;
+        if(Date.now()-(o.at||0)>8000) continue;
+        const dd=Math.hypot(meP.x-o.x,meP.y-o.y);
+        if(dd<bd){ bd=dd; best=o; }
+      }
+      if(best&&bd<PR*2.05){
+        const now=Date.now();
+        if(now-lastCatch>700){
+          lastCatch=now;
+          myScore++;
+          shake=7;
+          popups.push({x:meP.x,y:meP.y,t:1,txt:'抓到 +1'});
+          try{ set(metaRef,{ghost:best._u||'',by:me.username,at:now}); }catch(e){}
+          myGhost=false; ghostSelf(false);
+        }
+      }
+      /* 殘影 */
+      trail.push({x:meP.x,y:meP.y,t:0.5});
+      if(trail.length>14) trail.shift();
+    } else if(trail.length) { trail.shift(); }
+    trail.forEach(t=>t.t-=dt*1.4);
+
+    if(liveRef&&running) pushLive();
+  }
+
+  function pushLive(){
+    const now=Date.now();
+    if(now-lastPush<50) return; lastPush=now;
+    try{ set(liveRef,{x:Math.round(meP.x*10)/10,y:Math.round(meP.y*10)/10,
+      name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+      score:myScore,ghost:myGhost,at:now}); }catch(e){}
+  }
+  function ghostSelf(v){
+    myGhost=v;
+    if(v){
+      const sp=spawn(); meP.x=sp.x; meP.y=sp.y; meP.vx=meP.vy=0;
+      grace=1.2; trail=[];
+      popups.push({x:meP.x,y:meP.y,t:1.3,txt:'你是鬼！'});
+    }
+    try{ set(ref(db,'lobbyLive/tag/meta/'+me.username),v?1:null); }catch(e){}
+    pushLive();
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg=ctx.createRadialGradient(cw/2,ch*.42,40,cw/2,ch*.5,Math.max(cw,ch)*.8);
+    bg.addColorStop(0,'#0c1420'); bg.addColorStop(1,'#04070b');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+    drawField();
+
+    /* 殘影 */
+    trail.forEach((t,i)=>{
+      if(t.t<=0) return;
+      const p=w2s(t.x,t.y), s=p.s;
+      ctx.beginPath(); ctx.arc(p.sx,p.sy,PR*s*(0.5+t.t*0.5),0,7);
+      ctx.fillStyle='rgba(248,113,113,'+(t.t*0.18)+')'; ctx.fill();
+    });
+
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      if(o.ghost){ ghosts[u]=true; } else { delete ghosts[u]; }
+      drawBall(o.x,o.y,o.color||'#22c55e',PR,o.name,!!o.ghost,false);
+    }
+    drawBall(meP.x,meP.y,myGhost?'#ef4444':'#38bdf8',PR,me.displayName||me.username,myGhost,true);
+
+    popups.forEach(p=>{
+      const q=w2s(p.x,p.y);
+      ctx.globalAlpha=Math.max(0,p.t);
+      ctx.font='700 '+Math.max(12,q.s*15)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle=myGhost?'#fca5a5':'#4ade80';
+      ctx.fillText(p.txt,q.sx,q.sy-q.s*32-(1-p.t)*22);
+      ctx.globalAlpha=1;
+    });
+    ctx.restore();
+
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left'; ctx.fillStyle='rgba(226,232,240,.9)';
+    ctx.fillText((myGhost?'👻 你是鬼':'🏃 快走')+'　抓到 '+myScore, 16, 28);
+  }
+
+  function loop(t){
+    if(!running) return;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('tag',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const setK=(x,y)=>{keys.x=x;keys.y=y;};
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A')setK(-1,0);
+      else if(k==='ArrowRight'||k==='d'||k==='D')setK(1,0);
+      else if(k==='ArrowUp'||k==='w'||k==='W')setK(0,-1);
+      else if(k==='ArrowDown'||k==='s'||k==='S')setK(0,1);
+      else return;
+      e.preventDefault();
+    };
+    const onUp=()=>setK(0,0);
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    let tid=null,ox=0,oy=0;
+    cv.addEventListener('touchstart',e=>{const t0=e.changedTouches[0];tid=t0.identifier;ox=t0.clientX;oy=t0.clientY;e.preventDefault();},{passive:false});
+    cv.addEventListener('touchmove',e=>{for(const t0 of e.changedTouches){if(t0.identifier!==tid)continue;const dx=t0.clientX-ox,dy=t0.clientY-oy;const m=Math.hypot(dx,dy)||1;setK(dx/m,dy/m);}e.preventDefault();},{passive:false});
+    cv.addEventListener('touchend',e=>{for(const t0 of e.changedTouches){if(t0.identifier===tid){tid=null;setK(0,0);}}});
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  let unbind=null;
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      const sp=spawn(); meP.x=sp.x; meP.y=sp.y;
+      liveRef=ref(db,'lobbyLive/tag/p/'+me.username);
+      metaRef=ref(db,'lobbyLive/tag/meta');
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/tag/p'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username){ const it=Object.assign({},v[k]); it._u=k; o[k]=it; } }
+          others=o;
+        });
+      }catch(e){}
+      try{
+        unsubMeta=onValue(ref(db,'lobbyLive/tag/meta'),snap=>{
+          const v=snap.val()||{};
+          const now=Date.now();
+          /* 只有自己「唔係鬼」而同一個 meta 記錄指向自己 → 變成鬼 */
+          if(v.ghost&&v.ghost===me.username&&!myGhost&&now-(v.at||0)<6000) ghostSelf(true);
+          if(v.by&&v.by!==me.username&&myGhost&&now-(v.at||0)<6000){
+            /* 別人抓走了 → 自己也退鬼 */
+            myGhost=false; pushLive();
+          }
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(unsubMeta) unsubMeta(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      try{ if(me) await remove(ref(db,'lobbyLive/tag/meta/'+me.username)); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(2,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput(); draw();
+    },
+    tickHud(){
+      const el=document.getElementById('stCard');
+      if(el) el.innerHTML='<div style="font-size:11px;color:var(--text-sub)">'+(myGhost?'你是鬼':'逃跑中')+'</div>'
+        +'<div style="font-size:22px;font-weight:800">'+myScore+'</div>';
+    },
+    debug(){ return {x:meP.x,y:meP.y,score:myScore,ghost:myGhost,others:Object.keys(others||{})}; },
+    probe(x,y){ return Math.hypot(x,y)<=R; }
+  };
+}
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
