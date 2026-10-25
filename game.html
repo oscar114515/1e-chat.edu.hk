@@ -1318,6 +1318,11 @@ function startLobbyEarn(){
 /* ===== 載入用戶 ===== */
 async function loadUser(){
   let uname=params.get('u')||localStorage.getItem('game_user')||'';
+  /* 1E 別名：1E15 / 1e15 / 1e5 → stu15（跟 chat.html 的登入一致） */
+  try{
+    const _m=String(uname).trim().toLowerCase().match(/^1e(\d{1,2})$/i);
+    if(_m) uname='stu'+String(_m[1]).padStart(2,'0');
+  }catch(e){}
   if(!uname){
     // 由外層網頁注入
     try{ uname=(window.parent&&window.parent.__gameUser)||''; }catch(e){}
