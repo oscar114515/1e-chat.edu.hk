@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Xin7j/JYlBD/7EGHOhSkIr7dF6qNRpP+Q8j6VeE56SY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-aOQM5EWUp56SifCjT/tgM5Jjug/gM0ix/Zv9ATqC37Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -7356,48 +7356,55 @@ function openReactionPage(){
   openPage({title:'反應速度', key:'reaction', bodyHTML:
     '<div class="mg-box" id="reBox">'
     + '<div class="mg-big" id="reIco">⏱️</div>'
-    + '<div class="mg-msg" id="reMsg">點「開始」，畫面變綠那一刻立刻點</div>'
+    + '<div class="mg-msg" id="reMsg">點「開始」，畫面變綠那一刻立刻放手／點下去</div>'
     + '<button class="btn-primary" id="reBtn" style="max-width:190px">開始</button>'
     + '</div>'
     + '<div class="card" style="padding:12px 15px;font-size:11.5px;color:var(--text-muted);line-height:1.7">'
-    + '人類平均 250 毫秒。低於 200 算很快，低於 150 是頂尖。搶跑會重來。</div>'});
+    + '人類平均 250 毫秒。低於 200 算很快，低於 150 已經是職業選手級。'
+    + '<br>⚠ 按住不放、看到變綠才鬆手會被判定異常，不算成績。</div>'});
   let state='idle', goAt=0, timer=null;
   const box=document.getElementById('reBox'), ico=document.getElementById('reIco'),
         msg=document.getElementById('reMsg'), btn=document.getElementById('reBtn');
-  btn.onclick=function(){
-    if(state!=='idle') return;
-    state='wait'; box.classList.remove('go');
-    ico.textContent='🔴'; msg.textContent='等等…';
-    btn.textContent='不要按';
-    timer=setTimeout(function(){
-      state='go'; goAt=Date.now();
-      box.classList.add('go');
-      ico.textContent='🟢'; msg.textContent='按！';
-      btn.textContent='按！';
-    }, 1800+Math.random()*2600);
-  };
-  btn.onclick=function(){
-    if(state==='wait'){ clearTimeout(timer); state='idle'; box.classList.remove('go');
-      ico.textContent='⏱️'; msg.textContent='搶跑了，再試一次'; btn.textContent='開始'; return; }
-    if(state==='go'){
-      const ms=Date.now()-goAt;
-      state='idle'; box.classList.remove('go');
-      ico.textContent='⚡';
-      msg.textContent=ms+' 毫秒'+(ms<150?'　頂尖！':(ms<200?'　很快':(ms<300?'　正常':'　再練練')));
-      btn.textContent='再測一次';
-      addExp(2);
-      return;
-    }
-    /* idle → 開始 */
+  function reset(t, i, b){
+    state='idle'; box.classList.remove('go');
+    ico.textContent=i; msg.textContent=t; btn.textContent=b;
+  }
+  function start(){
     state='wait'; box.classList.remove('go');
     ico.textContent='🔴'; msg.textContent='等等…'; btn.textContent='不要按';
     timer=setTimeout(function(){
+      if(state!=='wait') return;
       state='go'; goAt=Date.now();
       box.classList.add('go');
       ico.textContent='🟢'; msg.textContent='按！'; btn.textContent='按！';
     }, 1800+Math.random()*2600);
+  }
+  /* ⚠ 以前用 onclick（= 手指鬆開才觸發）：
+     按住不放、見到變綠就鬆手，測出來會是 50-80 毫秒 —— 人類根本不可能。
+     改成 pointerdown（一碰到就計時），按住不放再鬆手不算數。 */
+  btn.onpointerdown=function(e){
+    try{ e.preventDefault(); }catch(_){}
+    if(state==='wait'){
+      clearTimeout(timer);
+      reset('搶跑了，再試一次','⏱️','開始');
+      return;
+    }
+    if(state==='go'){
+      const ms=Date.now()-goAt;
+      const tooFast=ms<80;
+      reset('','⚡','再測一次');
+      if(tooFast){
+        msg.textContent=ms+' 毫秒 · 太快了，是不是按住不放？';
+      }else{
+        msg.textContent=ms+' 毫秒'+(ms<150?'　頂尖！':(ms<200?'　很快':(ms<300?'　正常':'　再練練')));
+        addExp(2);
+      }
+      return;
+    }
+    start();
   };
 }
+
 
 /* ═══════════════ 記憶力 ═══════════════ */
 function openMemoryPage(){
@@ -7672,38 +7679,84 @@ async function saveStatus(){
 }
 
 /* ═══════════════ 每日一句（30 句輪替，按日期取） ═══════════════ */
-const DAILY_QUOTES=[
-  ['把每一天當成最後一天來活，但像還有永遠一樣去學。',''],
-  ['你現在偷的懶，都會變成以後打自己的巴掌。',''],
-  ['數學不會背叛你，不會就是不會。',''],
-  ['早睡不會死人，遲到才會。',''],
-  ['朋友是那個知道你所有缺點還願意坐你旁邊的人。',''],
-  ['不必急，中一才剛開始，但也不要停。',''],
-  ['你可以平凡，但不要讓自己習慣平凡。',''],
-  ['所有的「來不及」，都是從「等一下」開始的。',''],
-  ['今天的太陽照不到明天的你，所以要自己發光。',''],
-  ['認真聽一節課，比補習三小時有用。',''],
-  ['不要因為走得太慢就放棄，烏龜也贏過兔子。',''],
-  ['真正的自由，是有能力選擇不做什麼。',''],
-  ['你討厭的現在，是未來的你回不去的從前。',''],
-  ['失敗不是終點，只是「此路不通」的路牌。',''],
-  ['世界很大，但你的第一步在校門口。',''],
-  ['少一點抱怨，多一點完成。',''],
-  ['不要跟別人比，跟昨天的自己比。',''],
-  ['現在流的汗，是將來不必流的淚。',''],
-  ['別人怎麼看你，跟你實際是誰，是兩件事。',''],
-  ['先做完，再做好。',''],
-  ['你不是不夠好，你只是還沒做完。',''],
-  ['每天進步 1%，一年後是 37 倍。',''],
-  ['把難題拆開，就沒有難題。',''],
-  ['真正的朋友不會讓你一個人面對。',''],
-  ['休息不是偷懶，是為了走更遠。',''],
-  ['不確定的事，先做了才知道。',''],
-  ['你可以慢，但不要站著。',''],
-  ['成績是副產品，習慣才是主產品。',''],
-  ['今天不想做的事，明天只會更難。',''],
-  ['你比自己以為的更能撐。','']
+const DAILY_VERSES=[
+  ['在你所作的一切事上，天主常與你同在。','創世紀21：22'],
+  ['天主的看法與人不同：人看外貌，上主卻看人心。','撒慕爾紀上16：7'],
+  ['凡一切信賴上主的人們，請勇敢鼓起你們的心神。','聖詠集31：25'],
+  ['但願上主在白晝頒賜他的恩愛慈惠，我夜間向賜我生命的天主歌頌讚美！','聖詠集42：9'],
+  ['你該信賴上主，致力善行，你必安居樂土，享受康寧。','聖詠集37：3'],
+  ['你要鼓起勇氣，期望上主！你要振作精神，期望上主！','聖詠集27：14'],
+  ['天主是我們的救助和力量，是患難中最易尋到的保障。','聖詠集46：2'],
+  ['天主是我的護盾，給心正的人助陣。','聖詠集7：11'],
+  ['我今信賴你的愛憐；我心歡愉你的救援；我要向我恩主歌讚。','聖詠集13：6'],
+  ['我尋求了上主，他聽了我的祈求：由我受的一切驚惶中，將我救出。','聖詠集34：5'],
+  ['上主慈悲為懷，寬宏大方，他常緩於發怒，仁愛無量。','聖詠集145：8'],
+  ['上主對待萬有，溫和善良，對他的受造物，仁愛慈祥。','聖詠集145：9'],
+  ['在我一生歲月裡，幸福與慈愛常隨不離；我將住在上主的殿裡，直至悠遠的時日。','聖詠集23：6'],
+  ['這是上主所安排的一天，我們應該為此鼓舞喜歡。','聖詠集118：24'],
+  ['我終日仰望你，因你是救我的天主。','聖詠集25：5'],
+  ['上主親近心靈破碎的人，他必救助精神痛苦的人。','聖詠集34：19'],
+  ['將你的作為委託於上主，這樣你的計劃必會成功。','箴言16：3'],
+  ['慈善為懷的人，必得富裕；施惠於人的人，必蒙施惠。','箴言11：25'],
+  ['義人的果實是生命樹，智慧的人能奪取人心。','箴言11：30'],
+  ['一句簡單話，若說得適當，有如銀盤中，放上金蘋果。','箴言25：11'],
+  ['上主的名號，是堅固堡壘；義人投入內，必得享安全。','箴言18：10'],
+  ['你應專心接受教訓，傾耳細聽益智之言。','箴言23：12'],
+  ['獲得明哲的，必愛惜自己；珍惜明智的，必覓得幸福。','箴言19：8'],
+  ['喜愛受教的人，必喜愛智慧。','箴言12：1'],
+  ['天主原把智慧、學問和歡樂，賜給他所喜愛的人。','訓道篇2：26'],
+  ['你只管信賴天主，他必扶持你。','德訓篇2：6'],
+  ['我兒，你若願意，就可受教；你若專心，就會明智。','德訓篇6：33'],
+  ['各種工作的開端，在於立志。','德訓篇37：20'],
+  ['天主使他們充滿知識與理解力，使他們的心富於辨別力。','節錄自 德訓篇17：5-6'],
+  ['我兒，你要端莊，自重自愛，對自己應保持相稱的尊重。','德訓篇10：31'],
+  ['沒有一種財富，能勝過身體的健康。','德訓篇30：16'],
+  ['我，上主，你的天主，向你說過：「不要害怕，有我協助你。」','依撒意亞41：13'],
+  ['而仰望上主的，必獲得新力量，必能振翼高飛有如兀鷹，疾馳而不困乏，奔走而不疲倦。','依撒意亞40：31'],
+  ['天主賜給疲倦者力量，賜給無力者勇氣。','依撒意亞40：29'],
+  ['我在上主眼中是光榮的，天主是我的力量。','依撒意亞49：5'],
+  ['你們若細心聽我，你們就能吃豐美的食物，你們的心靈必因脂膏而喜悅。','依撒意亞55：2'],
+  ['看啊！黑暗籠罩著大地，陰雲遮蔽著萬民；但上主卻照耀著你，他的榮耀要彰顯在你的身上。','依撒意亞60：2'],
+  ['你們應走我吩咐你們的一切道路，好使你們獲得幸福。','耶肋米亞7：23'],
+  ['耶穌注視他們說：「為人這是不可能的；但為天主，一切都是可能的。」','瑪竇福音19：26'],
+  ['孩子們，我們愛，不可只用言語，也不可只用口舌，而要用行動和事實。','若望一書3：18'],
+  ['因為凡是求的，就必得到；找的，就必找到；敲的，就必給他開。','瑪竇福音7：8'],
+  ['若你們中二人，在地上同心合意，無論為什麼事祈禱，我在天之父，必要給他們成就。','瑪竇福音18：19'],
+  ['凡愛自己弟兄的，就是存留在光中。','若望一書2：10'],
+  ['締造和平的人是有福的，因為他們要稱為天主的子女。','瑪竇福音5：9'],
+  ['凡勞苦和負重擔的，你們都到我跟前來，我要使你們安息。','瑪竇福音11：28'],
+  ['在人不可能，在天主卻不然，因為在天主，一切都是可能的。','馬爾谷福音10：27'],
+  ['你是我的愛子，我因你而喜悅。','馬爾谷福音1：11'],
+  ['耶穌對他說：「『你若能，』為信的人，一切都是可能的！」','馬爾谷福音9：23'],
+  ['不要怕，祇管信。','馬爾谷福音5：36'],
+  ['萬福！充滿恩寵者，上主與你同在！','路加福音1：28'],
+  ['孩子漸漸長大而強壯，充滿智慧，天主的恩寵常在他身上。','路加福音2：40'],
+  ['各人應依照自己所領受的神恩，彼此服事，善做天主各種恩寵的管理員。','伯多祿前書4：10'],
+  ['我是世界的光；跟隨我的，決不在黑暗中行走，必有生命的光。','若望福音8：12'],
+  ['凡信的人，在他內得永生。','若望福音3：15'],
+  ['這是我的命令：你們該彼此相愛，如同我愛了你們一樣。','若望福音15：12'],
+  ['因為心裡相信，可使人成義；口裡承認，可使人獲得救恩。','羅馬書10：10'],
+  ['將你們的一切掛慮都託給他，因為他必關照你們。','伯多祿前書5：7'],
+  ['你們要為光榮天主而彼此接納，猶如基督也接納了你們一樣。','羅馬書15：7'],
+  ['因天主的恩寵，我成為今日的我。','格林多前書15：10'],
+  ['凡事包容，凡事相信，凡事盼望，凡事忍耐。愛永存不朽。','格林多前書13：7-8'],
+  ['該時常發憤勉力，因為你們知道，你們的勤勞在主內決不會落空。','格林多前書15：58'],
+  ['彼此祈禱，為得痊癒。','節錄自 雅各伯書5：16'],
+  ['天主能豐厚地賜與你們各種恩惠，使你們在一切事上常十分充足，能多多行各種善事。','格林多後書9：8'],
+  ['為使你們能夠同眾聖徒領悟基督的愛是怎樣的廣、闊、高、深。','厄弗所書3：18'],
+  ['因為你們得救是由於恩寵。','厄弗所書2：8'],
+  ['你們務要在主內，藉他的能力作堅強的人。','厄弗所書6：10'],
+  ['願你們的愛德日漸增長，滿渥真知識和各種識見。','斐理伯書1：9'],
+  ['以堅忍的心，跑那擺在我們面前的賽程。','希伯來書12：1'],
+  ['應常歡樂，不斷祈禱，事事感謝。','得撒洛尼前書5：16-18'],
+  ['你們要以過安定的生活，專務己業，親手勞作為光榮。','得撒洛尼前書4：11'],
+  ['願賜平安的主，親自時時處處賜給你們平安！願主與你們眾人同在！','得撒洛尼後書3：16'],
+  ['你要堅持你所學和所信的事，你知道你是由誰學來的。','弟茂德後書3：14'],
+  ['我們因他的恩寵成義。','弟鐸書3：7']
 ];
+/* 每日聖言：73 句，按「年積日 % 73」循環 —— 每句都會用到。
+   ⚠ 原本那個範例用 d.getDate()（1-31），只會用到前 31 句，第 32 句之後永遠不出現。 */
+const DAILY_QUOTES = DAILY_VERSES;
 function dailyQuote(){
   const d=new Date();
   const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
@@ -8247,7 +8300,7 @@ function openMomentsPage(){
   const dq=dailyQuote();
   markMomentsRead();
   openPage({title:'班級動態', key:'moments', bodyHTML:
-    '<div class="dq-card"><div class="dq-text">「'+escapeHtml(dq[0])+'」</div><div class="dq-from">— 每日一句</div></div>'
+    '<div class="dq-card"><div class="dq-text">「'+escapeHtml(dq[0])+'」</div><div class="dq-from">— '+(dq[1]?escapeHtml(dq[1]):'每日一句')+'</div></div>'
     + '<div class="card" style="padding:14px 16px;margin-bottom:14px">'
     + '<textarea id="momText" class="mom-input" maxlength="500" placeholder="分享一件小事…（最多 500 字）"></textarea>'
     + '<button class="btn-primary" data-action="postMoment" style="margin-top:10px">發佈</button></div>'
