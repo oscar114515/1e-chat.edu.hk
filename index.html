@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-+kav+lHfv/yCP3/v6KeoCYMYcyGC/iB1fQpWiA+pWfg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Yj106iFG3YvJpYUx0h/k4F3SJA9xZ/jEyCsM0lceYrI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -107,14 +107,31 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .tf-card .tf-i{font-size:24px;line-height:1}
 .tf-card .tf-t{font-size:13px;font-weight:800;color:#fbbf24}
 .tf-card .tf-s{font-size:10.5px;color:var(--text-sub);margin-top:2px}
-.rp-card{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:15px;
-  background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;min-width:190px;max-width:240px;
-  box-shadow:0 8px 22px -10px rgba(220,38,38,.7);cursor:pointer;position:relative;overflow:hidden}
-.rp-card.done{background:linear-gradient(135deg,#64748b,#475569);box-shadow:none;cursor:default}
-.rp-card .rp-i{font-size:25px;line-height:1}
-.rp-card .rp-t{font-size:13.5px;font-weight:800}
-.rp-card .rp-s{font-size:10.5px;opacity:.9;margin-top:2px}
-.rp-card:active{transform:scale(.97)}
+/* 紅包卡片：照微訊那種豎版 —— 上句祝福、中間金色「開」字圓、下面是誰的紅包 */
+.rp-card{width:232px;max-width:74vw;border-radius:14px;padding:17px 14px 15px;
+  display:flex;flex-direction:column;align-items:center;gap:13px;
+  background:linear-gradient(160deg,#f5562e 0%,#e8432a 42%,#fa9d3b 100%);
+  color:#fff;box-shadow:0 10px 26px -12px rgba(245,86,46,.85),inset 0 1px 0 rgba(255,255,255,.22);
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .16s cubic-bezier(.34,1.42,.64,1),box-shadow .2s}
+.rp-card:active{transform:scale(.96)}
+.rp-card::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% -20%,rgba(255,255,255,.30),transparent 62%)}
+.rp-card.done{background:linear-gradient(160deg,#64748b,#475569);box-shadow:none;cursor:default;opacity:.92}
+.rp-card .rp-top{font-size:12.5px;font-weight:700;letter-spacing:.6px;color:#ffe9cf;
+  position:relative;z-index:1;text-align:center;line-height:1.5;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-card .rp-open{width:62px;height:62px;border-radius:50%;position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  font-size:25px;font-weight:900;color:#8a4a00;line-height:1;
+  background:linear-gradient(180deg,#ffe0a3 0%,#f6c04a 55%,#e9a92c 100%);
+  box-shadow:inset 0 -3px 0 rgba(120,60,0,.18),0 5px 14px -4px rgba(0,0,0,.4);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.rp-card.spin .rp-open{animation:rpSpin .55s cubic-bezier(.34,1.4,.64,1)}
+@keyframes rpSpin{0%{transform:scale(1) rotate(0)}45%{transform:scale(1.18) rotate(180deg)}100%{transform:scale(1) rotate(360deg)}}
+.rp-card .rp-from{font-size:11px;color:#ffe2c2;opacity:.92;position:relative;z-index:1;
+  text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-card .rp-st{font-size:10px;color:#fff3e2;opacity:.72;position:relative;z-index:1}
 /* 開紅包彈層 */
 #rpOpen{position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.72);display:flex;
   align-items:center;justify-content:center;padding:24px;animation:rpFade .25s ease}
@@ -124,12 +141,16 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
   box-shadow:0 24px 60px -20px rgba(0,0,0,.8);animation:rpPop .38s cubic-bezier(.34,1.5,.5,1)}
 @keyframes rpPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 #rpOpen .rp-amt{font-size:38px;font-weight:900;letter-spacing:-1px;margin:14px 0 6px;
+  color:#ffe08a;text-shadow:0 2px 10px rgba(0,0,0,.35);
   animation:rpAmt .5s cubic-bezier(.34,1.6,.5,1) .15s both}
 @keyframes rpAmt{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 #rpOpen .rp-from{font-size:11.5px;opacity:.85}
 #rpOpen .rp-note{font-size:12.5px;opacity:.9;margin-top:10px}
-#rpOpen .rp-close{margin-top:18px;width:100%;padding:11px;border-radius:13px;border:none;
-  background:rgba(255,255,255,.18);color:#fff;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer}
+/* rpGold：微信拆完之後個掣係金色實心，唔係半透明白 */
+#rpOpen .rp-close{margin-top:18px;width:100%;padding:12px;border-radius:13px;border:none;
+  background:linear-gradient(180deg,#ffe0a3,#f6c04a 60%,#e9a92c);color:#7a3f00;
+  font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;
+  box-shadow:0 6px 16px -6px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)}
 /* 撒花 */
 #rpConfetti{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
 #rpConfetti i{position:absolute;font-size:15px;animation:rpFall 1.6s ease-out forwards}
@@ -151,8 +172,10 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .ai-quick button:active{transform:scale(.95)}
 .empty{padding:30px 16px;text-align:center;line-height:1.9}
 /* 節日特效 */
-#festive{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden}
-#festive i{position:absolute;top:-24px;font-size:15px;animation:fall linear infinite;opacity:.85}
+/* fxCalm：z-index 由 9998 降到 300 —— 之前蓋在彈窗、面板之上，
+   睇字會覺得有南瓜喺字前面飛過。降到 300 之後只喺背景飄，彈窗仍然喺最上層。 */
+#festive{position:fixed;inset:0;pointer-events:none;z-index:300;overflow:hidden}
+#festive i{position:absolute;top:-24px;font-size:15px;animation:fall linear infinite;opacity:.5}
 @keyframes fall{to{transform:translateY(105vh) rotate(320deg)}}
 
 /* ═══ 每日任務 / 轉盤 / 抽卡 ═══ */
@@ -4656,10 +4679,12 @@ function render(){
       const mine=claims[me.username];
       const finished=Number(m.leftCount||0)<=0;
       body='<div class="rp-card'+(finished&&!mine?' done':'')+'" '+(mine||finished?'':'data-action="claimRedPacket"')+' data-arg="'+escAttr(m.id)+'">'
-        + '<div class="rp-i">🧧</div><div style="min-width:0">'
-        + '<div class="rp-t">'+escapeHtml(m.note||'恭喜發財')+'</div>'
-        + '<div class="rp-s">'+(mine?('你搶到 '+Number(mine)+' 分'):(finished?'已搶完':'點開拆紅包'))+(Number(m.count)>1?('　剩 '+Number(m.leftCount||0)+'/'+Number(m.count)):'')+'</div>'
-        + '</div></div>';
+        + '<div class="rp-top">'+escapeHtml(m.note||'恭喜發財，大吉大利')+'</div>'
+        + '<div class="rp-open">'+(finished&&!mine?'🎊':'開')+'</div>'
+        + '<div class="rp-from">'+escapeHtml(m.displayName||m.username||'')+' 的紅包</div>'
+        + '<div class="rp-st">'+(mine?('你搶到 '+Number(mine)+' 分'):(finished?'紅包已領完':'點擊拆開'))
+        +   (Number(m.count)>1?('　'+Number(m.leftCount||0)+'/'+Number(m.count)+' 個'):'')+'</div>'
+        + '</div>';
     }
     else if(m.encrypted&&!isAI)body=renderEncryptedBody(m);
     else{
@@ -7634,6 +7659,11 @@ function openRedPacketSheet(){
 }
 async function claimRedPacket(msgId){
   if(!me) return;
+  /* 拆紅包動畫：卡片中央金色圓轉一圈，感覺似撕開個封口 */
+  try{
+    const card=document.querySelector('.rp-card[data-arg="'+msgId+'"]');
+    if(card){ card.classList.add('spin'); setTimeout(function(){ card.classList.remove('spin'); }, 620); }
+  }catch(e){}
   const m=allMsgs().find(function(x){ return x.id===msgId; });
   if(!m) return;
   const claims=m.claims||{};
@@ -7891,11 +7921,11 @@ function applyFestive(){
     const old=document.getElementById('festive'); if(old) old.remove();
     const d=new Date(), m=d.getMonth()+1, day=d.getDate();
     let emoji='', n=0;
-    if(m===12 && day>=20) { emoji='❄️'; n=26; }
-    else if(m===1 && day<=3) { emoji='🎉'; n=22; }
-    else if(m===10 && day>=25) { emoji='🎃'; n=18; }
-    else if(m===2 && day>=10 && day<=16) { emoji='🧧'; n=18; }
-    else if(m===9 && day>=10 && day<=18) { emoji='🥮'; n=16; }
+    if(m===12 && day>=20) { emoji='❄️'; n=14; }
+    else if(m===1 && day<=3) { emoji='🎉'; n=12; }
+    else if(m===10 && day>=25) { emoji='🎃'; n=8; }
+    else if(m===2 && day>=10 && day<=16) { emoji='🧧'; n=10; }
+    else if(m===9 && day>=10 && day<=18) { emoji='🥮'; n=9; }
     if(!emoji) return;
     const box=document.createElement('div'); box.id='festive';
     let html='';
@@ -10439,6 +10469,8 @@ const VERSION_HISTORY=[
 '積分拍賣改為只有管理員能用：普通同學打開會提示「積分拍賣由管理員發起」，入口移到管理員後台（商店旁邊的「拍賣」）',
 '釣魚／反應速度／記憶力搬到小遊戲：三款從個人主頁移到「小遊戲 → 單人遊戲」，跟俄羅斯方塊、2048 放在一起，不用先進個人主頁再找',
 '1E 帳號別名：準備把登入名由 stu15 統一到 1E15，過渡期兩種都可以用，指向同一個帳號同一個密碼。1E15 / 1e15 / 1E5 / 1e05 都認（1-2 位數字自動補零）。小遊戲頁面（game.html）同樣支援',
+'紅包卡片照微訊做：聊天室裡改成豎版紅包 —— 上面一句祝福、中間金色圓「開」字、下面「誰的紅包」和剩幾多個，用橙紅漸變（#f5562e → #fa9d3b）。點一下金色圓會轉一圈（拆封動作），拆開後彈層金額用金色、按鈕也改成金色實心',
+'節日特效收斂：南瓜／雪花原本 z-index 9998 蓋在彈窗上面，睇字會覺得有東西喺前面飛。現在降到 300（只喺背景飄），數量減半、透明度降到 0.5',
 '⚠ 修復：所有遊戲都進不去 —— 自設伺服器（wss://oscar-nas...）現在連不上，而所有房間操作都走那條連線，所以建房永遠卡住不返回（不是新遊戲的問題，原本的五子棋、2048 一樣開不了）。已把 meta/gamews 清空，全部改回 Firebase，遊戲立即恢復正常',
 '⚠ 再修：即使自設伺服器掛掉，遊戲也不應該玩不了。以前重試 4 次後雖然會「切換備援模式」，但只是打個招呼，實際所有房間操作仍然走去連死線 → 照樣卡死。現在降級時會真正清掉 WS 位址，同時 set/update 在降級後直接寫 Firebase —— 伺服器關機也能玩，只是慢一點',
 
