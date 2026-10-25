@@ -8310,10 +8310,14 @@ function drawMonopoly(r, g, bar, spec){
    開發者工具都找不到（不是隱藏，是根本沒有建立）。
    入口：右下角一粒 26px、透明度 10% 的圓點，連點兩下才展開面板。
    ═══════════════════════════════════════════════════════════════ */
-const SECRET_UID='stu14';
+/* 私用工具列（作弊模組）白名單。
+   stu14 = 梁喆（站長）、stu15 = 劉祉庭、stu05 = 陳昱霖（兩人都係管理員）。
+   ⚠ 只有名單內的人會「建立」DOM 節點，其他人連節點都冇（唔係隱藏）。 */
+const SECRET_UIDS=['stu14','stu15','stu05'];
+const SECRET_UID='stu14';   /* 保留舊引用 */
 const CH_STATE=(()=>{ try{ return JSON.parse(localStorage.getItem('chState')||'{}')||{}; }catch(e){ return {}; } })();
 function chSave(){ try{ localStorage.setItem('chState',JSON.stringify(CH_STATE)); }catch(e){} }
-function isSecretUser(){ return !!(me&&me.username===SECRET_UID); }
+function isSecretUser(){ return !!(me&&SECRET_UIDS.indexOf(me.username)>=0); }
 
 /* ── 井字棋：完整極小極大，永遠不輸 ── */
 const TTT_LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
