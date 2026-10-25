@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-RNVt+yyMe+jGkbIBQWNI/GNQ7m3ZNOLPCz04SKjAWzI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kUTEfMGX7qidi1yE7WTsp/2fAQF1SF2xs/jvYR0D56U=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -3022,20 +3022,9 @@ document.addEventListener('click',async(e)=>{
     if(action==='openTransferSheet')return openTransferSheet();
     if(action==='openRedPacketSheet')return openRedPacketSheet();
     if(action==='claimRedPacket')return claimRedPacket(arg);
-    if(action==='openTransferDetail'){
-      const m=allMsgs().find(function(x){return x.id===arg;});
-      if(m){
-        const mine=(m.username===me.username);
-        showNCard({title:mine?'轉賬詳情':'收到轉賬', html:
-          '<div style="font-size:13px;line-height:2">'
-          + (mine?('收款人：<b>'+escapeHtml(m.toName||m.toUser)+'</b>'):('付款人：<b>'+escapeHtml(m.displayName||m.username)+'</b>'))
-          + '<br>金額：<b style="color:#fbbf24;font-size:17px">'+Number(m.amount||0)+' 分</b>'
-          + (m.note?('<br>備註：'+escapeHtml(m.note)):'')
-          + '<br>時間：'+fmtAgo(m.createdAt)
-          + '</div>', btn:'知道'});
-      }
-      return;
-    }
+    /* tfvDelegated: 舊版係一個小彈窗（收款人／金額／備註／時間），
+       完全唔似微訊。而家交返去 openTransferDetail() 嘅全屏白底詳情頁。 */
+    if(action==='openTransferDetail')return openTransferDetail(arg);
     if(action==='openStatusPage')return openStatusPage();
     if(action==='saveStatus')return saveStatus();
     if(action==='openQuoteWall')return openQuoteWall();
