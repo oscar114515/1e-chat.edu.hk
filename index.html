@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-aOQM5EWUp56SifCjT/tgM5Jjug/gM0ix/Zv9ATqC37Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-jOceHqWZGNgHbixRqMGE3kdzkSDag74nb/VJX0+gtb4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -10362,6 +10362,9 @@ const VERSION_HISTORY=[
 '簽到失敗提示改善：以前網絡一斷就彈「簽到失敗」加一串英文錯誤（例如 Failed to get document because the client is offline），完全看不出發生什麼事。現在分兩種：網絡問題會說「網絡不穩，簽到未完成，連上網再按一次」並自動重試一次；其他錯誤才顯示原因',
 '簽到第 8 天正常：七格路線圖簽滿後，下一次會由第 1 格重新開始新一輪（連續天數繼續累加，不會清零）。實測第 8 天「連續 8 天，今日 +100 積分」正常',
 '聊天背景修正：以前選了背景（極光、森林、深夜…）完全看不到，就算刷新也一樣。原因是有一行 `#chatBox{background:transparent !important}`（為了讓頁面背景透出來），`!important` 把六款背景全部蓋掉了。現在六條背景規則也加上 `!important`，選了就立即看到，刷新後仍然保留',
+'每日聖言：班級動態最上面那句「每日一句」換成天主教每日聖言（73 句，附出處，例如「聖詠集46：2」）。按年積日循環，73 句全部都會輪到 —— 原本那種寫法用「日期」取（1-31），只會用到前 31 句，後面 42 句永遠不會出現',
+'反應速度防作弊：以前按住按鈕不放、見到畫面變綠才鬆手，可以測出 50-80 毫秒（人類極限約 150 毫秒，根本不可能）。現在改成「按下即計時」，按住不放再鬆手不算數，低於 80 毫秒會提示「太快了，是不是按住不放」，並且不加經驗',
+
 
 
 '＋ 選單背景修正：原本面板用半透明底色（rgba(30,41,59,.55)）壓在深色頁面上，顏色幾乎一樣，看上去像沒有面板。現在改成實色（深色 #1e293b／淺色純白）＋ 明顯邊框＋雙層陰影＋玻璃模糊，圖示底也加了描邊',
