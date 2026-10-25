@@ -558,6 +558,26 @@ body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-
   transform:translate(-50%,-62%) rotate(-45deg) scale(0);border-radius:1px;
   animation:okMark .34s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes okMark{to{transform:translate(-50%,-62%) rotate(-45deg) scale(1)}}
+/* 虛擬方向鍵樣式 */
+.dpad{position:absolute;right:16px;bottom:18px;width:132px;height:132px;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  gap:4px;z-index:22;touch-action:none;user-select:none;-webkit-user-select:none}
+.dpad .dp{grid-column:span 1;display:flex;align-items:center;justify-content:center;
+  background:rgba(30,41,59,.72);border:1px solid rgba(148,163,184,.35);
+  color:#cbd5e1;font-size:15px;border-radius:11px;cursor:pointer;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  transition:background .12s,transform .1s,color .12s;
+  -webkit-tap-highlight-color:transparent}
+.dpad .dp.on{background:rgba(56,189,248,.82);color:#04121f;transform:scale(.94);
+  border-color:rgba(56,189,248,.9)}
+.dpad .u{grid-area:1/2/2/3}
+.dpad .l{grid-area:2/1/3/2}
+.dpad .r{grid-area:2/3/3/4}
+.dpad .d{grid-area:3/2/4/3}
+/* 中間留空 */
+.dpad::after{content:'';grid-area:2/2/3/3;border-radius:50%;
+  background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.18)}
+
 </style>
 </head>
 <body data-page-node-id="o2XBarVikIbNEfUtNXqDJz">
@@ -2248,6 +2268,47 @@ function renderLobbyGame(){
 }
 
 /* ===== 遊戲清單 ===== */
+/* DPAD_CSS_MOVED: 已移到 <style> 內 */
+/* ═══ 虛擬方向鍵（手機用）—— 大廳即時遊戲共用 ═══
+   四個方向鍵排成十字，右下角浮在畫布上。按住即走，放手即停。
+   鍵盤 WASD/方向鍵照舊可以用，兩者不衝突。 */
+function mountDPad(host, onDir){
+  const old=host.querySelector('.dpad'); if(old) old.remove();
+  const d=document.createElement('div');
+  d.className='dpad';
+  d.innerHTML=
+     '<button class="dp u" data-d="u" aria-label="上">▲</button>'
+    +'<button class="dp l" data-d="l" aria-label="左">◀</button>'
+    +'<button class="dp r" data-d="r" aria-label="右">▶</button>'
+    +'<button class="dp d" data-d="d" aria-label="下">▼</button>';
+  host.appendChild(d);
+
+  const DIR={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0]};
+  const held=new Set();
+  function recompute(){
+    let x=0,y=0;
+    held.forEach(k=>{ const v=DIR[k]; x+=v[0]; y+=v[1]; });
+    const m=Math.hypot(x,y)||1;
+    onDir(x?(x/m):0, y?(y/m):0);
+  }
+  function press(k, on){
+    if(on) held.add(k); else held.delete(k);
+    recompute();
+  }
+  d.querySelectorAll('.dp').forEach(b=>{
+    const k=b.getAttribute('data-d');
+    const start=e=>{ e.preventDefault(); b.classList.add('on'); press(k,true); };
+    const end=e=>{ e.preventDefault(); b.classList.remove('on'); press(k,false); };
+    b.addEventListener('pointerdown',start);
+    b.addEventListener('pointerup',end);
+    b.addEventListener('pointercancel',end);
+    b.addEventListener('pointerleave',end);
+    /* 防止長按選字／放大鏡 */
+    b.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+  return ()=>{ try{ d.remove(); }catch(e){} onDir(0,0); };
+}
+
 /* ═══ 相撲推擠（sumo）—— 第一個 3D 感聯機遊戲 ═══
    玩法：所有人在一個圓形擂台，互相撞，把人推出圈外就得一分。
    渲染：Canvas 2D 做偽 3D —— 斜投影地面 + 球體徑向漸變 + 橢圓陰影。
@@ -2550,6 +2611,10 @@ function createSumoLobby(){
       fit();
       window.addEventListener('resize',fit);
       unbind=bindInput();
+      /* 手機：右下角虛擬方向鍵（鍵盤照舊可用） */
+      const host=cv.parentElement;
+      if(host){ const kill=mountDPad(host,(x,y)=>{ keys.x=x; keys.y=y; }); const oldUn=unbind;
+        unbind=()=>{ try{kill();}catch(e){} oldUn(); }; }
       draw();
     },
     tickHud(){
@@ -2818,7 +2883,11 @@ function createTagLobby(){
       const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
         cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
       fit(); window.addEventListener('resize',fit);
-      unbind=bindInput(); draw();
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){ const kill=mountDPad(host,(x,y)=>{ keys.x=x; keys.y=y; }); const oldUn=unbind;
+        unbind=()=>{ try{kill();}catch(e){} oldUn(); }; }
+      draw();
     },
     tickHud(){
       const el=document.getElementById('stCard');
