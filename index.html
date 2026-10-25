@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-S3G4SKWUNn1FtUxZlHeBX+Jy6EufLIbVViTQny0wHXk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-j+DdkmRlNNEZ45BopWoqO56Fem2dUcth0Rn+vp4lHcU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -7782,6 +7782,9 @@ async function claimRedPacket(msgId){
   if(!m) return;
   const claims=m.claims||{};
   if(claims[me.username]){ showRpOpen(claims[me.username], m); return; }
+  /* 發紅包的人自己唔可以領（以前漏咗呢個判斷，發完自己點就即刻搶返一蚊，
+     等於左手交右手、彩池少一份，其他同學分到的錢變少） */
+  if(m.username===me.username){ showNotif('不能領自己發的紅包'); return; }
   if(Number(m.leftCount||0)<=0){ showNotif('紅包已被搶完'); return; }
   /* 二八隨機：先取 1~2 倍平均值，但不超過剩餘 */
   const left=Number(m.left)||0, cnt=Number(m.leftCount)||1;
