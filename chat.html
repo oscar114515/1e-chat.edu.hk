@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-r6MgnNDTrUsPEjW97lrD8ewbFt4UytP+mSQ/Xzq3HgA=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tujbuiRNq/EJgICfQOyj4Wu73OsiRdndmcub8m0Fp2A=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -155,96 +155,13 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .wx-ico .bolt{animation:wxBolt 2.4s ease-in-out infinite}
 @keyframes wxBolt{0%,70%,100%{opacity:.35}80%,90%{opacity:1}}
 
-/* ═══ 個人主頁天氣卡 ═══
-   資料：香港天文台開放數據（data.weather.gov.hk，Access-Control-Allow-Origin: *，可直連）
-   圖標：內嵌 SVG，按 icon 碼自動換；全部帶動畫（太陽轉、雲飄、雨落、閃電）。
-   失敗時唔阻塞個人主頁 —— 只顯示一行灰字。 */
-const WX_PLACE='香港天文台';
-function wxIconSVG(code){
-  const c=Number(code)||50;
-  const sun=`<circle class="sun" cx="32" cy="32" r="11" fill="#fbbf24"/>
-    <g class="sun" stroke="#fbbf24" stroke-width="3" stroke-linecap="round">
-      <line x1="32" y1="8" x2="32" y2="2"/><line x1="32" y1="56" x2="32" y2="62"/>
-      <line x1="8" y1="32" x2="2" y2="32"/><line x1="56" y1="32" x2="62" y2="32"/>
-      <line x1="15" y1="15" x2="11" y2="11"/><line x1="49" y1="15" x2="53" y2="11"/>
-      <line x1="15" y1="49" x2="11" y2="53"/><line x1="49" y1="49" x2="53" y2="53"/>
-    </g>`;
-  const cloud=`<path class="cloud" d="M20 44c-5 0-9-3.6-9-8s4-8 9-8c1.6-6 7-10 13.5-10 7.5 0 13.5 5.6 14.5 12.8 4.4.4 8 4 8 8.6 0 4.8-4 8.6-9 8.6z"
-    fill="#94a3b8"/>`;
-  const cloudDark=`<path class="cloud" d="M20 44c-5 0-9-3.6-9-8s4-8 9-8c1.6-6 7-10 13.5-10 7.5 0 13.5 5.6 14.5 12.8 4.4.4 8 4 8 8.6 0 4.8-4 8.6-9 8.6z"
-    fill="#64748b"/>`;
-  const drops=`<g stroke="#38bdf8" stroke-width="2.8" stroke-linecap="round">
-    <line class="drop" x1="24" y1="48" x2="24" y2="54"/>
-    <line class="drop" x1="34" y1="48" x2="34" y2="54"/>
-    <line class="drop" x1="44" y1="48" x2="44" y2="54"/></g>`;
-  const bolt=`<path class="bolt" d="M34 46l-6 11h6l-3 9 11-13h-6l4-7z" fill="#fbbf24" stroke="#fbbf24" stroke-width="1"/>`;
-
-  if(c>=64&&c<=65) return `<svg viewBox="0 0 64 64">${cloudDark}${bolt}${drops}</svg>`;             /* 雷暴 */
-  if((c>=60&&c<=63)||(c>=70&&c<=79)) return `<svg viewBox="0 0 64 64">${cloudDark}${drops}</svg>`;  /* 有雨 */
-  if(c>=90) return `<svg viewBox="0 0 64 64">${cloud}${['<line x1="16" y1="52" x2="48" y2="52" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>','<line x1="20" y1="58" x2="44" y2="58" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" opacity=".6"/>'].join('')}</svg>`; /* 霧 */
-  if(c>=53&&c<=54) return `<svg viewBox="0 0 64 64">${cloud}</svg>`;                                 /* 多雲 */
-  if(c>=50&&c<=52) return `<svg viewBox="0 0 64 64"><g transform="translate(-8,-6) scale(.85)">${sun}</g><g transform="translate(10,14) scale(.72)">${cloud}</g></svg>`; /* 間晴 */
-  return `<svg viewBox="0 0 64 64">${sun}</svg>`;                                                    /* 晴 */
-}
-function wxDesc(code){
-  const c=Number(code)||50;
-  if(c>=64&&c<=65) return '雷暴';
-  if((c>=60&&c<=63)||(c>=70&&c<=79)) return '有雨';
-  if(c>=90) return '有霧';
-  if(c===54) return '密雲';
-  if(c===53) return '多雲';
-  if(c>=50&&c<=52) return '短暫陽光';
-  if(c>=80&&c<=85) return '大致晴朗';
-  return '晴朗';
-}
-function renderWeatherCard(){
-  const d=new Date();
-  const ds=d.getMonth()+1+'月'+d.getDate()+'日';
-  return '<div class="wx-card" id="wxCard">'
-    + '<div class="wx-top"><span class="wx-city">香港 · 天氣</span><span class="wx-date">'+ds+'</span></div>'
-    + '<div class="wx-loading" id="wxBody">正在取得天氣…</div>'
-    + '</div>';
-}
-async function loadWeatherCard(){
-  const box=document.getElementById('wxBody');
-  if(!box) return;
-  try{
-    const r=await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc',{cache:'no-store'});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    const pick=(arr)=>{ const a=(arr&&arr.data)||[]; const hit=a.find(x=>x.place===WX_PLACE); return hit||a[0]||null; };
-    const t=pick(j.temperature), h=pick(j.humidity), u=pick(j.uvindex);
-    const code=(j.icon&&j.icon[0])||50;
-    const temp=t?Math.round(Number(t.value)):'--';
-    const hum=h?Math.round(Number(h.value)):'--';
-    const uv=u?Number(u.value):null;
-    const uvTxt=uv===null?'—':(uv<=2?'低':uv<=5?'中等':uv<=7?'高':uv<=10?'甚高':'極高');
-    box.outerHTML='<div id="wxBody">'
-      + '<div class="wx-main">'
-      +   '<div class="wx-ico">'+wxIconSVG(code)+'</div>'
-      +   '<div style="min-width:0">'
-      +     '<div class="wx-temp">'+temp+'<span>°C</span></div>'
-      +     '<div class="wx-desc">'+wxDesc(code)+'</div>'
-      +   '</div>'
-      + '</div>'
-      + '<div class="wx-sep"></div>'
-      + '<div class="wx-grid">'
-      +   '<div class="wx-cell"><span class="wx-k">濕度</span><span class="wx-v">'+hum+'%</span></div>'
-      +   '<div class="wx-cell"><span class="wx-k">紫外線</span><span class="wx-v">'+(uv===null?'—':uv)+' <span style="font-size:10px;font-weight:500;opacity:.7">'+uvTxt+'</span></span></div>'
-      +   '<div class="wx-cell"><span class="wx-k">更新</span><span class="wx-v" style="font-size:11.5px">'+String((j.updateTime||'').slice(11,16)||'—')+'</span></div>'
-      + '</div>'
-      + '</div>';
-  }catch(e){
-    box.textContent='暫時取不到天氣資料';
-    box.style.color='var(--text-muted)';
-  }
-}
-
+/* WX_BLOCK_MOVED: 這段 JS 已移到 <script> 內（之前誤插在 <style>，整個函式從未執行） */
 /* 轉賬詳情：照微訊 —— 強制白底黑字（唔跟主題），因為微訊本身就係白 */
 .tfv{background:#fff;color:#111;min-height:100%;padding:8px 24px 30px;
   display:flex;flex-direction:column;align-items:center;
   /* 蓋住 openPage 預設的深色底 */
   margin:-16px -16px 0;border-radius:0}
+
 .tfv-ico{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   margin:24px 0 20px;flex:0 0 auto}
 .tfv-ico.wait{border:3px solid #1aadf0;background:#fff}
@@ -8155,6 +8072,91 @@ function pushNotify(title, body){
   }catch(e){}
 }
 
+/* ═══ 個人主頁天氣卡 ═══
+   資料：香港天文台開放數據（data.weather.gov.hk，Access-Control-Allow-Origin: *，可直連）
+   圖標：內嵌 SVG，按 icon 碼自動換；全部帶動畫（太陽轉、雲飄、雨落、閃電）。
+   失敗時唔阻塞個人主頁 —— 只顯示一行灰字。 */
+const WX_PLACE='香港天文台';
+function wxIconSVG(code){
+  const c=Number(code)||50;
+  const sun=`<circle class="sun" cx="32" cy="32" r="11" fill="#fbbf24"/>
+    <g class="sun" stroke="#fbbf24" stroke-width="3" stroke-linecap="round">
+      <line x1="32" y1="8" x2="32" y2="2"/><line x1="32" y1="56" x2="32" y2="62"/>
+      <line x1="8" y1="32" x2="2" y2="32"/><line x1="56" y1="32" x2="62" y2="32"/>
+      <line x1="15" y1="15" x2="11" y2="11"/><line x1="49" y1="15" x2="53" y2="11"/>
+      <line x1="15" y1="49" x2="11" y2="53"/><line x1="49" y1="49" x2="53" y2="53"/>
+    </g>`;
+  const cloud=`<path class="cloud" d="M20 44c-5 0-9-3.6-9-8s4-8 9-8c1.6-6 7-10 13.5-10 7.5 0 13.5 5.6 14.5 12.8 4.4.4 8 4 8 8.6 0 4.8-4 8.6-9 8.6z"
+    fill="#94a3b8"/>`;
+  const cloudDark=`<path class="cloud" d="M20 44c-5 0-9-3.6-9-8s4-8 9-8c1.6-6 7-10 13.5-10 7.5 0 13.5 5.6 14.5 12.8 4.4.4 8 4 8 8.6 0 4.8-4 8.6-9 8.6z"
+    fill="#64748b"/>`;
+  const drops=`<g stroke="#38bdf8" stroke-width="2.8" stroke-linecap="round">
+    <line class="drop" x1="24" y1="48" x2="24" y2="54"/>
+    <line class="drop" x1="34" y1="48" x2="34" y2="54"/>
+    <line class="drop" x1="44" y1="48" x2="44" y2="54"/></g>`;
+  const bolt=`<path class="bolt" d="M34 46l-6 11h6l-3 9 11-13h-6l4-7z" fill="#fbbf24" stroke="#fbbf24" stroke-width="1"/>`;
+
+  if(c>=64&&c<=65) return `<svg viewBox="0 0 64 64">${cloudDark}${bolt}${drops}</svg>`;             /* 雷暴 */
+  if((c>=60&&c<=63)||(c>=70&&c<=79)) return `<svg viewBox="0 0 64 64">${cloudDark}${drops}</svg>`;  /* 有雨 */
+  if(c>=90) return `<svg viewBox="0 0 64 64">${cloud}${['<line x1="16" y1="52" x2="48" y2="52" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>','<line x1="20" y1="58" x2="44" y2="58" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" opacity=".6"/>'].join('')}</svg>`; /* 霧 */
+  if(c>=53&&c<=54) return `<svg viewBox="0 0 64 64">${cloud}</svg>`;                                 /* 多雲 */
+  if(c>=50&&c<=52) return `<svg viewBox="0 0 64 64"><g transform="translate(-8,-6) scale(.85)">${sun}</g><g transform="translate(10,14) scale(.72)">${cloud}</g></svg>`; /* 間晴 */
+  return `<svg viewBox="0 0 64 64">${sun}</svg>`;                                                    /* 晴 */
+}
+function wxDesc(code){
+  const c=Number(code)||50;
+  if(c>=64&&c<=65) return '雷暴';
+  if((c>=60&&c<=63)||(c>=70&&c<=79)) return '有雨';
+  if(c>=90) return '有霧';
+  if(c===54) return '密雲';
+  if(c===53) return '多雲';
+  if(c>=50&&c<=52) return '短暫陽光';
+  if(c>=80&&c<=85) return '大致晴朗';
+  return '晴朗';
+}
+function renderWeatherCard(){
+  const d=new Date();
+  const ds=d.getMonth()+1+'月'+d.getDate()+'日';
+  return '<div class="wx-card" id="wxCard">'
+    + '<div class="wx-top"><span class="wx-city">香港 · 天氣</span><span class="wx-date">'+ds+'</span></div>'
+    + '<div class="wx-loading" id="wxBody">正在取得天氣…</div>'
+    + '</div>';
+}
+async function loadWeatherCard(){
+  const box=document.getElementById('wxBody');
+  if(!box) return;
+  try{
+    const r=await fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const pick=(arr)=>{ const a=(arr&&arr.data)||[]; const hit=a.find(x=>x.place===WX_PLACE); return hit||a[0]||null; };
+    const t=pick(j.temperature), h=pick(j.humidity), u=pick(j.uvindex);
+    const code=(j.icon&&j.icon[0])||50;
+    const temp=t?Math.round(Number(t.value)):'--';
+    const hum=h?Math.round(Number(h.value)):'--';
+    const uv=u?Number(u.value):null;
+    const uvTxt=uv===null?'—':(uv<=2?'低':uv<=5?'中等':uv<=7?'高':uv<=10?'甚高':'極高');
+    box.outerHTML='<div id="wxBody">'
+      + '<div class="wx-main">'
+      +   '<div class="wx-ico">'+wxIconSVG(code)+'</div>'
+      +   '<div style="min-width:0">'
+      +     '<div class="wx-temp">'+temp+'<span>°C</span></div>'
+      +     '<div class="wx-desc">'+wxDesc(code)+'</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="wx-sep"></div>'
+      + '<div class="wx-grid">'
+      +   '<div class="wx-cell"><span class="wx-k">濕度</span><span class="wx-v">'+hum+'%</span></div>'
+      +   '<div class="wx-cell"><span class="wx-k">紫外線</span><span class="wx-v">'+(uv===null?'—':uv)+' <span style="font-size:10px;font-weight:500;opacity:.7">'+uvTxt+'</span></span></div>'
+      +   '<div class="wx-cell"><span class="wx-k">更新</span><span class="wx-v" style="font-size:11.5px">'+String((j.updateTime||'').slice(11,16)||'—')+'</span></div>'
+      + '</div>'
+      + '</div>';
+  }catch(e){
+    box.textContent='暫時取不到天氣資料';
+    box.style.color='var(--text-muted)';
+  }
+}
+
 /* ═══════════════ 節日特效 ═══════════════ */
 function applyFestive(){
   try{
@@ -8882,8 +8884,12 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +'<a class="about-item" data-action="linkCheck" data-arg="'+ANDROID_APK_URL+'" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>'
       +'</div></details>'
       +(amAdmin?'<button class="btn-ghost" data-action="openUserDetail" data-arg="'+escAttr(username)+'">管理員資料頁（含密碼）</button>':'');
-    openPage({title:'我的主頁',heroHTML,bodyHTML:renderWeatherCard()+bodyHTML,key:'profile:'+username});
-    setTimeout(loadWeatherCard,60);
+    /* 天氣卡包一層 try：就算天文台 API／SVG 有任何意外，
+       都唔可以連累整個個人主頁開唔到（之前就係咁撞到白屏）。 */
+    let _wxHtml='';
+    try{ _wxHtml=renderWeatherCard(); }catch(e){ _wxHtml=''; }
+    openPage({title:'我的主頁',heroHTML,bodyHTML:_wxHtml+bodyHTML,key:'profile:'+username});
+    if(_wxHtml) setTimeout(function(){ try{ loadWeatherCard(); }catch(e){} }, 80);
   } else if(fromAdmin&&amAdmin){
     /* v1.37：管理員後台點進某人 → 跟一般個人主頁「同一個版面」，
        只在下面多接一段管理用的區塊（密碼、封禁、帳號、日誌…）。 */
