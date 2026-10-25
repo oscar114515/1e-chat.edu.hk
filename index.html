@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-r6XJ/NMNPpJT7yQBbFzq0gAPT0eNeEz3WRkg2PcJx4E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-+kav+lHfv/yCP3/v6KeoCYMYcyGC/iB1fQpWiA+pWfg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -2780,8 +2780,15 @@ if(!window.__rippleReady){
 
 async function handleLogin(uArg,pArg){
   // uArg / pArg 是「網址登入」帶進來的；一般按登入鈕時不會傳，就讀輸入框
-  const u=(uArg!==undefined?String(uArg):loginUsername.value).trim().toLowerCase(),
+  let u=(uArg!==undefined?String(uArg):loginUsername.value).trim().toLowerCase(),
         p=(pArg!==undefined?String(pArg):loginPassword.value);
+  /* 1E 別名：帳號格式準備由 stu15 統一到 1E15。
+     過渡期兩種都可以登入，指向同一個帳號、同一個密碼。
+     接受 1e15 / 1E15 / 1e5 / 1E05（1-2 位數字，自動補零）。 */
+  try{
+    const _m=u.match(/^1e(\d{1,2})$/i);
+    if(_m) u='stu'+String(_m[1]).padStart(2,'0');
+  }catch(e){}
   loginError.textContent='';
   if(!u||!p){loginError.textContent='請輸入帳號與密碼';return;}
   loginBtn.disabled=true;loginBtn.textContent='登入中...';
@@ -10431,6 +10438,7 @@ const VERSION_HISTORY=[
 '個人主頁折疊分組：25 個入口收成三組可折疊 —— 👤 個人資料（5：頭像/密碼/反饋/字體/個人化）、📈 成長（4）、⋯ 更多（13），加上單獨顯示的「我的農場」和「班級動態／留言板」。點標題展開，再點收起',
 '積分拍賣改為只有管理員能用：普通同學打開會提示「積分拍賣由管理員發起」，入口移到管理員後台（商店旁邊的「拍賣」）',
 '釣魚／反應速度／記憶力搬到小遊戲：三款從個人主頁移到「小遊戲 → 單人遊戲」，跟俄羅斯方塊、2048 放在一起，不用先進個人主頁再找',
+'1E 帳號別名：準備把登入名由 stu15 統一到 1E15，過渡期兩種都可以用，指向同一個帳號同一個密碼。1E15 / 1e15 / 1E5 / 1e05 都認（1-2 位數字自動補零）。小遊戲頁面（game.html）同樣支援',
 '⚠ 修復：所有遊戲都進不去 —— 自設伺服器（wss://oscar-nas...）現在連不上，而所有房間操作都走那條連線，所以建房永遠卡住不返回（不是新遊戲的問題，原本的五子棋、2048 一樣開不了）。已把 meta/gamews 清空，全部改回 Firebase，遊戲立即恢復正常',
 '⚠ 再修：即使自設伺服器掛掉，遊戲也不應該玩不了。以前重試 4 次後雖然會「切換備援模式」，但只是打個招呼，實際所有房間操作仍然走去連死線 → 照樣卡死。現在降級時會真正清掉 WS 位址，同時 set/update 在降級後直接寫 Firebase —— 伺服器關機也能玩，只是慢一點',
 
