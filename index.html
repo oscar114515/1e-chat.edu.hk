@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-bd7qVyFIZ3vR7gaPxILqcrynmMPS10Ruq9pDB2MGHxQ=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kWJWzAJVl0zGUgQbyAAXeZ3Ifw5+fQ94UTqXJE39Bqw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -8557,10 +8557,9 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +'<div class="section-title">偏好</div>'
       +aiRow('字體', fontName, 'openFontPage', 'file')
       +'<div class="section-title">個人化</div>'
-      +aiRow('等級 · 稱號 · 心情', 'Lv.'+levelOf(me.exp)+' '+(me.title||''), 'openCustomizePage', 'star')
-      +aiRow('頭像框 · 名字特效', CUS_FRAME_NM[me.frame||'']||'無', 'openCustomizePage', 'image')
-      +aiRow('聊天背景', CUS_BG_NM[me.chatBg||'']||'預設', 'openCustomizePage', 'grid')
-      +aiRow('個人簡介', (me.bio||'').slice(0,18)||'未填', 'openCustomizePage', 'file')
+      +aiRow('個人化', 'Lv.'+levelOf(me.exp)
+          +(me.frame?(' · '+(CUS_FRAME_NM[me.frame]||'')):'')
+          +(me.chatBg?(' · '+(CUS_BG_NM[me.chatBg]||'')):''), 'openCustomizePage', 'star')
       +'<div class="section-title">成長</div>'
       +aiRow('成長中心', 'Lv.'+levelOf(me.exp)+'　·　徽章 / 成就 / 數據', 'openGrowthPage', 'score')
       +aiRow('排行榜', '積分 / 簽到 / 等級', 'openRankPage', 'poll')
@@ -10417,6 +10416,7 @@ const VERSION_HISTORY=[
 '反應速度防作弊：以前按住按鈕不放、見到畫面變綠才鬆手，可以測出 50-80 毫秒（人類極限約 150 毫秒，根本不可能）。現在改成「按下即計時」，按住不放再鬆手不算數，低於 80 毫秒會提示「太快了，是不是按住不放」，並且不加經驗',
 '聊天背景顏色加強：之前就算選了也幾乎看不到，因為六款背景的不透明度只有 8-12%，鋪在深色底上等於沒變。現在提高到 22-38%（深夜款更實），一選就明顯看到整個聊天區換色',
 '問題反饋改兩級：先選「是哪個頁面」（聊天室／小遊戲／個人主頁／積分商店／農場小遊戲／AI／其他），選了小遊戲再彈「具體是哪一款」（39 款全部列出）。管理員後台收到的反饋會顯示「📍 小遊戲（聊天室內）→ 五子棋」，不用再猜是哪裡壞了。順手移除了原本用 AI 判斷「是否胡說」的那步，它經常把正常描述（例「五子棋卡住」）誤殺',
+'個人化入口合併：以前個人主頁分開四行（等級·稱號·心情／頭像框·名字特效／聊天背景／個人簡介），其實點進去都是同一頁。現在合成一行「個人化」，副標題直接顯示摘要（例「Lv.2 · 霓虹 · 森林」），點進去七個區塊一次過改完',
 
 
 
