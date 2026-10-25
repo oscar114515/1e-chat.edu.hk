@@ -434,6 +434,15 @@ body.theme-light .seg button.sel{color:#fff}
 .gcard.playing{border-color:var(--gold);box-shadow:0 0 0 1px rgba(226,176,74,.35) inset}
 
 /* ══ v1.40 canvas 類遊戲的版面（大廳自由／單人）══ */
+.mgbox{padding:22px 16px;text-align:center;border-radius:18px;background:rgba(148,163,184,.10);
+  border:1px solid var(--border-strong);margin:12px 0;min-height:200px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:13px;transition:background .25s}
+.mgbox.go{background:rgba(34,197,94,.22);border-color:rgba(74,222,128,.6)}
+.mgbig{font-size:44px;line-height:1.1}
+.mgmsg{font-size:14px;color:var(--text-main);line-height:1.7}
+.mgnum{font-size:32px;font-weight:800;letter-spacing:6px;color:var(--text-main);font-variant-numeric:tabular-nums}
+.mgin{width:100%;max-width:220px;padding:12px 14px;border-radius:13px;background:var(--bg-input);
+  color:var(--text-main);border:1px solid var(--border-strong);font-size:18px;text-align:center;font-family:inherit}
 .dpad{width:56px;height:50px;border-radius:14px;border:1px solid var(--border-strong);
   background:var(--bg-input);color:var(--text-main);font-size:19px;font-family:inherit;cursor:pointer;
   transition:transform .12s ease,background .12s ease}
@@ -968,6 +977,9 @@ const GAMES=[
  {k:'breakout',n:'打磚塊',cat:'solo',min:1,max:1,ok:true,c:'#22c55e',ab:'磚',ic:'i-breakout'},
  {k:'memory',n:'記憶配對',cat:'solo',min:1,max:1,ok:true,c:'#a855f7',ab:'記',ic:'i-memory'},
  {k:'mines',n:'踩地雷',cat:'solo',min:1,max:1,ok:true,c:'#94a3b8',ab:'雷',ic:'i-mines'},
+ {k:'fishing',n:'釣魚',cat:'solo',min:1,max:1,ok:true,c:'#0ea5e9',ab:'魚',ic:''},
+ {k:'reaction',n:'反應速度',cat:'solo',min:1,max:1,ok:true,c:'#22c55e',ab:'⚡',ic:''},
+ {k:'memsolo',n:'記憶力',cat:'solo',min:1,max:1,ok:true,c:'#a855f7',ab:'記',ic:''},
  {k:'flappy',n:'像素小鳥',cat:'solo',min:1,max:1,ok:true,c:'#eab308',ab:'鳥'},
  {k:'dino',n:'小恐龍',cat:'solo',min:1,max:1,ok:true,c:'#5b6470',ab:'龍',ic:'i-dino'}
 ];
@@ -1538,7 +1550,9 @@ async function nextMsgId(){
   const seq=res.snapshot.val();return 'msg_'+String(seq).padStart(4,'0');
 }
 async function doCreate(){
+  console.log('[DC] 0 start, pick.g=', pick&&pick.g);
   const g=gameDef(pick.g);
+  if(!g){ console.log('[DC] gameDef 返回空'); return; }
   const fee=feeOf(g.k);
   /* v1.41 開房先收費：房主付，這筆就是彩池的第一份 */
   if(fee>0){
@@ -1553,7 +1567,9 @@ async function doCreate(){
       return;
     }
   }
+  console.log('[DC] 1 準備 push rid');
   const rid=push(ref(db,'games')).key;
+  console.log('[DC] 2 rid=', rid);
   const now=Date.now();
   const solo=isSolo(g.k);
   // 先建房、發邀請（不卡 AI 出題）；題目由 ensureTopic 在後台生成
@@ -1574,8 +1590,18 @@ async function doCreate(){
     const st=initGameState(room, seed);
     room.seed=seed; room.startedAt=sNow(); room.turn=st.turn; room.state=st.state;
   }
-  await set(ref(db,'games/'+rid), room);
-  if(solo){ joinRoom(rid); return; }        // 單人遊戲不發邀請，免得每次玩都洗版
+  console.log('[DC] 3 開始 set');
+  /* ⚠ 用 _fbSet + _fbRef 直接寫真 Firebase：
+     原本 set(ref(db,'games/'+rid), room) 在「自設伺服器未設定」的情況下會卡住不返回
+     （替身判斷 __room 之後仍然試連 WS → 永遠 pending）。
+     建房是核心流程，唔可以靠替身。 */
+  let _setErr=null;
+  try{
+    await _fbSet(_fbRef(db,'games/'+rid), room);
+  }catch(e){ _setErr=e; console.log('[DC] set 出錯:', e&&e.message); }
+  console.log('[DC] 4 set 完成', _setErr?('err='+_setErr.message):'ok');
+  if(_setErr){ try{ showNetBanner('⚠ 開房失敗：'+(_setErr.message||'未知錯誤')); }catch(_){} return; }
+  if(solo){ console.log('[DC] 5 joinRoom'); joinRoom(rid); console.log('[DC] 6 已 join'); return; }        // 單人遊戲不發邀請，免得每次玩都洗版
   // 發邀請訊息（走既有訊息系統：msg_ 編號 + createdAt 排序）
   let msgId='msg_'+now;
   try{ msgId=await nextMsgId(); }catch(e){}
@@ -3951,6 +3977,173 @@ function render2048(r,g,spec){
   window.__solo={game:'g2048',get state(){ return soloEng&&soloEng.st?{b:soloEng.st.b.slice(),score:soloEng.st.score,over:soloEng.st.over} : null; },move};
 }
 
+/* ── 釣魚（單人） ── */
+function renderFishing(r,g,spec){
+  if(soloEng&&soloEng.key===soloKey()&&soloEng.st) return;
+  soloUnmount();
+  soloEng={key:soloKey(),st:{caught:0,missed:0}};
+  appEl.innerHTML=`${soloBar(g)}
+    <div class="wrap">
+      <div class="solo-hud"><div class="sh"><b id="fsScore">0</b><span>釣到</span></div>
+        <div class="sh"><b id="fsMiss">0</b><span>跑了</span></div></div>
+      <div class="mgbox" id="fsBox">
+        <div class="mgbig" id="fsIco">🎣</div>
+        <div class="mgmsg" id="fsMsg">點「拋竿」，浮標出「❗」那刻立刻拉</div>
+        <button class="btn primary" id="fsBtn" style="max-width:200px">拋竿</button>
+      </div>
+      <div class="hint">拉太早＝空竿，超過 1.2 秒＝魚跑了</div>
+    </div>`;
+  soloBindLeave();
+  const box=appEl.querySelector('#fsBox'), ico=appEl.querySelector('#fsIco'),
+        msg=appEl.querySelector('#fsMsg'), btn=appEl.querySelector('#fsBtn'),
+        scEl=appEl.querySelector('#fsScore'), msEl=appEl.querySelector('#fsMiss');
+  let state='idle', biteAt=0, timer=null;
+  const st=soloEng.st;
+  btn.onclick=function(){
+    if(state==='idle'){
+      state='wait'; box.classList.remove('go');
+      ico.textContent='🌊'; msg.textContent='等魚上鉤…'; btn.textContent='拉竿';
+      timer=setTimeout(function(){
+        if(state!=='wait') return;
+        state='bite'; biteAt=Date.now(); box.classList.add('go');
+        ico.textContent='❗'; msg.textContent='就是現在！立刻拉！';
+      }, 1200+Math.random()*2600);
+    }else if(state==='wait'){
+      clearTimeout(timer); state='idle'; box.classList.remove('go');
+      st.missed++; msEl.textContent=st.missed;
+      ico.textContent='🎣'; msg.textContent='拉太早了，魚還沒咬'; btn.textContent='拋竿';
+    }else if(state==='bite'){
+      const dt=Date.now()-biteAt;
+      state='idle'; box.classList.remove('go');
+      if(dt<=1200){
+        st.caught++; scEl.textContent=st.caught;
+        const big=Math.random()<0.18;
+        ico.textContent=big?'🐟':'🐠';
+        msg.textContent=(big?'大魚！':'釣到了！')+'（'+dt+' 毫秒反應）';
+      }else{
+        st.missed++; msEl.textContent=st.missed;
+        ico.textContent='💨'; msg.textContent='太慢了，魚跑了（'+dt+' 毫秒）';
+      }
+      btn.textContent='再釣一次';
+    }
+  };
+  soloEng.unmount=function(){ try{ clearTimeout(timer); }catch(e){} };
+}
+
+/* ── 反應速度（單人） ── */
+function renderReaction(r,g,spec){
+  if(soloEng&&soloEng.key===soloKey()&&soloEng.st) return;
+  soloUnmount();
+  soloEng={key:soloKey(),st:{best:null,tries:0}};
+  appEl.innerHTML=`${soloBar(g)}
+    <div class="wrap">
+      <div class="solo-hud"><div class="sh"><b id="reBest">—</b><span>最佳</span></div>
+        <div class="sh"><b id="reTries">0</b><span>次數</span></div></div>
+      <div class="mgbox" id="reBox">
+        <div class="mgbig" id="reIco">⏱️</div>
+        <div class="mgmsg" id="reMsg">點「開始」，畫面變綠那一刻按下</div>
+        <button class="btn primary" id="reBtn" style="max-width:200px">開始</button>
+      </div>
+      <div class="hint">人類平均 250 毫秒。低於 150 是職業選手級。按住不放會被判異常。</div>
+    </div>`;
+  soloBindLeave();
+  const box=appEl.querySelector('#reBox'), ico=appEl.querySelector('#reIco'),
+        msg=appEl.querySelector('#reMsg'), btn=appEl.querySelector('#reBtn'),
+        bestEl=appEl.querySelector('#reBest'), triesEl=appEl.querySelector('#reTries');
+  let state='idle', goAt=0, timer=null;
+  const st=soloEng.st;
+  function start(){
+    state='wait'; box.classList.remove('go');
+    ico.textContent='🔴'; msg.textContent='等等…'; btn.textContent='不要按';
+    timer=setTimeout(function(){
+      if(state!=='wait') return;
+      state='go'; goAt=Date.now(); box.classList.add('go');
+      ico.textContent='🟢'; msg.textContent='按！'; btn.textContent='按！';
+    }, 1800+Math.random()*2600);
+  }
+  btn.onpointerdown=function(e){
+    try{ e.preventDefault(); }catch(_){}
+    if(state==='wait'){ clearTimeout(timer); state='idle'; box.classList.remove('go');
+      ico.textContent='⏱️'; msg.textContent='搶跑了，再試一次'; btn.textContent='開始'; return; }
+    if(state==='go'){
+      const ms=Date.now()-goAt;
+      state='idle'; box.classList.remove('go');
+      st.tries++; triesEl.textContent=st.tries;
+      ico.textContent='⚡';
+      if(ms<80){
+        msg.textContent=ms+' 毫秒 · 太快了，是不是按住不放？';
+      }else{
+        msg.textContent=ms+' 毫秒'+(ms<150?'　頂尖！':(ms<200?'　很快':(ms<300?'　正常':'　再練練')));
+        if(st.best===null||ms<st.best){ st.best=ms; bestEl.textContent=ms; }
+      }
+      btn.textContent='再測一次';
+      return;
+    }
+    start();
+  };
+  soloEng.unmount=function(){ try{ clearTimeout(timer); }catch(e){} };
+}
+
+/* ── 記憶力（單人） ── */
+function renderMemorySolo(r,g,spec){
+  if(soloEng&&soloEng.key===soloKey()&&soloEng.st) return;
+  soloUnmount();
+  soloEng={key:soloKey(),st:{level:0,best:0}};
+  appEl.innerHTML=`${soloBar(g)}
+    <div class="wrap">
+      <div class="solo-hud"><div class="sh"><b id="msLv">0</b><span>目前位數</span></div>
+        <div class="sh"><b id="msBest">0</b><span>最高關</span></div></div>
+      <div class="mgbox" id="msBox">
+        <div class="mgbig" id="msIco">🧠</div>
+        <div class="mgmsg" id="msMsg">點「開始」，記住螢幕上的數字，消失後打出來</div>
+        <div class="mgnum" id="msNum" style="display:none"></div>
+        <input class="mgin" id="msIn" placeholder="打出來" style="display:none" inputmode="numeric">
+        <button class="btn primary" id="msBtn" style="max-width:200px">開始</button>
+      </div>
+      <div class="hint">每過一關多一位數。七位以上已經很利害。</div>
+    </div>`;
+  soloBindLeave();
+  const ico=appEl.querySelector('#msIco'), msg=appEl.querySelector('#msMsg'),
+        num=appEl.querySelector('#msNum'), inp=appEl.querySelector('#msIn'),
+        btn=appEl.querySelector('#msBtn'), lvEl=appEl.querySelector('#msLv'),
+        bestEl=appEl.querySelector('#msBest');
+  const st=soloEng.st;
+  let digits=4, answer='', state='idle', t=null;
+  function startRound(){
+    answer='';
+    for(let i=0;i<digits;i++) answer+=Math.floor(Math.random()*10);
+    state='show'; lvEl.textContent=digits;
+    num.textContent=answer; num.style.display='block'; inp.style.display='none';
+    msg.textContent='記住…'; ico.textContent='👀'; btn.textContent='等等…';
+    t=setTimeout(function(){
+      num.style.display='none';
+      state='input';
+      inp.value=''; inp.style.display='block'; inp.focus();
+      msg.textContent='打出來（'+digits+' 位）'; ico.textContent='⌨️'; btn.textContent='確認';
+    }, 1400+digits*180);
+  }
+  btn.onclick=function(){
+    if(state==='idle'){ if(digits<4) digits=4; startRound(); return; }
+    if(state==='input'){
+      if(String(inp.value).trim()===answer){
+        st.best=Math.max(st.best,digits);
+        bestEl.textContent=st.best;
+        digits++;
+        ico.textContent='✅'; msg.textContent='對了！下一關 '+digits+' 位';
+        state='idle';
+        setTimeout(function(){ startRound(); }, 900);
+      }else{
+        ico.textContent='❌'; msg.textContent='錯了，答案是 '+answer+'（你到 '+digits+' 位）';
+        st.best=Math.max(st.best,digits-1);
+        bestEl.textContent=st.best;
+        state='idle'; inp.style.display='none'; btn.textContent='再玩一次'; digits=4;
+      }
+    }
+  };
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter') btn.click(); });
+  soloEng.unmount=function(){ try{ clearTimeout(t); }catch(e){} };
+}
+
 /* ── 記憶配對 ── */
 const MEM_SYMBOLS=['●','■','▲','★','◆','✚','✦','✖'];
 function memNew(){
@@ -4747,6 +4940,9 @@ function renderGame(r,g){
   else if(r.game==='mines') renderMines(r,g,spec);
   else if(r.game==='breakout') renderBreakout(r,g,spec);
   else if(r.game==='flappy') renderFlappy(r,g,spec);
+  else if(r.game==='fishing') renderFishing(r,g,spec);
+  else if(r.game==='reaction') renderReaction(r,g,spec);
+  else if(r.game==='memsolo') renderMemorySolo(r,g,spec);
   else { appEl.innerHTML=`<div class="topbar"><button class="back-btn" data-act="leave"><svg class="ico"><use href="#i-back"/></svg></button><h1>${escapeHtml(g.n)}</h1></div><div class="empty">這款遊戲的對局介面還在開發中</div>`; }
   const lb=appEl.querySelector('[data-act="leave"]'); if(lb)lb.onclick=leaveWithAsk;
 }
