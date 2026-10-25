@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-546FZUvw4s3hY7itrYw7oPxVMHMJ3JRoAQtAyT2qkj4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tFoLYpXoMmW3TxtUcaHekJu2lh4ZMN1dUy0k75u0nDU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -8981,7 +8981,7 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
-      +'<details class="about-grp"><summary><span class="ag-ico">⋯</span><span>更多</span><span class="ag-n">17</span><span class="ag-a">›</span></summary><div class="ag-body">'
+      +'<details class="about-grp"><summary><span class="ag-ico">⋯</span><span>更多</span><span class="ag-n">15</span><span class="ag-a">›</span></summary><div class="ag-body">'
       +aiRow('今日狀態', statusText(me)||'未設定（24 小時消失）', 'openStatusPage', 'bell')
       +aiRow('金句牆', allQuotes.length+' 句', 'openQuoteWall', 'heart')
       +aiRow('紅包榜', '誰發最多・誰搶最多', 'openRpRank', 'heart')
@@ -8989,15 +8989,15 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +aiRow('數據導出', '下載自己的紀錄', 'exportMyData', 'download')
       +aiRow('開啟通知', ('Notification' in window && Notification.permission==='granted')?'已開啟':'未開啟', 'askPushPermission', 'bell')
       +'<button class="btn-ghost" data-action="openLoginLink" data-arg="'+escAttr(username)+'">產生一次性登入連結</button>'
-      +aiRow('感謝清單', String(thanksList.length), 'openThanks', 'heart')
-      +aiRow('版本資訊', CURRENT_VERSION, 'openVersion', 'info')
       +'<a class="about-item" data-action="linkCheck" data-arg="'+ANDROID_APK_URL+'" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>'
-      /* MORE_MERGED: 原本放在頁面底部的四項，按用戶要求併入「更多」組 */
+      +'</div></details>'
+      /* FLAT8_FIX: 以下八項按用戶要求「不折疊」，直接列在頁面上，跟之前一樣 */
+      +'<button class="btn-ghost" data-action="openThanks">感謝清單</button>'
+      +'<button class="btn-ghost" data-action="openVersion">版本資訊 '+escapeHtml(CURRENT_VERSION||'')+'</button>'
       +'<button class="btn-ghost" data-action="openMyLogs">我的日誌</button>'
       +'<button class="btn-ghost" data-action="openMyNotices">我的公告申請</button>'
       +'<button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button>'
       +'<button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button>'
-      +'</div></details>'
       +(amAdmin?'<button class="btn-ghost" data-action="openUserDetail" data-arg="'+escAttr(username)+'">管理員資料頁（含密碼）</button>':'');
     /* 天氣卡包一層 try：就算天文台 API／SVG 有任何意外，
        都唔可以連累整個個人主頁開唔到（之前就係咁撞到白屏）。 */
@@ -10842,7 +10842,7 @@ const VERSION_HISTORY=[
 '下拉框全部去原生樣式：11 個下拉選單本來在安卓上會彈出系統白底大列表，同深色主題撞到七彩。現在統一改色系、自繪箭頭、聚焦時青色描邊',
 '消息輸入框加聚焦效果：打字時邊框會亮起青色光暈、底色微微偏藍，佔位字自動淡出，一眼就知自己正在輸入',
 '加密勾選由圓點改方框勾：以前只是一個紅點，看不出「已勾選」。現在是方框，勾選時紅底白色打勾，還帶彈一下的動畫',
-'個人主頁四項收進「更多」：我的日誌／公告申請／痕跡地圖／在線查詢，本來散在頁面最底部，現在全部收進「更多」組（13 → 17 項），一頁看完唔使再碌到底',
+'個人主頁整理：感謝清單、版本資訊由「更多」抽出來，跟我的日誌／公告申請／痕跡地圖／在線查詢、安卓版 App、產生一次性登入連結一齊平鋪在頁面上，唔需要展開就見到（「更多」由 17 收返做 15 項）',
 '私人 AI 發送鍵換新：由「送出」兩個字變成帶星星圖標的按鈕，星星會閃、SEND 四個字母逐個亮。只用在私人 AI 對話，其他地方的發送鍵不變',
 '⚠ 修復：所有遊戲都進不去 —— 自設伺服器（wss://oscar-nas...）現在連不上，而所有房間操作都走那條連線，所以建房永遠卡住不返回（不是新遊戲的問題，原本的五子棋、2048 一樣開不了）。已把 meta/gamews 清空，全部改回 Firebase，遊戲立即恢復正常',
 '⚠ 再修：即使自設伺服器掛掉，遊戲也不應該玩不了。以前重試 4 次後雖然會「切換備援模式」，但只是打個招呼，實際所有房間操作仍然走去連死線 → 照樣卡死。現在降級時會真正清掉 WS 位址，同時 set/update 在降級後直接寫 Firebase —— 伺服器關機也能玩，只是慢一點',
