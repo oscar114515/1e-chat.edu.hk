@@ -5,14 +5,21 @@ title 安裝：開機自動啟動 1E Lobby
 
 REM ═══════════════════════════════════════════════════════════
 REM  把「1-start-lobby.bat」註冊成開機任務
+REM  · 雙擊即可，會自己彈 UAC（不用右鍵「以管理員身份執行」）
 REM  · 以 SYSTEM 身份執行 → 不用登入桌面也會跑
 REM  · 開機時觸發，不需要等任何人按鍵
 REM  · 崩潰後由 start-lobby.bat 自己重啟
-REM
-REM  ⚠ 必須「以管理員身份執行」，否則 schtasks 會失敗
 REM ═══════════════════════════════════════════════════════════
 
 cd /d "%~dp0"
+
+REM ── 自動提權：唔係管理員就重新以管理員開啟自己 ──
+net session >nul 2>&1
+if errorlevel 1 (
+  echo 需要管理員權限，正在重新開啟...
+  powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs" >nul 2>&1
+  exit /b
+)
 
 echo.
 echo ================================================
