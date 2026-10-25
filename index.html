@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-jOceHqWZGNgHbixRqMGE3kdzkSDag74nb/VJX0+gtb4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-nmJfPBhyVC4ww4j0xe2MKhsJVoC0FRcX33kWUGQE/Tw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -231,12 +231,12 @@ body.theme-light .title-tag{background:rgba(168,85,247,.12);color:#7c3aed}
 .nm-glow{color:#93c5fd;text-shadow:0 0 7px rgba(96,165,250,.85),0 0 14px rgba(59,130,246,.5);font-weight:700}
 .nm-fire{background:linear-gradient(180deg,#fbbf24,#ef4444);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
 /* 聊天背景 */
-#chatBox.bg-aurora{background:linear-gradient(160deg,rgba(56,189,248,.10),rgba(168,85,247,.10),rgba(244,114,182,.09)) !important}
-#chatBox.bg-sunset{background:linear-gradient(160deg,rgba(251,146,60,.12),rgba(239,68,68,.09)) !important}
-#chatBox.bg-forest{background:linear-gradient(160deg,rgba(74,222,128,.11),rgba(16,185,129,.08)) !important}
-#chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.55),rgba(15,23,42,.75)) !important}
-#chatBox.bg-paper{background:linear-gradient(160deg,rgba(250,250,245,.9),rgba(245,240,230,.9)) !important}
-body.theme-light #chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.14),rgba(15,23,42,.20)) !important}
+#chatBox.bg-aurora{background:linear-gradient(160deg,rgba(56,189,248,.30),rgba(168,85,247,.26),rgba(244,114,182,.22)) !important}
+#chatBox.bg-sunset{background:linear-gradient(160deg,rgba(251,146,60,.34),rgba(239,68,68,.26)) !important}
+#chatBox.bg-forest{background:linear-gradient(160deg,rgba(34,197,94,.34),rgba(16,185,129,.26)) !important}
+#chatBox.bg-night{background:linear-gradient(160deg,rgba(15,23,42,.88),rgba(2,6,23,.95)) !important}
+#chatBox.bg-paper{background:linear-gradient(160deg,rgba(252,250,244,.97),rgba(244,238,226,.97)) !important}
+body.theme-light #chatBox.bg-night{background:linear-gradient(160deg,rgba(51,65,85,.30),rgba(15,23,42,.38)) !important}
 /* 個人化頁的選項網格 */
 .cus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:8px 0 4px}
 .cus-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 6px;border-radius:14px;
@@ -10364,6 +10364,8 @@ const VERSION_HISTORY=[
 '聊天背景修正：以前選了背景（極光、森林、深夜…）完全看不到，就算刷新也一樣。原因是有一行 `#chatBox{background:transparent !important}`（為了讓頁面背景透出來），`!important` 把六款背景全部蓋掉了。現在六條背景規則也加上 `!important`，選了就立即看到，刷新後仍然保留',
 '每日聖言：班級動態最上面那句「每日一句」換成天主教每日聖言（73 句，附出處，例如「聖詠集46：2」）。按年積日循環，73 句全部都會輪到 —— 原本那種寫法用「日期」取（1-31），只會用到前 31 句，後面 42 句永遠不會出現',
 '反應速度防作弊：以前按住按鈕不放、見到畫面變綠才鬆手，可以測出 50-80 毫秒（人類極限約 150 毫秒，根本不可能）。現在改成「按下即計時」，按住不放再鬆手不算數，低於 80 毫秒會提示「太快了，是不是按住不放」，並且不加經驗',
+'聊天背景顏色加強：之前就算選了也幾乎看不到，因為六款背景的不透明度只有 8-12%，鋪在深色底上等於沒變。現在提高到 22-38%（深夜款更實），一選就明顯看到整個聊天區換色',
+
 
 
 
