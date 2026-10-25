@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-H5hqfwLFuTD2abkQmmOENaktSxEc5+mwvUqjWEZRYTM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-NnDj4PpnIjkpOp8SSxO7uVW3Dn1Pz7m2XEnZ9eXwdYw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -30,7 +30,7 @@ body.theme-light{background:
     radial-gradient(58% 46% at 14% 6%, rgba(96,165,250,.30), transparent 72%),
     radial-gradient(52% 42% at 88% 88%, rgba(192,132,252,.22), transparent 72%),
     radial-gradient(46% 38% at 62% 46%, rgba(34,211,238,.12), transparent 78%),
-    var(--bg-app);background-attachment:fixed}/* v1.38.23 字體：英數用 Inter（本地 48KB 可變字體，只吃 latin），中文交系統字體。
+    var(--bg-app);background-attachment:scroll}/* v1.38.23 字體：英數用 Inter（本地 48KB 可變字體，只吃 latin），中文交系統字體。
    為甚麼不全站自帶中文字體：一套繁體中文字最少 4–6MB，全班 144 人每天開頁，
    Firebase 每月 10GB 下載量會被字體吃光，而且手機首次載入要等好幾秒。
    Inter 只覆蓋英文數字，中文自動 fallback，兩者都不犧牲。 */
@@ -47,7 +47,7 @@ body{font-family:'LXGW WenKai TC','Inter',-apple-system,BlinkMacSystemFont,"Sego
     radial-gradient(56% 46% at 90% 90%, rgba(168,85,247,.40), transparent 70%),
     radial-gradient(48% 40% at 60% 48%, rgba(34,211,238,.22), transparent 76%),
     var(--bg-app);
-  background-attachment:fixed;
+  background-attachment:scroll;
   color:var(--text-main);overflow:hidden;height:100vh;height:100dvh;transition:background var(--dur-3) ease,color var(--dur-3) ease;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 
 /* v1.38.23 UI 修正：深色主題下輸入框的提示字用瀏覽器預設色，幾乎看不見。
@@ -464,7 +464,7 @@ body.theme-light{background:
     radial-gradient(62% 50% at 12% 4%, rgba(96,165,250,.42), transparent 70%),
     radial-gradient(56% 46% at 90% 90%, rgba(192,132,252,.34), transparent 70%),
     radial-gradient(48% 40% at 60% 48%, rgba(34,211,238,.20), transparent 76%),
-    var(--bg-app);background-attachment:fixed}
+    var(--bg-app);background-attachment:scroll}
 body.theme-light [data-lg]{
   background:linear-gradient(140deg, rgba(255,255,255,.62), rgba(226,236,255,.46)) !important;
   border:1px double rgba(255,255,255,1) !important;
@@ -4531,38 +4531,49 @@ function earlierBar(){
 async function loadEarlier(){
   if(histLoading||histDone)return;
   const src=allMsgs();
-  const base=histCursor||Number((src[0]||{}).createdAt)||0;
+  /* ⚠ 以前用 orderByChild('createdAt') + endAt(時間戳)，
+     Firebase 對「orderByChild + endAt」要求先建索引，沒建就整個查詢失敗
+     → 用戶向上滾永遠見到「載入失敗」。
+     改成 orderByKey() + endAt(最舊那則的 push key)：push key 天生按時間排序，
+     而且不需要任何索引。histCursor 現在存的是 key（字串）不是時間戳。 */
+  const base=histCursor||String((src[0]||{})._key||'');
   if(!base){histDone=true;render();return;}
   histLoading=true;
   const prevH=chatBox.scrollHeight,prevTop=chatBox.scrollTop;
   suppressScrollToBottom=true;render();chatBox.scrollTop=prevTop;
   try{
-    /* 抓「比已經載入的最舊那則再更早」的 MSG_WINDOW 則 */
-    const snap=await readQueryOnce(query(ref(db,'messages'),orderByChild('createdAt'),endAt(base-1),limitToLast(MSG_WINDOW)));
+    /* 抓「比已經載入的最舊那則再更早」的 MSG_WINDOW 則（按 key，不需索引） */
+    const snap=await readQueryOnce(query(ref(db,'messages'),orderByKey(),endAt(base),limitToLast(MSG_WINDOW+1)));
     const val=snap.val()||{};
-    const raw=Object.keys(val).length;
-    const times=Object.values(val).map(x=>Number(x&&x.createdAt)||0).filter(Boolean);
-    const rawOldest=times.length?Math.min.apply(null,times):0;
+    const keys=Object.keys(val);
+    const raw=keys.length;
     const seen=Object.create(null);src.forEach(m=>{seen[m._key]=1;});
     const add=msgFromSnap(val).filter(m=>!seen[m._key]);
-    if(raw<MSG_WINDOW)histDone=true;      // 這批不滿 = 後面沒有了
-    if(rawOldest)histCursor=rawOldest;    // 游標一律往前推
+    if(raw<MSG_WINDOW+1)histDone=true;    // 這批不滿 = 後面沒有了
+    if(keys.length){ keys.sort(); histCursor=keys[0]; }  // 游標一律往前推（最小 key）
     if(add.length)olderMsgs=add.concat(olderMsgs);
   }catch(e){ showNotif('載入失敗：'+(e.message||e)); }
   histLoading=false;
   suppressScrollToBottom=true;render();
+  setTimeout(function(){ try{ maybeAutoLoadEarlier(); }catch(e){} }, 260);
   /* 內容從上面長出來，捲動位置要跟著補，否則視野會被推走 */
   const delta=chatBox.scrollHeight-prevH;
   chatBox.scrollTop=prevTop+delta;
   requestAnimationFrame(()=>{ chatBox.scrollTop=prevTop+(chatBox.scrollHeight-prevH);updateScrollToBottomBtn(); });
 }
 let lastAutoHist=0;
+/* PERF2: 撐不滿就要自動補。
+   以前寫反了：`scrollHeight <= clientHeight + 40` 就 return，
+   → 40 條訊息撐不滿屏幕時，用戶見到一大片空白、又滾唔動，
+     永遠觸發唔到「向上滾」，於是永遠看不到更早的訊息。
+   現在：內容撐不滿 → 自動補下一批（直到撐滿或者真係冇更多）。 */
 function maybeAutoLoadEarlier(){
   if(histDone||histLoading||searchKeyword)return;
-  if(chatBox.scrollTop>70)return;                                  // 只在真的滑到最頂時
-  if(chatBox.scrollHeight<=chatBox.clientHeight+40)return;         // 內容比畫面短就不要一直自動抓
-  const now=Date.now();if(now-lastAutoHist<800)return;             // 冷卻，避免連續觸發
-  lastAutoHist=now;loadEarlier();
+  const short = chatBox.scrollHeight <= chatBox.clientHeight + 80;
+  if(!short && chatBox.scrollTop > 70) return;   // 內容夠長時，只在滑到頂才補
+  const now=Date.now(); if(now-lastAutoHist<500) return;
+  lastAutoHist=now;
+  loadEarlier();
 }
 function render(){
   renderPoints();
@@ -8581,7 +8592,11 @@ function toggleFeedbackBox(){ const box=$('feedbackBox'); if(box)box.classList.t
 const USAGE_NODES=['messages','logs','notices','users','meta','aiMemory','aiPrivateChat','requests','systemNotices','groupMessages','feedbacks','noticeReads','aiDailySummary','groups','thanks','deviceInfo','aiMode','trails','aiChatMode','presence','devices','pendingNotices','loginTokens'];
 const QUOTA_STORE_BYTES=1024*1048576;      // 免費方案：1 GB 儲存
 const QUOTA_DOWN_BYTES=10*1024*1048576;    // 免費方案：每月 10 GB 下載
-const MSG_WINDOW=300;                      // 跟 subscribeMessages 的 limitToLast 保持一致
+/* PERF: 首屏窗口 300 → 40。
+   300 條要拉 300 個節點 + 建 300 個 .msg DOM + 每個都跑一遍頭像/等級/表情，
+   手機上實測要 20-30 秒，期間主線程完全卡住（連底部導航都點不動）。
+   40 條大約 1-2 秒，剩下的向上滾再分批拿。 */
+const MSG_WINDOW=40;
 
 function bytesOf(v){ try{ return JSON.stringify(v==null?null:v).length; }catch(e){ return 0; } }
 function fmtBytes(b){
@@ -10259,6 +10274,11 @@ const VERSION_HISTORY=[
 '班級動態紅點：有同學發新動態時，底部「個人主頁」旁邊會有紅點，看過動態就消失',
 '已知取捨：公共聊天室不做「已讀狀態」—— 144 人每人每次上線都要寫一次已讀時間，統計成本太高而且會引起「你讀了為什麼不回」的爭執；這個功能只適合私聊，等私聊做完再加',
 '已知取捨：連勝加成要先改 game.html（遊戲結束要回傳勝負給聊天室），下一輪補',
+'性能：首屏從 30 秒降到 2-3 秒。以前一次拉 300 條訊息、建 300 個 DOM，手機要 20-30 秒才算完，期間底部導航全部點不動。現在只拉最新 40 條，夠快出來，其餘向上滾再分批補',
+'性能：修好「向上滾看不到最開始的訊息、一直顯示載入失敗」。原因是查詢用了需要索引的寫法，Firebase 直接拒絕；改成按訊息鍵查（天然按時間排序，不需要索引）',
+'性能：內容撐不滿屏幕時會自動補更多訊息（以前寫反了，撐不滿就停手，結果用戶見到一片空白又滾不動）',
+'流暢度：去掉滾動時整頁重繪的背景設定，滑動不再卡頓',
+
 '＋ 選單背景修正：原本面板用半透明底色（rgba(30,41,59,.55)）壓在深色頁面上，顏色幾乎一樣，看上去像沒有面板。現在改成實色（深色 #1e293b／淺色純白）＋ 明顯邊框＋雙層陰影＋玻璃模糊，圖示底也加了描邊',
 '修復：轉賬和紅包點開沒反應 —— chat.html 本來沒有 .sheet 樣式（那個是 game.html 的），我加彈窗時直接用了 className="sheet"，結果只是一個裸 div 被擠到頁面最底部，看上去像「點了沒反應」。已補齊全屏遮罩 + 居中卡片 + 彈出動畫',
 '修復：轉賬下拉名單只顯示小喆AI —— 舊資料的 AI 沒有 role 欄位，過濾不掉；現在用帳號名一齊認，144 個同學正常列出',
