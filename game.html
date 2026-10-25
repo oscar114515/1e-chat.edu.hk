@@ -2375,17 +2375,27 @@ function createSumoLobby(){
       if(dist<minD && dist>0.01){
         const nx=dx/dist, ny=dy/dist;
         const overlap=minD-dist;
-        meP.x+=nx*overlap*0.55; meP.y+=ny*overlap*0.55;
-        meP.vx+=nx*260; meP.vy+=ny*260;
-        pushing=0.25;
+        /* 位置推開（唔可以重疊）*/
+        meP.x+=nx*overlap*0.7; meP.y+=ny*overlap*0.7;
+        /* 力：越貼越大力，但上限；除咗方向，亦加一點切向位（唔會正面死頂）*/
+        const tx=-ny, ty=nx;
+        const side=(meP.vx*tx+meP.vy*ty)>0?1:-1;
+        const push=Math.min(420, 180+overlap*24);
+        meP.vx+=nx*push+tx*side*70;
+        meP.vy+=ny*push+ty*side*70;
+        pushing=0.22;
+        shake=Math.max(shake,4);
       }
     }
-    /* 貼牆時滑動 */
+    /* SUMO_FIX2: 之前每幀 vx*=0.3 但加速度照加，結果永遠貼住邊一路滑（繞圈）。
+       改成「法向分量清零、切向保留」——撞牆就停，但可以沿住牆行。 */
     const dn=Math.hypot(meP.x,meP.y);
     if(dn>R-PR*0.4 && dn>0.01){
       const nx=meP.x/dn, ny=meP.y/dn;
       meP.x=nx*(R-PR*0.4); meP.y=ny*(R-PR*0.4);
-      meP.vx*=0.3; meP.vy*=0.3;
+      const vn=meP.vx*nx+meP.vy*ny;      /* 向外速度 */
+      if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }   /* 只扣向外，唔會反彈 */
+      meP.vx*=0.82; meP.vy*=0.82;        /* 牆面摩擦 */
     }
 
     if(pushing>0) pushing-=dt;
@@ -2506,10 +2516,13 @@ function createSumoLobby(){
       try{
         unsubLive=onValue(ref(db,'lobbyLive/sumo'),snap=>{
           const v=snap.val()||{};
-          others=v;
-          if(v&&v[me.username]&&typeof v[me.username].score==='number'&&v[me.username].score>score){
-            score=v[me.username].score;
-          }
+          /* SUMO_FIX1: 之前冇剔走自己，lobbyLive 入面有自己嘅節點，
+             本地又畫一次 → 同一個名出現兩個圈，睇落似「兩個都喺度追」。 */
+          const mine=v[me.username]||null;
+          const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+          if(mine&&typeof mine.score==='number'&&mine.score>score) score=mine.score;
         });
       }catch(e){}
       running=true; lastT=performance.now();
