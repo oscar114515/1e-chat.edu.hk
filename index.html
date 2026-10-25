@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-smnApUl/wYnCS7iXcZnJGhcpRch9emneQ1zkUgO1yUo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-S3G4SKWUNn1FtUxZlHeBX+Jy6EufLIbVViTQny0wHXk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -735,6 +735,10 @@ body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 .meta .enc-tag{background:rgba(220,38,38,.2);color:var(--warn-tx);padding:1px 6px;border-radius:var(--r-0);font-size:10px;font-weight:600}
 .meta .ai-tag{background:rgba(102,204,255,.25);color:var(--ai);padding:1px 6px;border-radius:var(--r-0);font-size:10px;font-weight:700}
 .bubble{padding:9px 13px;border-radius:var(--r-2);font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;color:#fff;max-width:100%}
+/* 轉賬／紅包係「裸卡片」，唔應該再有外層氣泡的底色、內距、圓角
+   （否則會見到紫色框住個橙卡，完全唔似微訊） */
+.bubble.card-bubble{padding:0!important;background:transparent!important;border-radius:0!important;
+  box-shadow:none!important;border:none!important}
 .msg.me .bubble{border-bottom-right-radius:4px}
 .msg:not(.me) .bubble{border-bottom-left-radius:4px}
 .bubble .mention{background:rgba(255,255,255,.25);padding:1px 5px;border-radius:var(--r-0);font-weight:600}
@@ -4754,7 +4758,7 @@ function render(){
     if(m.recalled){
       return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta">${escapeHtml(m.displayName||m.username)} · ${time}</div><div class="bubble" style="background:transparent;border:1px dashed rgba(148,163,184,.4);color:var(--text-muted);font-size:12px;font-style:italic">已撤回一則訊息</div></div></div>`;
     }
-    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta"><span class="${uvNm.trim()||'nm-none'}">${escapeHtml(m.displayName||m.username)}</span>${uvLvHtml}${uvTitle}${uvMood}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble${m.type==='sticker'?' sticker-bubble':''}" style="background:${m.type==='sticker'?'transparent':shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
+    return `<div class="msg ${isMe?'me':''}" data-msgid="${escAttr(m.id)}"><div class="${avatarCls}" style="background:${isDeletedUser?'#475569':shownColor}" data-action="openUserProfile" data-arg="${escAttr(m.username)}">${avatarHTML(m)}</div><div class="bubble-wrap"><div class="meta"><span class="${uvNm.trim()||'nm-none'}">${escapeHtml(m.displayName||m.username)}</span>${uvLvHtml}${uvTitle}${uvMood}${realNameTag}${classTag}${roleTag} · ${time}${deletedTag}${encTag}${aiTag}</div><div class="bubble${m.type==='sticker'?' sticker-bubble':''}${(m.type==='transfer'||m.type==='redpacket')?' card-bubble':''}" style="background:${(m.type==='sticker'||m.type==='transfer'||m.type==='redpacket')?'transparent':shownColor}">${body}</div>${checkingHtml}${reactionsHTML(m.id)}</div></div>`;
   }).join('');
   /* v1.38.5：剛從別的頁面返回聊天室時，位置是刻意還原到原處的，
      不應該立刻被「新訊息自動捲到底」搶走，所以鎖 600ms。 */
@@ -10584,6 +10588,8 @@ const VERSION_HISTORY=[
 '紅包轉賬照微訊重做（聊天室）：兩個氣泡同一種橙（#e8863a）—— 轉賬左邊白色圓加雙向箭頭、大金額 `¥N`、「請收款／已收款」，左下角「WeChat 轉賬」；紅包左邊紅色小方塊（中間一條金線）、祝福語做標題，左下角「微信紅包」',
 '轉賬改成「待收款」流程：以前一轉就即刻為對方加分，無得確認、亦都唔似微訊。現在發出只扣自己分、訊息標記 received:false；對方點開詳情按「收款」才真正入帳（並記錄收款時間）。轉賬詳情照微訊做白底：待收是藍色圓圈時鐘＋綠底「收款」按鈕，已收是綠色打勾＋「資金已存入餘額」＋轉賬／收款時間兩行',
 '節日特效打遊戲時自動收起：南瓜／雪花原本 z-index 300，比小遊戲覆蓋層（200）高，打遊戲時會喺畫面上飄。現在降到 150，而且一開小遊戲就直接移除節點，關掉遊戲才重新加返',
+'收款後氣泡變灰：照微訊 —— 轉賬按了「收款」之後，聊天室那條氣泡整塊變淺灰（連金額同「已收款」都轉灰白）；紅包自己領過或者已領完，一樣變淺灰，紅色小方塊都褪色',
+'轉賬紅包去掉外層氣泡：以前成個橙卡被聊天氣泡的底色（每人自訂顏色）框住，睇落去似紫色邊。現在這兩種訊息用「裸卡片」，外層氣泡唔再上色、冇內距、冇圓角',
 '⚠ 修復：所有遊戲都進不去 —— 自設伺服器（wss://oscar-nas...）現在連不上，而所有房間操作都走那條連線，所以建房永遠卡住不返回（不是新遊戲的問題，原本的五子棋、2048 一樣開不了）。已把 meta/gamews 清空，全部改回 Firebase，遊戲立即恢復正常',
 '⚠ 再修：即使自設伺服器掛掉，遊戲也不應該玩不了。以前重試 4 次後雖然會「切換備援模式」，但只是打個招呼，實際所有房間操作仍然走去連死線 → 照樣卡死。現在降級時會真正清掉 WS 位址，同時 set/update 在降級後直接寫 Firebase —— 伺服器關機也能玩，只是慢一點',
 
