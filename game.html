@@ -975,7 +975,7 @@ const GAMES=[
  {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
  {k:'fish',n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚'},
  {k:'bombzone',n:'炸彈人',cat:'lobby',min:1,max:0,ok:false,c:'#f97316',ab:'爆'},
- {k:'sumo',n:'相撲推擠',cat:'lobby',min:1,max:0,ok:false,c:'#78716c',ab:'角'},
+ {k:'sumo', n:'相撲推擠',cat:'lobby',min:1,max:0,ok:false,c:'#78716c',ab:'角', ok:true},
  {k:'paint',n:'塗地大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#ec4899',ab:'色'},
 
  /* ── 單人遊戲（一個人玩，其他人可觀戰）── */
@@ -2248,7 +2248,307 @@ function renderLobbyGame(){
 }
 
 /* ===== 遊戲清單 ===== */
-const LOBBY_ENGINES={ snake:createSnakeLobby };
+/* ═══ 相撲推擠（sumo）—— 第一個 3D 感聯機遊戲 ═══
+   玩法：所有人在一個圓形擂台，互相撞，把人推出圈外就得一分。
+   渲染：Canvas 2D 做偽 3D —— 斜投影地面 + 球體徑向漸變 + 橢圓陰影。
+   同步：每人只寫自己的座標到 lobbyLive/sumo/{u}，撞擊由「被撞者」本地判定，
+         所以不會有兩邊同時改同一個人的問題。 */
+function createSumoLobby(){
+  const R=210;                 /* 擂台半徑（世界座標） */
+  const PR=16;                 /* 球半徑 */
+  const K=0.55;                /* 縱向壓縮（斜視角） */
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let alive=true, score=0;
+  let meP={x:0,y:0,vx:0,vy:0};
+  let liveRef=null, unsubLive=null, unsubScore=null;
+  let others={};               /* username → {x,y,name,color,at} */
+  let lastT=0, keys={x:0,y:0}, pushing=0;
+  let popups=[];               /* 被撞飛的小字 */
+  let shake=0;
+
+  function worldToScreen(x,y){
+    const s=Math.min(cw/(R*2.5), ch/(R*2.5*K*2))*1.0;
+    return {sx:cw/2+x*s, sy:ch/2+y*s*K, s:s};
+  }
+  function randSpawn(){
+    const a=Math.random()*Math.PI*2, r=Math.sqrt(Math.random())*R*0.62;
+    return {x:Math.cos(a)*r, y:Math.sin(a)*r};
+  }
+
+  /* ── 畫地面：斜格 + 紅圈 ── */
+  function drawArena(){
+    const c=worldToScreen(0,0), s=c.s;
+    /* 外圈陰影 */
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(c.sx,c.sy+c.s*14,R*s*1.06,R*s*K*1.06,0,0,7);
+    ctx.fillStyle='rgba(0,0,0,.35)'; ctx.filter='blur(10px)'; ctx.fill();
+    ctx.restore();
+
+    /* 擂台面：徑向漸變（中心亮 → 邊暗），做出凹面感 */
+    const g=ctx.createRadialGradient(c.sx,c.sy-s*20,10,c.sx,c.sy,R*s);
+    g.addColorStop(0,'#243447'); g.addColorStop(.65,'#1a2536'); g.addColorStop(1,'#0f1620');
+    ctx.beginPath();
+    ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.fillStyle=g; ctx.fill();
+
+    /* 斜格線 */
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7); ctx.clip();
+    ctx.strokeStyle='rgba(120,160,210,.09)'; ctx.lineWidth=1;
+    const step=42;
+    for(let gx=-R;gx<=R;gx+=step){
+      const a=worldToScreen(gx,-R), b=worldToScreen(gx,R);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+    }
+    for(let gy=-R;gy<=R;gy+=step){
+      const a=worldToScreen(-R,gy), b=worldToScreen(R,gy);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+    }
+    ctx.restore();
+
+    /* 邊界圈：外紅內青，危險時脈動 */
+    ctx.beginPath();
+    ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.strokeStyle='rgba(248,113,113,.85)'; ctx.lineWidth=Math.max(2,s*3.2); ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(c.sx,c.sy,R*s*0.965,R*s*K*0.965,0,0,7);
+    ctx.strokeStyle='rgba(56,189,248,.35)'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+
+  /* ── 畫一顆球（立體感：投影 + 徑向漸變 + 高光）── */
+  function drawBall(x,y,color,r,isMe,label){
+    const p=worldToScreen(x,y), s=p.s;
+    const rr=r*s;
+    /* 地面投影 */
+    ctx.beginPath();
+    ctx.ellipse(p.sx,p.sy+rr*0.55, rr*0.95, rr*0.42,0,0,7);
+    ctx.fillStyle='rgba(0,0,0,.42)'; ctx.filter='blur(4px)'; ctx.fill();
+    ctx.filter='none';
+    /* 球體 */
+    const g=ctx.createRadialGradient(p.sx-rr*0.35,p.sy-rr*0.45,rr*0.1,p.sx,p.sy,rr*1.05);
+    g.addColorStop(0,'#ffffff');
+    g.addColorStop(0.28,color);
+    g.addColorStop(1,'rgba(0,0,0,.55)');
+    ctx.beginPath(); ctx.arc(p.sx,p.sy,rr,0,7); ctx.fillStyle=g; ctx.fill();
+    /* 邊光 */
+    ctx.beginPath(); ctx.arc(p.sx,p.sy,rr,0,7);
+    ctx.strokeStyle=isMe?'rgba(56,189,248,.95)':'rgba(255,255,255,.25)';
+    ctx.lineWidth=isMe?2.4:1.2; ctx.stroke();
+    /* 高光點 */
+    ctx.beginPath(); ctx.arc(p.sx-rr*0.32,p.sy-rr*0.4,rr*0.18,0,7);
+    ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fill();
+    /* 名字 */
+    if(label){
+      ctx.font='600 '+Math.max(10,s*13)+'px Inter,sans-serif';
+      ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,.92)';
+      ctx.fillText(label,p.sx,p.sy-rr-6);
+    }
+  }
+
+  function step(dt){
+    /* 自己移動 */
+    const acc=1450;
+    meP.vx+=keys.x*acc*dt; meP.vy+=keys.y*acc*dt;
+    const fr=Math.pow(0.0016,dt);
+    meP.vx*=fr; meP.vy*=fr;
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+
+    /* 出界判定（自己）*/
+    const d=Math.hypot(meP.x,meP.y);
+    if(d>R+PR*0.6){
+      alive=false;
+      score=Math.max(0,score-1);
+      const sp=randSpawn(); meP.x=sp.x; meP.y=sp.y; meP.vx=meP.vy=0;
+      popups.push({x:meP.x,y:meP.y,t:1,txt:'出局 −1'});
+      shake=10;
+      setTimeout(()=>{ alive=true; },900);
+    }
+
+    /* 與別人碰撞：自己被推開那邊才算（避免兩邊搶寫）*/
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      const dx=meP.x-o.x, dy=meP.y-o.y;
+      const dist=Math.hypot(dx,dy);
+      const minD=PR*2;
+      if(dist<minD && dist>0.01){
+        const nx=dx/dist, ny=dy/dist;
+        const overlap=minD-dist;
+        meP.x+=nx*overlap*0.55; meP.y+=ny*overlap*0.55;
+        meP.vx+=nx*260; meP.vy+=ny*260;
+        pushing=0.25;
+      }
+    }
+    /* 貼牆時滑動 */
+    const dn=Math.hypot(meP.x,meP.y);
+    if(dn>R-PR*0.4 && dn>0.01){
+      const nx=meP.x/dn, ny=meP.y/dn;
+      meP.x=nx*(R-PR*0.4); meP.y=ny*(R-PR*0.4);
+      meP.vx*=0.3; meP.vy*=0.3;
+    }
+
+    if(pushing>0) pushing-=dt;
+    if(shake>0) shake-=dt*30;
+    popups.forEach(p=>p.t-=dt*1.2);
+    popups=popups.filter(p=>p.t>0);
+
+    /* 寫回自己位置（節流：約 20Hz）*/
+    if(liveRef && running){
+      pushLive();
+    }
+  }
+  let lastPush=0;
+  function pushLive(){
+    const now=Date.now();
+    if(now-lastPush<50) return;
+    lastPush=now;
+    try{
+      set(liveRef,{x:Math.round(meP.x*10)/10,y:Math.round(meP.y*10)/10,
+        name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+        score:score,at:now});
+    }catch(e){}
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    /* 背景：徑向深藍 */
+    const bg=ctx.createRadialGradient(cw/2,ch*0.42,40,cw/2,ch*0.5,Math.max(cw,ch)*0.8);
+    bg.addColorStop(0,'#0d1726'); bg.addColorStop(1,'#05080e');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+
+    drawArena();
+
+    /* 其他人 */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;   /* 8 秒沒更新當離線 */
+      drawBall(o.x,o.y,o.color||'#22c55e',PR,false,o.name);
+    }
+    /* 自己 */
+    if(alive) drawBall(meP.x,meP.y,'#38bdf8',PR,true,me.displayName||me.username);
+
+    /* 撞飛小字 */
+    popups.forEach(p=>{
+      const q=worldToScreen(p.x,p.y);
+      ctx.globalAlpha=Math.max(0,p.t);
+      ctx.font='700 '+Math.max(12,q.s*15)+'px Inter,sans-serif';
+      ctx.textAlign='center'; ctx.fillStyle='#f87171';
+      ctx.fillText(p.txt,q.sx,q.sy-q.s*30-(1-p.t)*24);
+      ctx.globalAlpha=1;
+    });
+    ctx.restore();
+
+    /* HUD：分數 */
+    ctx.font='700 15px Inter,sans-serif';
+    ctx.textAlign='left'; ctx.fillStyle='rgba(226,232,240,.9)';
+    ctx.fillText('分數 '+score, 16, 28);
+  }
+
+  function loop(t){
+    if(!running) return;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016);
+    lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('sumo',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const setK=(x,y)=>{ keys.x=x; keys.y=y; };
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A') setK(-1,0);
+      else if(k==='ArrowRight'||k==='d'||k==='D') setK(1,0);
+      else if(k==='ArrowUp'||k==='w'||k==='W') setK(0,-1);
+      else if(k==='ArrowDown'||k==='s'||k==='S') setK(0,1);
+      else return;
+      e.preventDefault();
+    };
+    const onUp=()=>setK(0,0);
+    window.addEventListener('keydown',onKey);
+    window.addEventListener('keyup',onUp);
+
+    /* 觸控：拖哪邊就往哪邊 */
+    let tid=null, ox=0, oy=0;
+    cv.addEventListener('touchstart',e=>{
+      const t0=e.changedTouches[0]; tid=t0.identifier; ox=t0.clientX; oy=t0.clientY;
+      e.preventDefault();
+    },{passive:false});
+    cv.addEventListener('touchmove',e=>{
+      for(const t0 of e.changedTouches){
+        if(t0.identifier!==tid) continue;
+        const dx=t0.clientX-ox, dy=t0.clientY-oy;
+        const m=Math.hypot(dx,dy)||1;
+        setK(dx/m,dy/m);
+      }
+      e.preventDefault();
+    },{passive:false});
+    cv.addEventListener('touchend',e=>{
+      for(const t0 of e.changedTouches){ if(t0.identifier===tid){ tid=null; setK(0,0); } }
+    });
+    return ()=>{ window.removeEventListener('keydown',onKey); window.removeEventListener('keyup',onUp); };
+  }
+
+  let unbind=null;
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      const sp=randSpawn(); meP.x=sp.x; meP.y=sp.y;
+      liveRef=ref(db,'lobbyLive/sumo/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      /* 訂閱全部玩家 */
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/sumo'),snap=>{
+          const v=snap.val()||{};
+          others=v;
+          if(v&&v[me.username]&&typeof v[me.username].score==='number'&&v[me.username].score>score){
+            score=v[me.username].score;
+          }
+        });
+      }catch(e){}
+      running=true; lastT=performance.now();
+      this.mounted=true;
+      if(cv){ const r=cv.getBoundingClientRect(); cw=r.width||360; ch=r.height||420; }
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){ unbind(); unbind=null; }
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(2,window.devicePixelRatio||1);
+      const fit=()=>{
+        const r=cv.getBoundingClientRect();
+        cw=r.width||360; ch=r.height||420;
+        cv.width=cw*dpr; cv.height=ch*dpr;
+        cv.style.width=cw+'px'; cv.style.height=ch+'px';
+      };
+      fit();
+      window.addEventListener('resize',fit);
+      unbind=bindInput();
+      draw();
+    },
+    tickHud(){
+      const el=document.getElementById('stCard');
+      if(el) el.innerHTML='<div style="font-size:11px;color:var(--text-sub)">分數</div><div style="font-size:22px;font-weight:800">'+score+'</div>';
+    },
+    debug(){ return {x:meP.x,y:meP.y,score,others:Object.keys(others||{}),alive}; },
+    probe(x,y){ return Math.hypot(x,y)<=R; }
+  };
+}
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
