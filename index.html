@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Yj106iFG3YvJpYUx0h/k4F3SJA9xZ/jEyCsM0lceYrI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-RNVt+yyMe+jGkbIBQWNI/GNQ7m3ZNOLPCz04SKjAWzI=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -101,37 +101,63 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .msg .bubble.sticker-bubble{background:transparent!important;padding:0!important;box-shadow:none!important}
 
 /* ═══ 轉賬 / 紅包 ═══ */
-.tf-card{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:15px;
-  background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(245,158,11,.12));
-  border:1px solid rgba(251,191,36,.45);min-width:170px;max-width:230px}
-.tf-card .tf-i{font-size:24px;line-height:1}
-.tf-card .tf-t{font-size:13px;font-weight:800;color:#fbbf24}
-.tf-card .tf-s{font-size:10.5px;color:var(--text-sub);margin-top:2px}
-/* 紅包卡片：照微訊那種豎版 —— 上句祝福、中間金色「開」字圓、下面是誰的紅包 */
-.rp-card{width:232px;max-width:74vw;border-radius:14px;padding:17px 14px 15px;
-  display:flex;flex-direction:column;align-items:center;gap:13px;
-  background:linear-gradient(160deg,#f5562e 0%,#e8432a 42%,#fa9d3b 100%);
-  color:#fff;box-shadow:0 10px 26px -12px rgba(245,86,46,.85),inset 0 1px 0 rgba(255,255,255,.22);
-  cursor:pointer;position:relative;overflow:hidden;
-  transition:transform .16s cubic-bezier(.34,1.42,.64,1),box-shadow .2s}
-.rp-card:active{transform:scale(.96)}
-.rp-card::after{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(circle at 50% -20%,rgba(255,255,255,.30),transparent 62%)}
-.rp-card.done{background:linear-gradient(160deg,#64748b,#475569);box-shadow:none;cursor:default;opacity:.92}
-.rp-card .rp-top{font-size:12.5px;font-weight:700;letter-spacing:.6px;color:#ffe9cf;
-  position:relative;z-index:1;text-align:center;line-height:1.5;
-  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rp-card .rp-open{width:62px;height:62px;border-radius:50%;position:relative;z-index:1;
-  display:flex;align-items:center;justify-content:center;
-  font-size:25px;font-weight:900;color:#8a4a00;line-height:1;
-  background:linear-gradient(180deg,#ffe0a3 0%,#f6c04a 55%,#e9a92c 100%);
-  box-shadow:inset 0 -3px 0 rgba(120,60,0,.18),0 5px 14px -4px rgba(0,0,0,.4);
-  transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
-.rp-card.spin .rp-open{animation:rpSpin .55s cubic-bezier(.34,1.4,.64,1)}
-@keyframes rpSpin{0%{transform:scale(1) rotate(0)}45%{transform:scale(1.18) rotate(180deg)}100%{transform:scale(1) rotate(360deg)}}
-.rp-card .rp-from{font-size:11px;color:#ffe2c2;opacity:.92;position:relative;z-index:1;
-  text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rp-card .rp-st{font-size:10px;color:#fff3e2;opacity:.72;position:relative;z-index:1}
+/* 轉賬氣泡：照微訊 —— 橙底、左邊白色圓加橙色雙向箭頭、下面「WeChat 轉賬」小字 */
+.tf-card{display:flex;flex-direction:column;width:216px;max-width:72vw;border-radius:8px;
+  background:#e8863a;color:#fff;overflow:hidden;cursor:pointer;
+  box-shadow:0 1px 2px rgba(0,0,0,.12);transition:transform .15s}
+.tf-card:active{transform:scale(.97)}
+.tf-head{display:flex;align-items:center;gap:11px;padding:15px 13px 11px}
+.tf-ico{width:40px;height:40px;border-radius:50%;background:#fff;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;color:#e8863a;font-size:22px;font-weight:900;line-height:1}
+.tf-amt{font-size:16.5px;font-weight:700;line-height:1.15}
+.tf-st{font-size:11.5px;opacity:.94;margin-top:3px}
+.tf-foot{font-size:10px;opacity:.72;padding:0 13px 12px;letter-spacing:.3px}
+/* 轉賬詳情：照微訊 —— 強制白底黑字（唔跟主題），因為微訊本身就係白 */
+.tfv{background:#fff;color:#111;min-height:100%;padding:8px 24px 30px;
+  display:flex;flex-direction:column;align-items:center;
+  /* 蓋住 openPage 預設的深色底 */
+  margin:-16px -16px 0;border-radius:0}
+.tfv-ico{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin:24px 0 20px;flex:0 0 auto}
+.tfv-ico.wait{border:3px solid #1aadf0;background:#fff}
+.tfv-ico.ok{background:#07c160}
+.tfv-ico svg{width:34px;height:34px;display:block}
+.tfv-title{font-size:16.5px;color:#111;margin-bottom:16px;text-align:center;line-height:1.5;
+  max-width:100%;word-break:break-all}
+.tfv-amt{font-size:46px;font-weight:600;letter-spacing:-1.5px;color:#111;line-height:1.05;
+  font-variant-numeric:tabular-nums}
+.tfv-sub{font-size:12.5px;color:#8a8a8a;margin-top:10px}
+.tfv-note{font-size:12.5px;color:#666;margin-top:12px;background:#f5f5f5;
+  padding:6px 14px;border-radius:8px;max-width:100%;word-break:break-all}
+.tfv-divider{width:100%;height:1px;background:#ededed;margin:24px 0 6px;flex:0 0 auto}
+.tfv-row{width:100%;display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;color:#8a8a8a;padding:10px 0;gap:12px}
+.tfv-row b{color:#111;font-weight:400;text-align:right}
+.tfv-spacer{flex:1;min-height:50px}
+.tfv-btn{width:100%;max-width:320px;padding:14px;border-radius:8px;border:none;
+  background:#07c160;color:#fff;font-size:16px;font-weight:600;font-family:inherit;
+  cursor:pointer;box-shadow:0 2px 8px -2px rgba(7,193,96,.5)}
+.tfv-btn:active{background:#06ad56}
+.tfv-btn:disabled{opacity:.6}
+.tfv-hint{font-size:12px;color:#9a9a9a;text-align:center;line-height:1.8;padding:6px 0 10px}
+.tfv-hint a{color:#576b95;cursor:pointer;font-weight:500}
+.tfv-foot{font-size:13px;color:#576b95;padding:12px;cursor:pointer}
+
+/* 紅包氣泡：照微訊 —— 跟轉賬同一種橙，左邊紅色小方塊（帶金線），下面「微信紅包」 */
+.rp-card{display:flex;flex-direction:column;width:216px;max-width:72vw;border-radius:8px;
+  background:#e8863a;color:#fff;overflow:hidden;cursor:pointer;
+  box-shadow:0 1px 2px rgba(0,0,0,.12);transition:transform .15s}
+.rp-card:active{transform:scale(.97)}
+.rp-card.done{opacity:.62;cursor:default}
+.rp-head{display:flex;align-items:center;gap:11px;padding:15px 13px 11px}
+.rp-ico{width:36px;height:36px;border-radius:5px;background:#d8382c;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.rp-ico::after{content:'';position:absolute;left:50%;top:8px;bottom:8px;width:2px;
+  transform:translateX(-50%);background:rgba(255,214,120,.9);border-radius:1px}
+.rp-txt{font-size:16.5px;font-weight:700;line-height:1.25;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-sub{font-size:11px;opacity:.9;margin-top:3px}
+.rp-foot{font-size:10px;opacity:.72;padding:0 13px 12px;letter-spacing:.3px}
 /* 開紅包彈層 */
 #rpOpen{position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.72);display:flex;
   align-items:center;justify-content:center;padding:24px;animation:rpFade .25s ease}
@@ -174,7 +200,9 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 /* 節日特效 */
 /* fxCalm：z-index 由 9998 降到 300 —— 之前蓋在彈窗、面板之上，
    睇字會覺得有南瓜喺字前面飛過。降到 300 之後只喺背景飄，彈窗仍然喺最上層。 */
-#festive{position:fixed;inset:0;pointer-events:none;z-index:300;overflow:hidden}
+/* fxPaused：z-index 要低過 #gamesOverlay(200)，否則打遊戲時南瓜會蓋在遊戲畫面上。
+   150 = 在對話/列表之上、任何彈層之下。 */
+#festive{position:fixed;inset:0;pointer-events:none;z-index:150;overflow:hidden}
 #festive i{position:absolute;top:-24px;font-size:15px;animation:fall linear infinite;opacity:.5}
 @keyframes fall{to{transform:translateY(105vh) rotate(320deg)}}
 
@@ -4668,22 +4696,33 @@ function render(){
         /* 用戶要求：轉賬只有雙方看到，其他人完全不顯示 */
         return '';
       }
+      /* 照微訊：大金額 + 「請收款 / 已收款」，左下角「WeChat 轉賬」 */
+      const tfDone=!!m.received;
       body='<div class="tf-card" data-action="openTransferDetail" data-arg="'+escAttr(m.id)+'">'
-        + '<div class="tf-i">¥</div><div style="min-width:0">'
-        + '<div class="tf-t">'+(isMine?'轉給 ':'收到 ')+escapeHtml(isMine?(m.toName||m.toUser):(m.displayName||m.username))+'</div>'
-        + '<div class="tf-s">'+(isMine?'-':'+')+Number(m.amount||0)+' 分'+(m.note?('　'+escapeHtml(m.note)):'')+'</div>'
-        + '</div></div>';
+        + '<div class="tf-head">'
+        +   '<div class="tf-ico">⇅</div>'
+        +   '<div style="min-width:0">'
+        +     '<div class="tf-amt">¥'+Number(m.amount||0)+'</div>'
+        +     '<div class="tf-st">'+(isMine?(tfDone?'已收款':'請收款'):(tfDone?'已收款':'請收款'))+'</div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="tf-foot">WeChat 轉賬</div>'
+        + '</div>';
     }
     else if(m.type==='redpacket'){
       const claims=m.claims||{};
       const mine=claims[me.username];
       const finished=Number(m.leftCount||0)<=0;
-      body='<div class="rp-card'+(finished&&!mine?' done':'')+'" '+(mine||finished?'':'data-action="claimRedPacket"')+' data-arg="'+escAttr(m.id)+'">'
-        + '<div class="rp-top">'+escapeHtml(m.note||'恭喜發財，大吉大利')+'</div>'
-        + '<div class="rp-open">'+(finished&&!mine?'🎊':'開')+'</div>'
-        + '<div class="rp-from">'+escapeHtml(m.displayName||m.username||'')+' 的紅包</div>'
-        + '<div class="rp-st">'+(mine?('你搶到 '+Number(mine)+' 分'):(finished?'紅包已領完':'點擊拆開'))
-        +   (Number(m.count)>1?('　'+Number(m.leftCount||0)+'/'+Number(m.count)+' 個'):'')+'</div>'
+      /* 照微訊：祝福語當標題，左下角「微信紅包」；已領完的變淡 */
+      body='<div class="rp-card'+(finished&&!mine?' done':'')+'" data-action="claimRedPacket" data-arg="'+escAttr(m.id)+'">'
+        + '<div class="rp-head">'
+        +   '<div class="rp-ico"></div>'
+        +   '<div style="min-width:0">'
+        +     '<div class="rp-txt">'+escapeHtml(m.note||'恭喜發財')+'</div>'
+        +     '<div class="rp-sub">'+(mine?('你領到 '+Number(mine)):(finished?'已領完':'點擊領取'))+'</div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="rp-foot">微信紅包</div>'
         + '</div>';
     }
     else if(m.encrypted&&!isAI)body=renderEncryptedBody(m);
@@ -5377,6 +5416,9 @@ function openGames(roomId,gameKey){
   if(!me){showNotif('請先登入');return;}
   let ov=document.getElementById('gamesOverlay');
   if(ov)ov.remove();
+  /* 打遊戲時把所有節日特效收起來（南瓜／雪花／彩帶），
+     唔係只係壓低 z-index 咁簡單 —— 直接唔渲染，手機省電又唔會分心。 */
+  try{ const fx=document.getElementById('festive'); if(fx) fx.remove(); }catch(e){}
   ov=document.createElement('div');
   ov.id='gamesOverlay';
   let url='game.html?u='+encodeURIComponent(me.username)+'&theme='+encodeURIComponent(theme==='light'?'light':'dark')
@@ -5395,7 +5437,8 @@ function openGames(roomId,gameKey){
   });
 }
 window.addEventListener('message',(e)=>{
-  if(e.data&&e.data.type==='closeGames'){const ov=document.getElementById('gamesOverlay');if(ov)ov.remove();}
+  if(e.data&&e.data.type==='closeGames'){const ov=document.getElementById('gamesOverlay');if(ov)ov.remove();
+    try{ applyFestive(); }catch(err){}}
 });
 function openPollCreate(){
   if(!me)return;
@@ -7612,17 +7655,87 @@ function openTransferSheet(){
     if(!ok) return;
     const paid=await changePoints(me.username,-amt,'轉賬');
     if(!paid){ showNotif('轉賬失敗'); return; }
-    await changePoints(to, amt, '來自 '+(me.displayName||me.username)+' 的轉賬');
+    /* 照微訊：發出只係「待收款」，對方要自己按「收款」先入帳。
+       以前係即時加分，無得反悔、亦都唔似微訊，所以改成 received:false。 */
     try{
       const id=await nextMsgId();
       await set(ref(db,'messages/'+id),{id:id,username:me.username,displayName:me.displayName,color:me.color||'#3b82f6',avatar:me.avatar,role:me.role,
         text:'',type:'transfer',toUser:to,toName:(allUsers[to].displayName||to),amount:amt,note:note,
-        createdAt:Date.now(),deleted:false});
+        received:false,createdAt:Date.now(),deleted:false});
       try{ writeLog('transfer','轉 '+amt+' 分給 '+to); }catch(e){}
     }catch(e){}
     showNotif('已轉 '+amt+' 分');
   };
 }
+/* ═══ 轉賬詳情（照微訊：白底、狀態圖標、大金額、收款按鈕）═══ */
+function tfTimeStr(ts){
+  const d=new Date(Number(ts)||0);
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+function openTransferDetail(msgId){
+  if(!me) return;
+  const m=allMsgs().find(function(x){ return x.id===msgId; });
+  if(!m) return;
+  const isMine=(m.username===me.username);
+  const isTarget=(m.toUser===me.username);
+  if(!isMine&&!isTarget) return;      /* 只有雙方睇得到 */
+  const done=!!m.received;
+  const amt=Number(m.amount||0);
+  const who=isMine?(m.toName||m.toUser||''):(m.displayName||m.username||'');
+  const meName=me.displayName||me.username;
+
+  const icon = done
+    ? '<div class="tfv-ico ok"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></div>'
+    : '<div class="tfv-ico wait"><svg viewBox="0 0 24 24" fill="none" stroke="#1aadf0" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 2"/></svg></div>';
+
+  const title = done
+    ? (isMine ? (who+' 已收款') : '你已收款，資金已存入餘額')
+    : (isMine ? ('待 '+who+' 收款') : '待確認收款');
+
+  let rows = '<div class="tfv-row"><span>轉賬時間</span><b>'+tfTimeStr(m.createdAt)+'</b></div>';
+  if(done && m.receivedAt) rows += '<div class="tfv-row"><span>收款時間</span><b>'+tfTimeStr(m.receivedAt)+'</b></div>';
+
+  const noteLine = m.note ? '<div class="tfv-note">'+escapeHtml(m.note)+'</div>' : '';
+
+  const action = (!done && isTarget)
+    ? '<button class="tfv-btn" id="tfvGet">收款</button>'
+    : (done ? '<div class="tfv-foot">賬單詳情</div>'
+            : '<div class="tfv-hint">1 天內未收款，將退款給對方。<a id="tfvBack">立即退還</a></div>');
+
+  openPage({title:'', key:'transferdetail', bodyHTML:
+    '<div class="tfv">'
+    + icon
+    + '<div class="tfv-title">'+escapeHtml(title)+'</div>'
+    + '<div class="tfv-amt">¥'+amt+'</div>'
+    + (done?'<div class="tfv-sub">餘額</div>':'')
+    + noteLine
+    + '<div class="tfv-divider"></div>'
+    + rows
+    + '<div class="tfv-spacer"></div>'
+    + action
+    + '</div>'
+  });
+
+  const g=document.getElementById('tfvGet');
+  if(g) g.onclick=async function(){
+    g.disabled=true; g.textContent='收款中…';
+    try{
+      const okPay=await changePoints(m.toUser, Number(m.amount||0), '來自 '+(m.displayName||m.username)+' 的轉賬');
+      if(!okPay){ showNotif('收款失敗，請再試'); g.disabled=false; g.textContent='收款'; return; }
+      await update(ref(db,'messages/'+m.id),{received:true,receivedAt:Date.now()});
+      try{ writeLog('transfer','收 '+m.amount+' 分（來自 '+(m.displayName||m.username)+'）'); }catch(e){}
+      showNotif('已收款 ¥'+Number(m.amount||0));
+      try{ openTransferDetail(m.id); }catch(e){}
+    }catch(e){
+      showNotif('收款出錯：'+(e&&e.message||e));
+      g.disabled=false; g.textContent='收款';
+    }
+  };
+  const b=document.getElementById('tfvBack');
+  if(b) b.onclick=function(){ showNotif('退款功能仲未做，暫停用'); };
+}
+
 function openRedPacketSheet(){
   if(!me) return;
   closePlus();
@@ -10471,6 +10584,9 @@ const VERSION_HISTORY=[
 '1E 帳號別名：準備把登入名由 stu15 統一到 1E15，過渡期兩種都可以用，指向同一個帳號同一個密碼。1E15 / 1e15 / 1E5 / 1e05 都認（1-2 位數字自動補零）。小遊戲頁面（game.html）同樣支援',
 '紅包卡片照微訊做：聊天室裡改成豎版紅包 —— 上面一句祝福、中間金色圓「開」字、下面「誰的紅包」和剩幾多個，用橙紅漸變（#f5562e → #fa9d3b）。點一下金色圓會轉一圈（拆封動作），拆開後彈層金額用金色、按鈕也改成金色實心',
 '節日特效收斂：南瓜／雪花原本 z-index 9998 蓋在彈窗上面，睇字會覺得有東西喺前面飛。現在降到 300（只喺背景飄），數量減半、透明度降到 0.5',
+'紅包轉賬照微訊重做（聊天室）：兩個氣泡同一種橙（#e8863a）—— 轉賬左邊白色圓加雙向箭頭、大金額 `¥N`、「請收款／已收款」，左下角「WeChat 轉賬」；紅包左邊紅色小方塊（中間一條金線）、祝福語做標題，左下角「微信紅包」',
+'轉賬改成「待收款」流程：以前一轉就即刻為對方加分，無得確認、亦都唔似微訊。現在發出只扣自己分、訊息標記 received:false；對方點開詳情按「收款」才真正入帳（並記錄收款時間）。轉賬詳情照微訊做白底：待收是藍色圓圈時鐘＋綠底「收款」按鈕，已收是綠色打勾＋「資金已存入餘額」＋轉賬／收款時間兩行',
+'節日特效打遊戲時自動收起：南瓜／雪花原本 z-index 300，比小遊戲覆蓋層（200）高，打遊戲時會喺畫面上飄。現在降到 150，而且一開小遊戲就直接移除節點，關掉遊戲才重新加返',
 '⚠ 修復：所有遊戲都進不去 —— 自設伺服器（wss://oscar-nas...）現在連不上，而所有房間操作都走那條連線，所以建房永遠卡住不返回（不是新遊戲的問題，原本的五子棋、2048 一樣開不了）。已把 meta/gamews 清空，全部改回 Firebase，遊戲立即恢復正常',
 '⚠ 再修：即使自設伺服器掛掉，遊戲也不應該玩不了。以前重試 4 次後雖然會「切換備援模式」，但只是打個招呼，實際所有房間操作仍然走去連死線 → 照樣卡死。現在降級時會真正清掉 WS 位址，同時 set/update 在降級後直接寫 Firebase —— 伺服器關機也能玩，只是慢一點',
 
@@ -11104,6 +11220,7 @@ function applyRemote(){
 function syncFeatureState(){
   if(featOff('games')){
     const ov=document.getElementById('gamesOverlay'); if(ov)ov.remove();
+    try{ applyFestive(); }catch(e){}
   }
   if(featOff('call')){
     const st=document.getElementById('vcStage');
