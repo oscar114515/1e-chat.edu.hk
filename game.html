@@ -2632,6 +2632,72 @@ function createSumoLobby(){
         判定由「鬼自己」算（他離誰最近），抓到就寫 ghost=對方。 */
 function createTagLobby(){
   const R=230, PR=15, K=0.55;
+  /* TAG_WALLS: 固定佈局（唔隨機）——所有人同一張地圖。
+     圓形擂台 + 幾堵牆，做「迷宮」的感覺，又唔會困死。
+     座標是中心點 + 寬高（世界座標）。 */
+  const WALLS=[
+    {x:-118,y:-96,w:74,h:22},
+    {x: 96,y:-118,w:22,h:70},
+    {x:-150,y: 38,w:22,h:78},
+    {x:  36,y: 86,w:86,h:22},
+    {x: 148,y: 52,w:22,h:64},
+    {x: -22,y:-24,w:22,h:64},
+    {x:-82,y: 118,w:64,h:20},
+    {x: 118,y: 148,w:20,h:52},
+  ];
+  const WALL_TOP='#334155', WALL_SIDE='#1e293b', WALL_EDGE='rgba(148,163,184,.5)';
+  function inWall(x,y,pad){
+    for(const w of WALLS){
+      if(Math.abs(x-w.x) < w.w/2+pad && Math.abs(y-w.y) < w.h/2+pad) return true;
+    }
+    return false;
+  }
+  function resolveWalls(p,r){
+    for(const w of WALLS){
+      const cx=Math.max(w.x-w.w/2, Math.min(p.x, w.x+w.w/2));
+      const cy=Math.max(w.y-w.h/2, Math.min(p.y, w.y+w.h/2));
+      const dx=p.x-cx, dy=p.y-cy;
+      const d=Math.hypot(dx,dy);
+      if(d<r && d>0.01){
+        const nx=dx/d, ny=dy/d;
+        p.x=cx+nx*r; p.y=cy+ny*r;
+        const vn=p.vx*nx+p.vy*ny;
+        if(vn<0){ p.vx-=nx*vn; p.vy-=ny*vn; }
+        p.vx*=0.86; p.vy*=0.86;
+      }
+    }
+  }
+  /* 3D 牆：頂面 + 前面 + 右面，做出厚度 */
+  function drawWall(w){
+    const s=w2s(0,0).s;
+    const halfW=w.w/2, halfH=w.h/2, H=16;   /* H = 牆高（世界單位） */
+    const A=w2s(w.x-halfW, w.y-halfH), B=w2s(w.x+halfW, w.y-halfH);
+    const C=w2s(w.x+halfW, w.y+halfH), D=w2s(w.x-halfW, w.y+halfH);
+    const hgt=H*s*K*1.35;
+    /* 側面（前面 + 右面）*/
+    ctx.beginPath();
+    ctx.moveTo(D.sx,D.sy); ctx.lineTo(C.sx,C.sy);
+    ctx.lineTo(C.sx,C.sy-hgt); ctx.lineTo(D.sx,D.sy-hgt); ctx.closePath();
+    ctx.fillStyle=WALL_SIDE; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(B.sx,B.sy); ctx.lineTo(C.sx,C.sy);
+    ctx.lineTo(C.sx,C.sy-hgt); ctx.lineTo(B.sx,B.sy-hgt); ctx.closePath();
+    ctx.fillStyle='#16202c'; ctx.fill();
+    /* 頂面 */
+    ctx.beginPath();
+    ctx.moveTo(A.sx,A.sy-hgt); ctx.lineTo(B.sx,B.sy-hgt);
+    ctx.lineTo(C.sx,C.sy-hgt); ctx.lineTo(D.sx,D.sy-hgt); ctx.closePath();
+    ctx.fillStyle=WALL_TOP; ctx.fill();
+    ctx.strokeStyle=WALL_EDGE; ctx.lineWidth=1.2; ctx.stroke();
+    /* 頂面高光 */
+    ctx.beginPath();
+    ctx.moveTo(A.sx,A.sy-hgt); ctx.lineTo(B.sx,B.sy-hgt);
+    ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1.4; ctx.stroke();
+    /* 地面投影 */
+    ctx.beginPath();
+    ctx.moveTo(D.sx,D.sy); ctx.lineTo(C.sx,C.sy); ctx.lineTo(B.sx,B.sy);
+    ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=3; ctx.stroke();
+  }
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
   let meP={x:0,y:0,vx:0,vy:0};
   let others={};                 /* u → {x,y,name,color,at} */
@@ -2646,7 +2712,14 @@ function createTagLobby(){
     const s=Math.min(cw/(R*2.35), ch/(R*2.35*K))*1.0;
     return {sx:cw/2+x*s, sy:ch/2+y*s*K, s};
   }
-  function spawn(){ const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.7; return {x:Math.cos(a)*r,y:Math.sin(a)*r}; }
+  function spawn(){
+    for(let i=0;i<40;i++){
+      const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.72;
+      const x=Math.cos(a)*r, y=Math.sin(a)*r;
+      if(!inWall(x,y,PR+8)) return {x,y};
+    }
+    return {x:0,y:-R*0.85};
+  }
 
   function drawField(){
     const c=w2s(0,0), s=c.s;
@@ -2666,11 +2739,15 @@ function createTagLobby(){
     for(let gy=-R;gy<=R;gy+=46){ const a=w2s(-R,gy),b=w2s(R,gy); ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);ctx.stroke(); }
     ctx.restore();
 
-    /* 邊界：有鬼時轉紅 */
+    /* 邊界：有鬼時轉紅；再加一圈內虛線，同相撲（實線圓）區分 */
     const anyGhost=Object.keys(ghosts).length>0;
     ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
     ctx.strokeStyle=anyGhost?'rgba(248,113,113,.9)':'rgba(56,189,248,.55)';
     ctx.lineWidth=Math.max(2,s*3.4); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s*0.93,R*s*K*0.93,0,0,7);
+    ctx.setLineDash([6,7]);
+    ctx.strokeStyle='rgba(148,163,184,.28)'; ctx.lineWidth=1.4; ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   function drawBall(x,y,color,r,label,isGhost,isMe){
@@ -2715,6 +2792,8 @@ function createTagLobby(){
       if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }
       meP.vx*=0.84; meP.vy*=0.84;
     }
+
+    resolveWalls(meP, PR);
 
     if(grace>0) grace-=dt;
     if(shake>0) shake-=dt*32;
@@ -2785,6 +2864,9 @@ function createTagLobby(){
       ctx.beginPath(); ctx.arc(p.sx,p.sy,PR*s*(0.5+t.t*0.5),0,7);
       ctx.fillStyle='rgba(248,113,113,'+(t.t*0.18)+')'; ctx.fill();
     });
+
+    /* 牆：按 y 排序，後面的先畫（有遮擋感）*/
+    [...WALLS].sort((a,b)=>a.y-b.y).forEach(drawWall);
 
     for(const u in others){
       const o=others[u];
