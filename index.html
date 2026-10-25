@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-NnDj4PpnIjkpOp8SSxO7uVW3Dn1Pz7m2XEnZ9eXwdYw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-yLZsaKsASaeMtGFIqNUfEjqBDpqCyBFaO0Zr2gZMnuY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -6888,6 +6888,8 @@ function checkinHTML(c, inModal){
           + '</div>'
         : '');
 }
+/* 簽到失敗自動重試一次（只針對網絡錯誤，避免重複加分） */
+let _ckRetried=false;
 async function doCheckin(){
   if(!me) return;
   /* 立即撒花 —— 之後要 await get/set/runTransaction 三次網絡往返，
@@ -6935,7 +6937,33 @@ async function doCheckin(){
       onClose:()=>{ try{ openProfilePage(me.username,true); }catch(e){} }
     }); }, 260);
   }catch(e){
-    showNCard({title:'簽到失敗',html:escapeHtml(String(e&&e.message||e).slice(0,80)),btn:'知道了'});
+    /* 以前這裡直接把原始錯誤丟出來（例如 "Failed to get document because the client is offline"），
+       用戶只見到「簽到失敗」四個字，完全唔知發生咩事。
+       現在分兩種：網絡問題（可以再試）／其他錯誤（顯示原因）。 */
+    const msg=String(e&&e.message||e);
+    const isNet=/network|offline|timeout|unavailable|connection|disconnect/i.test(msg);
+    if(isNet && !_ckRetried){
+      /* 只重試一次。重試前先確認是不是其實已經簽到了（避免重複加分）。 */
+      _ckRetried=true;
+      showNotif('網絡不穩，自動重試…');
+      setTimeout(async function(){
+        try{
+          const c2=(await get(child(ref(db),'checkin/'+me.username))).val()||{};
+          if(c2.last===_dayStr(0)){ _ckRetried=false; showNotif('其實已經簽到成功了'); return; }
+        }catch(_){}
+        _ckRetried=false;
+        doCheckin();
+      }, 1500);
+      return;
+    }
+    _ckRetried=false;
+    showNCard({
+      title: isNet?'網絡不穩，簽到未完成':'簽到失敗',
+      html: isNet
+        ? '你的網絡好像斷了。<br>簽到紀錄沒有改變，連上網再按一次就可以。<br><span style="font-size:11px;color:var(--text-muted);word-break:break-all">'+escapeHtml(msg.slice(0,100))+'</span>'
+        : escapeHtml(msg.slice(0,140)),
+      btn: isNet?'知道了':'知道了'
+    });
   }
 }
 
@@ -10278,6 +10306,9 @@ const VERSION_HISTORY=[
 '性能：修好「向上滾看不到最開始的訊息、一直顯示載入失敗」。原因是查詢用了需要索引的寫法，Firebase 直接拒絕；改成按訊息鍵查（天然按時間排序，不需要索引）',
 '性能：內容撐不滿屏幕時會自動補更多訊息（以前寫反了，撐不滿就停手，結果用戶見到一片空白又滾不動）',
 '流暢度：去掉滾動時整頁重繪的背景設定，滑動不再卡頓',
+'簽到失敗提示改善：以前網絡一斷就彈「簽到失敗」加一串英文錯誤（例如 Failed to get document because the client is offline），完全看不出發生什麼事。現在分兩種：網絡問題會說「網絡不穩，簽到未完成，連上網再按一次」並自動重試一次；其他錯誤才顯示原因',
+'簽到第 8 天正常：七格路線圖簽滿後，下一次會由第 1 格重新開始新一輪（連續天數繼續累加，不會清零）。實測第 8 天「連續 8 天，今日 +100 積分」正常',
+
 
 '＋ 選單背景修正：原本面板用半透明底色（rgba(30,41,59,.55)）壓在深色頁面上，顏色幾乎一樣，看上去像沒有面板。現在改成實色（深色 #1e293b／淺色純白）＋ 明顯邊框＋雙層陰影＋玻璃模糊，圖示底也加了描邊',
 '修復：轉賬和紅包點開沒反應 —— chat.html 本來沒有 .sheet 樣式（那個是 game.html 的），我加彈窗時直接用了 className="sheet"，結果只是一個裸 div 被擠到頁面最底部，看上去像「點了沒反應」。已補齊全屏遮罩 + 居中卡片 + 彈出動畫',
