@@ -661,6 +661,11 @@ const roomNet={
           this.backoff++;
           if(this.backoff>4){
             this.dead=true; this.subs.clear();
+            /* PERM_FALLBACK: 唔止標 dead，仲要清空 WS 位址。
+               因為 ref() 係靠 `GAME_WS_URL && isRoomPath()` 決定回傳真 ref 定係 {__room:true} 替身；
+               只設 dead 唔清位址，之後所有 ref() 仍然回傳替身 → set/onValue 照樣走去連死線 → 永遠卡住。
+               清空之後，新開的 ref() 全部走 Firebase，遊戲即刻可以照玩。 */
+            try{ GAME_WS_URL=''; LOBBY_WS_URL=''; }catch(e){}
             /* 永久降級：伺服器真係連唔到，但 Firebase 仍然可以用，遊戲照玩。
                唔可以一直掛住紅色「連不上」——改成橙色提示，3 秒後自己收。 */
             showNetBanner('已切換備援模式（Firebase），操作會慢一點');
@@ -785,6 +790,7 @@ async function get(r){
 }
 async function set(r, v){
   if(r&&r.__room){
+    if(!GAME_WS_URL){ return _fbSet(_fbRef(db, r.raw), v); }   /* 已降級 → 直接寫 Firebase */
     await roomNet.connect();                    /* 第一次寫入時連線可能還沒建立 */
     roomNet.send({t:'rSet', rid:r.rid, path:r.path, v:v===undefined?null:v});
     return;
@@ -793,6 +799,7 @@ async function set(r, v){
 }
 async function update(r, patch){
   if(r&&r.__room){
+    if(!GAME_WS_URL){ return _fbUpdate(_fbRef(db, r.raw), patch); }
     await roomNet.connect();
     roomNet.send({t:'rUpd', rid:r.rid, patch});
     return;
