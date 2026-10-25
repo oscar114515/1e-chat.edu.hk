@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kUTEfMGX7qidi1yE7WTsp/2fAQF1SF2xs/jvYR0D56U=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-smnApUl/wYnCS7iXcZnJGhcpRch9emneQ1zkUgO1yUo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -105,7 +105,12 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 .tf-card{display:flex;flex-direction:column;width:216px;max-width:72vw;border-radius:8px;
   background:#e8863a;color:#fff;overflow:hidden;cursor:pointer;
   box-shadow:0 1px 2px rgba(0,0,0,.12);transition:transform .15s}
+/* tfDoneGrey：照微訊 —— 收款之後氣泡整塊變淺灰，字同金額都轉灰 */
 .tf-card:active{transform:scale(.97)}
+.tf-card.done{background:#c9cbcd;box-shadow:none;cursor:default}
+.tf-card.done .tf-amt,.tf-card.done .tf-st{color:#fff}
+.tf-card.done .tf-ico{background:rgba(255,255,255,.85);color:#9aa0a6}
+.tf-card.done .tf-foot{opacity:.6}
 .tf-head{display:flex;align-items:center;gap:11px;padding:15px 13px 11px}
 .tf-ico{width:40px;height:40px;border-radius:50%;background:#fff;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;color:#e8863a;font-size:22px;font-weight:900;line-height:1}
@@ -148,7 +153,10 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
   background:#e8863a;color:#fff;overflow:hidden;cursor:pointer;
   box-shadow:0 1px 2px rgba(0,0,0,.12);transition:transform .15s}
 .rp-card:active{transform:scale(.97)}
-.rp-card.done{opacity:.62;cursor:default}
+.rp-card.done{background:#d5d6d8;box-shadow:none;cursor:default}
+.rp-card.done .rp-ico{background:#b9bcbf}
+.rp-card.done .rp-ico::after{background:rgba(255,255,255,.75)}
+.rp-card.done .rp-txt,.rp-card.done .rp-sub{color:#fff}
 .rp-head{display:flex;align-items:center;gap:11px;padding:15px 13px 11px}
 .rp-ico{width:36px;height:36px;border-radius:5px;background:#d8382c;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
@@ -4687,7 +4695,7 @@ function render(){
       }
       /* 照微訊：大金額 + 「請收款 / 已收款」，左下角「WeChat 轉賬」 */
       const tfDone=!!m.received;
-      body='<div class="tf-card" data-action="openTransferDetail" data-arg="'+escAttr(m.id)+'">'
+      body='<div class="tf-card'+(tfDone?' done':'')+'" data-action="openTransferDetail" data-arg="'+escAttr(m.id)+'">'
         + '<div class="tf-head">'
         +   '<div class="tf-ico">⇅</div>'
         +   '<div style="min-width:0">'
@@ -4703,7 +4711,7 @@ function render(){
       const mine=claims[me.username];
       const finished=Number(m.leftCount||0)<=0;
       /* 照微訊：祝福語當標題，左下角「微信紅包」；已領完的變淡 */
-      body='<div class="rp-card'+(finished&&!mine?' done':'')+'" data-action="claimRedPacket" data-arg="'+escAttr(m.id)+'">'
+      body='<div class="rp-card'+((finished||mine)?' done':'')+'" data-action="claimRedPacket" data-arg="'+escAttr(m.id)+'">'
         + '<div class="rp-head">'
         +   '<div class="rp-ico"></div>'
         +   '<div style="min-width:0">'
