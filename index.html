@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-yLZsaKsASaeMtGFIqNUfEjqBDpqCyBFaO0Zr2gZMnuY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Xin7j/JYlBD/7EGHOhSkIr7dF6qNRpP+Q8j6VeE56SY=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -231,12 +231,12 @@ body.theme-light .title-tag{background:rgba(168,85,247,.12);color:#7c3aed}
 .nm-glow{color:#93c5fd;text-shadow:0 0 7px rgba(96,165,250,.85),0 0 14px rgba(59,130,246,.5);font-weight:700}
 .nm-fire{background:linear-gradient(180deg,#fbbf24,#ef4444);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
 /* 聊天背景 */
-#chatBox.bg-aurora{background:linear-gradient(160deg,rgba(56,189,248,.10),rgba(168,85,247,.10),rgba(244,114,182,.09))}
-#chatBox.bg-sunset{background:linear-gradient(160deg,rgba(251,146,60,.12),rgba(239,68,68,.09))}
-#chatBox.bg-forest{background:linear-gradient(160deg,rgba(74,222,128,.11),rgba(16,185,129,.08))}
-#chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.55),rgba(15,23,42,.75))}
-#chatBox.bg-paper{background:linear-gradient(160deg,rgba(250,250,245,.9),rgba(245,240,230,.9))}
-body.theme-light #chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.14),rgba(15,23,42,.20))}
+#chatBox.bg-aurora{background:linear-gradient(160deg,rgba(56,189,248,.10),rgba(168,85,247,.10),rgba(244,114,182,.09)) !important}
+#chatBox.bg-sunset{background:linear-gradient(160deg,rgba(251,146,60,.12),rgba(239,68,68,.09)) !important}
+#chatBox.bg-forest{background:linear-gradient(160deg,rgba(74,222,128,.11),rgba(16,185,129,.08)) !important}
+#chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.55),rgba(15,23,42,.75)) !important}
+#chatBox.bg-paper{background:linear-gradient(160deg,rgba(250,250,245,.9),rgba(245,240,230,.9)) !important}
+body.theme-light #chatBox.bg-night{background:linear-gradient(160deg,rgba(30,41,59,.14),rgba(15,23,42,.20)) !important}
 /* 個人化頁的選項網格 */
 .cus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:8px 0 4px}
 .cus-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 6px;border-radius:14px;
@@ -10308,6 +10308,7 @@ const VERSION_HISTORY=[
 '流暢度：去掉滾動時整頁重繪的背景設定，滑動不再卡頓',
 '簽到失敗提示改善：以前網絡一斷就彈「簽到失敗」加一串英文錯誤（例如 Failed to get document because the client is offline），完全看不出發生什麼事。現在分兩種：網絡問題會說「網絡不穩，簽到未完成，連上網再按一次」並自動重試一次；其他錯誤才顯示原因',
 '簽到第 8 天正常：七格路線圖簽滿後，下一次會由第 1 格重新開始新一輪（連續天數繼續累加，不會清零）。實測第 8 天「連續 8 天，今日 +100 積分」正常',
+'聊天背景修正：以前選了背景（極光、森林、深夜…）完全看不到，就算刷新也一樣。原因是有一行 `#chatBox{background:transparent !important}`（為了讓頁面背景透出來），`!important` 把六款背景全部蓋掉了。現在六條背景規則也加上 `!important`，選了就立即看到，刷新後仍然保留',
 
 
 '＋ 選單背景修正：原本面板用半透明底色（rgba(30,41,59,.55)）壓在深色頁面上，顏色幾乎一樣，看上去像沒有面板。現在改成實色（深色 #1e293b／淺色純白）＋ 明顯邊框＋雙層陰影＋玻璃模糊，圖示底也加了描邊',
