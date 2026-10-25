@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kWJWzAJVl0zGUgQbyAAXeZ3Ifw5+fQ94UTqXJE39Bqw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-RGzK6p4Eo5cHEGcK3CGk8+A0ZF8N9ZCqLEz+W0XkOFU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -1136,6 +1136,19 @@ input[type=file]{display:none}
 .sn-sub-tip{font-size:11.5px;color:var(--text-sub);margin-left:auto;white-space:nowrap;font-weight:500}
 .sn-header .sn-ackall{background:rgba(148,163,184,.16);color:var(--text-main);border:none;border-radius:var(--r-1);padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;flex:0 0 auto}
 .sn-header .sn-ackall[disabled]{opacity:.42;cursor:default}
+.about-grp{margin-bottom:11px;border:1px solid var(--border);border-radius:16px;overflow:hidden;
+  background:rgba(148,163,184,.045)}
+.about-grp>summary{list-style:none;cursor:pointer;padding:13px 15px;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:700;color:var(--text-main);user-select:none;-webkit-tap-highlight-color:transparent}
+.about-grp>summary::-webkit-details-marker{display:none}
+.about-grp>summary:active{background:rgba(148,163,184,.08)}
+.about-grp .ag-ico{font-size:15px;line-height:1;width:18px;text-align:center}
+.about-grp .ag-n{margin-left:auto;font-size:10.5px;color:var(--text-muted);background:rgba(148,163,184,.16);
+  padding:1px 8px;border-radius:9px;font-weight:600}
+.about-grp .ag-a{font-size:14px;color:var(--text-muted);transition:transform .22s ease;width:12px;text-align:center}
+.about-grp[open] .ag-a{transform:rotate(90deg)}
+.about-grp .ag-body{padding:0 6px 6px}
+.about-grp .about-item{border-radius:12px}
 .af-loc{font-size:11px;color:#93c5fd;background:rgba(59,130,246,.14);border:1px solid rgba(96,165,250,.3);
   border-radius:8px;padding:3px 9px;display:inline-block;margin:6px 0 2px;word-break:break-all}
 .admin-feedback{padding:14px;border-radius:var(--r-2);background:var(--bg-input);border:1px solid var(--border);margin-bottom:12px}
@@ -2940,6 +2953,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='openReactionPage')return openReactionPage();
     if(action==='openMemoryPage')return openMemoryPage();
     if(action==='openAuctionPage')return openAuctionPage();
+    if(action==='openAdminAuction')return openAuctionPage();
     if(action==='createAuction')return createAuction();
     if(action==='bidAuction')return bidAuction(arg);
     if(action==='openRpRank')return openRpRank();
@@ -7084,6 +7098,11 @@ function badgeCount(exp,ck){
    這樣避免「出價被超越要退款」的一堆交易競態。 */
 async function openAuctionPage(){
   if(!me) return;
+  /* 用戶要求：積分拍賣只有管理員可以用（一般人容易亂發，變成騷擾） */
+  if(me.role!=='superadmin'&&me.role!=='admin'){
+    showNCard({title:'只有管理員可以用',html:'積分拍賣由管理員發起，避免有人亂開拍賣。想拍賣什麼可以跟管理員講。',btn:'知道'});
+    return;
+  }
   let list=[];
   try{
     const v=(await get(ref(db,'auctions'))).val()||{};
@@ -8549,50 +8568,42 @@ async function openProfilePage(username,isSelf,fromAdmin){
     const fontName=(typeof fontPref==='function'&&fontPref()==='sys')?'系統字體':'霞鶩文楷';
     const bodyHTML=checkinCardHTML(ck)
       +(statusText(me)?('<div style="margin:0 0 12px"><span class="status-line">💭 '+escapeHtml(statusText(me))+'</span></div>'):'')
-      +'<div class="section-title">個人資料</div>'
+      +'<details class="about-grp"><summary><span class="ag-ico">👤</span><span>個人資料</span><span class="ag-n">5</span><span class="ag-a">›</span></summary><div class="ag-body">'
       +aiRow('頭像與顯示名稱', escapeHtml(me.displayName||''), 'openProfileEdit', 'user')
-      +'<div class="section-title">帳號與安全</div>'
       +aiRow('修改密碼','', 'openChangePassword', 'settings')
       +aiRow('問題反饋','', 'openFeedbackPage', 'msg')
-      +'<div class="section-title">偏好</div>'
       +aiRow('字體', fontName, 'openFontPage', 'file')
-      +'<div class="section-title">個人化</div>'
       +aiRow('個人化', 'Lv.'+levelOf(me.exp)
           +(me.frame?(' · '+(CUS_FRAME_NM[me.frame]||'')):'')
           +(me.chatBg?(' · '+(CUS_BG_NM[me.chatBg]||'')):''), 'openCustomizePage', 'star')
-      +'<div class="section-title">成長</div>'
+      +'</div></details>'
+      +'<details class="about-grp"><summary><span class="ag-ico">📈</span><span>成長</span><span class="ag-n">4</span><span class="ag-a">›</span></summary><div class="ag-body">'
       +aiRow('成長中心', 'Lv.'+levelOf(me.exp)+'　·　徽章 / 成就 / 數據', 'openGrowthPage', 'score')
       +aiRow('排行榜', '積分 / 簽到 / 等級', 'openRankPage', 'poll')
       +aiRow('每日任務 · 轉盤', '完成任務 +200 分', 'openDailyPage', 'check')
       +aiRow('收藏冊', '抽卡收集', 'openCardsPage', 'heart')
-      +'<div class="section-title">更多</div>'
-      +aiRow('今日狀態', statusText(me)||'未設定（24 小時消失）', 'openStatusPage', 'bell')
-      +aiRow('金句牆', allQuotes.length+' 句', 'openQuoteWall', 'heart')
-      +aiRow('AI 快捷', '幫寫 / 翻譯 / 總結', 'openAiQuickPage', 'bot')
-      +aiRow('數據導出', '下載自己的紀錄', 'exportMyData', 'download')
-      +aiRow('開啟通知', ('Notification' in window && Notification.permission==='granted')?'已開啟':'未開啟', 'askPushPermission', 'bell')
-      +'<div class="section-title">農場與遊戲</div>'
+      +'</div></details>'
+      +'<div class="section-title">遊戲</div>'
       +aiRow('我的農場', '養動物・收成換分', 'openFarmPage', 'heart')
-      +aiRow('釣魚', '抓時機拉竿', 'openFishingPage', 'drop')
-      +aiRow('反應速度', '測毫秒', 'openReactionPage', 'clock')
-      +aiRow('記憶力挑戰', '背數字', 'openMemoryPage', 'star')
-      +'<div class="section-title">市場</div>'
-      +aiRow('積分拍賣', '出價搶東西', 'openAuctionPage', 'shopping')
-      +aiRow('紅包榜', '誰發最多・誰搶最多', 'openRpRank', 'heart')
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
-      +'<div class="section-title">工具</div>'
+      +'<details class="about-grp"><summary><span class="ag-ico">⋯</span><span>更多</span><span class="ag-n">13</span><span class="ag-a">›</span></summary><div class="ag-body">'
+      +aiRow('今日狀態', statusText(me)||'未設定（24 小時消失）', 'openStatusPage', 'bell')
+      +aiRow('金句牆', allQuotes.length+' 句', 'openQuoteWall', 'heart')
+      +aiRow('紅包榜', '誰發最多・誰搶最多', 'openRpRank', 'heart')
+      +aiRow('AI 快捷', '幫寫 / 翻譯 / 總結', 'openAiQuickPage', 'bot')
+      +aiRow('數據導出', '下載自己的紀錄', 'exportMyData', 'download')
+      +aiRow('開啟通知', ('Notification' in window && Notification.permission==='granted')?'已開啟':'未開啟', 'askPushPermission', 'bell')
       +'<button class="btn-ghost" data-action="openMyLogs">我的日誌</button>'
       +'<button class="btn-ghost" data-action="openMyNotices">我的公告申請</button>'
       +'<button class="btn-ghost" data-action="openTrailMap">痕跡地圖</button>'
       +'<button class="btn-ghost" data-action="openOnlineQuery">在線查詢</button>'
       +'<button class="btn-ghost" data-action="openLoginLink" data-arg="'+escAttr(username)+'">產生一次性登入連結</button>'
-      +'<div class="section-title">關於</div>'
-      +'<div class="about-item disabled"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-user"/></svg></div><div><div class="ai-title">作者</div><div class="ai-sub">梁喆</div></div></div></div>'
       +aiRow('感謝清單', String(thanksList.length), 'openThanks', 'heart')
       +aiRow('版本資訊', CURRENT_VERSION, 'openVersion', 'info')
       +'<a class="about-item" data-action="linkCheck" data-arg="'+ANDROID_APK_URL+'" style="text-decoration:none;color:inherit"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-download"/></svg></div><div><div class="ai-title">安卓版 App</div><div class="ai-sub">下載最新 APK</div></div></div><div class="ai-arrow">›</div></a>'
+      +'</div></details>'
       +(amAdmin?'<button class="btn-ghost" data-action="openUserDetail" data-arg="'+escAttr(username)+'">管理員資料頁（含密碼）</button>':'');
     openPage({title:'我的主頁',heroHTML,bodyHTML,key:'profile:'+username});
   } else if(fromAdmin&&amAdmin){
@@ -9254,7 +9265,7 @@ function openAdminPage(tab){
   const isSuper=me.role==='superadmin';
   const accountTab=isSuper?`<button class="tab ${tab==='accounts'?'active':''}" data-action="switchAdminTab" data-arg="accounts">帳號管理</button>`:'';
   beginPage('admin');
-  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button><button class="tab ${tab==='checkin'?'active':''}" data-action="switchAdminTab" data-arg="checkin">次數</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='redeem'?'active':''}" data-action="switchAdminTab" data-arg="redeem">兌換碼</button><button class="tab ${tab==='shop'?'active':''}" data-action="switchAdminTab" data-arg="shop">商店</button>`:''}${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
+  pageRoot.innerHTML=`<div class="fullPage"><div class="fp-header"><button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button><div class="fp-title">管理員後台</div><span style="font-size:11.5px;color:var(--purple-tx)">${isSuper?'超級管理員':'管理員'}</span></div><div class="tabs"><button class="tab ${tab==='users'?'active':''}" data-action="switchAdminTab" data-arg="users">用戶</button><button class="tab ${tab==='checkin'?'active':''}" data-action="switchAdminTab" data-arg="checkin">次數</button>${accountTab}<button class="tab ${tab==='notices'?'active':''}" data-action="switchAdminTab" data-arg="notices">審核</button><button class="tab ${tab==='requests'?'active':''}" data-action="switchAdminTab" data-arg="requests">請求</button><button class="tab ${tab==='feedbacks'?'active':''}" data-action="switchAdminTab" data-arg="feedbacks">反饋</button><button class="tab ${tab==='logs'?'active':''}" data-action="switchAdminTab" data-arg="logs">日誌</button><button class="tab ${tab==='groups'?'active':''}" data-action="switchAdminTab" data-arg="groups">群聊監看</button><button class="tab ${tab==='usage'?'active':''}" data-action="switchAdminTab" data-arg="usage">用量</button>${isSuper?`<button class="tab ${tab==='redeem'?'active':''}" data-action="switchAdminTab" data-arg="redeem">兌換碼</button><button class="tab ${tab==='shop'?'active':''}" data-action="switchAdminTab" data-arg="shop">商店</button><button class="tab" data-action="openAdminAuction">拍賣</button>`:''}${isSuper?`<button class="tab ${tab==='remote'?'active':''}" data-action="switchAdminTab" data-arg="remote">遠端</button>`:''}</div><div class="fp-body"><div class="admin-body" id="adminBody"></div></div></div>`;
   renderAdminTab(tab);
 }
 /* v1.38.5：記住每個管理分頁各自的捲動位置。
@@ -10417,6 +10428,9 @@ const VERSION_HISTORY=[
 '聊天背景顏色加強：之前就算選了也幾乎看不到，因為六款背景的不透明度只有 8-12%，鋪在深色底上等於沒變。現在提高到 22-38%（深夜款更實），一選就明顯看到整個聊天區換色',
 '問題反饋改兩級：先選「是哪個頁面」（聊天室／小遊戲／個人主頁／積分商店／農場小遊戲／AI／其他），選了小遊戲再彈「具體是哪一款」（39 款全部列出）。管理員後台收到的反饋會顯示「📍 小遊戲（聊天室內）→ 五子棋」，不用再猜是哪裡壞了。順手移除了原本用 AI 判斷「是否胡說」的那步，它經常把正常描述（例「五子棋卡住」）誤殺',
 '個人化入口合併：以前個人主頁分開四行（等級·稱號·心情／頭像框·名字特效／聊天背景／個人簡介），其實點進去都是同一頁。現在合成一行「個人化」，副標題直接顯示摘要（例「Lv.2 · 霓虹 · 森林」），點進去七個區塊一次過改完',
+'個人主頁折疊分組：25 個入口收成三組可折疊 —— 👤 個人資料（5：頭像/密碼/反饋/字體/個人化）、📈 成長（4）、⋯ 更多（13），加上單獨顯示的「我的農場」和「班級動態／留言板」。點標題展開，再點收起',
+'積分拍賣改為只有管理員能用：普通同學打開會提示「積分拍賣由管理員發起」，入口移到管理員後台（商店旁邊的「拍賣」）',
+
 
 
 
