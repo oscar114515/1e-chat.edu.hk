@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-Xag9JLiqh4gpJG5EWBWgRoE3frjiuUUvyFoq0sbOV0c=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-99zyrjmWvAZpOPGcnhFz2OCyX2m6KF4Av0fOMScVQpw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -184,7 +184,12 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
 @keyframes aildLet{0%,100%{opacity:.45;transform:translateY(0)}20%{opacity:1;transform:scale(1.18)}40%{opacity:.7;transform:translateY(0)}}
 .aild-t:nth-child(2){animation-delay:0s}
 .aild-t:nth-child(3){animation-delay:.12s}
-.aild-t:nth-child(4){animation-delay:.24s}
+/* AI 思考：英文，唔跟語言設定（用戶要求：無論設咩語言都要顯示英文） */
+.aild-wrap{display:inline-flex;align-items:center;gap:7px;padding:3px 2px 3px 0}
+.aild-txt{font-size:12px;color:#94a3b8;letter-spacing:.4px;font-weight:500;
+  animation:aildTxt 2s ease-in-out infinite;white-space:nowrap}
+@keyframes aildTxt{0%,100%{opacity:.55}50%{opacity:1}}
+body.theme-light .aild-txt{color:#64748b}
 
 .pc-input-bar .aibtn,.aibtn{position:relative;display:flex;align-items:center;gap:2px;
   padding:7px 12px 7px 10px;border-radius:22px;cursor:pointer;flex-shrink:0;
@@ -4760,7 +4765,7 @@ function render(){
     const shownColor=safeColor(isAI?AI_COLOR:(msgIsAdmin?'#8b5cf6':m.color),'#3b82f6');
     const userExists=allUsers[m.username];
     const isDeletedUser=!isAI&&!userExists&&usersLoaded;
-    if(isAI&&m.thinking){ return `<div class="msg thinking"><div class="avatar">${aiFaceHTML()}</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble" style="background:transparent;padding:0"><div class="aild"><div class="aild-ball"></div><span class="aild-t">思</span><span class="aild-t">考</span><span class="aild-t">中</span></div></div></div></div>`; }
+    if(isAI&&m.thinking){ return `<div class="msg thinking"><div class="avatar">${aiFaceHTML()}</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble" style="background:transparent;padding:0"><span class="aild-wrap"><span class="aild"><span class="aild-ball"></span><span class="aild-t">A</span><span class="aild-t">I</span></span><span class="aild-txt">Thinking</span></span></div></div></div>`; }
     let body='';
     if(m.type==='image'){const iu=String(m.imageUrl==null?'':m.imageUrl);body=`<img class="msg-img" src="${escAttr(iu)}" data-action="viewImage" data-arg="${escAttr(iu)}">`;}
     else if(m.type==='file')body=`<div class="file-msg"><span class="fi">[F]</span><div style="flex:1;min-width:0"><div class="fn">${escapeHtml(m.fileName||'file')}</div><div class="fs">${formatSize(m.fileSize||0)}</div></div></div>`;
@@ -10325,7 +10330,7 @@ function renderAIPrivate(){
       const isMe=m.username===me.username;
       const isAI=m.role==='ai';
       const time=new Date(m.createdAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-      if(isAI&&m.thinking){return `<div class="msg thinking"><div class="avatar">${aiFaceHTML()}</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble" style="background:transparent;padding:0"><div class="aild"><div class="aild-ball"></div><span class="aild-t">思</span><span class="aild-t">考</span><span class="aild-t">中</span></div></div></div></div>`;}
+      if(isAI&&m.thinking){return `<div class="msg thinking"><div class="avatar">${aiFaceHTML()}</div><div class="bubble-wrap"><div class="meta">小喆AI · ${time}</div><div class="bubble" style="background:transparent;padding:0"><span class="aild-wrap"><span class="aild"><span class="aild-ball"></span><span class="aild-t">A</span><span class="aild-t">I</span></span><span class="aild-txt">Thinking</span></span></div></div></div>`;}
       const color=safeColor(isAI?AI_COLOR:me.color,'#3b82f6');
       const av=isAI?'AI':escapeHtml((me.displayName||me.username).charAt(0).toUpperCase());
       const iu=String(m.imageUrl==null?'':m.imageUrl);
