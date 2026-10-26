@@ -578,6 +578,21 @@ body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-
 .dpad::after{content:'';grid-area:2/2/3/3;border-radius:50%;
   background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.18)}
 
+/* 搖杆 */
+.stick{position:absolute;left:16px;bottom:18px;width:120px;height:120px;z-index:22;
+  touch-action:none;user-select:none;-webkit-user-select:none}
+.stick-base{position:absolute;inset:0;border-radius:50%;
+  background:rgba(15,23,42,.55);border:1.5px solid rgba(148,163,184,.35);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent}
+.stick-base::after{content:'';position:absolute;width:104px;height:104px;border-radius:50%;
+  border:1px dashed rgba(148,163,184,.18)}
+.stick-knob{width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#7dd3fc,#0ea5e9 60%,#0369a1);
+  box-shadow:0 3px 10px rgba(2,132,199,.55),inset 0 1px 2px rgba(255,255,255,.5);
+  transition:transform .06s linear,box-shadow .15s}
+.stick-knob.on{box-shadow:0 4px 16px rgba(14,165,233,.85),inset 0 1px 2px rgba(255,255,255,.6)}
 </style>
 </head>
 <body data-page-node-id="o2XBarVikIbNEfUtNXqDJz">
@@ -2314,6 +2329,100 @@ function mountDPad(host, onDir){
    渲染：Canvas 2D 做偽 3D —— 斜投影地面 + 球體徑向漸變 + 橢圓陰影。
    同步：每人只寫自己的座標到 lobbyLive/sumo/{u}，撞擊由「被撞者」本地判定，
          所以不會有兩邊同時改同一個人的問題。 */
+/* LOBBY_FIX_A: 三個引擎原本只更新自己那張小卡（#stCard），
+   完全冇更新 #lbRows → 積分榜永遠空白。這裡統一一支函式。 */
+/* ═══ STICK_V1: 虛擬搖杆（手機）+ 鼠標（電腦）═══
+   用戶要求「跟貪吃蛇一樣的觸摸風格」：手指按住左下圓盤拖，推得越遠走得越快。
+   電腦：鼠標離開圓心就朝那個方向走（唔使按鍵）。 */
+function mountStick(host, onChange){
+  const old=host.querySelector('.stick'); if(old) old.remove();
+  const wrap=document.createElement('div');
+  wrap.className='stick';
+  wrap.innerHTML='<div class="stick-base"><div class="stick-knob"></div></div>';
+  host.appendChild(wrap);
+  const base=wrap.querySelector('.stick-base');
+  const knob=wrap.querySelector('.stick-knob');
+  const RAD=44;                 /* 搖杆可拖最大半徑 */
+  let active=false, id=null, cx=0, cy=0;
+
+  function setKnob(dx,dy){
+    const m=Math.hypot(dx,dy);
+    const k=m>RAD?RAD/m:1;
+    const kx=dx*k, ky=dy*k;
+    knob.style.transform='translate('+kx+'px,'+ky+'px)';
+    const nx=dx/RAD, ny=dy/RAD;
+    const nm=Math.min(1,Math.hypot(nx,ny));
+    const a=Math.atan2(ny,nx);
+    onChange(Math.cos(a)*nm, Math.sin(a)*nm);
+  }
+  function reset(){
+    active=false; id=null;
+    knob.style.transform='translate(0,0)';
+    knob.classList.remove('on');
+    onChange(0,0);
+  }
+  base.addEventListener('pointerdown',e=>{
+    active=true; id=e.pointerId;
+    const r=base.getBoundingClientRect();
+    cx=r.left+r.width/2; cy=r.top+r.height/2;
+    knob.classList.add('on');
+    setKnob(e.clientX-cx, e.clientY-cy);
+    e.preventDefault();
+    try{ base.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  base.addEventListener('pointermove',e=>{
+    if(!active||e.pointerId!==id) return;
+    setKnob(e.clientX-cx, e.clientY-cy);
+    e.preventDefault();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>{
+    base.addEventListener(ev,e=>{ if(e.pointerId===id) reset(); });
+  });
+  base.addEventListener('contextmenu',e=>e.preventDefault());
+
+  return ()=>{ try{ wrap.remove(); }catch(e){} onChange(0,0); };
+}
+
+/* 鼠標控制：只在有精細指針（電腦）時啟用，手指唔會誤觸 */
+function bindMouseMove(canvas, getCenter, onChange){
+  if(!window.matchMedia || !window.matchMedia('(pointer:fine)').matches) return ()=>{};
+  const onMove=e=>{
+    const r=canvas.getBoundingClientRect();
+    const c=getCenter();
+    const dx=e.clientX-r.left-c.x, dy=e.clientY-r.top-c.y;
+    const m=Math.hypot(dx,dy);
+    if(m<18){ onChange(0,0); return; }     /* 中間死區，避免抖 */
+    onChange(dx/m, dy/m);
+  };
+  canvas.addEventListener('mousemove',onMove);
+  canvas.addEventListener('mouseleave',()=>onChange(0,0));
+  return ()=>{ canvas.removeEventListener('mousemove',onMove); };
+}
+
+function paintLobbyBoard(myName, myScore, others, unit){
+  const el=document.getElementById('lbRows');
+  if(!el) return;
+  const rows=[{me:true,name:'你',n:Number(myScore)||0,color:'#38bdf8'}];
+  for(const u in (others||{})){
+    const o=others[u];
+    if(!o||typeof o.x!=='number') continue;
+    if(Date.now()-(o.at||0)>8000) continue;
+    rows.push({me:false,name:o.name||u,n:Number(o.score)||0,color:o.color||'#94a3b8'});
+  }
+  rows.sort((a,b)=>b.n-a.n);
+  const top=rows.slice(0,6);
+  el.innerHTML=top.map((x,i)=>
+    '<div class="lbrow '+(x.me?'me':'')+'">'
+    +'<span class="lbr">'+(i+1)+'</span>'
+    +'<span class="lbd" style="background:'+safeColor(x.color,'#94a3b8')+'"></span>'
+    +'<span class="lbn">'+escapeHtml(x.name)+'</span>'
+    +'<span class="lbv">'+x.n+(unit||'')+'</span></div>'
+  ).join('')
+  + (rows.length<2?'<div class="lbrow"><span class="lbempty">暫時只有你一個，其他同學進來就會出現</span></div>':'');
+  const card=document.getElementById('lbCard');
+  if(card) card.style.opacity='';
+}
+
 function createSumoLobby(){
   const R=210;                 /* 擂台半徑（世界座標） */
   const PR=16;                 /* 球半徑 */
@@ -2418,6 +2527,8 @@ function createSumoLobby(){
     const d=Math.hypot(meP.x,meP.y);
     if(d>R+PR*0.6){
       alive=false;
+      /* LOBBY_FIX_A: 原本出局 −1 分，但撞人冇分 → 大家唔知做乜。
+         改成：自己出局 −1；活住撞走人（距離判定）＋2。 */
       score=Math.max(0,score-1);
       const sp=randSpawn(); meP.x=sp.x; meP.y=sp.y; meP.vx=meP.vy=0;
       popups.push({x:meP.x,y:meP.y,t:1,txt:'出局 −1'});
@@ -2440,7 +2551,9 @@ function createSumoLobby(){
         /* 力：越貼越大力，但上限；除咗方向，亦加一點切向位（唔會正面死頂）*/
         const tx=-ny, ty=nx;
         const side=(meP.vx*tx+meP.vy*ty)>0?1:-1;
-        const push=Math.min(420, 180+overlap*24);
+        /* LOBBY_FIX_A: 原本 180~420 太細，撞落去只震一下、推唔郁。
+           而家 620~1500，真係撞得飛。 */
+        const push=Math.min(1500, 620+overlap*58);
         meP.vx+=nx*push+tx*side*70;
         meP.vy+=ny*push+ty*side*70;
         pushing=0.22;
@@ -2591,6 +2704,10 @@ function createSumoLobby(){
       running=true; lastT=performance.now();
       this.mounted=true;
       if(cv){ const r=cv.getBoundingClientRect(); cw=r.width||360; ch=r.height||420; }
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
       raf=requestAnimationFrame(loop);
     },
     async stop(){
@@ -2613,15 +2730,27 @@ function createSumoLobby(){
       fit();
       window.addEventListener('resize',fit);
       unbind=bindInput();
-      /* 手機：右下角虛擬方向鍵（鍵盤照舊可用） */
+      /* STICK_V1: 左下搖杆（手機）+ 鼠標（電腦）*/
       const host=cv.parentElement;
-      if(host){ const kill=mountDPad(host,(x,y)=>{ keys.x=x; keys.y=y; }); const oldUn=unbind;
-        unbind=()=>{ try{kill();}catch(e){} oldUn(); }; }
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{ keys.x=x; keys.y=y; });
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{ keys.x=x;keys.y=y; });
+        const oldUn=unbind;
+        unbind=()=>{ try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn(); };
+      }
       draw();
     },
     tickHud(){
+      paintLobbyBoard(me.displayName||me.username, score, others, '');
       const el=document.getElementById('stCard');
-      if(el) el.innerHTML='<div style="font-size:11px;color:var(--text-sub)">分數</div><div style="font-size:22px;font-weight:800">'+score+'</div>';
+      if(el){
+        const rank=(function(){
+          const rows=[{me:true,n:score}]; for(const u in others){ if(others[u]&&typeof others[u].x==='number'&&Date.now()-(others[u].at||0)<8000) rows.push({me:false,n:Number(others[u].score)||0}); }
+          rows.sort((a,b)=>b.n-a.n); return rows.findIndex(x=>x.me)+1;
+        })();
+        el.innerHTML='<div><div class="sv">'+score+'</div><div class="sl">分數</div></div>'
+          +'<div><div class="sv">'+rank+'</div><div class="sl">排名</div></div>';
+      }
     },
     debug(){ return {x:meP.x,y:meP.y,score,others:Object.keys(others||{}),alive}; },
     probe(x,y){ return Math.hypot(x,y)<=R; }
@@ -2810,6 +2939,28 @@ function createTagLobby(){
 
     resolveWalls(meP, PR);
 
+    /* LOBBY_FIX_A: 被鬼碰到 → 扣 1 分（之前完全冇懲罰，所以大家入到去唔知做乜）。
+       鬼抓到自己以外嘅人 → 自己 +1（下面已經有）。 */
+    if(!myGhost && grace<=0){
+      for(const u in others){
+        const o=others[u];
+        if(!o||typeof o.x!=='number'||!o.ghost) continue;
+        if(Date.now()-(o.at||0)>8000) continue;
+        const dd=Math.hypot(meP.x-o.x, meP.y-o.y);
+        if(dd < PR*2.05){
+          myScore=Math.max(0,myScore-1);
+          grace=1.4;
+          shake=8;
+          popups.push({x:meP.x,y:meP.y,t:1.2,txt:'被捉 −1'});
+          /* 被捉後彈開，避免連續扣 */
+          const ax=meP.x-(o.x||0), ay=meP.y-(o.y||0), am=Math.hypot(ax,ay)||1;
+          meP.x+=ax/am*70; meP.y+=ay/am*70;
+          meP.vx=ax/am*420; meP.vy=ay/am*420;
+          break;
+        }
+      }
+    }
+
     if(grace>0) grace-=dt;
     if(shake>0) shake-=dt*32;
     popups.forEach(p=>p.t-=dt*1.1); popups=popups.filter(p=>p.t>0);
@@ -2975,6 +3126,11 @@ function createTagLobby(){
         });
       }catch(e){}
       running=true; lastT=performance.now(); this.mounted=true;
+      /* STICK_V1: 500ms 刷一次積分榜（之前只有 render 時才刷，所以永遠空白）*/
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
       raf=requestAnimationFrame(loop);
     },
     async stop(){
@@ -2995,14 +3151,26 @@ function createTagLobby(){
       fit(); window.addEventListener('resize',fit);
       unbind=bindInput();
       const host=cv.parentElement;
-      if(host){ const kill=mountDPad(host,(x,y)=>{ keys.x=x; keys.y=y; }); const oldUn=unbind;
-        unbind=()=>{ try{kill();}catch(e){} oldUn(); }; }
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{ keys.x=x; keys.y=y; });
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{ keys.x=x; keys.y=y; });
+        const oldUn=unbind;
+        unbind=()=>{ try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn(); };
+      }
       draw();
     },
     tickHud(){
+      paintLobbyBoard(me.displayName||me.username, myScore, others, '');
       const el=document.getElementById('stCard');
-      if(el) el.innerHTML='<div style="font-size:11px;color:var(--text-sub)">'+(myGhost?'你是鬼':'逃跑中')+'</div>'
-        +'<div style="font-size:22px;font-weight:800">'+myScore+'</div>';
+      if(el){
+        const rank=(function(){
+          const rows=[{me:true,n:myScore}]; for(const u in others){ if(others[u]&&typeof others[u].x==='number'&&Date.now()-(others[u].at||0)<8000) rows.push({me:false,n:Number(others[u].score)||0}); }
+          rows.sort((a,b)=>b.n-a.n); return rows.findIndex(x=>x.me)+1;
+        })();
+        el.innerHTML='<div><div class="sv">'+(myGhost?'鬼':'逃')+'</div><div class="sl">身份</div></div>'
+          +'<div><div class="sv">'+myScore+'</div><div class="sl">分數</div></div>'
+          +'<div><div class="sv">'+rank+'</div><div class="sl">排名</div></div>';
+      }
     },
     debug(){ return {x:meP.x,y:meP.y,score:myScore,ghost:myGhost,others:Object.keys(others||{})}; },
     probe(x,y){ return Math.hypot(x,y)<=R; }
@@ -3279,6 +3447,11 @@ function createFishLobby(){
         });
       }catch(e){}
       running=true; lastT=performance.now(); this.mounted=true;
+      /* STICK_V1: 500ms 刷一次積分榜（之前只有 render 時才刷，所以永遠空白）*/
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
       raf=requestAnimationFrame(loop);
     },
     async stop(){
@@ -3297,14 +3470,26 @@ function createFishLobby(){
       fit(); window.addEventListener('resize',fit);
       unbind=bindInput();
       const host=cv.parentElement;
-      if(host){ const kill=mountDPad(host,(x,y)=>{keys.x=x;keys.y=y;}); const oldUn=unbind;
-        unbind=()=>{try{kill();}catch(e){} oldUn();}; }
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
+        const oldUn=unbind;
+        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
+      }
       draw();
     },
     tickHud(){
+      paintLobbyBoard(me.displayName||me.username, myScore, others, '');
       const el=document.getElementById('stCard');
-      if(el) el.innerHTML='<div style="font-size:11px;color:var(--text-sub)">吃到</div>'
-        +'<div style="font-size:22px;font-weight:800">'+myScore+'</div>';
+      if(el){
+        const rank=(function(){
+          const rows=[{me:true,n:myScore}]; for(const u in others){ if(others[u]&&typeof others[u].x==='number'&&Date.now()-(others[u].at||0)<8000) rows.push({me:false,n:Number(others[u].score)||0}); }
+          rows.sort((a,b)=>b.n-a.n); return rows.findIndex(x=>x.me)+1;
+        })();
+        el.innerHTML='<div><div class="sv">'+myScore+'</div><div class="sl">吃到</div></div>'
+          +'<div><div class="sv">'+Math.round(meP.r)+'</div><div class="sl">大小</div></div>'
+          +'<div><div class="sv">'+rank+'</div><div class="sl">排名</div></div>';
+      }
     },
     debug(){ return {x:meP.x,y:meP.y,r:meP.r,score:myScore,fishes:fishes.length,others:Object.keys(others||{})}; },
     probe(x,y){ return Math.hypot(x,y)<=R; }
