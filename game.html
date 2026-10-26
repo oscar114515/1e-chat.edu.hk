@@ -1009,7 +1009,7 @@ const GAMES=[
  {k:'dotrush', n:'搶豆競速',cat:'lobby',min:1,max:0,ok:false,c:'#fbbf24',ab:'豆',ic:'i-dot', ok:true},
  {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:false,c:'#a855f7',ab:'彈',ic:'i-dodge'},
  {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:false,c:'#ef4444',ab:'車',ic:'i-race'},
- {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:false,c:'#f59e0b',ab:'王',ic:'i-king'},
+ {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:true,c:'#f59e0b',ab:'王',ic:'i-king'},
  {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
  {k:'fish', n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚', ok:true},
  {k:'bombzone',n:'炸彈人',cat:'lobby',min:1,max:0,ok:false,c:'#f97316',ab:'爆'},
@@ -2434,6 +2434,13 @@ function drawMiniMap(ctx, cw, R, walls, players, opts){
   if(opts.square){ ctx.rect(x+5,y+5,SZ-10,SZ-10); }
   else { ctx.arc(cx,cy,SZ/2-5,0,7); }
   ctx.strokeStyle='rgba(148,163,184,.22)'; ctx.lineWidth=1; ctx.stroke();
+
+  /* 陣地／高地區域（可選） */
+  if(opts.zone && opts.zone.r){
+    ctx.beginPath(); ctx.arc(cx,cy,Math.max(2,opts.zone.r*s),0,7);
+    ctx.fillStyle='rgba(250,204,21,.15)'; ctx.fill();
+    ctx.strokeStyle=opts.zone.color||'rgba(250,204,21,.8)'; ctx.lineWidth=1.2; ctx.stroke();
+  }
 
   /* 障礙物 */
   if(walls && walls.length){
@@ -4088,7 +4095,345 @@ function createDotrushLobby(){
   };
 }
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby };
+/* ═══ 佔領高地（king）—— 企上山頂就加分，推走對手 ═══
+   場地圓形，中央一座 3D 高台。站在台上每秒 +5 分，台上多過一個人就「爭奪中」全部唔加分。
+   玩家之間會硬碰硬互推（同相撲一樣的推力模型）。先到 100 分贏。
+   與其他大廳遊戲一致：相機跟隨、搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
+function createKingLobby(){
+  const R=560, PR=14, K=0.55;
+  const VIEW_H=860;
+  const HILL_R=130, HILL_H=52;      /* 高地半徑 / 偽 3D 高度（世界單位） */
+  const GOAL=100;                   /* 台上每秒 +5 → 約 20 秒 */
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0};
+  let cam={x:0,y:0};
+  let others={}, liveRef=null, unsubLive=null;
+  let myScore=0, lastPush=0, lastT=0, shake=0, keys={x:0,y:0};
+  let popups=[], tAcc=0, onHill=false, contested=false, won=false;
+  let unbind=null, _lastDraw=0, owner=null;
+
+  function w2s(x,y){ const s=ch/(VIEW_H*K); return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s*K, s}; }
+  function viewHalfW(){ return (cw/2)/(ch/(VIEW_H*K)); }
+  function viewHalfH(){ return (cw/2)/(ch/(VIEW_H*K)*K); }
+  function randPoint(){
+    const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.9;
+    return {x:Math.cos(a)*r, y:Math.sin(a)*r};
+  }
+
+  function drawField(){
+    const c=w2s(0,0), s=c.s;
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.fillStyle='rgba(12,14,24,.62)'; ctx.fill();
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7); ctx.clip();
+    ctx.strokeStyle='rgba(120,160,210,.075)'; ctx.lineWidth=1;
+    for(let gx=-R;gx<=R;gx+=70){
+      const a=w2s(gx,-R), b=w2s(gx,R);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+    }
+    for(let gy=-R;gy<=R;gy+=70){
+      const a=w2s(-R,gy), b=w2s(R,gy);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.strokeStyle='rgba(250,204,21,.5)'; ctx.lineWidth=Math.max(2,s*3); ctx.stroke();
+  }
+
+  /* 中央高台：圓柱體（側面 + 頂面），金黃色；上山頂會發亮，被搶就轉紅 */
+  function drawHill(){
+    const c=w2s(0,0), s=c.s;
+    const rx=HILL_R*s, ry=HILL_R*s*K, hh=HILL_H*s*K;
+    const sideTop = contested ? '#b91c1c' : (onHill ? '#eab308' : '#64748b');
+    const sideBot = contested ? '#450a0a' : (onHill ? '#78350f' : '#1e293b');
+    const topA = contested ? '#fecaca' : (onHill ? '#fffbeb' : '#fde9b0');
+    const topB = contested ? '#ef4444' : (onHill ? '#fbbf24' : '#d4a437');
+    const topC = contested ? '#7f1d1d' : (onHill ? '#92400e' : '#6b4e12');
+
+    /* 地面光暈（讓高台成為地標） */
+    const gl=ctx.createRadialGradient(c.sx,c.sy,rx*0.15,c.sx,c.sy,rx*1.6);
+    gl.addColorStop(0, contested?'rgba(239,68,68,.18)':'rgba(250,204,21,.17)');
+    gl.addColorStop(1,'rgba(250,204,21,0)');
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,rx*1.6,ry*1.6,0,0,7); ctx.fillStyle=gl; ctx.fill();
+
+    /* 側面 */
+    ctx.beginPath();
+    ctx.moveTo(c.sx-rx, c.sy-hh);
+    ctx.lineTo(c.sx-rx, c.sy);
+    ctx.ellipse(c.sx,c.sy,rx,ry,0,Math.PI,0,true);
+    ctx.lineTo(c.sx+rx, c.sy-hh);
+    ctx.ellipse(c.sx,c.sy-hh,rx,ry,0,0,Math.PI,true);
+    ctx.closePath();
+    const lg=ctx.createLinearGradient(c.sx-rx,0,c.sx+rx,0);
+    lg.addColorStop(0, sideBot); lg.addColorStop(.32, sideTop);
+    lg.addColorStop(.62, sideBot); lg.addColorStop(1, sideBot);
+    ctx.fillStyle=lg; ctx.fill();
+
+    /* 頂面 */
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy-hh,rx,ry,0,0,7);
+    const tg=ctx.createRadialGradient(c.sx-rx*.3,c.sy-hh-ry*.35,rx*.08,c.sx,c.sy-hh,rx*1.02);
+    tg.addColorStop(0,topA); tg.addColorStop(.45,topB); tg.addColorStop(1,topC);
+    ctx.fillStyle=tg; ctx.fill();
+    ctx.strokeStyle= onHill?'rgba(255,255,255,.9)':(contested?'rgba(255,200,200,.85)':'rgba(250,204,21,.55)');
+    ctx.lineWidth=2.2; ctx.stroke();
+    /* 頂面同心紋 */
+    for(let i=1;i<=2;i++){
+      ctx.beginPath(); ctx.ellipse(c.sx,c.sy-hh,rx*(i*0.34),ry*(i*0.34),0,0,7);
+      ctx.strokeStyle='rgba(255,255,255,'+(i===1?'.26':'.16')+')'; ctx.lineWidth=1.3; ctx.stroke();
+    }
+
+    /* 旗：放喺高台後緣，唔會同玩家重疊 */
+    const fp=w2s(0, -HILL_R*0.62);
+    const bx=fp.sx, by=fp.sy-hh;
+    const ph=Math.max(24, 54*s*K), fw=Math.max(15, 24*s*K), fh=Math.max(11, 17*s*K);
+    const topY=by-ph;
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx,topY);
+    ctx.strokeStyle='rgba(241,245,249,.92)'; ctx.lineWidth=Math.max(1.8,1.8*s*K); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(bx,by,fw*0.22,fw*0.11,0,0,7);
+    ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(bx,topY);
+    ctx.quadraticCurveTo(bx+fw*0.55, topY+fh*0.15, bx+fw, topY+fh*0.55);
+    ctx.quadraticCurveTo(bx+fw*0.5, topY+fh*0.95, bx, topY+fh*1.05);
+    ctx.closePath();
+    ctx.fillStyle= contested?'#ef4444' : (onHill?'#fbbf24':'#e2b53c');
+    ctx.fill();
+  }
+
+  function drawBall(x,y,color,r,isMe,label,lift){
+    const p=w2s(x,y), s=p.s, rr=r*s;
+    const yy=p.sy-(lift||0);
+    ctx.beginPath(); ctx.ellipse(p.sx,p.sy+rr*0.55,rr*0.95*(lift?0.82:1),rr*0.42*(lift?0.6:1),0,0,7);
+    ctx.fillStyle=lift?'rgba(0,0,0,.18)':'rgba(0,0,0,.26)'; ctx.fill();
+    const g=ctx.createRadialGradient(p.sx-rr*.35,yy-rr*.45,rr*.1,p.sx,yy,rr*1.05);
+    g.addColorStop(0,'#fff'); g.addColorStop(.28,color); g.addColorStop(1,'rgba(0,0,0,.55)');
+    ctx.beginPath(); ctx.arc(p.sx,yy,rr,0,7); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.sx,yy,rr,0,7);
+    ctx.strokeStyle=isMe?'rgba(56,189,248,.95)':'rgba(255,255,255,.22)';
+    ctx.lineWidth=isMe?2.4:1.2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.sx-rr*.32,yy-rr*.4,rr*.18,0,7); ctx.fillStyle='rgba(255,255,255,.72)'; ctx.fill();
+    if(label){
+      ctx.font='600 '+Math.max(9,s*11)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle='rgba(255,255,255,.9)';
+      ctx.fillText(label,p.sx,yy-rr-6);
+    }
+  }
+
+  function step(dt){
+    const acc=1750;
+    meP.vx+=keys.x*acc*dt; meP.vy+=keys.y*acc*dt;
+    const fr=Math.pow(0.0012,dt); meP.vx*=fr; meP.vy*=fr;
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+
+    /* 玩家互推（被撞者會被彈開；對面客戶端同時做同一件事，感覺一致） */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      const dx=meP.x-o.x, dy=meP.y-o.y;
+      const d=Math.hypot(dx,dy)||0.01, min=PR*2;
+      if(d<min){
+        const nx=dx/d, ny=dy/d, ov=min-d;
+        meP.x+=nx*ov*0.55; meP.y+=ny*ov*0.55;
+        meP.vx+=nx*ov*14; meP.vy+=ny*ov*14;
+        shake=Math.min(6, shake+ov*0.5);
+      }
+    }
+    /* 邊界 */
+    const d=Math.hypot(meP.x,meP.y);
+    if(d>R-PR && d>0.01){
+      const nx=meP.x/d, ny=meP.y/d;
+      meP.x=nx*(R-PR); meP.y=ny*(R-PR);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }
+      meP.vx*=0.82; meP.vy*=0.82;
+    }
+
+    /* 佔領判定：台上只有我一個人才加分 */
+    onHill = Math.hypot(meP.x,meP.y) < HILL_R-PR*0.2;
+    let rivals=0;
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      if(Math.hypot(o.x,o.y) < HILL_R) rivals++;
+    }
+    contested = onHill && rivals>0;
+    if(onHill && !contested && !won){
+      myScore += dt*5;
+      tAcc += dt;
+      if(tAcc>0.5){ tAcc=0; popups.push({x:meP.x,y:meP.y-30,t:0.7,txt:'+5'+(Math.random()<0.3?'':''),vx:0,vy:-30,c:'#facc15'}); }
+      if(myScore>=GOAL){
+        myScore=GOAL; won=true;
+        popups.push({x:meP.x,y:meP.y-46,t:2.2,txt:'🏆 佔領完成！',vx:0,vy:-14,c:'#fbbf24'});
+        try{ showNotice('🏆 你佔領了高地！'); }catch(e){}
+      }
+    }
+    popups.forEach(p=>{ p.x+=(p.vx||0)*dt; p.y+=(p.vy||0)*dt; p.t-=dt*1.1; });
+    popups=popups.filter(p=>p.t>0);
+    if(shake>0) shake-=dt*30;
+
+    /* 誰是現任山主（分數最高） */
+    owner=null; let best=myScore;
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      const sc=Number(o.score)||0;
+      if(sc>best){ best=sc; owner=o.name||u; }
+    }
+
+    if(liveRef&&running){
+      const n2=Date.now();
+      if(n2-lastPush>60){
+        lastPush=n2;
+        try{ set(liveRef,{x:Math.round(meP.x),y:Math.round(meP.y),
+          name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+          score:Math.round(myScore),at:n2}); }catch(e){}
+      }
+    }
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg=ctx.createLinearGradient(0,0,0,ch);
+    bg.addColorStop(0,'#141020'); bg.addColorStop(1,'#07060c');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+    cam.x+=(meP.x-cam.x)*0.14;
+    cam.y+=(meP.y-cam.y)*0.14;
+    drawField();
+    drawHill();
+
+    const s=ch/(VIEW_H*K);
+    const hw=viewHalfW()+70, hh2=viewHalfH()+110;
+    /* 其他人（按 y 排序，後面的蓋前面的）*/
+    const list=[];
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh2) continue;
+      list.push({y:o.y,draw:()=>{
+        const inside=Math.hypot(o.x,o.y)<HILL_R;
+        drawBall(o.x,o.y,o.color||'#22c55e',PR,false,o.name, inside?HILL_H*s*K:0);
+      }});
+    }
+    const meIn=Math.hypot(meP.x,meP.y)<HILL_R;
+    list.push({y:meP.y,draw:()=>drawBall(meP.x,meP.y,'#38bdf8',PR,true,me.displayName||me.username, meIn?HILL_H*s*K:0)});
+    list.sort((a,b)=>a.y-b.y);
+    list.forEach(x=>{ try{ x.draw(); }catch(e){} });
+
+    popups.forEach(p=>{
+      const q=w2s(p.x,p.y);
+      ctx.globalAlpha=Math.max(0,Math.min(1,p.t));
+      ctx.font='700 '+Math.max(12,(p.txt.length>4?15:14)*q.s/2.4)+'px Inter,sans-serif';
+      ctx.textAlign='center'; ctx.fillStyle=p.c||'#fbbf24';
+      ctx.fillText(p.txt,q.sx,q.sy);
+      ctx.globalAlpha=1;
+    });
+    ctx.restore();
+
+    /* 左上狀態 */
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle= onHill ? (contested?'#fca5a5':'#facc15') : 'rgba(226,232,240,.85)';
+    ctx.fillText((onHill?(contested?'⚔ 爭奪中':'⛰ 佔領中'):'⛰ 上山頂')+'  '+Math.round(myScore)+' / '+GOAL, 16, 28);
+
+    drawMiniMap(ctx, cw, R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others),
+      {square:false, zone:{r:HILL_R, color: onHill?'#facc15':'#94a3b8'}});
+  }
+
+  function loop(t){
+    if(!running) return;
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('king',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const setK=(x,y)=>{keys.x=x;keys.y=y;};
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A')setK(-1,0);
+      else if(k==='ArrowRight'||k==='d'||k==='D')setK(1,0);
+      else if(k==='ArrowUp'||k==='w'||k==='W')setK(0,-1);
+      else if(k==='ArrowDown'||k==='s'||k==='S')setK(0,1);
+      else return;
+      e.preventDefault();
+    };
+    const onUp=()=>setK(0,0);
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      const p=randPoint(); meP.x=p.x; meP.y=p.y; cam={x:meP.x,y:meP.y};
+      liveRef=ref(db,'lobbyLive/king/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/king'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(1.5,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
+        const oldUn=unbind;
+        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
+      }
+      draw();
+    },
+    tickHud(){
+      paintLobbyBoard(me.displayName||me.username, Math.round(myScore), others, '', meP);
+      const el=document.getElementById('stCard');
+      if(el){
+        const rows=[{me:true,n:Math.round(myScore)}];
+        for(const u in others){ if(others[u]&&typeof others[u].x==='number'&&Date.now()-(others[u].at||0)<8000) rows.push({me:false,n:Number(others[u].score)||0}); }
+        rows.sort((a,b)=>b.n-a.n);
+        const rank=rows.findIndex(x=>x.me)+1;
+        el.innerHTML='<div><div class="sv">'+Math.round(myScore)+'</div><div class="sl">佔領值</div></div>'
+          +'<div><div class="sv">'+rank+'</div><div class="sl">排名</div></div>';
+      }
+    },
+    debug(){ return {x:meP.x,y:meP.y,score:Math.round(myScore),onHill,contested,won,dots:0,others:Object.keys(others||{}),owner}; },
+    probe(x,y){ return Math.hypot(x,y)<=R; }
+  };
+}
+
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, king:createKingLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
