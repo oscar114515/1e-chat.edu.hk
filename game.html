@@ -5782,6 +5782,7 @@ function createPaintLobby(){
       try{ if(unsubLive) unsubLive(); }catch(e){}
       try{ if(unsubPaint) unsubPaint(); }catch(e){}
       try{ if(liveRef) await remove(liveRef); }catch(e){}
+      try{ if(me) await remove(ref(db,'lobbyPaint/paint/'+me.username)); }catch(e){}
       this.mounted=false;
     },
     mount(canvas){
@@ -6091,6 +6092,9 @@ function createBombLobby(){
     ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
     ctx.fillStyle='#fdba74';
     ctx.fillText('💣 炸中 '+score+'   💥 被炸 '+deaths, 16, 28);
+    ctx.font='600 12px Inter,sans-serif';
+    ctx.fillStyle='rgba(148,163,184,.85)';
+    ctx.fillText('點畫面／空白鍵放炸彈', 16, 48);
 
     drawMiniMap(ctx, cw, Math.max(W,H)/2, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:true});
   }
