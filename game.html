@@ -4423,13 +4423,12 @@ function createSnakeLobby(){
     } else {
       const el=document.getElementById('ovBox'); if(el&&el.dataset.on){ el.innerHTML=''; delete el.dataset.on; }
     }
-  }
-
     /* SNAKE_MINIMAP: 右上角小地圖 —— 只標每條蛇的頭（蛇身太細），
        唔畫金豆，純粹讓玩家知道自己在 2040×2040 場地的哪裡、別人在哪。 */
     (function(){
+      /* 小地圖要避開右上角那塊 HUD（長度／本局最長／排名）→ 向下移 52px */
       const SZ=Math.min(92, Math.max(62, cw*0.22)), pad=10;
-      const x=cw-SZ-pad, y=pad, s=(SZ/2-5)/HALF, cx=x+SZ/2, cy=y+SZ/2;
+      const x=cw-SZ-pad, y=pad+52, s=(SZ/2-5)/HALF, cx=x+SZ/2, cy=y+SZ/2;
       const mp=(wx,wy)=>({x:cx+wx*s, y:cy+wy*s});
       ctx.save();
       roundRectPath(ctx,x,y,SZ,SZ,SZ*0.16);
@@ -4453,6 +4452,8 @@ function createSnakeLobby(){
       }
       ctx.restore();
     })();
+
+  }
   /** 畫一條蛇：外描邊 → 主體 → 內亮線 → 頭（眼睛） */
   function drawSnake(pts, color, zoom, rn){
     if(pts.length<2) return;
