@@ -593,6 +593,9 @@ body.theme-light .specbar{background:rgba(255,255,255,.88);color:#a16207;border-
   box-shadow:0 3px 10px rgba(2,132,199,.55),inset 0 1px 2px rgba(255,255,255,.5);
   transition:transform .06s linear,box-shadow .15s}
 .stick-knob.on{box-shadow:0 4px 16px rgba(14,165,233,.85),inset 0 1px 2px rgba(255,255,255,.6)}
+/* 積分榜座標小字 */
+.lbpos{display:block;font-size:9.5px;color:var(--text-muted);
+  font-variant-numeric:tabular-nums;letter-spacing:.2px;margin-top:1px;font-weight:500}
 </style>
 </head>
 <body data-page-node-id="o2XBarVikIbNEfUtNXqDJz">
@@ -2469,15 +2472,20 @@ function miniPlayers(myX,myY,myColor,others,extra){
   return arr;
 }
 
-function paintLobbyBoard(myName, myScore, others, unit){
+function paintLobbyBoard(myName, myScore, others, unit, myPos){
   const el=document.getElementById('lbRows');
   if(!el) return;
-  const rows=[{me:true,name:'你',n:Number(myScore)||0,color:'#38bdf8'}];
+  /* WALL_NUM_V1: 每行加座標（用戶要對照牆編號講位置）*/
+  const posTxt=(o)=>{
+    if(!o || typeof o.x!=='number' || typeof o.y!=='number') return '';
+    return '('+Math.round(o.x)+','+Math.round(o.y)+')';
+  };
+  const rows=[{me:true,name:'你',n:Number(myScore)||0,color:'#38bdf8',pos:posTxt(myPos)}];
   for(const u in (others||{})){
     const o=others[u];
     if(!o||typeof o.x!=='number') continue;
     if(Date.now()-(o.at||0)>8000) continue;
-    rows.push({me:false,name:o.name||u,n:Number(o.score)||0,color:o.color||'#94a3b8'});
+    rows.push({me:false,name:o.name||u,n:Number(o.score)||0,color:o.color||'#94a3b8',pos:posTxt(o)});
   }
   rows.sort((a,b)=>b.n-a.n);
   const top=rows.slice(0,6);
@@ -2485,7 +2493,9 @@ function paintLobbyBoard(myName, myScore, others, unit){
     '<div class="lbrow '+(x.me?'me':'')+'">'
     +'<span class="lbr">'+(i+1)+'</span>'
     +'<span class="lbd" style="background:'+safeColor(x.color,'#94a3b8')+'"></span>'
-    +'<span class="lbn">'+escapeHtml(x.name)+'</span>'
+    +'<span class="lbn">'+escapeHtml(x.name)
+      +(x.pos?'<span class="lbpos">'+x.pos+'</span>':'')
+    +'</span>'
     +'<span class="lbv">'+x.n+(unit||'')+'</span></div>'
   ).join('')
   + (rows.length<2?'<div class="lbrow"><span class="lbempty">暫時只有你一個，其他同學進來就會出現</span></div>':'');
@@ -2813,7 +2823,7 @@ function createSumoLobby(){
       draw();
     },
     tickHud(){
-      paintLobbyBoard(me.displayName||me.username, score, others, '');
+      paintLobbyBoard(me.displayName||me.username, score, others, '', meP);
       const el=document.getElementById('stCard');
       if(el){
         const rank=(function(){
@@ -2836,8 +2846,10 @@ function createSumoLobby(){
 function createTagLobby(){
   /* CAMERA_V1: 地圖放大 4 倍（230 → 900），相機跟隨；牆由 8 增到 30 堵，
      形成真正「大迷宮」，唔再係一個小圓盤。 */
-  const R=900, PR=15, K=0.55;
-  const VIEW_H=620;
+  /* WALL_NUM_V1: 用戶要求地圖再大一點 900 → 1200（面積 ×1.78），
+     牆座標同步 ×1.33，維持原本的相對佈局。 */
+  const R=1200, PR=15, K=0.55;
+  const VIEW_H=660;
   let cam={x:0,y:0};
   /* TAG_WALLS: 固定佈局（唔隨機）——所有人同一張地圖。
      圓形擂台 + 幾堵牆，做「迷宮」的感覺，又唔會困死。
@@ -2846,16 +2858,16 @@ function createTagLobby(){
   const WALLS=(function(){
     const out=[];
     const seed=[
-      [-620,-580,220,26],[ -240,-660,26,200],[ 300,-620,240,26],[ 640,-560,26,220],
-      [-700,-240,26,240],[ -420,-330,200,26],[  80,-380,26,220],[ 420,-300,220,26],
-      [ 700,-180,26,200],
-      [-760, 120,220,26],[ -380, 100,26,240],[  40,  60,240,26],[ 460, 140,26,220],
-      [ 720, 260,26,200],
-      [-640, 420,26,220],[ -300, 480,240,26],[ 160, 420,26,240],[ 520, 480,220,26],
-      [-700, 640,200,26],[ -200, 700,26,200],[ 280, 660,220,26],
-      [-520,-80,26,180],[ -120,-100,180,26],[ 240, -60,26,180],[ 560, 60,180,26],
-      [-480, 260,180,26],[ -100, 300,26,180],[ 340, 300,180,26],
-      [ -60,-500,180,26],[ 200, 240,180,26]
+      [-825,-771,293,35],[-319,-878,35,266],[399,-825,319,35],[851,-745,35,293],
+      [-931,-319,35,319],[-559,-439,266,35],[106,-505,35,293],[559,-399,293,35],
+      [931,-239,35,266],
+      [-1011,160,293,35],[-505,133,35,319],[53,80,319,35],[612,186,35,293],
+      [958,346,35,266],
+      [-851,559,35,293],[-399,638,319,35],[213,559,35,319],[692,638,293,35],
+      [-931,851,266,35],[-266,931,35,266],[372,878,293,35],
+      [-692,-106,35,239],[-160,-133,239,35],[319,-80,35,239],[745,80,239,35],
+      [-638,346,239,35],[-133,399,35,239],[452,399,239,35],
+      [-80,-665,239,35],[266,319,239,35]
     ];
     for(const [x,y,w,h] of seed) out.push({x,y,w,h});
     return out;
@@ -2883,7 +2895,7 @@ function createTagLobby(){
     }
   }
   /* 3D 牆：頂面 + 前面 + 右面，做出厚度 */
-  function drawWall(w){
+  function drawWall(w, idx){
     const s=w2s(0,0).s;
     /* SYNC_FIX_V1: 原本 H=16，3D 頂面比球員高一大截，
        球走到牆「下方」時頂面蓋住球 → 玩家以為穿過去了（其實碰撞正常）。
@@ -2911,6 +2923,18 @@ function createTagLobby(){
     ctx.beginPath();
     ctx.moveTo(A.sx,A.sy-hgt); ctx.lineTo(B.sx,B.sy-hgt);
     ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1.4; ctx.stroke();
+    /* WALL_NUM_V1: 牆編號（方便玩家講「第幾號牆有問題」）*/
+    if(idx!=null && s>0.35){
+      const mcx=(A.sx+B.sx+C.sx+D.sx)/4, mcy=(A.sy+B.sy+C.sy+D.sy)/4 - hgt;
+      const fs=Math.max(8, Math.min(13, s*11));
+      ctx.font='700 '+fs+'px Inter,sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(4,10,18,.55)';
+      ctx.fillText(String(idx), mcx+0.6, mcy+0.6);
+      ctx.fillStyle='rgba(186,230,253,.95)';
+      ctx.fillText(String(idx), mcx, mcy);
+      ctx.textBaseline='alphabetic';
+    }
     /* 地面投影 */
     ctx.beginPath();
     ctx.moveTo(D.sx,D.sy); ctx.lineTo(C.sx,C.sy); ctx.lineTo(B.sx,B.sy);
@@ -3309,8 +3333,10 @@ function createTagLobby(){
     });
 
     /* 牆：只畫可見範圍，按 y 排序 */
-    WALLS.filter(w=>Math.abs(w.x-cam.x)<hw+w.w && Math.abs(w.y-cam.y)<hh+w.h)
-         .sort((a,b)=>a.y-b.y).forEach(drawWall);
+    WALLS.map((w,k)=>({w,k}))
+         .filter(o=>Math.abs(o.w.x-cam.x)<hw+o.w.w && Math.abs(o.w.y-cam.y)<hh+o.w.h)
+         .sort((a,b)=>a.w.y-b.w.y)
+         .forEach(o=>drawWall(o.w, o.k+1));
 
     for(const u in others){
       const o=others[u];
@@ -3438,7 +3464,7 @@ function createTagLobby(){
       draw();
     },
     tickHud(){
-      paintLobbyBoard(me.displayName||me.username, myScore, others, '');
+      paintLobbyBoard(me.displayName||me.username, myScore, others, '', meP);
       const el=document.getElementById('stCard');
       if(el){
         const rank=(function(){
@@ -3759,7 +3785,7 @@ function createFishLobby(){
       draw();
     },
     tickHud(){
-      paintLobbyBoard(me.displayName||me.username, myScore, others, '');
+      paintLobbyBoard(me.displayName||me.username, myScore, others, '', meP);
       const el=document.getElementById('stCard');
       if(el){
         const rank=(function(){
