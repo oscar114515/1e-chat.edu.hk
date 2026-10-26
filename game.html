@@ -1008,7 +1008,7 @@ const GAMES=[
  {k:'tag', n:'鬼抓人',cat:'lobby',min:1,max:0,ok:false,c:'#f472b6',ab:'鬼',ic:'i-tag', ok:true},
  {k:'dotrush', n:'搶豆競速',cat:'lobby',min:1,max:0,ok:false,c:'#fbbf24',ab:'豆',ic:'i-dot', ok:true},
  {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:false,c:'#a855f7',ab:'彈',ic:'i-dodge'},
- {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:false,c:'#ef4444',ab:'車',ic:'i-race'},
+ {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:true,c:'#ef4444',ab:'車',ic:'i-race'},
  {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:true,c:'#f59e0b',ab:'王',ic:'i-king'},
  {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
  {k:'fish', n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚', ok:true},
@@ -2434,6 +2434,14 @@ function drawMiniMap(ctx, cw, R, walls, players, opts){
   if(opts.square){ ctx.rect(x+5,y+5,SZ-10,SZ-10); }
   else { ctx.arc(cx,cy,SZ/2-5,0,7); }
   ctx.strokeStyle='rgba(148,163,184,.22)'; ctx.lineWidth=1; ctx.stroke();
+
+  /* 環形賽道（可選） */
+  if(opts.ring && opts.ring.rOut){
+    ctx.beginPath(); ctx.arc(cx,cy,opts.ring.rOut*s,0,7);
+    ctx.strokeStyle='rgba(148,163,184,.6)'; ctx.lineWidth=1.3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,opts.ring.rIn*s,0,7);
+    ctx.strokeStyle='rgba(148,163,184,.6)'; ctx.lineWidth=1.3; ctx.stroke();
+  }
 
   /* 陣地／高地區域（可選） */
   if(opts.zone && opts.zone.r){
@@ -4433,7 +4441,295 @@ function createKingLobby(){
 }
 
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, king:createKingLobby };
+/* ═══ 迷你賽車（race）—— 環形賽道跑三圈 ═══
+   橢圓環形賽道，車頭跟住行車方向轉。搖桿／滑鼠控制方向，速度自動加速。
+   圈數由「累積角度」判斷，跑反方向會倒扣，唔可以抄近路直接切圓心（會被賽道邊界推回）。
+   與其他大廳遊戲一致：相機跟隨、搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
+function createRaceLobby(){
+  const R_OUT=620, R_IN=380, PR=13, K=0.55;
+  const VIEW_H=900;
+  const LAPS=3;
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0}, head=0;
+  let cam={x:0,y:0};
+  let others={}, liveRef=null, unsubLive=null;
+  let keys={x:0,y:0}, lastT=0, lastPush=0, _lastDraw=0;
+  let prog=0, lastAng=null, lap=0, best=0, done=false, t0=0, myTime=0;
+  let unbind=null, skid=[], shake=0;
+
+  function w2s(x,y){ const s=ch/(VIEW_H*K); return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s*K, s}; }
+  function viewHalfW(){ return (cw/2)/(ch/(VIEW_H*K)); }
+  function viewHalfH(){ return (cw/2)/(ch/(VIEW_H*K)*K); }
+
+  function drawTrack(){
+    const c=w2s(0,0), s=c.s;
+    /* 草地底 */
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,(R_OUT+150)*s,(R_OUT+150)*s*K,0,0,7);
+    ctx.fillStyle='#0a1a12'; ctx.fill();
+    /* 賽道（外圈填灰，內圈挖空成草地） */
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R_OUT*s,R_OUT*s*K,0,0,7);
+    ctx.fillStyle='#232a35'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R_IN*s,R_IN*s*K,0,0,7);
+    ctx.fillStyle='#0d2216'; ctx.fill();
+    /* 路肩紅白 */
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R_OUT*s,R_OUT*s*K,0,0,7);
+    ctx.strokeStyle='rgba(239,68,68,.55)'; ctx.lineWidth=Math.max(2,3*s); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R_IN*s,R_IN*s*K,0,0,7);
+    ctx.strokeStyle='rgba(248,250,252,.45)'; ctx.lineWidth=Math.max(2,3*s); ctx.stroke();
+    /* 中線虛線 */
+    const RM=(R_OUT+R_IN)/2;
+    ctx.setLineDash([14*s, 18*s]);
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,RM*s,RM*s*K,0,0,7);
+    ctx.strokeStyle='rgba(148,163,184,.32)'; ctx.lineWidth=Math.max(1.4,2*s); ctx.stroke();
+    ctx.setLineDash([]);
+    /* 起跑格：頂部一個橫幅 */
+    const N=8;
+    for(let i=0;i<N;i++){
+      const a0=-Math.PI/2-Math.PI*0.055+i*(Math.PI*0.11/N);
+      const t=(i%2===0);
+      for(let j=0;j<2;j++){
+        const r0=R_IN+(R_OUT-R_IN)*(j/2), r1=R_IN+(R_OUT-R_IN)*((j+1)/2);
+        const p0=w2s(Math.cos(a0)*r0,Math.sin(a0)*r0), p1=w2s(Math.cos(a0)*r1,Math.sin(a0)*r1);
+        const a1=a0+Math.PI*0.11/N;
+        const p2=w2s(Math.cos(a1)*r1,Math.sin(a1)*r1), p3=w2s(Math.cos(a1)*r0,Math.sin(a1)*r0);
+        ctx.beginPath(); ctx.moveTo(p0.sx,p0.sy); ctx.lineTo(p1.sx,p1.sy); ctx.lineTo(p2.sx,p2.sy); ctx.lineTo(p3.sx,p3.sy);
+        ctx.closePath();
+        ctx.fillStyle=((i+j)%2===0)?'rgba(248,250,252,.85)':'rgba(15,23,42,.85)';
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawCar(x,y,ang,color,isMe,label){
+    const p=w2s(x,y), s=p.s, L=PR*1.9*s, W=PR*1.25*s;
+    ctx.save();
+    ctx.translate(p.sx,p.sy);
+    ctx.beginPath(); ctx.ellipse(0,L*0.42,W*0.62,W*0.28,0,0,7); ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fill();
+    ctx.rotate(ang+Math.PI/2);
+    /* 車身 */
+    roundRectPath(ctx,-W/2,-L/2,W,L,W*0.34);
+    const g=ctx.createLinearGradient(-W/2,0,W/2,0);
+    g.addColorStop(0,'rgba(0,0,0,.35)'); g.addColorStop(.35,color); g.addColorStop(.6,color); g.addColorStop(1,'rgba(0,0,0,.45)');
+    ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle=isMe?'rgba(56,189,248,.95)':'rgba(255,255,255,.35)';
+    ctx.lineWidth=isMe?2:1.2; ctx.stroke();
+    /* 車窗 */
+    roundRectPath(ctx,-W*0.3,-L*0.18,W*0.6,L*0.3,W*0.12);
+    ctx.fillStyle='rgba(186,230,253,.55)'; ctx.fill();
+    ctx.restore();
+    if(label){
+      ctx.font='600 '+Math.max(9,s*11)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle='rgba(255,255,255,.9)';
+      ctx.fillText(label,p.sx,p.sy-L*0.72);
+    }
+  }
+
+  function clampToTrack(){
+    const d=Math.hypot(meP.x,meP.y);
+    if(d<1) return;
+    const nx=meP.x/d, ny=meP.y/d;
+    if(d>R_OUT-PR){
+      meP.x=nx*(R_OUT-PR); meP.y=ny*(R_OUT-PR);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn>0){ meP.vx-=nx*vn*1.35; meP.vy-=ny*vn*1.35; }
+      shake=Math.min(5,shake+2);
+    } else if(d<R_IN+PR){
+      meP.x=nx*(R_IN+PR); meP.y=ny*(R_IN+PR);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn<0){ meP.vx-=nx*vn*1.35; meP.vy-=ny*vn*1.35; }
+      shake=Math.min(5,shake+2);
+    }
+  }
+
+  function step(dt){
+    const m=Math.hypot(keys.x,keys.y);
+    const acc=1500;
+    if(m>0.04){
+      meP.vx+=(keys.x/m)*acc*dt;
+      meP.vy+=(keys.y/m)*acc*dt;
+    } else {
+      meP.vx*=Math.pow(0.28,dt); meP.vy*=Math.pow(0.28,dt);
+    }
+    /* 限速 */
+    const sp=Math.hypot(meP.vx,meP.vy), MAX=520;
+    if(sp>MAX){ meP.vx=meP.vx/sp*MAX; meP.vy=meP.vy/sp*MAX; }
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+    clampToTrack();
+
+    if(sp>60){
+      const want=Math.atan2(meP.vy,meP.vx);
+      let d=want-head;
+      while(d>Math.PI) d-=6.283185307;
+      while(d<-Math.PI) d+=6.283185307;
+      head+=d*Math.min(1,dt*13);
+      if(Math.random()<0.5) skid.push({x:meP.x-meP.vx*0.03,y:meP.y-meP.vy*0.03,t:0.5});
+    }
+    skid.forEach(p=>p.t-=dt*1.6);
+    while(skid.length>40) skid.shift();
+    skid=skid.filter(p=>p.t>0);
+
+    /* 圈數：累積角度 */
+    const ang=Math.atan2(meP.y,meP.x);
+    if(lastAng===null) lastAng=ang;
+    else{
+      let d=ang-lastAng;
+      while(d>Math.PI) d-=6.283185307;
+      while(d<-Math.PI) d+=6.283185307;
+      prog+=d;
+      lastAng=ang;
+      const nl=Math.max(0, Math.floor(prog/6.283185307));
+      if(nl>lap){
+        lap=nl;
+        if(lap>=LAPS && !done){
+          done=true; myTime=(Date.now()-t0)/1000;
+          try{ showNotice('🏁 完成！用時 '+myTime.toFixed(1)+' 秒'); }catch(e){}
+        }
+      }
+    }
+    if(shake>0) shake-=dt*26;
+
+    if(liveRef&&running){
+      const n2=Date.now();
+      if(n2-lastPush>90){
+        lastPush=n2;
+        try{ set(liveRef,{x:Math.round(meP.x),y:Math.round(meP.y),a:Math.round(head*100)/100,
+          name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+          lap:lap, t: done?Math.round(myTime*10):0, at:n2}); }catch(e){}
+      }
+    }
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg=ctx.createLinearGradient(0,0,0,ch);
+    bg.addColorStop(0,'#0b1220'); bg.addColorStop(1,'#05080e');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+    cam.x+=(meP.x-cam.x)*0.12;
+    cam.y+=(meP.y-cam.y)*0.12;
+    drawTrack();
+    /* 胎痕 */
+    for(const p of skid){
+      const q=w2s(p.x,p.y);
+      ctx.globalAlpha=Math.max(0,p.t)*0.35;
+      ctx.beginPath(); ctx.ellipse(q.sx,q.sy,3*q.s,1.6*q.s,0,0,7);
+      ctx.fillStyle='#0f172a'; ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    const hw=viewHalfW()+90, hh2=viewHalfH()+90;
+    const list=[];
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh2) continue;
+      list.push({y:o.y,d:()=>drawCar(o.x,o.y,o.a||0,o.color||'#22c55e',false,o.name)});
+    }
+    list.push({y:meP.y,d:()=>drawCar(meP.x,meP.y,head,'#38bdf8',true,me.displayName||me.username)});
+    list.sort((a,b)=>a.y-b.y);
+    list.forEach(x=>{ try{x.d();}catch(e){} });
+    ctx.restore();
+
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle='rgba(226,232,240,.92)';
+    ctx.fillText('🏁 第 '+Math.min(LAPS,lap+1)+' / '+LAPS+' 圈'+(done?'  ✓':'')+'   '+(t0?((Date.now()-t0)/1000).toFixed(1)+'s':''), 16, 28);
+
+    drawMiniMap(ctx, cw, R_OUT, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:false, ring:{rIn:R_IN, rOut:R_OUT}});
+  }
+
+  function loop(t){
+    if(!running) return;
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('race',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const setK=(x,y)=>{keys.x=x;keys.y=y;};
+    const onKey=e=>{
+      const k=e.key; let x=0,y=0;
+      if(k==='ArrowLeft'||k==='a'||k==='A')x=-1;
+      else if(k==='ArrowRight'||k==='d'||k==='D')x=1;
+      else if(k==='ArrowUp'||k==='w'||k==='W')y=-1;
+      else if(k==='ArrowDown'||k==='s'||k==='S')y=1;
+      else return;
+      keys.x=x; keys.y=y; e.preventDefault();
+    };
+    const onUp=()=>setK(0,0);
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      const a=-Math.PI/2-0.22;
+      const RM=(R_OUT+R_IN)/2;
+      meP.x=Math.cos(a)*RM; meP.y=Math.sin(a)*RM; head=a+Math.PI/2;
+      cam={x:meP.x,y:meP.y}; t0=Date.now(); lastAng=null; prog=0; lap=0; done=false;
+      liveRef=ref(db,'lobbyLive/race/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/race'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(1.5,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
+        const oldUn=unbind;
+        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
+      }
+      draw();
+    },
+    tickHud(){
+      paintLobbyBoard(me.displayName||me.username, lap, others, '圈', meP);
+      const el=document.getElementById('stCard');
+      if(el){
+        const rows=[{me:true,n:lap*10000+prog}];
+        for(const u in others){ const o=others[u]; if(o&&typeof o.x==='number'&&Date.now()-(o.at||0)<8000) rows.push({me:false,n:(Number(o.lap)||0)*10000}); }
+        rows.sort((a,b)=>b.n-a.n);
+        el.innerHTML='<div><div class="sv">'+Math.min(LAPS,lap+1)+'</div><div class="sl">圈數</div></div>'
+          +'<div><div class="sv">'+(rows.findIndex(x=>x.me)+1)+'</div><div class="sl">排名</div></div>';
+      }
+    },
+    debug(){ return {x:meP.x,y:meP.y,head,lap,prog,score:lap,done,others:Object.keys(others||{})}; },
+    probe(x,y){ const d=Math.hypot(x,y); return d<=R_OUT && d>=R_IN; }
+  };
+}
+
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, race:createRaceLobby, king:createKingLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
