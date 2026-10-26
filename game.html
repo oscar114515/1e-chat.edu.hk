@@ -2399,6 +2399,76 @@ function bindMouseMove(canvas, getCenter, onChange){
   return ()=>{ canvas.removeEventListener('mousemove',onMove); };
 }
 
+/* ═══ MINIMAP_V1: 通用小地圖（右上角）═══
+   用戶要求：所有遊戲右上角加一個很小的地圖簡圖，標出障礙物與所有人位置。
+   貪吃蛇不放金豆，只顯示每條蛇在哪 —— 讓玩家看到整個場地範圍。 */
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+function drawMiniMap(ctx, cw, R, walls, players, opts){
+  opts = opts || {};
+  const SZ = Math.min(96, Math.max(66, cw*0.235));
+  const pad = 10;
+  const x = cw - SZ - pad, y = pad;
+  const s = (SZ/2 - 5) / R;            /* 世界 → 小地圖縮放 */
+  const cx = x + SZ/2, cy = y + SZ/2;
+  const mp = (wx,wy)=>({x: cx + wx*s, y: cy + wy*s});
+
+  ctx.save();
+  /* 底 */
+  roundRectPath(ctx,x,y,SZ,SZ,SZ*0.16);
+  ctx.fillStyle='rgba(8,14,24,.66)'; ctx.fill();
+  ctx.strokeStyle='rgba(148,163,184,.34)'; ctx.lineWidth=1; ctx.stroke();
+
+  /* 場地範圍 */
+  ctx.beginPath();
+  if(opts.square){ ctx.rect(x+5,y+5,SZ-10,SZ-10); }
+  else { ctx.arc(cx,cy,SZ/2-5,0,7); }
+  ctx.strokeStyle='rgba(148,163,184,.22)'; ctx.lineWidth=1; ctx.stroke();
+
+  /* 障礙物 */
+  if(walls && walls.length){
+    ctx.fillStyle='rgba(148,163,184,.62)';
+    for(const w of walls){
+      const a=mp(w.x-w.w/2, w.y-w.h/2);
+      const ww=Math.max(1.2, w.w*s), hh=Math.max(1.2, w.h*s);
+      ctx.fillRect(a.x,a.y,ww,hh);
+    }
+  }
+
+  /* 玩家點 */
+  for(const p of (players||[])){
+    if(typeof p.x!=='number') continue;
+    const q=mp(p.x,p.y);
+    if(p.me){
+      ctx.beginPath(); ctx.arc(q.x,q.y,4.6,0,7);
+      ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=1.5; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(q.x,q.y,p.me?3.1:2.6,0,7);
+    ctx.fillStyle=p.color||'#38bdf8'; ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* 把「自己 + 其他人」整理成小地圖要的格式 */
+function miniPlayers(myX,myY,myColor,others,extra){
+  const arr=[{x:myX,y:myY,color:myColor||'#38bdf8',me:true}];
+  for(const u in (others||{})){
+    const o=others[u];
+    if(!o||typeof o.x!=='number') continue;
+    if(Date.now()-(o.at||0)>8000) continue;
+    arr.push({x:o.x,y:o.y,color:o.color||'#94a3b8'});
+  }
+  if(extra&&typeof extra.x==='number') arr.push(extra);
+  return arr;
+}
+
 function paintLobbyBoard(myName, myScore, others, unit){
   const el=document.getElementById('lbRows');
   if(!el) return;
@@ -2631,6 +2701,8 @@ function createSumoLobby(){
     ctx.font='700 15px Inter,sans-serif';
     ctx.textAlign='left'; ctx.fillStyle='rgba(226,232,240,.9)';
     ctx.fillText('分數 '+score, 16, 28);
+    /* 小地圖 */
+    drawMiniMap(ctx, cw, R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:false});
   }
 
   let _lastDraw=0;
@@ -3266,6 +3338,9 @@ function createTagLobby(){
 
     ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left'; ctx.fillStyle='rgba(226,232,240,.9)';
     ctx.fillText((myGhost?'👻 你是鬼':'🏃 快走')+'　抓到 '+myScore, 16, 28);
+    /* 小地圖：連 AI 鬼都標出來，可以提早預判 */
+    drawMiniMap(ctx, cw, R, WALLS, miniPlayers(meP.x,meP.y,myGhost?'#ef4444':'#38bdf8',others,
+      (aiGhost&&aiGhost.active)?{x:aiGhost.x,y:aiGhost.y,color:'#a855f7'}:null), {square:false});
   }
 
   let _lastDraw=0;
@@ -3601,6 +3676,8 @@ function createFishLobby(){
     ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
     ctx.fillStyle='rgba(224,242,254,.92)';
     ctx.fillText('🐟 '+myScore+'　大小 '+Math.round(meP.r), 16, 28);
+    /* 小地圖：只顯示玩家（魚太小，唔畫）*/
+    drawMiniMap(ctx, cw, R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:false});
   }
 
   let _lastDraw=0;
@@ -4321,6 +4398,35 @@ function createSnakeLobby(){
       const el=document.getElementById('ovBox'); if(el&&el.dataset.on){ el.innerHTML=''; delete el.dataset.on; }
     }
   }
+
+    /* SNAKE_MINIMAP: 右上角小地圖 —— 只標每條蛇的頭（蛇身太細），
+       唔畫金豆，純粹讓玩家知道自己在 2040×2040 場地的哪裡、別人在哪。 */
+    (function(){
+      const SZ=Math.min(92, Math.max(62, cw*0.22)), pad=10;
+      const x=cw-SZ-pad, y=pad, s=(SZ/2-5)/HALF, cx=x+SZ/2, cy=y+SZ/2;
+      const mp=(wx,wy)=>({x:cx+wx*s, y:cy+wy*s});
+      ctx.save();
+      roundRectPath(ctx,x,y,SZ,SZ,SZ*0.16);
+      ctx.fillStyle='rgba(8,14,24,.66)'; ctx.fill();
+      ctx.strokeStyle='rgba(148,163,184,.34)'; ctx.lineWidth=1; ctx.stroke();
+      ctx.strokeStyle='rgba(148,163,184,.20)'; ctx.lineWidth=1;
+      ctx.strokeRect(x+5,y+5,SZ-10,SZ-10);
+      for(const u in rivals){
+        const r=rivals[u];
+        if(!r||!r.h||!r.h.length||r.dead) continue;
+        const last=r.h[r.h.length-1];
+        const q=mp(last.x,last.y);
+        ctx.beginPath(); ctx.arc(q.x,q.y,2.5,0,7);
+        ctx.fillStyle=r.color||'#94a3b8'; ctx.fill();
+      }
+      if(my){
+        const q=mp(my.x,my.y);
+        ctx.beginPath(); ctx.arc(q.x,q.y,5,0,7);
+        ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.beginPath(); ctx.arc(q.x,q.y,3,0,7); ctx.fillStyle='#38bdf8'; ctx.fill();
+      }
+      ctx.restore();
+    })();
   /** 畫一條蛇：外描邊 → 主體 → 內亮線 → 頭（眼睛） */
   function drawSnake(pts, color, zoom, rn){
     if(pts.length<2) return;
