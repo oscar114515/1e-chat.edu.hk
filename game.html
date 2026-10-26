@@ -1004,7 +1004,7 @@ const GAMES=[
 
  /* ── 大廳自由（沒有房主，點進去就玩）── */
  {k:'snake',n:'貪吃蛇',cat:'lobby',min:1,max:0,ok:true,c:'#22c55e',ab:'蛇',ic:'i-snake'},
- {k:'agar',n:'球球大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#38bdf8',ab:'球',ic:'i-ball'},
+ {k:'agar',n:'球球大作戰',cat:'lobby',min:1,max:0,ok:true,c:'#38bdf8',ab:'球',ic:'i-ball'},
  {k:'tag', n:'鬼抓人',cat:'lobby',min:1,max:0,ok:false,c:'#f472b6',ab:'鬼',ic:'i-tag', ok:true},
  {k:'dotrush', n:'搶豆競速',cat:'lobby',min:1,max:0,ok:false,c:'#fbbf24',ab:'豆',ic:'i-dot', ok:true},
  {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:true,c:'#a855f7',ab:'彈',ic:'i-dodge'},
@@ -5274,7 +5274,276 @@ function createLaserLobby(){
 }
 
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, laser:createLaserLobby, dodge:createDodgeLobby, race:createRaceLobby, king:createKingLobby };
+/* ═══ 球球大作戰（agar）—— 食豆變大，大魚食細魚 ═══
+   食豆會長大；比對方大半個就可以吞咗佢（體積 30% 過戶），被吞會變返細。
+   「邊個食邊個」由雙方各自用同一份公開資料判斷 → 唔需要額外伺服器節點。
+   與其他大廳遊戲一致：相機跟隨（會隨體型自動拉遠）、搖桿 + 鼠標、小地圖、積分榜帶座標。 */
+function createAgarLobby(){
+  const R=780, K=0.55;
+  const VIEW_H=880;
+  const START_R=20, MAX_R=92, WIN_R=72;
+  const FOOD_N=260;
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0}, myR=START_R;
+  let cam={x:0,y:0};
+  let others={}, liveRef=null, unsubLive=null;
+  let foods=[], keys={x:0,y:0}, lastT=0, lastPush=0, _lastDraw=0;
+  let eaten={}, won=false, popups=[], unbind=null, kills=0, lastEatLog=0;
+
+  function zoom(){ return 1 + Math.max(0,(myR-START_R))/95; }
+  function w2s(x,y){ const z=zoom(), s=ch/(VIEW_H*K*z); return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s*K, s}; }
+  function viewHalfW(){ const z=zoom(); return (cw/2)/(ch/(VIEW_H*K*z)); }
+  function viewHalfH(){ const z=zoom(); return (cw/2)/(ch/(VIEW_H*K*z)*K); }
+  function randPoint(){ const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.94; return {x:Math.cos(a)*r,y:Math.sin(a)*r}; }
+
+  function ensureFood(){
+    while(foods.length<FOOD_N){
+      const p=randPoint();
+      foods.push({x:p.x,y:p.y,r:5+Math.random()*4,
+        col: ['#67e8f9','#a78bfa','#fbbf24','#34d399','#f472b6'][Math.floor(Math.random()*5)]});
+    }
+  }
+
+  function resetMe(){
+    const p=randPoint();
+    meP.x=p.x*0.35; meP.y=p.y*0.35; meP.vx=0; meP.vy=0; myR=START_R; cam={x:meP.x,y:meP.y};
+  }
+
+  function step(dt){
+    const m=Math.hypot(keys.x,keys.y);
+    const speedF=Math.max(0.55, 1-(myR-START_R)/260);   /* 越大越慢 */
+    const acc=1900*speedF;
+    if(m>0.05){ meP.vx+=(keys.x/m)*acc*dt; meP.vy+=(keys.y/m)*acc*dt; }
+    else { meP.vx*=Math.pow(0.25,dt); meP.vy*=Math.pow(0.25,dt); }
+    const MAX=430*speedF, sp=Math.hypot(meP.vx,meP.vy);
+    if(sp>MAX){ meP.vx=meP.vx/sp*MAX; meP.vy=meP.vy/sp*MAX; }
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+    const d=Math.hypot(meP.x,meP.y);
+    if(d>R-myR && d>0.01){
+      const nx=meP.x/d, ny=meP.y/d;
+      meP.x=nx*(R-myR); meP.y=ny*(R-myR);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }
+    }
+
+    /* 食豆 */
+    for(let i=foods.length-1;i>=0;i--){
+      const f=foods[i];
+      if(Math.hypot(f.x-meP.x,f.y-meP.y) < myR+f.r*0.6){
+        foods.splice(i,1);
+        myR=Math.min(MAX_R, myR+0.9);
+        if(Math.random()<0.25) popups.push({x:f.x,y:f.y,t:0.6,txt:'+',vx:0,vy:-24,c:f.col});
+      }
+    }
+    ensureFood();
+
+    /* 同其他球互動 */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      const orr=Number(o.r)||START_R;
+      const dd=Math.hypot(meP.x-o.x, meP.y-o.y)||0.01;
+      /* 我吞佢 */
+      if(myR > orr*1.15 && dd < myR - orr*0.35){
+        const key=u+'_'+Math.floor(Date.now()/3000);
+        if(!eaten[key]){
+          eaten[key]=1;
+          myR=Math.min(MAX_R, myR+Math.sqrt(orr*orr)*0.5);
+          kills++;
+          popups.push({x:o.x,y:o.y,t:1.1,txt:'吞咗 '+(o.name||''),vx:0,vy:-30,c:'#fbbf24'});
+        }
+      }
+      /* 佢吞我 */
+      else if(orr > myR*1.15 && dd < orr - myR*0.35){
+        popups.push({x:meP.x,y:meP.y,t:1.4,txt:'被吞了',vx:0,vy:-28,c:'#f87171'});
+        try{ showNotice('💀 你被 '+(o.name||'其他玩家')+' 吞了'); }catch(e){}
+        resetMe();
+        break;
+      }
+      /* 同級互推 */
+      else if(dd < myR+orr){
+        const nx=(meP.x-o.x)/dd, ny=(meP.y-o.y)/dd, ov=myR+orr-dd;
+        meP.x+=nx*ov*0.5; meP.y+=ny*ov*0.5;
+        meP.vx+=nx*ov*7; meP.vy+=ny*ov*7;
+      }
+    }
+    if(myR>=WIN_R && !won){
+      won=true;
+      try{ showNotice('👑 你成為全場最大！'); }catch(e){}
+    }
+    popups.forEach(p=>{ p.x+=(p.vx||0)*dt; p.y+=(p.vy||0)*dt; p.t-=dt*1.2; });
+    popups=popups.filter(p=>p.t>0);
+
+    if(liveRef&&running){
+      const n2=Date.now();
+      if(n2-lastPush>90){
+        lastPush=n2;
+        try{ set(liveRef,{x:Math.round(meP.x),y:Math.round(meP.y),r:Math.round(myR*10)/10,
+          name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+          score:Math.round(myR*10)/10, at:n2}); }catch(e){}
+      }
+    }
+  }
+
+  function drawBall(x,y,rr,color,isMe,label){
+    const p=w2s(x,y), s=p.s, px=rr*s;
+    ctx.beginPath(); ctx.ellipse(p.sx,p.sy+px*0.5,px*0.92,px*0.4,0,0,7);
+    ctx.fillStyle='rgba(0,0,0,.24)'; ctx.fill();
+    const g=ctx.createRadialGradient(p.sx-px*.34,p.sy-px*.42,px*.1,p.sx,p.sy,px*1.04);
+    g.addColorStop(0,'#fff'); g.addColorStop(.26,color); g.addColorStop(1,'rgba(0,0,0,.5)');
+    ctx.beginPath(); ctx.arc(p.sx,p.sy,px,0,7); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.sx,p.sy,px,0,7);
+    ctx.strokeStyle=isMe?'rgba(56,189,248,.95)':'rgba(255,255,255,.3)';
+    ctx.lineWidth=isMe?2.6:1.4; ctx.stroke();
+    if(label){
+      ctx.font='700 '+Math.max(9,px*0.42)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle='rgba(255,255,255,.92)';
+      ctx.fillText(label,p.sx,p.sy+px*0.14);
+    }
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg=ctx.createLinearGradient(0,0,0,ch);
+    bg.addColorStop(0,'#0a141f'); bg.addColorStop(1,'#05090f');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+    cam.x+=(meP.x-cam.x)*0.13; cam.y+=(meP.y-cam.y)*0.13;
+    const c=w2s(0,0), s=c.s;
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.fillStyle='rgba(12,22,36,.7)'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.strokeStyle='rgba(56,189,248,.4)'; ctx.lineWidth=Math.max(2,s*3); ctx.stroke();
+
+    const hw=viewHalfW()+80, hh2=viewHalfH()+80;
+    /* 豆 */
+    for(const f of foods){
+      if(Math.abs(f.x-cam.x)>hw||Math.abs(f.y-cam.y)>hh2) continue;
+      const q=w2s(f.x,f.y);
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,Math.max(1.6,f.r*q.s),0,7);
+      ctx.fillStyle=f.col; ctx.fill();
+    }
+    /* 其他球（按 y 排） */
+    const list=[];
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh2) continue;
+      list.push({y:o.y,d:()=>drawBall(o.x,o.y,Number(o.r)||START_R,o.color||'#22c55e',false,o.name)});
+    }
+    list.push({y:meP.y,d:()=>drawBall(meP.x,meP.y,myR,'#38bdf8',true,me.displayName||me.username)});
+    list.sort((a,b)=>a.y-b.y);
+    list.forEach(x=>{ try{x.d();}catch(e){} });
+
+    popups.forEach(p=>{
+      const q=w2s(p.x,p.y);
+      ctx.globalAlpha=Math.max(0,Math.min(1,p.t));
+      ctx.font='700 '+Math.max(11,13*q.s)+'px Inter,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle=p.c||'#fbbf24';
+      ctx.fillText(p.txt,q.sx,q.sy);
+      ctx.globalAlpha=1;
+    });
+
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle='#7dd3fc';
+    ctx.fillText('🔵 體型 '+myR.toFixed(0)+' / '+WIN_R+'   吞 '+kills, 16, 28);
+
+    drawMiniMap(ctx, cw, R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:false});
+  }
+
+  function loop(t){
+    if(!running) return;
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('agar',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A')keys.x=-1;
+      else if(k==='ArrowRight'||k==='d'||k==='D')keys.x=1;
+      else if(k==='ArrowUp'||k==='w'||k==='W')keys.y=-1;
+      else if(k==='ArrowDown'||k==='s'||k==='S')keys.y=1;
+      else return;
+      e.preventDefault();
+    };
+    const onUp=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A'||k==='ArrowRight'||k==='d'||k==='D')keys.x=0;
+      if(k==='ArrowUp'||k==='w'||k==='W'||k==='ArrowDown'||k==='s'||k==='S')keys.y=0;
+    };
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      foods=[]; ensureFood(); resetMe(); kills=0; won=false; eaten={};
+      liveRef=ref(db,'lobbyLive/agar/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/agar'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(1.5,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
+        const oldUn=unbind;
+        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
+      }
+      draw();
+    },
+    tickHud(){
+      paintLobbyBoard(me.displayName||me.username, Math.round(myR), others, '', meP);
+      const el=document.getElementById('stCard');
+      if(el){
+        const rows=[{me:true,n:myR}];
+        for(const u in others){ const o=others[u]; if(o&&typeof o.x==='number'&&Date.now()-(o.at||0)<8000) rows.push({me:false,n:Number(o.r)||0}); }
+        rows.sort((a,b)=>b.n-a.n);
+        el.innerHTML='<div><div class="sv">'+Math.round(myR)+'</div><div class="sl">體型</div></div>'
+          +'<div><div class="sv">'+(rows.findIndex(x=>x.me)+1)+'</div><div class="sl">排名</div></div>';
+      }
+    },
+    debug(){ return {x:meP.x,y:meP.y,r:Math.round(myR*10)/10,score:Math.round(myR),kills,food:foods.length,others:Object.keys(others||{})}; },
+    probe(x,y){ return Math.hypot(x,y)<=R; }
+  };
+}
+
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, agar:createAgarLobby, laser:createLaserLobby, dodge:createDodgeLobby, race:createRaceLobby, king:createKingLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
