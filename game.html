@@ -2343,7 +2343,7 @@ function createSumoLobby(){
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(c.sx,c.sy+c.s*14,R*s*1.06,R*s*K*1.06,0,0,7);
-    ctx.fillStyle='rgba(0,0,0,.35)'; ctx.filter='blur(10px)'; ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fill();   /* PERF_FIX_V1: 去掉 blur filter */
     ctx.restore();
 
     /* 擂台面：徑向漸變（中心亮 → 邊暗），做出凹面感 */
@@ -2384,8 +2384,7 @@ function createSumoLobby(){
     /* 地面投影 */
     ctx.beginPath();
     ctx.ellipse(p.sx,p.sy+rr*0.55, rr*0.95, rr*0.42,0,0,7);
-    ctx.fillStyle='rgba(0,0,0,.42)'; ctx.filter='blur(4px)'; ctx.fill();
-    ctx.filter='none';
+    ctx.fillStyle='rgba(0,0,0,.26)'; ctx.fill();
     /* 球體 */
     const g=ctx.createRadialGradient(p.sx-rr*0.35,p.sy-rr*0.45,rr*0.1,p.sx,p.sy,rr*1.05);
     g.addColorStop(0,'#ffffff');
@@ -2521,8 +2520,11 @@ function createSumoLobby(){
     ctx.fillText('分數 '+score, 16, 28);
   }
 
+  let _lastDraw=0;
   function loop(t){
     if(!running) return;
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
     const dt=Math.min(0.05,(t-lastT)/1000||0.016);
     lastT=t;
     try{ step(dt); draw(); }catch(e){ console.error('sumo',e); }
@@ -2601,7 +2603,7 @@ function createSumoLobby(){
     },
     mount(canvas){
       cv=canvas; ctx=cv.getContext('2d');
-      dpr=Math.min(2,window.devicePixelRatio||1);
+      dpr=Math.min(1.5,window.devicePixelRatio||1);   /* PERF_FIX_V1: 2 → 1.5，像素少 44% */
       const fit=()=>{
         const r=cv.getBoundingClientRect();
         cw=r.width||360; ch=r.height||420;
@@ -2726,7 +2728,7 @@ function createTagLobby(){
     /* 地面陰影 */
     ctx.save(); ctx.beginPath();
     ctx.ellipse(c.sx,c.sy+s*16,R*s*1.08,R*s*K*1.08,0,0,7);
-    ctx.fillStyle='rgba(0,0,0,.4)'; ctx.filter='blur(12px)'; ctx.fill(); ctx.restore();
+    ctx.fillStyle='rgba(0,0,0,.24)'; ctx.fill(); ctx.restore();
 
     /* 地面：徑向漸變 + 斜格 */
     const g=ctx.createRadialGradient(c.sx,c.sy-s*24,12,c.sx,c.sy,R*s);
@@ -2754,8 +2756,7 @@ function createTagLobby(){
     const p=w2s(x,y), s=p.s, rr=r*s;
     /* 投影 */
     ctx.beginPath(); ctx.ellipse(p.sx,p.sy+rr*0.55,rr*0.95,rr*0.42,0,0,7);
-    ctx.fillStyle=isGhost?'rgba(248,113,113,.35)':'rgba(0,0,0,.42)';
-    ctx.filter='blur(4px)'; ctx.fill(); ctx.filter='none';
+    ctx.fillStyle=isGhost?'rgba(248,113,113,.3)':'rgba(0,0,0,.26)'; ctx.fill();
     /* 鬼光環 */
     if(isGhost){
       const hg=ctx.createRadialGradient(p.sx,p.sy,rr*0.6,p.sx,p.sy,rr*2.4);
@@ -2891,8 +2892,12 @@ function createTagLobby(){
     ctx.fillText((myGhost?'👻 你是鬼':'🏃 快走')+'　抓到 '+myScore, 16, 28);
   }
 
+  let _lastDraw=0;
   function loop(t){
     if(!running) return;
+    /* PERF_FIX_V1: 限 33fps —— 手機上 60fps 對呢類遊戲冇必要，發熱同耗電明顯低 */
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
     const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
     try{ step(dt); draw(); }catch(e){ console.error('tag',e); }
     raf=requestAnimationFrame(loop);
@@ -2961,7 +2966,7 @@ function createTagLobby(){
     },
     mount(canvas){
       cv=canvas; ctx=cv.getContext('2d');
-      dpr=Math.min(2,window.devicePixelRatio||1);
+      dpr=Math.min(1.5,window.devicePixelRatio||1);   /* PERF_FIX_V1: 2 → 1.5，像素少 44% */
       const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
         cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
       fit(); window.addEventListener('resize',fit);
@@ -3005,18 +3010,20 @@ function createFishLobby(){
       hue:Math.random()<.5?195:35, ph:Math.random()*6.283};
   }
 
+  /* PERF_FIX_V1：背景漸變只建一次（原本每幀建 3 個 gradient）*/
+  let _waterG=null, _waterW=0, _waterH=0;
   function drawWater(){
-    /* 藍色海洋：上淺下深 */
-    const g=ctx.createLinearGradient(0,0,0,ch);
-    g.addColorStop(0,'#0c4a6e'); g.addColorStop(.45,'#0a3a58'); g.addColorStop(1,'#04202f');
-    ctx.fillStyle=g; ctx.fillRect(0,0,cw,ch);
-    /* 水面光斑 */
-    const lg=ctx.createRadialGradient(cw*0.3,0,10,cw*0.3,0,ch*0.75);
-    lg.addColorStop(0,'rgba(125,211,252,.28)'); lg.addColorStop(1,'rgba(125,211,252,0)');
-    ctx.fillStyle=lg; ctx.fillRect(0,0,cw,ch);
-    const lg2=ctx.createRadialGradient(cw*0.75,ch*0.08,8,cw*0.75,ch*0.08,ch*0.55);
-    lg2.addColorStop(0,'rgba(56,189,248,.18)'); lg2.addColorStop(1,'rgba(56,189,248,0)');
-    ctx.fillStyle=lg2; ctx.fillRect(0,0,cw,ch);
+    if(!_waterG || _waterW!==cw || _waterH!==ch){
+      _waterW=cw; _waterH=ch;
+      _waterG=ctx.createLinearGradient(0,0,0,ch);
+      _waterG.addColorStop(0,'#0c4a6e'); _waterG.addColorStop(.45,'#0a3a58'); _waterG.addColorStop(1,'#04202f');
+    }
+    ctx.fillStyle=_waterG; ctx.fillRect(0,0,cw,ch);
+    /* 光斑改用兩塊半透明圓（唔用 radialGradient）*/
+    ctx.fillStyle='rgba(125,211,252,.07)';
+    ctx.beginPath(); ctx.ellipse(cw*0.3,0,ch*0.55,ch*0.38,0,0,7); ctx.fill();
+    ctx.fillStyle='rgba(56,189,248,.05)';
+    ctx.beginPath(); ctx.ellipse(cw*0.75,ch*0.08,ch*0.34,ch*0.26,0,0,7); ctx.fill();
   }
 
   function drawBounds(){
@@ -3037,7 +3044,7 @@ function createFishLobby(){
     ctx.globalAlpha=alpha==null?1:alpha;
     /* 水底投影 */
     ctx.beginPath(); ctx.ellipse(p.sx,p.sy+rr*0.5,rr*0.9,rr*0.35,0,0,7);
-    ctx.fillStyle='rgba(0,20,35,.35)'; ctx.filter='blur(4px)'; ctx.fill(); ctx.filter='none';
+    ctx.fillStyle='rgba(0,20,35,.28)'; ctx.fill();
 
     ctx.translate(p.sx,p.sy);
     ctx.scale(facing<0?-1:1,1);
@@ -3050,11 +3057,11 @@ function createFishLobby(){
     ctx.lineTo(-rr*1.5,  rr*0.55+wig*rr*0.4);
     ctx.closePath();
     ctx.fillStyle=dark; ctx.fill();
-    /* 身體（徑向漸變做立體）*/
-    const bg=ctx.createRadialGradient(-rr*0.2,-rr*0.35,rr*0.1,0,0,rr*1.05);
-    bg.addColorStop(0,'#e0f2fe'); bg.addColorStop(.35,body); bg.addColorStop(1,dark);
+    /* 身體：純色 + 上方亮帶（PERF_FIX_V1：唔再用每條魚建 radialGradient）*/
     ctx.beginPath(); ctx.ellipse(0,0,rr,rr*0.68,0,0,7);
-    ctx.fillStyle=bg; ctx.fill();
+    ctx.fillStyle=body; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-rr*0.05,-rr*0.22,rr*0.62,rr*0.3,0,0,7);
+    ctx.fillStyle='rgba(224,242,254,.42)'; ctx.fill();
     /* 背鰭 */
     ctx.beginPath();
     ctx.moveTo(-rr*0.15,-rr*0.6);
@@ -3113,7 +3120,7 @@ function createFishLobby(){
       }
     });
     fishes=fishes.filter(f=>!f.dead);
-    while(fishes.length<34) fishes.push(spawnFish());
+    while(fishes.length<16) fishes.push(spawnFish());
 
     /* 玩家互吃：大過對方 15% 就食得 */
     for(const u in others){
@@ -3179,8 +3186,12 @@ function createFishLobby(){
     ctx.fillText('🐟 '+myScore+'　大小 '+Math.round(meP.r), 16, 28);
   }
 
+  let _lastDraw=0;
   function loop(t){
     if(!running) return;
+    /* PERF_FIX_V1: 限 33fps —— 手機上 60fps 對呢類遊戲冇必要，發熱同耗電明顯低 */
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
     const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
     try{ step(dt); draw(); }catch(e){ console.error('fish',e); }
     raf=requestAnimationFrame(loop);
@@ -3211,7 +3222,7 @@ function createFishLobby(){
     async start(){
       if(!me) return;
       meP={x:0,y:0,vx:0,vy:0,r:12,facing:1};
-      fishes=[]; for(let i=0;i<34;i++) fishes.push(spawnFish());
+      fishes=[]; for(let i=0;i<16;i++) fishes.push(spawnFish());
       liveRef=ref(db,'lobbyLive/fish/'+me.username);
       try{ onDisconnect(liveRef).remove(); }catch(e){}
       try{
@@ -3234,7 +3245,7 @@ function createFishLobby(){
     },
     mount(canvas){
       cv=canvas; ctx=cv.getContext('2d');
-      dpr=Math.min(2,window.devicePixelRatio||1);
+      dpr=Math.min(1.5,window.devicePixelRatio||1);   /* PERF_FIX_V1: 2 → 1.5，像素少 44% */
       const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
         cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
       fit(); window.addEventListener('resize',fit);
@@ -3810,7 +3821,7 @@ function createSnakeLobby(){
   /* ── 畫圖 ── */
   function resize(){
     if(!cv) return;
-    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const dpr=Math.min(1.5,window.devicePixelRatio||1);   /* PERF_FIX_V1: 2 → 1.5，像素少 44% */
     const rect=cv.parentElement.getBoundingClientRect();
     cw=Math.max(1,Math.round(rect.width)); ch=Math.max(1,Math.round(rect.height));
     cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr);
@@ -4246,7 +4257,7 @@ function createTetris(){
   /* ── 畫面 ── */
   function resize(){
     if(!cv) return;
-    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const dpr=Math.min(1.5,window.devicePixelRatio||1);   /* PERF_FIX_V1: 2 → 1.5，像素少 44% */
     const rect=cv.parentElement.getBoundingClientRect();
     const w=Math.max(1,Math.round(rect.width)), h=Math.max(1,Math.round(rect.height));
     cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
@@ -4261,7 +4272,7 @@ function createTetris(){
     const cur=specMode?((sv&&sv.cur)||null):(local&&!local.over?{ti:local.ti,rot:local.rot,x:local.x,y:local.y}:null);
     const over=specMode?!!(sv&&sv.over):!!(local&&local.over);
     if(!board) return;
-    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const dpr=Math.min(1.5,window.devicePixelRatio||1);   /* PERF_FIX_V1: 2 → 1.5，像素少 44% */
     const W=cv.width/dpr, H=cv.height/dpr;
     ctx.clearRect(0,0,W,H);
     const pad=8;
