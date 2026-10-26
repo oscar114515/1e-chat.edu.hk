@@ -1010,7 +1010,7 @@ const GAMES=[
  {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:true,c:'#a855f7',ab:'彈',ic:'i-dodge'},
  {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:true,c:'#ef4444',ab:'車',ic:'i-race'},
  {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:true,c:'#f59e0b',ab:'王',ic:'i-king'},
- {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
+ {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:true,c:'#06b6d4',ab:'光'},
  {k:'fish', n:'大魚吃小魚',cat:'lobby',min:1,max:0,ok:false,c:'#3b82f6',ab:'魚', ok:true},
  {k:'bombzone',n:'炸彈人',cat:'lobby',min:1,max:0,ok:false,c:'#f97316',ab:'爆'},
  {k:'sumo', n:'相撲推擠',cat:'lobby',min:1,max:0,ok:false,c:'#78716c',ab:'角', ok:true},
@@ -5013,7 +5013,268 @@ function createDodgeLobby(){
 }
 
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, dodge:createDodgeLobby, race:createRaceLobby, king:createKingLobby };
+/* ═══ 雷射迷宮（laser）—— 穿過閃爍雷射走到對面 ═══
+   整個迷宮一屏看得完（固定鏡頭，不跟隨）。橫向、縱向雷射按時間閃爍，
+   時間節奏由 Date.now() 決定 → 全體玩家見到同一刻的開關狀態，公平對戰。
+   每次成功走到右邊 +1 分；被雷射掃到會彈返起點。
+   與其他大廳遊戲一致：搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
+/* ═══ 雷射迷宮（laser）—— 穿過閃爍雷射閘門走到對面 ═══
+   整個迷宮一屏看得完（固定鏡頭，不跟隨）。
+   五道「直閘」在 x 位置閃爍，要趁熄滅一刻衝過去；兩條「橫掃」不斷上下移動，
+   逼你唔可以死守一條線。時間節奏由 Date.now() 決定 → 全體玩家同一刻同一狀態。
+   每成功走到右邊 +1 分；被掃到彈返起點。
+   與其他大廳遊戲一致：搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
+function createLaserLobby(){
+  const W=640, H=1200, PR=13, K=0.62;
+  const SAFE=76;                        /* 起點／終點安全區闊度 */
+  const GATES=[-180,-60,60,180];        /* 直閘 x 位置 */
+  const CYC=2.2, ON=0.85, WARN=1.45;    /* 閃爍節奏（秒）*/
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0};
+  let others={}, liveRef=null, unsubLive=null;
+  let keys={x:0,y:0}, lastT=0, lastPush=0, _lastDraw=0;
+  let score=0, hits=0, flash=0, shake=0, cool=0;
+  let unbind=null, s=1, ox=0, oy=0;
+
+  function w2s(x,y){ return {sx:ox+x*s, sy:oy+y*s*K, s}; }
+  function layout(){
+    const padX=cw*0.05, padY=ch*0.06;
+    s=Math.min((cw-padX*2)/W, (ch-padY*2)/(H*K));
+    ox=cw/2; oy=ch/2;
+  }
+  function gateState(i){
+    const tm=(((Date.now()/1000)+i*0.37)%CYC+CYC)%CYC;
+    return {on:tm<ON, warn:tm>=WARN};
+  }
+  function sweeperY(i){
+    const t=Date.now()/1000;
+    return Math.sin(t*0.62 + i*Math.PI) * (H/2-150);
+  }
+  function hitRects(){
+    const list=[];
+    GATES.forEach((gx,i)=>{ if(gateState(i).on) list.push({x0:gx-7,x1:gx+7,y0:-H/2,y1:H/2}); });
+    for(let i=0;i<2;i++){
+      const y=sweeperY(i);
+      list.push({x0:-W/2+SAFE,x1:W/2-SAFE,y0:y-8,y1:y+8});
+    }
+    return list;
+  }
+
+  function step(dt){
+    const acc=2700;
+    meP.vx+=keys.x*acc*dt; meP.vy+=keys.y*acc*dt;
+    const fr=Math.pow(0.0006,dt); meP.vx*=fr; meP.vy*=fr;
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+    const bx=W/2-PR, by=H/2-PR;
+    if(meP.x<-bx){meP.x=-bx;meP.vx=0;} if(meP.x>bx){meP.x=bx;meP.vx=0;}
+    if(meP.y<-by){meP.y=-by;meP.vy=0;} if(meP.y>by){meP.y=by;meP.vy=0;}
+
+    if(cool>0) cool-=dt;
+    if(cool<=0){
+      for(const r of hitRects()){
+        const cx=Math.max(r.x0,Math.min(meP.x,r.x1));
+        const cy=Math.max(r.y0,Math.min(meP.y,r.y1));
+        if(Math.hypot(meP.x-cx,meP.y-cy) < PR*0.8){
+          hits++; flash=0.4; shake=7; cool=1.0;
+          meP.x=-W/2+PR*2.6; meP.y=0; meP.vx=0; meP.vy=0;
+          try{ showNotice('⚡ 被雷射掃到，返起點'); }catch(e){}
+          break;
+        }
+      }
+    }
+    if(meP.x>W/2-PR-4 && cool<=0){
+      score++; cool=0.7;
+      meP.x=-W/2+PR*2.6; meP.vx=0; meP.vy=0;
+      try{ showNotice('✅ 過關！累計 '+score+' 次'); }catch(e){}
+    }
+    if(flash>0) flash-=dt;
+    if(shake>0) shake-=dt*26;
+
+    if(liveRef&&running){
+      const n2=Date.now();
+      if(n2-lastPush>90){
+        lastPush=n2;
+        try{ set(liveRef,{x:Math.round(meP.x),y:Math.round(meP.y),
+          name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+          score:score, at:n2}); }catch(e){}
+      }
+    }
+  }
+
+  function line(x0,y0,x1,y1,color,w){
+    const p0=w2s(x0,y0), p1=w2s(x1,y1);
+    ctx.beginPath(); ctx.moveTo(p0.sx,p0.sy); ctx.lineTo(p1.sx,p1.sy);
+    ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke();
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg=ctx.createLinearGradient(0,0,0,ch);
+    bg.addColorStop(0,'#0a1620'); bg.addColorStop(1,'#04080d');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+    layout();
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+
+    const a=w2s(-W/2,-H/2), b=w2s(W/2,H/2);
+    ctx.beginPath(); ctx.rect(a.sx,a.sy,b.sx-a.sx,b.sy-a.sy);
+    ctx.fillStyle='rgba(12,32,44,.9)'; ctx.fill();
+    ctx.strokeStyle='rgba(6,182,212,.5)'; ctx.lineWidth=2; ctx.stroke();
+    /* 地板格線 */
+    ctx.strokeStyle='rgba(6,182,212,.08)'; ctx.lineWidth=1;
+    for(let gx=-W/2;gx<=W/2;gx+=64) line(gx,-H/2,gx,H/2,'rgba(6,182,212,.08)',1);
+    for(let gy=-H/2;gy<=H/2;gy+=64) line(-W/2,gy,W/2,gy,'rgba(6,182,212,.08)',1);
+
+    /* 起點／終點 */
+    const s0=w2s(-W/2,-H/2), s1=w2s(-W/2+SAFE,H/2);
+    ctx.fillStyle='rgba(34,197,94,.18)'; ctx.fillRect(s0.sx,s0.sy,s1.sx-s0.sx,s1.sy-s0.sy);
+    const g0=w2s(W/2-SAFE,-H/2), g1=w2s(W/2,H/2);
+    ctx.fillStyle='rgba(250,204,21,.2)'; ctx.fillRect(g0.sx,g0.sy,g1.sx-g0.sx,g1.sy-g0.sy);
+    ctx.font='700 '+Math.max(10,12*s)+'px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='rgba(134,239,172,.9)';
+    ctx.fillText('起點',(s0.sx+s1.sx)/2,a.sy+22);
+    ctx.fillStyle='rgba(253,224,71,.95)';
+    ctx.fillText('終點',(g0.sx+g1.sx)/2,a.sy+22);
+
+    /* 直閘 */
+    GATES.forEach((gx,i)=>{
+      const st=gateState(i);
+      if(st.on){
+        line(gx,-H/2,gx,H/2,'rgba(239,68,68,.18)',Math.max(6,20*s));
+        line(gx,-H/2,gx,H/2,'#ef4444',Math.max(3,10*s));
+        line(gx,-H/2,gx,H/2,'rgba(255,235,235,.95)',Math.max(1.4,3.4*s));
+      } else if(st.warn){
+        const al=0.25+0.25*Math.abs(Math.sin(performance.now()/70));
+        line(gx,-H/2,gx,H/2,'rgba(248,113,113,'+al+')',Math.max(1.6,3*s));
+      }
+    });
+    /* 橫掃 */
+    for(let i=0;i<2;i++){
+      const y=sweeperY(i);
+      line(-W/2+SAFE,y,W/2-SAFE,y,'rgba(239,68,68,.16)',Math.max(8,26*s));
+      line(-W/2+SAFE,y,W/2-SAFE,y,'#f43f5e',Math.max(3,9*s));
+      line(-W/2+SAFE,y,W/2-SAFE,y,'rgba(255,235,235,.9)',Math.max(1.2,3*s));
+    }
+
+    /* 其他人 */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      const q=w2s(o.x,o.y), rr=PR*q.s;
+      ctx.beginPath(); ctx.arc(q.sx,q.sy+rr*0.5,rr*0.9,0,7); ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7); ctx.fillStyle=o.color||'#22c55e'; ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1.2; ctx.stroke();
+    }
+    /* 自己 */
+    const q=w2s(meP.x,meP.y), rr=PR*q.s;
+    ctx.beginPath(); ctx.arc(q.sx,q.sy+rr*0.5,rr*0.9,0,7); ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fill();
+    const g=ctx.createRadialGradient(q.sx-rr*.35,q.sy-rr*.45,rr*.1,q.sx,q.sy,rr*1.05);
+    g.addColorStop(0,'#fff'); g.addColorStop(.28,'#38bdf8'); g.addColorStop(1,'rgba(0,0,0,.5)');
+    ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7); ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.restore();
+
+    if(flash>0){ ctx.fillStyle='rgba(239,68,68,'+(flash*0.32)+')'; ctx.fillRect(0,0,cw,ch); }
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle='#fde68a';
+    ctx.fillText('✅ 過關 '+score+'   ⚡ 被掃 '+hits, 16, 28);
+
+    drawMiniMap(ctx, cw, W/2, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:true});
+  }
+
+  function loop(t){
+    if(!running) return;
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('laser',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A')keys.x=-1;
+      else if(k==='ArrowRight'||k==='d'||k==='D')keys.x=1;
+      else if(k==='ArrowUp'||k==='w'||k==='W')keys.y=-1;
+      else if(k==='ArrowDown'||k==='s'||k==='S')keys.y=1;
+      else return;
+      e.preventDefault();
+    };
+    const onUp=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A'||k==='ArrowRight'||k==='d'||k==='D')keys.x=0;
+      if(k==='ArrowUp'||k==='w'||k==='W'||k==='ArrowDown'||k==='s'||k==='S')keys.y=0;
+    };
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      meP.x=-W/2+PR*2.6; meP.y=0; meP.vx=0; meP.vy=0; score=0; hits=0; cool=1.0;
+      liveRef=ref(db,'lobbyLive/laser/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/laser'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(1.5,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
+        const oldUn=unbind;
+        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
+      }
+      draw();
+    },
+    tickHud(){
+      paintLobbyBoard(me.displayName||me.username, score, others, '次', meP);
+      const el=document.getElementById('stCard');
+      if(el){
+        const rows=[{me:true,n:score}];
+        for(const u in others){ const o=others[u]; if(o&&typeof o.x==='number'&&Date.now()-(o.at||0)<8000) rows.push({me:false,n:Number(o.score)||0}); }
+        rows.sort((a,b)=>b.n-a.n);
+        el.innerHTML='<div><div class="sv">'+score+'</div><div class="sl">過關</div></div>'
+          +'<div><div class="sv">'+(rows.findIndex(x=>x.me)+1)+'</div><div class="sl">排名</div></div>';
+      }
+    },
+    debug(){ return {x:meP.x,y:meP.y,score,hits,others:Object.keys(others||{})}; },
+    probe(x,y){ return Math.abs(x)<=W/2 && Math.abs(y)<=H/2; }
+  };
+}
+
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, laser:createLaserLobby, dodge:createDodgeLobby, race:createRaceLobby, king:createKingLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
