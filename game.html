@@ -2880,11 +2880,104 @@ function createTagLobby(){
     aiGhost.x=sp.x; aiGhost.y=sp.y; aiGhost.vx=aiGhost.vy=0;
     aiGhost.active=true; aiGhost.cool=1.5;
   }
+  /* ═══ AI_PATHFIND_V1: 網格 BFS 尋路 ═══
+     之前只係「直行 + 撞牆左繞右繞」，一入到兩面牆夾住的角落就會
+     左撞右撞無限循環（用戶實測：AI 卡死在角落）。
+     現在用 48 單位的網格做 BFS，每次重算一條真正繞開牆的路線。
+     900 格的 BFS 大約 1-2ms，每 0.4 秒算一次完全夠。 */
+  const GRID=48;
+  const GN=Math.ceil((R*2)/GRID);
+  let GRIDMAP=null;
+  function buildGrid(){
+    const g=new Uint8Array(GN*GN);
+    for(let iy=0;iy<GN;iy++){
+      for(let ix=0;ix<GN;ix++){
+        const wx=-R+ix*GRID+GRID/2, wy=-R+iy*GRID+GRID/2;
+        const outside=Math.hypot(wx,wy) > R-PR*1.6;
+        g[iy*GN+ix] = (outside || inWall(wx,wy,PR*1.35)) ? 1 : 0;
+      }
+    }
+    return g;
+  }
+  function cellOf(x,y){
+    const ix=Math.floor((x+R)/GRID), iy=Math.floor((y+R)/GRID);
+    if(ix<0||iy<0||ix>=GN||iy>=GN) return -1;
+    return iy*GN+ix;
+  }
+  function cellCenter(i){ return {x:-R+(i%GN)*GRID+GRID/2, y:-R+Math.floor(i/GN)*GRID+GRID/2}; }
+  /* BFS（4 方向，唔用 8 方向：對角容易擦牆） */
+  const _prev=new Int32Array(4096);
+  const _queue=new Int32Array(4096);
+  function bfsPath(sx,sy,tx,ty){
+    if(!GRIDMAP) GRIDMAP=buildGrid();
+    let s=cellOf(sx,sy), t=cellOf(tx,ty);
+    if(s<0||t<0) return null;
+    /* 起點/終點在牆內 → 就近找一個可走格 */
+    const fix=(i)=>{
+      if(GRIDMAP[i]===0) return i;
+      for(let r=1;r<=4;r++){
+        const cx=i%GN, cy=Math.floor(i/GN);
+        for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+          const nx=cx+dx, ny=cy+dy;
+          if(nx<0||ny<0||nx>=GN||ny>=GN) continue;
+          if(GRIDMAP[ny*GN+nx]===0) return ny*GN+nx;
+        }
+      }
+      return -1;
+    };
+    s=fix(s); t=fix(t);
+    if(s<0||t<0) return null;
+    if(s===t) return [{x:tx,y:ty}];
+
+    _prev.fill(-1);
+    let head=0, tail=0;
+    _queue[tail++]=s; _prev[s]=s;
+    let found=false;
+    while(head<tail && tail<4096){
+      const cur=_queue[head++];
+      if(cur===t){ found=true; break; }
+      const cx=cur%GN, cy=Math.floor(cur/GN);
+      const nb=[ cur-GN, cur+GN, cx>0?cur-1:-1, cx<GN-1?cur+1:-1 ];
+      for(const n of nb){
+        if(n<0||n>=GN*GN) continue;
+        if(GRIDMAP[n]!==0) continue;
+        if(_prev[n]!==-1) continue;
+        _prev[n]=cur; _queue[tail++]=n;
+      }
+    }
+    if(!found) return null;
+    /* 回溯 */
+    const path=[];
+    let cur=t;
+    while(cur!==s && cur>=0){
+      path.push(cellCenter(cur));
+      cur=_prev[cur];
+      if(path.length>400) break;
+    }
+    path.reverse();
+    path.push({x:tx,y:ty});
+    return path;
+  }
+  /* 路徑平滑：跳過共線點，減少轉折 */
+  function smooth(path){
+    if(!path||path.length<3) return path||[];
+    const out=[path[0]];
+    for(let i=1;i<path.length-1;i++){
+      const a=out[out.length-1], b=path[i], c=path[i+1];
+      const cross=(b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x);
+      if(Math.abs(cross)>6) out.push(b);      /* 有轉折才保留 */
+    }
+    out.push(path[path.length-1]);
+    return out;
+  }
+
+  let aiPath=null, aiPathT=0, aiGoal=null;
+
   function aiStep(dt){
     if(!aiGhost.active) { aiReset(); return; }
     aiGhost.cool=Math.max(0,aiGhost.cool-dt);
 
-    /* 找最近的可見玩家（自己 + 其他人）*/
+    /* 找最近目標 */
     let best=null,bd=1e9;
     const cand=[{x:meP.x,y:meP.y,me:true}];
     for(const u in others){
@@ -2899,23 +2992,45 @@ function createTagLobby(){
     }
     if(!best) return;
 
-    const SPD=138;                       /* 比玩家慢一點，玩家跑得甩 */
-    let dx=best.x-aiGhost.x, dy=best.y-aiGhost.y;
+    const SPD=142;
+
+    /* 每 0.4 秒，或者目標移位超過 120，就重算路徑 */
+    const now=performance.now();
+    const needRe=!aiPath || (now-aiPathT>400)
+      || (aiGoal && Math.hypot(best.x-aiGoal.x, best.y-aiGoal.y)>120);
+    if(needRe){
+      aiPathT=now;
+      aiGoal={x:best.x,y:best.y};
+      aiPath=smooth(bfsPath(aiGhost.x,aiGhost.y,best.x,best.y));
+      aiPath=aiPath||[];
+      /* 去掉已經走過的點 */
+      while(aiPath.length && Math.hypot(aiPath[0].x-aiGhost.x, aiPath[0].y-aiGhost.y) < GRID*0.55){
+        aiPath.shift();
+      }
+    }
+
+    /* 沿路徑走 */
+    let tx=best.x, ty=best.y;
+    if(aiPath && aiPath.length){
+      tx=aiPath[0].x; ty=aiPath[0].y;
+      if(Math.hypot(tx-aiGhost.x, ty-aiGhost.y) < GRID*0.45) aiPath.shift();
+    }
+    /* 近距離（<140）直接衝，唔跟路徑 —— 免得格線造成僵硬 */
+    if(bd<140){ tx=best.x; ty=best.y; }
+
+    let dx=tx-aiGhost.x, dy=ty-aiGhost.y;
     const m=Math.hypot(dx,dy)||1;
     dx/=m; dy/=m;
 
-    /* 三步試行：直行 → 左繞 → 右繞（避免直撞牆卡住）*/
-    let mvx=dx*SPD, mvy=dy*SPD;
-    const nextX=aiGhost.x+dx*22, nextY=aiGhost.y+dy*22;
-    if(inWall(nextX,nextY,PR*0.9)){
-      const lx=aiGhost.x+(-dy)*22, ly=aiGhost.y+dx*22;
-      const rx=aiGhost.x+dy*22,  ry=aiGhost.y+(-dx)*22;
-      const okL=!inWall(lx,ly,PR*0.9), okR=!inWall(rx,ry,PR*0.9);
-      if(okL){ mvx=(-dy)*SPD; mvy=dx*SPD; }
-      else if(okR){ mvx=dy*SPD; mvy=(-dx)*SPD; }
-      else { mvx=-dx*SPD*0.6; mvy=-dy*SPD*0.6; }   /* 死路：退一退再試 */
+    /* 最後一重保險：前方有牆就轉 90 度（先試左，再試右）*/
+    const probeX=aiGhost.x+dx*18, probeY=aiGhost.y+dy*18;
+    if(inWall(probeX,probeY,PR*0.95)){
+      const ax=dx, ay=dy;
+      if(!inWall(aiGhost.x+(-ay)*18, aiGhost.y+ax*18, PR*0.95)){ dx=-ay; dy=ax; }
+      else if(!inWall(aiGhost.x+ay*18, aiGhost.y+(-ax)*18, PR*0.95)){ dx=ay; dy=-ax; }
+      else { dx=-ax*0.5; dy=-ay*0.5; }
     }
-    aiGhost.x+=mvx*dt; aiGhost.y+=mvy*dt;
+    aiGhost.x+=dx*SPD*dt; aiGhost.y+=dy*SPD*dt;
 
     /* 場地邊界 */
     const ad=Math.hypot(aiGhost.x,aiGhost.y);
