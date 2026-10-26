@@ -1007,7 +1007,7 @@ const GAMES=[
  {k:'agar',n:'球球大作戰',cat:'lobby',min:1,max:0,ok:false,c:'#38bdf8',ab:'球',ic:'i-ball'},
  {k:'tag', n:'鬼抓人',cat:'lobby',min:1,max:0,ok:false,c:'#f472b6',ab:'鬼',ic:'i-tag', ok:true},
  {k:'dotrush', n:'搶豆競速',cat:'lobby',min:1,max:0,ok:false,c:'#fbbf24',ab:'豆',ic:'i-dot', ok:true},
- {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:false,c:'#a855f7',ab:'彈',ic:'i-dodge'},
+ {k:'dodge',n:'彈幕生存',cat:'lobby',min:1,max:0,ok:true,c:'#a855f7',ab:'彈',ic:'i-dodge'},
  {k:'race',n:'迷你賽車',cat:'lobby',min:1,max:0,ok:true,c:'#ef4444',ab:'車',ic:'i-race'},
  {k:'king',n:'佔領高地',cat:'lobby',min:1,max:0,ok:true,c:'#f59e0b',ab:'王',ic:'i-king'},
  {k:'laser',n:'雷射迷宮',cat:'lobby',min:1,max:0,ok:false,c:'#06b6d4',ab:'光'},
@@ -4729,7 +4729,291 @@ function createRaceLobby(){
 }
 
 
-const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, race:createRaceLobby, king:createKingLobby };
+/* ═══ 彈幕生存（dodge）—— 睇你捱幾耐 ═══
+   全場都係彈幕，固定種子 → 每個人見到嘅彈幕序列完全一樣（公平）。
+   被擊中即死，重置後由頭再嚟。積分＝捱過嘅秒數，榜上比邊個最耐。
+   與其他大廳遊戲一致：相機跟隨、搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
+function createDodgeLobby(){
+  const R=430, PR=12, K=0.55;
+  const VIEW_H=760;
+  const SEED0=0x9E3779B9;
+  let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
+  let meP={x:0,y:0,vx:0,vy:0};
+  let cam={x:0,y:0};
+  let others={}, liveRef=null, unsubLive=null;
+  let keys={x:0,y:0}, lastT=0, lastPush=0, _lastDraw=0;
+  let bullets=[], seed=SEED0, nextSpawn=0.8, survive=0, best=0, alive=true;
+  let deadT=0, deathFlash=0, shake=0, trail=[], burstNext=6;
+  let unbind=null, hits=0, runs=0;
+
+  function rnd(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }
+  function w2s(x,y){ const s=ch/(VIEW_H*K); return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s*K, s}; }
+  function viewHalfW(){ return (cw/2)/(ch/(VIEW_H*K)); }
+  function viewHalfH(){ return (cw/2)/(ch/(VIEW_H*K)*K); }
+
+  function resetRun(){
+    seed=SEED0; bullets=[]; nextSpawn=0.8; survive=0; alive=true; burstNext=6; trail=[];
+    meP.x=0; meP.y=0; meP.vx=0; meP.vy=0; cam={x:0,y:0};
+    runs++;
+  }
+
+  function spawnOne(){
+    const a=rnd()*6.283;
+    const from=R*1.12;
+    const bx=Math.cos(a)*from, by=Math.sin(a)*from;
+    /* 瞄向場內一點（唔一定係中心，否則太易預判） */
+    const ta=rnd()*6.283, tr=rnd()*R*0.72;
+    const tx=Math.cos(ta)*tr, ty=Math.sin(ta)*tr;
+    const d=Math.hypot(tx-bx,ty-by)||1;
+    const sp=170+rnd()*170+Math.min(180,survive*3.2);
+    bullets.push({x:bx,y:by,vx:(tx-bx)/d*sp,vy:(ty-by)/d*sp,r:5+rnd()*7,
+      col: rnd()<0.22?'#f472b6':'#a855f7', t:0});
+  }
+  function spawnBurst(){
+    const n=14+Math.min(14,Math.floor(survive/4));
+    const a0=rnd()*6.283;
+    for(let i=0;i<n;i++){
+      const a=a0+i*(6.283/n);
+      const sp=150+rnd()*90;
+      bullets.push({x:Math.cos(a)*30,y:Math.sin(a)*30,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+        r:8,col:'#fbbf24',t:0});
+    }
+    shake=Math.min(8,shake+5);
+  }
+
+  function step(dt){
+    /* 生成彈幕 */
+    if(alive){
+      survive+=dt;
+      nextSpawn-=dt;
+      if(nextSpawn<=0){
+        nextSpawn=Math.max(0.11, 0.42-survive*0.006)+rnd()*0.1;
+        spawnOne();
+        if(survive>14 && rnd()<0.34) spawnOne();
+      }
+      burstNext-=dt;
+      if(burstNext<=0){ burstNext=Math.max(3.2, 7-survive*0.05); spawnBurst(); }
+    } else {
+      deadT-=dt;
+      if(deadT<=0){ if(survive>best) best=survive; resetRun(); }
+    }
+
+    /* 移動 */
+    const acc=2100;
+    meP.vx+=keys.x*acc*dt; meP.vy+=keys.y*acc*dt;
+    const fr=Math.pow(0.0009,dt); meP.vx*=fr; meP.vy*=fr;
+    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+    const d=Math.hypot(meP.x,meP.y);
+    if(d>R-PR && d>0.01){
+      const nx=meP.x/d, ny=meP.y/d;
+      meP.x=nx*(R-PR); meP.y=ny*(R-PR);
+      const vn=meP.vx*nx+meP.vy*ny;
+      if(vn>0){ meP.vx-=nx*vn; meP.vy-=ny*vn; }
+    }
+    if(alive){
+      trail.push({x:meP.x,y:meP.y,t:0.35});
+      if(trail.length>26) trail.shift();
+    }
+    trail.forEach(p=>p.t-=dt*2.6); trail=trail.filter(p=>p.t>0);
+
+    /* 彈幕前進 + 命中 */
+    for(let i=bullets.length-1;i>=0;i--){
+      const b=bullets[i]; b.t+=dt;
+      b.x+=b.vx*dt; b.y+=b.vy*dt;
+      if(Math.hypot(b.x,b.y)>R*1.5+b.r){ bullets.splice(i,1); continue; }
+      if(alive && Math.hypot(b.x-meP.x,b.y-meP.y) < b.r+PR*0.82){
+        alive=false; deadT=1.5; deathFlash=0.55; hits++;
+        best=Math.max(best,survive);
+        shake=9;
+        try{ showNotice('💥 撐了 '+survive.toFixed(1)+' 秒'); }catch(e){}
+      }
+    }
+    if(bullets.length>420) bullets.splice(0,bullets.length-420);
+    if(deathFlash>0) deathFlash-=dt;
+    if(shake>0) shake-=dt*24;
+
+    if(liveRef&&running){
+      const n2=Date.now();
+      if(n2-lastPush>90){
+        lastPush=n2;
+        try{ set(liveRef,{x:Math.round(meP.x),y:Math.round(meP.y),
+          name:me.displayName||me.username,color:safeColor(me.color,'#22c55e'),
+          score:Math.round(Math.max(best,survive)*10)/10, alive:alive, at:n2}); }catch(e){}
+      }
+    }
+  }
+
+  function draw(){
+    if(!ctx) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg=ctx.createLinearGradient(0,0,0,ch);
+    bg.addColorStop(0,'#160d24'); bg.addColorStop(1,'#08050e');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,cw,ch);
+    ctx.save();
+    if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+    cam.x+=(meP.x-cam.x)*0.16; cam.y+=(meP.y-cam.y)*0.16;
+
+    const c=w2s(0,0), s=c.s;
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.fillStyle='rgba(24,16,40,.72)'; ctx.fill();
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7); ctx.clip();
+    ctx.strokeStyle='rgba(168,85,247,.09)'; ctx.lineWidth=1;
+    for(let gx=-R;gx<=R;gx+=64){
+      const a=w2s(gx,-R), b2=w2s(gx,R);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b2.sx,b2.sy); ctx.stroke();
+    }
+    for(let gy=-R;gy<=R;gy+=64){
+      const a=w2s(-R,gy), b2=w2s(R,gy);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b2.sx,b2.sy); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.beginPath(); ctx.ellipse(c.sx,c.sy,R*s,R*s*K,0,0,7);
+    ctx.strokeStyle= deathFlash>0?'rgba(248,113,113,.9)':'rgba(168,85,247,.55)';
+    ctx.lineWidth=Math.max(2,s*3); ctx.stroke();
+
+    /* 尾跡 */
+    for(const p of trail){
+      const q=w2s(p.x,p.y);
+      ctx.globalAlpha=Math.max(0,p.t)*0.5;
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,PR*q.s*(0.4+p.t),0,7);
+      ctx.fillStyle='#38bdf8'; ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    /* 彈幕 */
+    const hw=viewHalfW()+60, hh2=viewHalfH()+60;
+    for(const b of bullets){
+      if(Math.abs(b.x-cam.x)>hw||Math.abs(b.y-cam.y)>hh2) continue;
+      const q=w2s(b.x,b.y), rr=Math.max(2,b.r*q.s);
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr*1.7,0,7);
+      ctx.fillStyle= b.col==='#fbbf24' ? 'rgba(251,191,36,.16)' : 'rgba(168,85,247,.16)';
+      ctx.fill();
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7);
+      ctx.fillStyle=b.col||'#a855f7'; ctx.fill();
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr*0.45,0,7);
+      ctx.fillStyle='rgba(255,255,255,.85)'; ctx.fill();
+    }
+    /* 其他人（ ghost 顯示，不影響玩法） */
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      const q=w2s(o.x,o.y), rr=PR*q.s;
+      ctx.globalAlpha=o.alive===false?0.32:0.9;
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7);
+      ctx.fillStyle=o.color||'#22c55e'; ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    /* 自己 */
+    if(alive){
+      const q=w2s(meP.x,meP.y), rr=PR*q.s;
+      const g=ctx.createRadialGradient(q.sx-rr*.35,q.sy-rr*.45,rr*.1,q.sx,q.sy,rr*1.05);
+      g.addColorStop(0,'#fff'); g.addColorStop(.28,'#38bdf8'); g.addColorStop(1,'rgba(0,0,0,.5)');
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7); ctx.fillStyle=g; ctx.fill();
+      ctx.beginPath(); ctx.arc(q.sx,q.sy,rr,0,7);
+      ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=2; ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle= alive?'#c4b5fd':'#fca5a5';
+    ctx.fillText((alive?'⏱ ':'💀 ')+survive.toFixed(1)+'s   最佳 '+best.toFixed(1)+'s', 16, 28);
+
+    drawMiniMap(ctx, cw, R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others), {square:false});
+  }
+
+  function loop(t){
+    if(!running) return;
+    if(t-_lastDraw<30){ raf=requestAnimationFrame(loop); return; }
+    _lastDraw=t;
+    const dt=Math.min(0.05,(t-lastT)/1000||0.016); lastT=t;
+    try{ step(dt); draw(); }catch(e){ console.error('dodge',e); }
+    raf=requestAnimationFrame(loop);
+  }
+
+  function bindInput(){
+    const onKey=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A')keys.x=-1;
+      else if(k==='ArrowRight'||k==='d'||k==='D')keys.x=1;
+      else if(k==='ArrowUp'||k==='w'||k==='W')keys.y=-1;
+      else if(k==='ArrowDown'||k==='s'||k==='S')keys.y=1;
+      else return;
+      e.preventDefault();
+    };
+    const onUp=e=>{
+      const k=e.key;
+      if(k==='ArrowLeft'||k==='a'||k==='A'||k==='ArrowRight'||k==='d'||k==='D')keys.x=0;
+      if(k==='ArrowUp'||k==='w'||k==='W'||k==='ArrowDown'||k==='s'||k==='S')keys.y=0;
+    };
+    window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
+    return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  return {
+    mounted:false,
+    async start(){
+      if(!me) return;
+      resetRun();
+      liveRef=ref(db,'lobbyLive/dodge/'+me.username);
+      try{ onDisconnect(liveRef).remove(); }catch(e){}
+      try{
+        unsubLive=onValue(ref(db,'lobbyLive/dodge'),snap=>{
+          const v=snap.val()||{}; const o={};
+          for(const k in v){ if(k!==me.username) o[k]=v[k]; }
+          others=o;
+        });
+      }catch(e){}
+      running=true; lastT=performance.now(); this.mounted=true;
+      const self=this;
+      const _hudTimer=setInterval(()=>{ try{ self.tickHud(); }catch(e){} }, 500);
+      const _oldStop=this.stop.bind(this);
+      this.stop=async function(){ clearInterval(_hudTimer); return _oldStop(); };
+      raf=requestAnimationFrame(loop);
+    },
+    async stop(){
+      running=false;
+      if(raf) cancelAnimationFrame(raf);
+      if(unbind){unbind();unbind=null;}
+      try{ if(unsubLive) unsubLive(); }catch(e){}
+      try{ if(liveRef) await remove(liveRef); }catch(e){}
+      this.mounted=false;
+    },
+    mount(canvas){
+      cv=canvas; ctx=cv.getContext('2d');
+      dpr=Math.min(1.5,window.devicePixelRatio||1);
+      const fit=()=>{const r=cv.getBoundingClientRect();cw=r.width||360;ch=r.height||420;
+        cv.width=cw*dpr;cv.height=ch*dpr;cv.style.width=cw+'px';cv.style.height=ch+'px';};
+      fit(); window.addEventListener('resize',fit);
+      unbind=bindInput();
+      const host=cv.parentElement;
+      if(host){
+        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
+        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
+        const oldUn=unbind;
+        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
+      }
+      draw();
+    },
+    tickHud(){
+      paintLobbyBoard(me.displayName||me.username, Math.round(Math.max(best,survive)*10)/10, others, '秒', meP);
+      const el=document.getElementById('stCard');
+      if(el){
+        const rows=[{me:true,n:Math.max(best,survive)}];
+        for(const u in others){ const o=others[u]; if(o&&typeof o.x==='number'&&Date.now()-(o.at||0)<8000) rows.push({me:false,n:Number(o.score)||0}); }
+        rows.sort((a,b)=>b.n-a.n);
+        el.innerHTML='<div><div class="sv">'+Math.max(best,survive).toFixed(1)+'</div><div class="sl">最佳秒數</div></div>'
+          +'<div><div class="sv">'+(rows.findIndex(x=>x.me)+1)+'</div><div class="sl">排名</div></div>';
+      }
+    },
+    debug(){ return {x:meP.x,y:meP.y,alive,survive:Math.round(survive*10)/10,best:Math.round(best*10)/10,
+      bullets:bullets.length,score:Math.round(best*10)/10,others:Object.keys(others||{}),runs}; },
+    probe(x,y){ return Math.hypot(x,y)<=R; }
+  };
+}
+
+
+const LOBBY_ENGINES={ snake:createSnakeLobby, sumo:createSumoLobby, tag:createTagLobby, fish:createFishLobby , dotrush:createDotrushLobby, dodge:createDodgeLobby, race:createRaceLobby, king:createKingLobby };
 /* 測試用唯讀鉤子：只把當前狀態讀出來，沒有任何寫入面。 */
 Object.defineProperty(window,'__snake',{get(){ try{ return (lgame&&lgame.debug)?lgame.debug():null; }catch(e){ return null; } }});
 window.__snakeProbe=function(x,y){ try{ return (lgame&&lgame.probe)?lgame.probe(x,y):null; }catch(e){ return null; } };
