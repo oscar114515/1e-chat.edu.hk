@@ -2813,7 +2813,10 @@ function createTagLobby(){
   /* 3D 牆：頂面 + 前面 + 右面，做出厚度 */
   function drawWall(w){
     const s=w2s(0,0).s;
-    const halfW=w.w/2, halfH=w.h/2, H=16;   /* H = 牆高（世界單位） */
+    /* SYNC_FIX_V1: 原本 H=16，3D 頂面比球員高一大截，
+       球走到牆「下方」時頂面蓋住球 → 玩家以為穿過去了（其實碰撞正常）。
+       降到 5，只做薄薄一層厚度感，唔會再遮住球。 */
+    const halfW=w.w/2, halfH=w.h/2, H=5;
     const A=w2s(w.x-halfW, w.y-halfH), B=w2s(w.x+halfW, w.y-halfH);
     const C=w2s(w.x+halfW, w.y+halfH), D=w2s(w.x-halfW, w.y+halfH);
     const hgt=H*s*K*1.35;
@@ -2864,6 +2867,84 @@ function createTagLobby(){
       if(!inWall(x,y,PR+8)) return {x,y};
     }
     return {x:0,y:-R*0.85};
+  }
+
+  /* ═══ AI 鬼 ═══
+     用戶要求：「有一個 AI 的鬼，會捉住附近的人，不能穿牆，捉最近那一個」。
+     做法：在本地跑（每個客戶端都跑同一隻），因為玩家位置已經同步，
+     所以大家看到同一隻鬼、抓同一個人，不需要伺服器。
+     尋路：直接朝目標走；碰到牆就用「切向繞行」（沿牆滑），唔會卡死。 */
+  const aiGhost={x:0,y:0,vx:0,vy:0,active:false,target:null,cool:0};
+  function aiReset(){
+    const sp=spawn();
+    aiGhost.x=sp.x; aiGhost.y=sp.y; aiGhost.vx=aiGhost.vy=0;
+    aiGhost.active=true; aiGhost.cool=1.5;
+  }
+  function aiStep(dt){
+    if(!aiGhost.active) { aiReset(); return; }
+    aiGhost.cool=Math.max(0,aiGhost.cool-dt);
+
+    /* 找最近的可見玩家（自己 + 其他人）*/
+    let best=null,bd=1e9;
+    const cand=[{x:meP.x,y:meP.y,me:true}];
+    for(const u in others){
+      const o=others[u];
+      if(!o||typeof o.x!=='number') continue;
+      if(Date.now()-(o.at||0)>8000) continue;
+      cand.push({x:o.x,y:o.y,u});
+    }
+    for(const c of cand){
+      const d=Math.hypot(c.x-aiGhost.x, c.y-aiGhost.y);
+      if(d<bd){ bd=d; best=c; }
+    }
+    if(!best) return;
+
+    const SPD=138;                       /* 比玩家慢一點，玩家跑得甩 */
+    let dx=best.x-aiGhost.x, dy=best.y-aiGhost.y;
+    const m=Math.hypot(dx,dy)||1;
+    dx/=m; dy/=m;
+
+    /* 三步試行：直行 → 左繞 → 右繞（避免直撞牆卡住）*/
+    let mvx=dx*SPD, mvy=dy*SPD;
+    const nextX=aiGhost.x+dx*22, nextY=aiGhost.y+dy*22;
+    if(inWall(nextX,nextY,PR*0.9)){
+      const lx=aiGhost.x+(-dy)*22, ly=aiGhost.y+dx*22;
+      const rx=aiGhost.x+dy*22,  ry=aiGhost.y+(-dx)*22;
+      const okL=!inWall(lx,ly,PR*0.9), okR=!inWall(rx,ry,PR*0.9);
+      if(okL){ mvx=(-dy)*SPD; mvy=dx*SPD; }
+      else if(okR){ mvx=dy*SPD; mvy=(-dx)*SPD; }
+      else { mvx=-dx*SPD*0.6; mvy=-dy*SPD*0.6; }   /* 死路：退一退再試 */
+    }
+    aiGhost.x+=mvx*dt; aiGhost.y+=mvy*dt;
+
+    /* 場地邊界 */
+    const ad=Math.hypot(aiGhost.x,aiGhost.y);
+    if(ad>R-PR && ad>0.01){
+      aiGhost.x=aiGhost.x/ad*(R-PR); aiGhost.y=aiGhost.y/ad*(R-PR);
+    }
+    /* 牆推出（保險，防止穿過）*/
+    const fake={x:aiGhost.x,y:aiGhost.y,vx:0,vy:0};
+    resolveWalls(fake, PR);
+    aiGhost.x=fake.x; aiGhost.y=fake.y;
+
+    /* 抓到：距離 < 2 個球 */
+    if(bd < PR*2.2 && aiGhost.cool<=0){
+      aiGhost.cool=2.2;
+      shake=10;
+      if(best.me){
+        myScore=Math.max(0,myScore-1);
+        grace=1.6;
+        popups.push({x:meP.x,y:meP.y,t:1.3,txt:'AI 鬼捉到你 −1'});
+        const ax=meP.x-aiGhost.x, ay=meP.y-aiGhost.y, am=Math.hypot(ax,ay)||1;
+        meP.x+=ax/am*80; meP.y+=ay/am*80;
+        meP.vx=ax/am*460; meP.vy=ay/am*460;
+      }else{
+        popups.push({x:best.x,y:best.y,t:1.1,txt:'AI 捉到 '+((others[best.u]||{}).name||'')});
+      }
+      /* 抓完跳走，唔好貼住人連環抓 */
+      const a2=Math.random()*6.283;
+      aiGhost.x+=Math.cos(a2)*160; aiGhost.y+=Math.sin(a2)*160;
+    }
   }
 
   function drawField(){
@@ -2961,6 +3042,8 @@ function createTagLobby(){
       }
     }
 
+    aiStep(dt);
+
     if(grace>0) grace-=dt;
     if(shake>0) shake-=dt*32;
     popups.forEach(p=>p.t-=dt*1.1); popups=popups.filter(p=>p.t>0);
@@ -3050,6 +3133,10 @@ function createTagLobby(){
       if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh) continue;
       drawBall(o.x,o.y,o.color||'#22c55e',PR,o.name,!!o.ghost,false);
     }
+    /* AI 鬼：紫色，永遠存在 */
+    if(aiGhost.active && Math.abs(aiGhost.x-cam.x)<hw && Math.abs(aiGhost.y-cam.y)<hh){
+      drawBall(aiGhost.x,aiGhost.y,'#a855f7',PR+2,'AI 鬼',true,false);
+    }
     drawBall(meP.x,meP.y,myGhost?'#ef4444':'#38bdf8',PR,me.displayName||me.username,myGhost,true);
 
     popups.forEach(p=>{
@@ -3103,6 +3190,7 @@ function createTagLobby(){
     async start(){
       if(!me) return;
       const sp=spawn(); meP.x=sp.x; meP.y=sp.y; cam={x:sp.x,y:sp.y};
+      aiReset();
       liveRef=ref(db,'lobbyLive/tag/p/'+me.username);
       metaRef=ref(db,'lobbyLive/tag/meta');
       try{ onDisconnect(liveRef).remove(); }catch(e){}
@@ -3762,7 +3850,11 @@ function createSnakeLobby(){
   const SPEED_BOOST=286;     /* 加速時的速度 */
   const TURN=4.4;            /* 每秒最多轉幾弧度（3.5 → 4.4：轉向爽一點，唔會覺得撳咗冇反應） */
   const START_N=14;          /* 出生長度 */
-  const NET_DELAY=130;       /* 別人的畫面延遲（毫秒）：用插值讓 8Hz 的封包看起來是連續的 */
+  /* SYNC_FIX_V1: 原本一律 130ms。但 Firebase 路徑延遲實測 300-800ms，
+     130ms 的緩衝追不上 → 渲染到最後一個取樣點就卡住，新點一到就瞬移
+     （用戶見到「別人的蛇忽前忽後、只見到兩節」）。
+     WS 保持 130（自家伺服器同區，延遲 <50ms），Firebase 放寬到 420。 */
+  const NET_DELAY_WS=130, NET_DELAY_FB=420;
   const FOOD_TARGET=260;     /* 場上維持多少顆豆（正方形比圓形大，所以比之前多一點） */
   const ARENA=LobbyArena(HALF);
 
@@ -3979,7 +4071,7 @@ function createSnakeLobby(){
     if(document.hidden){ lastT=ts; return; }
     const dt=Math.min(0.05,(ts-lastT)/1000||0); lastT=ts;
     const now=sNow();
-    const renderT=(wsMode?Date.now():now)-NET_DELAY;
+    const renderT=(wsMode?Date.now():now)-(wsMode?NET_DELAY_WS:NET_DELAY_FB);
     if(my&&my.alive){
       /* 轉向：方向鍵（觸控）優先，其餘用滑鼠／手指指向的位置；
          但每秒最多轉 TURN 弧度，所以按「後」不會瞬間反轉，而是繞一個弧。 */
