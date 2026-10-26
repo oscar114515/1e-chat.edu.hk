@@ -2633,20 +2633,32 @@ function createSumoLobby(){
    同步：位置寫 lobbyLive/tag/p/{u}，鬼寫 lobbyLive/tag/meta/ghost。
         判定由「鬼自己」算（他離誰最近），抓到就寫 ghost=對方。 */
 function createTagLobby(){
-  const R=230, PR=15, K=0.55;
+  /* CAMERA_V1: 地圖放大 4 倍（230 → 900），相機跟隨；牆由 8 增到 30 堵，
+     形成真正「大迷宮」，唔再係一個小圓盤。 */
+  const R=900, PR=15, K=0.55;
+  const VIEW_H=620;
+  let cam={x:0,y:0};
   /* TAG_WALLS: 固定佈局（唔隨機）——所有人同一張地圖。
      圓形擂台 + 幾堵牆，做「迷宮」的感覺，又唔會困死。
      座標是中心點 + 寬高（世界座標）。 */
-  const WALLS=[
-    {x:-118,y:-96,w:74,h:22},
-    {x: 96,y:-118,w:22,h:70},
-    {x:-150,y: 38,w:22,h:78},
-    {x:  36,y: 86,w:86,h:22},
-    {x: 148,y: 52,w:22,h:64},
-    {x: -22,y:-24,w:22,h:64},
-    {x:-82,y: 118,w:64,h:20},
-    {x: 118,y: 148,w:20,h:52},
-  ];
+  /* 30 堵牆，固定佈局（所有人同一張圖）。分三環：內圈密、外圈疏。 */
+  const WALLS=(function(){
+    const out=[];
+    const seed=[
+      [-620,-580,220,26],[ -240,-660,26,200],[ 300,-620,240,26],[ 640,-560,26,220],
+      [-700,-240,26,240],[ -420,-330,200,26],[  80,-380,26,220],[ 420,-300,220,26],
+      [ 700,-180,26,200],
+      [-760, 120,220,26],[ -380, 100,26,240],[  40,  60,240,26],[ 460, 140,26,220],
+      [ 720, 260,26,200],
+      [-640, 420,26,220],[ -300, 480,240,26],[ 160, 420,26,240],[ 520, 480,220,26],
+      [-700, 640,200,26],[ -200, 700,26,200],[ 280, 660,220,26],
+      [-520,-80,26,180],[ -120,-100,180,26],[ 240, -60,26,180],[ 560, 60,180,26],
+      [-480, 260,180,26],[ -100, 300,26,180],[ 340, 300,180,26],
+      [ -60,-500,180,26],[ 200, 240,180,26]
+    ];
+    for(const [x,y,w,h] of seed) out.push({x,y,w,h});
+    return out;
+  })();
   const WALL_TOP='#334155', WALL_SIDE='#1e293b', WALL_EDGE='rgba(148,163,184,.5)';
   function inWall(x,y,pad){
     for(const w of WALLS){
@@ -2711,9 +2723,11 @@ function createTagLobby(){
   let trail=[];                  /* 鬼的殘影 */
 
   function w2s(x,y){
-    const s=Math.min(cw/(R*2.35), ch/(R*2.35*K))*1.0;
-    return {sx:cw/2+x*s, sy:ch/2+y*s*K, s};
+    const s=ch/(VIEW_H*K);
+    return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s*K, s};
   }
+  function viewHalfW(){ return (cw/2)/(ch/(VIEW_H*K)); }
+  function viewHalfH(){ return (ch/2)/(ch/(VIEW_H*K)*K); }
   function spawn(){
     for(let i=0;i<40;i++){
       const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.72;
@@ -2856,24 +2870,33 @@ function createTagLobby(){
 
     ctx.save();
     if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+
+    /* 相機：平滑跟隨玩家 */
+    cam.x+=(meP.x-cam.x)*0.12;
+    cam.y+=(meP.y-cam.y)*0.12;
+
     drawField();
 
+    const hw=viewHalfW()+140, hh=viewHalfH()+140;
     /* 殘影 */
     trail.forEach((t,i)=>{
       if(t.t<=0) return;
+      if(Math.abs(t.x-cam.x)>hw||Math.abs(t.y-cam.y)>hh) return;
       const p=w2s(t.x,t.y), s=p.s;
       ctx.beginPath(); ctx.arc(p.sx,p.sy,PR*s*(0.5+t.t*0.5),0,7);
       ctx.fillStyle='rgba(248,113,113,'+(t.t*0.18)+')'; ctx.fill();
     });
 
-    /* 牆：按 y 排序，後面的先畫（有遮擋感）*/
-    [...WALLS].sort((a,b)=>a.y-b.y).forEach(drawWall);
+    /* 牆：只畫可見範圍，按 y 排序 */
+    WALLS.filter(w=>Math.abs(w.x-cam.x)<hw+w.w && Math.abs(w.y-cam.y)<hh+w.h)
+         .sort((a,b)=>a.y-b.y).forEach(drawWall);
 
     for(const u in others){
       const o=others[u];
       if(!o||typeof o.x!=='number') continue;
       if(Date.now()-(o.at||0)>8000) continue;
       if(o.ghost){ ghosts[u]=true; } else { delete ghosts[u]; }
+      if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh) continue;
       drawBall(o.x,o.y,o.color||'#22c55e',PR,o.name,!!o.ghost,false);
     }
     drawBall(meP.x,meP.y,myGhost?'#ef4444':'#38bdf8',PR,me.displayName||me.username,myGhost,true);
@@ -2928,7 +2951,7 @@ function createTagLobby(){
     mounted:false,
     async start(){
       if(!me) return;
-      const sp=spawn(); meP.x=sp.x; meP.y=sp.y;
+      const sp=spawn(); meP.x=sp.x; meP.y=sp.y; cam={x:sp.x,y:sp.y};
       liveRef=ref(db,'lobbyLive/tag/p/'+me.username);
       metaRef=ref(db,'lobbyLive/tag/meta');
       try{ onDisconnect(liveRef).remove(); }catch(e){}
@@ -2990,20 +3013,27 @@ function createTagLobby(){
    自己吃小魚變大；比對大過自己太多的玩家會被吃掉（扣分）。
    小魚各自本地生成（唔同步），只有玩家位置同步 —— 省流量又唔會搶食。 */
 function createFishLobby(){
-  const R=240, K=0.55;
+  /* CAMERA_V1: 世界放大 5 倍（240 → 1200），相機跟住玩家，畫面上只見到附近一小塊
+     —— 同貪吃蛇一樣「人細、地大」的感覺。R 仍然係世界半徑。 */
+  const R=1200, K=0.55;
+  const VIEW_H=560;               /* 屏幕可見的世界高度（越小＝Zoom 越近） */
+  let cam={x:0,y:0};
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
-  let meP={x:0,y:0,vx:0,vy:0,r:12,facing:1};
+  let meP={x:0,y:0,vx:0,vy:0,r:14,facing:1}; cam={x:0,y:0};
   let others={}, liveRef=null, unsubLive=null;
   let fishes=[], bubbles=[], myScore=0, lastPush=0, lastT=0, shake=0;
   let keys={x:0,y:0}, eating=0;
   let unbind=null;
 
   function w2s(x,y){
-    const s=Math.min(cw/(R*2.2), ch/(R*2.2*K));
-    return {sx:cw/2+x*s, sy:ch/2+y*s*K, s};
+    /* 固定縮放（唔隨世界大小變），相對相機 */
+    const s=ch/(VIEW_H*K);
+    return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s*K, s};
   }
+  function viewHalfW(){ return (cw/2)/(ch/(VIEW_H*K)); }
+  function viewHalfH(){ return (ch/2)/(ch/(VIEW_H*K)*K); }
   function spawnFish(){
-    const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.88;
+    const a=Math.random()*6.283, r=Math.sqrt(Math.random())*R*0.95;
     const size=3.5+Math.random()*5.5;
     return {x:Math.cos(a)*r, y:Math.sin(a)*r,
       r:size, vx:(Math.random()-.5)*22, vy:(Math.random()-.5)*22,
@@ -3120,7 +3150,16 @@ function createFishLobby(){
       }
     });
     fishes=fishes.filter(f=>!f.dead);
-    while(fishes.length<16) fishes.push(spawnFish());
+    /* 只維持玩家附近 60 條（世界太大，遠處嘅冇人見到）*/
+    while(fishes.length<60) {
+      const f=spawnFish();
+      /* 30% 機率直接刷在玩家視野附近，保持密度 */
+      if(Math.random()<0.34){
+        const a=Math.random()*6.283, rr=180+Math.random()*420;
+        f.x=meP.x+Math.cos(a)*rr; f.y=meP.y+Math.sin(a)*rr;
+      }
+      fishes.push(f);
+    }
 
     /* 玩家互吃：大過對方 15% 就食得 */
     for(const u in others){
@@ -3157,20 +3196,27 @@ function createFishLobby(){
     ctx.save();
     if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
     drawWater();
-    drawBounds();
 
-    /* 小魚（按大小排，小的先畫）*/
-    [...fishes].sort((a,b)=>a.r-b.r).forEach(f=>drawFish(f.x,f.y,f.r,f.hue,false,1,null,null));
+    /* 相機：平滑跟隨（0.14 係手感，太快會暈，太慢會甩）*/
+    cam.x+=(meP.x-cam.x)*0.14;
+    cam.y+=(meP.y-cam.y)*0.14;
 
-    /* 其他玩家 */
+    const hw=viewHalfW()+80, hh=viewHalfH()+80;
+    /* 只畫可見範圍內的魚 */
+    const vis=fishes.filter(f=>Math.abs(f.x-cam.x)<hw && Math.abs(f.y-cam.y)<hh);
+    vis.sort((a,b)=>a.r-b.r).forEach(f=>drawFish(f.x,f.y,f.r,f.hue,false,1,null,null));
+
     for(const u in others){
       const o=others[u];
       if(!o||typeof o.x!=='number') continue;
       if(Date.now()-(o.at||0)>8000) continue;
+      if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh) continue;
       drawFish(o.x,o.y,o.r||12,200,false,1,o.name,0.9);
     }
     /* 自己 */
     drawFish(meP.x,meP.y,meP.r,200,true,meP.facing,me.displayName||me.username,1);
+    /* 邊界：只有接近時才畫（R=1200 的橢圓描邊成本唔低） */
+    if(Math.hypot(meP.x,meP.y) > R*0.72) drawBounds();
 
     /* 氣泡 */
     bubbles.forEach(b=>{
@@ -3222,7 +3268,7 @@ function createFishLobby(){
     async start(){
       if(!me) return;
       meP={x:0,y:0,vx:0,vy:0,r:12,facing:1};
-      fishes=[]; for(let i=0;i<16;i++) fishes.push(spawnFish());
+      fishes=[]; for(let i=0;i<60;i++) fishes.push(spawnFish());
       liveRef=ref(db,'lobbyLive/fish/'+me.username);
       try{ onDisconnect(liveRef).remove(); }catch(e){}
       try{
