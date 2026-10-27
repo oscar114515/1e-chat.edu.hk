@@ -2540,7 +2540,7 @@ function paintLobbyBoard(myName, myScore, others, unit, myPos){
 }
 
 function createSumoLobby(){
-  const R=210;                 /* 擂台半徑（世界座標） */
+  const R=300;                 /* 擂台半徑（世界座標） */
   const PR=16;                 /* 球半徑 */
   const K=0.55;                /* 縱向壓縮（斜視角） */
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
@@ -2884,28 +2884,39 @@ function createTagLobby(){
      形成真正「大迷宮」，唔再係一個小圓盤。 */
   /* WALL_NUM_V1: 用戶要求地圖再大一點 900 → 1200（面積 ×1.78），
      牆座標同步 ×1.33，維持原本的相對佈局。 */
-  const R=1200, PR=15, K=0.55;
-  const VIEW_H=660;
+  const R=1700, PR=15, K=0.55;
+  const VIEW_H=820;
   let cam={x:0,y:0};
   /* TAG_WALLS: 固定佈局（唔隨機）——所有人同一張地圖。
      圓形擂台 + 幾堵牆，做「迷宮」的感覺，又唔會困死。
      座標是中心點 + 寬高（世界座標）。 */
-  /* 30 堵牆，固定佈局（所有人同一張圖）。分三環：內圈密、外圈疏。 */
+  /* ~72 堵牆，固定種子程序化生成（所有人同一張圖）：不重疊、離中心夠遠、
+     通道至少 90 單位 → 真正大迷宮，又唔會困死。 */
   const WALLS=(function(){
     const out=[];
-    const seed=[
-      [-825,-771,293,35],[-319,-878,35,266],[399,-825,319,35],[851,-745,35,293],
-      [-931,-319,35,319],[-559,-439,266,35],[106,-505,35,293],[559,-399,293,35],
-      [931,-239,35,266],
-      [-1011,160,293,35],[-505,133,35,319],[53,80,319,35],[612,186,35,293],
-      [958,346,35,266],
-      [-851,559,35,293],[-399,638,319,35],[213,559,35,319],[692,638,293,35],
-      [-931,851,266,35],[-266,931,35,266],[372,878,293,35],
-      [-692,-106,35,239],[-160,-133,239,35],[319,-80,35,239],[745,80,239,35],
-      [-638,346,239,35],[-133,399,35,239],[452,399,239,35],
-      [-80,-665,239,35],[266,319,239,35]
-    ];
-    for(const [x,y,w,h] of seed) out.push({x,y,w,h});
+    let st=20261027;
+    const rnd=()=>{ st=(Math.imul(st,1664525)+1013904223)>>>0; return st/4294967296; };
+    const CELL=150;
+    let guard=0;
+    while(out.length<72 && guard++<900){
+      const horiz=rnd()<0.5;
+      const len=(2+Math.floor(rnd()*4))*CELL*0.6;
+      const th=32;
+      const ang=rnd()*6.283;
+      const rad=210+Math.sqrt(rnd())*(R-330);
+      const cx=Math.cos(ang)*rad, cy=Math.sin(ang)*rad;
+      const x=Math.round((cx-(horiz?len/2:0))/CELL*2)*CELL/2;
+      const y=Math.round((cy-(horiz?0:len/2))/CELL*2)*CELL/2;
+      const w=horiz?len:th, h=horiz?th:len;
+      if(Math.abs(x)+w/2>R-60 || Math.abs(y)+h/2>R-60) continue;
+      if(Math.hypot(x,y)<240) continue;
+      let clash=false;
+      for(const q of out){
+        if(Math.abs(q.x-x)<(q.w+w)/2+90 && Math.abs(q.y-y)<(q.h+h)/2+90){ clash=true; break; }
+      }
+      if(clash) continue;
+      out.push({x,y,w,h});
+    }
     return out;
   })();
   const WALL_TOP='#334155', WALL_SIDE='#1e293b', WALL_EDGE='rgba(148,163,184,.5)';
@@ -3843,7 +3854,7 @@ function createFishLobby(){
    豆子數量不多（24 顆）、只在被吃時刪一次，流量很低。
    相機跟隨、搖桿 + 鼠標、右上角小地圖、積分榜帶座標 —— 與其他 3 款一致。 */
 function createDotrushLobby(){
-  const R=560, PR=14, K=0.55;
+  const R=800, PR=14, K=0.55;
   const VIEW_H=860;
   const GOAL=25;                  /* 先搶到 30 顆就贏 */
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
@@ -3870,7 +3881,7 @@ function createDotrushLobby(){
       const snap=await get(ref(db,'lobbyFood/dotrush'));
       if(snap.exists()) return;
       const batch={};
-      for(let i=0;i<40;i++){
+      for(let i=0;i<56;i++){
         const p=randPoint();
         batch['d'+i]= {x:Math.round(p.x), y:Math.round(p.y),
           col: i%7===0 ? '#fbbf24' : '#67e8f9'};
@@ -4851,7 +4862,7 @@ function createRaceLobby(){
 }
 
 function createDodgeLobby(){
-  const R=430, PR=12, K=0.55;
+  const R=620, PR=12, K=0.55;
   const VIEW_H=760;
   const SEED0=0x9E3779B9;
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
@@ -5142,7 +5153,7 @@ function createDodgeLobby(){
    每成功走到右邊 +1 分；被掃到彈返起點。
    與其他大廳遊戲一致：搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
 function createLaserLobby(){
-  const W=640, H=1200, PR=13, K=0.62;
+  const W=900, H=1800, PR=13, K=0.62;
   const SAFE=76;                        /* 起點／終點安全區闊度 */
   const GATES=[-180,-60,60,180];        /* 直閘 x 位置 */
   const CYC=2.2, ON=0.85, WARN=1.45;    /* 閃爍節奏（秒）*/
@@ -5396,10 +5407,10 @@ function createLaserLobby(){
    「邊個食邊個」由雙方各自用同一份公開資料判斷 → 唔需要額外伺服器節點。
    與其他大廳遊戲一致：相機跟隨（會隨體型自動拉遠）、搖桿 + 鼠標、小地圖、積分榜帶座標。 */
 function createAgarLobby(){
-  const R=780, K=0.55;
+  const R=1100, K=0.55;
   const VIEW_H=880;
   const START_R=20, MAX_R=92, WIN_R=72;
-  const FOOD_N=260;
+  const FOOD_N=340;
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
   let meP={x:0,y:0,vx:0,vy:0}, myR=START_R;
   let cam={x:0,y:0};
@@ -5666,7 +5677,7 @@ function createAgarLobby(){
    流量極低；其他人一收到就畫埋一份。先塗到 45% 就贏。
    與其他大廳遊戲一致：相機跟隨、搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
 function createPaintLobby(){
-  const W=1040, H=1040, TILE=65, N=16, PR=15, K=0.55;
+  const W=1560, H=1560, TILE=78, N=20, PR=15, K=0.55;
   const VIEW_H=900;
   const TOTAL=N*N, WIN_TILES=Math.round(TOTAL*0.45);
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
@@ -5930,7 +5941,7 @@ function createPaintLobby(){
    炸彈跟隨自己的即時資料廣播（同一條 watch，零額外節點）。
    與其他大廳遊戲一致：相機跟隨、搖桿／點擊、小地圖、積分榜帶座標。 */
 function createBombLobby(){
-  const GW=9, GH=19, CELL=78, PR=15, K=0.55;
+  const GW=11, GH=23, CELL=78, PR=15, K=0.55;
   const W=GW*CELL, H=GH*CELL;
   const VIEW_H=820;
   const FUSE=2000, BLAST=460, RANGE=2;
