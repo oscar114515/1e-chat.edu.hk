@@ -4694,8 +4694,9 @@ function createRaceLobby(){
     lat*=Math.exp(-5.0*dt);
     /* 轉彎半徑 = max(100, v²/900)：低速最小 100（< 3% 圓盤直徑 108），高速自然變大 */
     if(steer!==0 && Math.abs(fwd)>15){
-      const R=Math.max(100, fwd*fwd/900);
-      head += steer * (Math.abs(fwd)/R) * dt;
+      /* 轉向率封頂 1.4 rad/s（轉彎半徑≈450），唔會「一轉向就爆炸」亦唔會原地打轉 */
+      const rate = steer * Math.min(1.4, Math.abs(fwd)/450);
+      head += rate * dt;
     }
     vx = fx*fwd - fy*lat;
     vy = fy*fwd + fx*lat;
