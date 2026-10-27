@@ -4716,10 +4716,11 @@ function createRaceLobby(){
     const ACC=560, DRAG=150, MAX=640, TURN=1.9;
     if(throttle) speed=Math.min(MAX, speed+ACC*dt);
     else speed=Math.max(0, speed-DRAG*dt*1.7);
-    /* 轉向：速度越快越鈍（卡丁車手感） */
-    if(steer!==0){
-      const eff=TURN*Math.min(1.0, 130/Math.max(45,speed));
-      head+=steer*eff*dt;
+    /* 轉向：阿克曼模型 —— 轉向率 ∝ 速度（停定轉唔到，唔會原地 360° 轉圈） */
+    if(steer!==0 && speed>12){
+      const rate=steer*Math.min(2.6, speed*0.0045);
+      head+=rate*dt;
+      speed*=Math.max(0, 1-0.10*dt);       /* 過彎輕微減速 */
     }
     meP.x+=Math.cos(head)*speed*dt;
     meP.y+=Math.sin(head)*speed*dt;
