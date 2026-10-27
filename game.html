@@ -4538,9 +4538,13 @@ function createKingLobby(){
     probe(x,y){ return Math.hypot(x,y)<=R; }
   };
 }
-
+/* ═══ 迷你賽車（race v3）—— 油門 + 方向盤，追尾旋轉視角 ═══
+   操作：唔再係搖桿。踩油門加速、按左右轉方向盤（速度越快越難轉）。
+   視角：唔係第一人稱，但鏡頭永遠鎖住車頭朝屏幕上方 —— 車喺屏幕下方，
+   賽道圍住車轉，前方一直係「要行嗰邊」。 */
 function createRaceLobby(){
   const PR=15, VIEW_H=1500, TRACK_HALF=148, LAPS=3;
+  const LOOK=150;                 /* 相機喺車前方幾遠 → 車喺屏幕下方 LOOK*s 像素 */
   const CP=(function(){
     const out=[], M=14, TAU=Math.PI*2;
     for(let i=0;i<M;i++){
@@ -4575,14 +4579,22 @@ function createRaceLobby(){
   const MAP_DOTS=(function(){ const a=[]; for(let i=0;i<NT;i+=6) a.push({x:PTS[i].x,y:PTS[i].y,color:'rgba(148,163,184,.55)'}); return a; })();
 
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
-  let meP={x:0,y:0,vx:0,vy:0}, head=0;
-  let cam={x:0,y:0};
+  let meP={x:0,y:0}, head=0, speed=0;
+  let cam={x:0,y:0}, camAng=0;
   let others={}, liveRef=null, unsubLive=null;
-  let keys={x:0,y:0}, lastT=0, lastPush=0, _lastDraw=0;
-  let lap=0, lastIdx=null, done=false, t0=0, myTime=0;
-  let unbind=null, skid=[], shake=0, best=0, curS=0;
+  let throttle=false, steer=0;
+  let lastT=0, lastPush=0, _lastDraw=0;
+  let lap=0, lastIdx=null, done=false, t0=0, myTime=0, curS=0;
+  let unbind=null, skid=[], shake=0;
 
-  function w2s(x,y){ const s=ch/VIEW_H; return {sx:cw/2+(x-cam.x)*s, sy:ch/2+(y-cam.y)*s, s}; }
+  /* 旋轉追尾相機：camAng＝車頭方向，forward 映射到屏幕 -y（上） */
+  function w2s(x,y){
+    const s=ch/VIEW_H;
+    const fx=Math.cos(camAng), fy=Math.sin(camAng), rx=-fy, ry=fx;
+    const dx=x-cam.x, dy=y-cam.y;
+    const sx=dx*rx+dy*ry, sy=dx*fx+dy*fy;
+    return {sx:cw/2+sx*s, sy:ch/2-sy*s, s};
+  }
   function nearIdx(x,y,from){
     let best=0, bd=1e18;
     const lo=from===null?0:Math.max(0,from-70), hi=from===null?NT:Math.min(NT,from+70);
@@ -4610,28 +4622,22 @@ function createRaceLobby(){
 
   function drawTrack(){
     const s=ch/VIEW_H;
-    /* 草地 */
     ctx.fillStyle='#0c1f14'; ctx.fillRect(0,0,cw,ch);
-    /* 砂石緩衝區 */
     pathTrack(); ctx.lineJoin='round'; ctx.lineCap='round';
     ctx.strokeStyle='#4a4030'; ctx.lineWidth=(TRACK_HALF+52)*2*s; ctx.stroke();
-    /* 瀝青 */
     pathTrack(); ctx.strokeStyle='#2b3038'; ctx.lineWidth=TRACK_HALF*2*s; ctx.stroke();
-    /* 路肩：紅底 + 白虛線（畫在瀝青之上才見到） */
     for(const side of [1,-1]){
       pathOffset(side);
       ctx.setLineDash([]); ctx.strokeStyle='#dc2626'; ctx.lineWidth=Math.max(3,13*s); ctx.stroke();
       ctx.setLineDash([17*s,17*s]); ctx.strokeStyle='#f8fafc'; ctx.stroke();
       ctx.setLineDash([]);
     }
-    /* 內側白線 */
     pathOffset(1); ctx.strokeStyle='rgba(248,250,252,.35)'; ctx.lineWidth=Math.max(1.2,2.5*s); ctx.stroke();
     pathOffset(-1); ctx.strokeStyle='rgba(248,250,252,.35)'; ctx.lineWidth=Math.max(1.2,2.5*s); ctx.stroke();
-    /* 中心虛線 */
     pathTrack(); ctx.setLineDash([22*s,26*s]);
     ctx.strokeStyle='rgba(148,163,184,.35)'; ctx.lineWidth=Math.max(1.2,3*s); ctx.stroke();
     ctx.setLineDash([]);
-    /* 起跑格：PTS[0] 處橫向格紋 */
+    /* 起跑格 */
     const p=PTS[0], nx=-p.ty, ny=p.tx;
     const COLS=10, ROWS=4;
     for(let c=-COLS/2;c<COLS/2;c++){
@@ -4650,18 +4656,15 @@ function createRaceLobby(){
         ctx.fill();
       }
     }
-    /* 圈數牌 */
-    const flag=w2s(p.x-nx*(TRACK_HALF+120), p.y-ny*(TRACK_HALF+120));
-    ctx.font='700 '+Math.max(12,16*s)+'px Inter,sans-serif'; ctx.textAlign='center';
-    ctx.fillStyle='rgba(148,163,184,.8)'; ctx.fillText('START',flag.sx,flag.sy);
   }
 
+  /* 車頭朝屏幕 -y（上），長軸沿 y；ang 係「相對相機」嘅角 */
   function drawCar(x,y,ang,color,isMe,label){
     const p=w2s(x,y), s=p.s, L=PR*2.1*s, W=PR*1.35*s;
     ctx.save();
     ctx.translate(p.sx,p.sy);
-    ctx.beginPath(); ctx.ellipse(0,L*0.3,W*0.62,W*0.5,0,0,7); ctx.fillStyle='rgba(0,0,0,.32)'; ctx.fill();
-    ctx.rotate(ang+Math.PI/2);
+    ctx.beginPath(); ctx.ellipse(0,L*0.28,W*0.62,W*0.5,0,0,7); ctx.fillStyle='rgba(0,0,0,.32)'; ctx.fill();
+    ctx.rotate(ang);
     /* 尾翼 */
     ctx.beginPath(); ctx.rect(-W*0.62,L*0.30,W*1.24,L*0.14);
     ctx.fillStyle='rgba(20,24,34,.95)'; ctx.fill();
@@ -4671,7 +4674,7 @@ function createRaceLobby(){
     ctx.fillStyle=g; ctx.fill();
     ctx.strokeStyle=isMe?'rgba(56,189,248,.95)':'rgba(255,255,255,.4)';
     ctx.lineWidth=isMe?2:1.2; ctx.stroke();
-    /* 鼻翼 */
+    /* 鼻翼（車頭 = -y） */
     ctx.beginPath(); ctx.rect(-W*0.5,-L*0.5,W,L*0.1); ctx.fillStyle='rgba(15,23,42,.9)'; ctx.fill();
     /* 座艙 */
     roundRectPath(ctx,-W*0.28,-L*0.16,W*0.56,L*0.3,W*0.14);
@@ -4703,33 +4706,36 @@ function createRaceLobby(){
       const nx=dx/d, ny=dy/d;
       meP.x=p.x+nx*(TRACK_HALF-PR);
       meP.y=p.y+ny*(TRACK_HALF-PR);
-      const vn=meP.vx*nx+meP.vy*ny;
-      if(vn>0){ meP.vx-=nx*vn*1.25; meP.vy-=ny*vn*1.25; }
+      const vn=Math.cos(head)*nx+Math.sin(head)*ny;
+      if(vn>0) speed*=0.62;              /* 撞牆急煞 */
       shake=Math.min(6,shake+2.6);
     }
   }
 
   function step(dt){
-    const m=Math.hypot(keys.x,keys.y);
-    const acc=1500;
-    if(m>0.04){ meP.vx+=(keys.x/m)*acc*dt; meP.vy+=(keys.y/m)*acc*dt; }
-    else { meP.vx*=Math.pow(0.25,dt); meP.vy*=Math.pow(0.25,dt); }
-    const sp=Math.hypot(meP.vx,meP.vy), MAX=560;
-    if(sp>MAX){ meP.vx=meP.vx/sp*MAX; meP.vy=meP.vy/sp*MAX; }
-    meP.x+=meP.vx*dt; meP.y+=meP.vy*dt;
+    const ACC=560, DRAG=150, MAX=640, TURN=1.9;
+    if(throttle) speed=Math.min(MAX, speed+ACC*dt);
+    else speed=Math.max(0, speed-DRAG*dt*1.7);
+    /* 轉向：速度越快越鈍（卡丁車手感） */
+    if(steer!==0){
+      const eff=TURN*Math.min(1.0, 130/Math.max(45,speed));
+      head+=steer*eff*dt;
+    }
+    meP.x+=Math.cos(head)*speed*dt;
+    meP.y+=Math.sin(head)*speed*dt;
     clampTrack();
-    if(sp>70){
-      const want=Math.atan2(meP.vy,meP.vx);
-      let d=want-head;
-      while(d>Math.PI) d-=6.283185307;
-      while(d<-Math.PI) d+=6.283185307;
-      head+=d*Math.min(1,dt*14);
-      if(Math.random()<0.4) skid.push({x:meP.x-meP.vx*0.026,y:meP.y-meP.vy*0.026,t:0.45});
+    if(speed>130 && steer!==0 && Math.random()<0.5){
+      skid.push({x:meP.x-Math.cos(head)*PR, y:meP.y-Math.sin(head)*PR, t:0.4});
     }
     skid.forEach(p=>p.t-=dt*1.5);
-    while(skid.length>50) skid.shift();
+    while(skid.length>40) skid.shift();
     skid=skid.filter(p=>p.t>0);
     if(shake>0) shake-=dt*26;
+
+    /* 相機：鎖車頭朝上，車喺屏幕下方 */
+    camAng=head;
+    cam.x=meP.x+Math.cos(head)*LOOK;
+    cam.y=meP.y+Math.sin(head)*LOOK;
 
     if(liveRef&&running){
       const n2=Date.now();
@@ -4748,7 +4754,6 @@ function createRaceLobby(){
     ctx.fillStyle='#0c1f14'; ctx.fillRect(0,0,cw,ch);
     ctx.save();
     if(shake>0) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
-    cam.x+=(meP.x-cam.x)*0.10; cam.y+=(meP.y-cam.y)*0.10;
     drawTrack();
     for(const p of skid){
       const q=w2s(p.x,p.y);
@@ -4756,22 +4761,23 @@ function createRaceLobby(){
       ctx.beginPath(); ctx.arc(q.sx,q.sy,3.2*q.s,0,7); ctx.fillStyle='#0b1118'; ctx.fill();
       ctx.globalAlpha=1;
     }
-    const s=ch/VIEW_H, hw=cw/2/s+120, hh=ch/2/s+120, list=[];
+    const s=ch/VIEW_H, hw=cw/2/s+180, hh=ch/2/s+180, list=[];
     for(const u in others){
       const o=others[u];
       if(!o||typeof o.x!=='number') continue;
       if(Date.now()-(o.at||0)>8000) continue;
-      if(Math.abs(o.x-cam.x)>hw||Math.abs(o.y-cam.y)>hh) continue;
-      list.push({y:o.y,d:()=>drawCar(o.x,o.y,o.a||0,o.color||'#22c55e',false,o.name)});
+      const dx=o.x-meP.x, dy=o.y-meP.y;
+      if(dx*dx+dy*dy>hw*hw) continue;
+      list.push({y:o.y,d:()=>drawCar(o.x,o.y,(o.a||0)-head,o.color||'#22c55e',false,o.name)});
     }
-    list.push({y:meP.y,d:()=>drawCar(meP.x,meP.y,head,'#38bdf8',true,me.displayName||me.username)});
+    list.push({y:meP.y,d:()=>drawCar(meP.x,meP.y,0,'#38bdf8',true,me.displayName||me.username)});
     list.sort((a,b)=>a.y-b.y);
     list.forEach(x=>{ try{x.d();}catch(e){} });
     ctx.restore();
 
     ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
     ctx.fillStyle='rgba(226,232,240,.95)';
-    ctx.fillText('🏁 第 '+Math.min(LAPS,lap+1)+' / '+LAPS+' 圈'+(done?'  ✓ '+myTime.toFixed(1)+'s':'')+'   賽道 '+Math.round(curS)+'%', 16, 28);
+    ctx.fillText('🏁 第 '+Math.min(LAPS,lap+1)+' / '+LAPS+' 圈'+(done?'  ✓ '+myTime.toFixed(1)+'s':'')+'   '+Math.round(speed)+' km/h', 16, 28);
 
     drawMiniMap(ctx, cw, MAP_R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others),
       {square:false, dots:MAP_DOTS});
@@ -4789,20 +4795,41 @@ function createRaceLobby(){
   function bindInput(){
     const onKey=e=>{
       const k=e.key;
-      if(k==='ArrowLeft'||k==='a'||k==='A')keys.x=-1;
-      else if(k==='ArrowRight'||k==='d'||k==='D')keys.x=1;
-      else if(k==='ArrowUp'||k==='w'||k==='W')keys.y=-1;
-      else if(k==='ArrowDown'||k==='s'||k==='S')keys.y=1;
+      if(k==='ArrowLeft'||k==='a'||k==='A'){ steer=-1; e.preventDefault(); }
+      else if(k==='ArrowRight'||k==='d'||k==='D'){ steer=1; e.preventDefault(); }
+      else if(k==='ArrowUp'||k==='w'||k==='W'||k===' '){ throttle=true; e.preventDefault(); }
       else return;
-      e.preventDefault();
     };
     const onUp=e=>{
       const k=e.key;
-      if(k==='ArrowLeft'||k==='a'||k==='A'||k==='ArrowRight'||k==='d'||k==='D')keys.x=0;
-      if(k==='ArrowUp'||k==='w'||k==='W'||k==='ArrowDown'||k==='s'||k==='S')keys.y=0;
+      if(k==='ArrowLeft'||k==='a'||k==='A'){ if(steer<0) steer=0; }
+      else if(k==='ArrowRight'||k==='d'||k==='D'){ if(steer>0) steer=0; }
+      else if(k==='ArrowUp'||k==='w'||k==='W'||k===' '){ throttle=false; }
     };
     window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
     return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
+  }
+
+  /* 觸控：左下 ←/→ 方向盤，右下油門 */
+  function mountTouchControls(host){
+    const mk=(cls,html,left,bottom,size)=>{
+      const b=document.createElement('button');
+      b.className='race-btn '+cls;
+      b.innerHTML=html;
+      b.style.cssText='position:absolute;z-index:30;border:none;border-radius:50%;'+
+        'background:rgba(15,23,42,.55);border:1.5px solid rgba(148,163,184,.4);color:#e2e8f0;'+
+        'font:700 20px Inter,sans-serif;display:flex;align-items:center;justify-content:center;'+
+        'left:'+left+'px;bottom:'+bottom+'px;width:'+size+'px;height:'+size+'px;touch-action:none;-webkit-tap-highlight-color:transparent;';
+      host.appendChild(b);
+      return b;
+    };
+    const L=mk('','◀',16,116,60), R=mk('','▶',84,116,60), G=mk('','油門',null,96,84);
+    G.style.cssText+= 'right:18px;left:auto;';
+    const bind=(el,on,off)=>{ el.addEventListener('pointerdown',e=>{on();e.preventDefault();}); el.addEventListener('pointerup',off); el.addEventListener('pointercancel',off); el.addEventListener('pointerleave',off); };
+    bind(L,()=>steer=-1,()=>{if(steer<0)steer=0;});
+    bind(R,()=>steer=1,()=>{if(steer>0)steer=0;});
+    bind(G,()=>throttle=true,()=>throttle=false);
+    return ()=>{ try{L.remove();R.remove();G.remove();}catch(e){} };
   }
 
   return {
@@ -4810,9 +4837,9 @@ function createRaceLobby(){
     async start(){
       if(!me) return;
       const p=PTS[0];
-      meP.x=p.x; meP.y=p.y; meP.vx=0; meP.vy=0;
-      head=Math.atan2(p.ty,p.tx);
-      cam={x:p.x,y:p.y};
+      meP.x=p.x; meP.y=p.y;
+      head=Math.atan2(p.ty,p.tx); speed=0;
+      camAng=head; cam={x:meP.x+Math.cos(head)*LOOK, y:meP.y+Math.sin(head)*LOOK};
       t0=Date.now(); lastIdx=null; lap=0; done=false; skid=[]; curS=0;
       liveRef=ref(db,'lobbyLive/race/'+me.username);
       try{ onDisconnect(liveRef).remove(); }catch(e){}
@@ -4846,12 +4873,10 @@ function createRaceLobby(){
       fit(); window.addEventListener('resize',fit);
       unbind=bindInput();
       const host=cv.parentElement;
-      if(host){
-        const killStick=mountStick(host,(x,y)=>{keys.x=x;keys.y=y;});
-        const killMouse=bindMouseMove(cv,()=>({x:cw/2,y:ch/2}),(x,y)=>{keys.x=x;keys.y=y;});
-        const oldUn=unbind;
-        unbind=()=>{try{killStick();}catch(e){} try{killMouse();}catch(e){} oldUn();};
-      }
+      let killTouch=null;
+      if(host){ killTouch=mountTouchControls(host); }
+      const oldUn=unbind;
+      unbind=()=>{ try{killTouch&&killTouch();}catch(e){} oldUn(); };
       draw();
     },
     tickHud(){
@@ -4865,7 +4890,7 @@ function createRaceLobby(){
           +'<div><div class="sv">'+(rows.findIndex(x=>x.me)+1)+'</div><div class="sl">排名</div></div>';
       }
     },
-    debug(){ return {x:meP.x,y:meP.y,head,lap,curS,pts:NT,done,score:lap,others:Object.keys(others||{})}; },
+    debug(){ return {x:meP.x,y:meP.y,head,speed:Math.round(speed),lap,curS,pts:NT,done,score:lap,others:Object.keys(others||{})}; },
     probe(x,y){ const n=nearIdx(x,y,null); return n.d<=TRACK_HALF; }
   };
 }
