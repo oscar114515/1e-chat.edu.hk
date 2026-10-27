@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CrCj9LSw9HxWfUkhBo197gA3C5fAPqm9X8NgazltD+s=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kf5MznQgg3HVu+lD9wFKm+skc4iQPJ/uNLc4VatI7SA=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -1951,6 +1951,17 @@ body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
 @keyframes fx-fadeinout{0%{opacity:0;z-index:1000}30%{opacity:.8;z-index:1000}
   70%{opacity:.8;z-index:1000}100%{opacity:0;z-index:1000}}
 
+
+/* ═══ v1.39.4 離線提示條（地鐵／電梯弱網時才知道是網的問題）═══ */
+#netBar{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));
+  transform:translate(-50%,16px);z-index:2147483001;
+  background:rgba(180,83,9,.96);color:#fff;font-size:12.5px;line-height:1.4;
+  padding:7px 16px;border-radius:999px;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.28);
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+#netBar.on{opacity:1;transform:translate(-50%,0)}
+#netBar.ok{background:rgba(22,101,52,.96)}
+
 </style>
 </head>
 <body>
@@ -2128,7 +2139,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.3';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.4';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -3111,6 +3122,34 @@ function enterChat(){
   subscribeMoments();
   setTimeout(function(){ try{ checkMomentBadge(); }catch(e){} }, 3200);
   setInterval(function(){ try{ checkMomentBadge(); }catch(e){} }, 60000);
+
+  /* ═══ v1.39.4 連線狀態監聽 ═══
+     地鐵／電梯斷線時，畫面不會自動告訴你「已經斷了」，
+     用戶只會覺得「網站壞了、點什麼都沒反應」。這裡用 Firebase 內建的
+     .info/connected 做一條提示：斷線橙色、恢復綠色 3 秒後收起。 */
+  if(!window.__netWatched){
+    window.__netWatched=true;
+    let netBar=document.createElement('div');
+    netBar.id='netBar';
+    document.body.appendChild(netBar);
+    let netHideT=null, netEver=false;
+    const netSay=function(text,ok,autoHide){
+      netBar.textContent=text;
+      netBar.classList.toggle('ok',!!ok);
+      netBar.classList.add('on');
+      clearTimeout(netHideT);
+      if(autoHide) netHideT=setTimeout(function(){ netBar.classList.remove('on'); },2600);
+    };
+    try{
+      onValue(ref(db,'.info/connected'),function(s){
+        const online=(s.val()===true);
+        if(!netEver){ netEver=true; if(online) return; }
+        if(online){ netSay('已重新連線',true,true); }
+        else{ netSay('離線中 · 正在重連…',false,false); }
+      });
+    }catch(e){}
+    window.addEventListener('online',function(){ try{ netSay('已重新連線',true,true); }catch(e){} });
+  }
   subscribeQuotes();
   subscribeFollows();
   bindChatGestures();
@@ -5841,6 +5880,48 @@ function setPageHTML(html,keepScroll){
    每次導航發一個號，彈頁時把號加一；回來的舊請求驗不過就直接放棄。 */
 let navSeq=0;
 function navStart(){ return ++navSeq; }
+
+/* ═══ v1.39.4 帶超時的讀取 ═══════════════════════════════════════════
+   Firebase 的 get() 在弱網（地鐵、電梯、訊號邊緣）會一直掛著不回來，
+   用戶看到的就是「按了個人主頁，完全沒反應」—— 不是出錯，是白等。
+   這裡加一個上限：超過 ms 就 reject，由上層顯示「重新載入」按鈕。
+   ⚠ 不要直接換掉全站的 get()：很多地方沒有 try/catch，
+     換了會變成 Unhandled Rejection。只用在有處理錯誤的頁面。 */
+function pGet(path, ms){
+  return new Promise(function(resolve, reject){
+    let done = false;
+    const tid = setTimeout(function(){
+      if(done) return;
+      done = true;
+      reject(new Error('timeout'));
+    }, ms || 10000);
+    get(child(ref(db), path)).then(function(s){
+      if(done) return;
+      done = true; clearTimeout(tid); resolve(s);
+    }).catch(function(e){
+      if(done) return;
+      done = true; clearTimeout(tid); reject(e);
+    });
+  });
+}
+
+/* 弱網時顯示的頁面：講清楚是網的問題，並給一個可以再試一次的按鈕 */
+function netFailPage(title, act, arg, key){
+  openPage({
+    title: title,
+    bodyHTML: '<div class="empty" style="line-height:2;padding:26px 10px">'
+      + '網絡好像不太順，資料拿不下來。<br>'
+      + '<span style="color:var(--text-muted);font-size:12px">訊號弱的時候會這樣，等一下或者換個位置再試。</span>'
+      + '</div>'
+      + '<button class="btn-primary" data-action="' + act + '" data-arg="' + escAttr(arg) + '">重新載入</button>'
+      + '<button class="btn-ghost" data-action="closePage" style="margin-top:10px">返回</button>',
+    key: key
+  });
+}
+
+/* 弱網測試用唯讀鉤子（跟 __okra、__fxEgg 一樣，只讀不改狀態） */
+window.__netTest={pGet:pGet,openProfilePage:openProfilePage,openGroupChat:openGroupChat,netFailPage:netFailPage,
+  state:()=>({bar:(document.getElementById('netBar')||{}).textContent||'',groupMsgsReady:groupMsgsReady})};
 function navAlive(seq){ return seq===navSeq; }
 function beginPage(key){
   if(currentPageKey===null){ chatScrollMemo=chatBox?chatBox.scrollTop:0; currentPageKey=key; _pageSameKey=false; return; }
@@ -8976,7 +9057,17 @@ async function openProfilePage(username,isSelf,fromAdmin){
      「我明明退了出去，介面自己又刷新回來」。所以先領一個導航序號，
      回來驗票，彈過頁就直接放棄。 */
   const seq=navStart();
-  const snap=await get(child(ref(db),'users/'+username));
+  let snap;
+  try{
+    snap=await pGet('users/'+username,10000);
+  }catch(err){
+    /* 弱網：唔好再白等，直接講清楚 + 畀個「重新載入」。
+       ⚠ 這裡刻意不再檢查 navAlive —— 用戶已經等了 10 秒，
+         就算中途有其他導航把票號加過，也要給他一個交代，
+         否則又變回「按了完全沒反應」。 */
+    netFailPage('載入不到','openUserProfile',username,'profile:'+username);
+    return;
+  }
   if(!navAlive(seq))return;
   if(!snap.exists()){openPage({title:'已註銷',bodyHTML:'<div class="empty">該用戶已註銷帳戶</div>',key:'profile:'+username});return;}
   const u=snap.val();
@@ -10114,9 +10205,23 @@ async function submitCreateGroup(){
     setTimeout(()=>openGroupChat(name),500);
   }catch(e){if(errEl)errEl.textContent=e.message;}
 }
+/* 群聊訊息是否已經成功同步過一次 —— 用來分開「仲喺度載入」同「真係冇訊息」。
+   以前兩者都顯示「還沒有訊息，說點什麼吧！」，弱網時會誤導。 */
+let groupMsgsReady=false;
+
 async function openGroupChat(groupKey){
   if(!me)return;
-  const snap=await get(child(ref(db),'groups/'+groupKey));
+  const seq=navStart();
+  groupMsgsReady=false;
+  let snap;
+  try{
+    snap=await pGet('groups/'+groupKey,10000);
+  }catch(err){
+    /* 同上：超時一定要有反饋 */
+    netFailPage('載入不到','openGroupChat',groupKey,'groupChat:'+groupKey);
+    return;
+  }
+  if(!navAlive(seq))return;
   if(!snap.exists()){showNotif('群聊不存在');return;}
   const g=snap.val();
   if(!g.members||!g.members[me.username]){showNotif('你不在這個群聊');return;}
@@ -10125,6 +10230,10 @@ async function openGroupChat(groupKey){
   unsubGroupMsgs=onValue(ref(db,'groupMessages/'+groupKey),snap2=>{
     const val=snap2.val()||{};
     currentGroupMsgs=Object.keys(val).map(k=>({_key:k,...val[k]})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    groupMsgsReady=true;
+    renderGroupChat(groupKey,g);
+  },function(){
+    /* 訂閱失敗（權限／網絡）—— 至少讓畫面知道不是「沒有訊息」 */
     renderGroupChat(groupKey,g);
   });
   renderGroupChat(groupKey,g);
@@ -10175,7 +10284,11 @@ function toggleGroupPlus(){
 function renderGroupChat(groupKey,g){
   g=myGroups[groupKey]||g||{};   // 優先用訂閱到的最新資料（群公告改了才會即時更新）
   const memberCount=Object.keys(g.members||{}).length;
-  const msgsHTML=currentGroupMsgs.length===0?`<div class="empty">還沒有訊息，說點什麼吧！</div>`:currentGroupMsgs.map(m0=>{
+  const msgsHTML=currentGroupMsgs.length===0
+    ? (groupMsgsReady
+        ? `<div class="empty">還沒有訊息，說點什麼吧！</div>`
+        : `<div class="empty" style="line-height:2">正在載入訊息…<br><span style="color:var(--text-muted);font-size:12px">網絡慢的話會久一點</span></div>`)
+    : currentGroupMsgs.map(m0=>{
     const m=Object.assign({},m0,liveWho(m0)||{});   // v1.36 群聊也一樣：名稱／頭像取最新
     const isMe=m.username===me.username;
     const time=new Date(m.createdAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
@@ -10793,6 +10906,11 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.4',date:'2026-10-27',changes:[
+'修好地鐵、電梯這類弱網下「點個人主頁完全沒反應」：以前個人主頁一打開就要向伺服器拿資料，但那個請求冇設上限，訊號一差就一直在等 —— 不是壞了，是一直在等。現在超過 10 秒就停手，直接寫「網絡好像不太順」，再給一個「重新載入」按鈕',
+'群聊一樣：以前點進去會卡住、或者進去之後一片空白，還寫「還沒有訊息」令人以為被人清空了。現在分清楚「正在載入」和「真的沒有訊息」，載入失敗也可以重新載入',
+'新增連線提示：地鐵斷線時畫面底部會彈一條「離線中 · 正在重連…」，網絡回來會變綠色「已重新連線」再自動收起。以前斷線完全冇提示，只覺得網站壞了',
+]},
 {ver:'v1.39.3',date:'2026-10-27',changes:[
 '修好彩蛋只觸發第一個的問題：之前一條訊息寫「67 流星雨 do a barrel roll」，只會播流星雨，另外兩個完全冇反應。原因是判定時只取第一個命中的關鍵詞',
 '現在一條訊息含幾個關鍵詞就全部觸發：流星雨同 blink 即時一齊播；67／askew／barrel roll／隕石 因為都係改成個頁面嘅變形，會撞，所以排隊一個接一個播（最多排兩個，唔會播十幾秒）',
