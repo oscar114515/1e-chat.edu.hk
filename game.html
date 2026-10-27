@@ -4691,11 +4691,11 @@ function createRaceLobby(){
     if(throttle) fwd=Math.min(MAX, fwd+ACC*dt);
     if(reverse)  fwd=Math.max(-MAX_R, fwd-ACC_R*dt);
     if(!throttle && !reverse) fwd*=Math.max(0, 1-0.25*dt);
-    lat*=Math.exp(-5.0*dt);
+    lat*=Math.exp(-10.0*dt);
     /* 轉彎半徑 = max(100, v²/900)：低速最小 100（< 3% 圓盤直徑 108），高速自然變大 */
     if(steer!==0 && Math.abs(fwd)>15){
-      /* 轉向率封頂 1.4 rad/s（轉彎半徑≈450），唔會「一轉向就爆炸」亦唔會原地打轉 */
-      const rate = steer * Math.min(1.4, Math.abs(fwd)/450);
+      /* 轉向率 = v/賽道半徑：車沿環形賽道弧線繞圈（轉彎半徑≈1550），唔會螺旋切內圈撞牆 */
+      const rate = steer * Math.min(0.6, Math.abs(fwd)/1550);
       head += rate * dt;
     }
     vx = fx*fwd - fy*lat;
