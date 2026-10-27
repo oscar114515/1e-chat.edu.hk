@@ -2991,7 +2991,7 @@ function createTagLobby(){
   let meP={x:0,y:0,vx:0,vy:0};
   let others={};                 /* u → {x,y,name,color,at} */
   let ghosts={};                 /* u → true   誰是鬼（可多於一個） */
-  let myScore=0, myGhost=false, lastCatch=0;
+  let myScore=0, myGhost=false, lastCatch=0, surviveAcc=0;
   let liveRef=null, metaRef=null, unsubLive=null, unsubMeta=null;
   let keys={x:0,y:0}, lastT=0, lastPush=0, shake=0;
   let popups=[], grace=0;        /* grace：剛換鬼後 1.2 秒無敵，避免連環抓 */
@@ -3302,6 +3302,15 @@ function createTagLobby(){
 
     aiStep(dt);
 
+    /* SURVIVE_SCORE_V1：生存者每 2 秒 +1 分（之前完全冇生存獎勵，只有鬼抓到先加分） */
+    if(!myGhost){
+      surviveAcc+=dt;
+      if(surviveAcc>=2){
+        surviveAcc-=2;
+        myScore++;
+      }
+    }
+
     if(grace>0) grace-=dt;
     if(shake>0) shake-=dt*32;
     popups.forEach(p=>p.t-=dt*1.1); popups=popups.filter(p=>p.t>0);
@@ -3410,7 +3419,7 @@ function createTagLobby(){
     ctx.restore();
 
     ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left'; ctx.fillStyle='rgba(226,232,240,.9)';
-    ctx.fillText((myGhost?'👻 你是鬼':'🏃 快走')+'　抓到 '+myScore, 16, 28);
+    ctx.fillText((myGhost?'👻 你是鬼':'🏃 快走')+'　分數 '+myScore, 16, 28);
     /* 小地圖：連 AI 鬼都標出來，可以提早預判 */
     drawMiniMap(ctx, cw, R, WALLS, miniPlayers(meP.x,meP.y,myGhost?'#ef4444':'#38bdf8',others,
       (aiGhost&&aiGhost.active)?{x:aiGhost.x,y:aiGhost.y,color:'#a855f7'}:null), {square:false});
@@ -5677,7 +5686,7 @@ function createAgarLobby(){
    流量極低；其他人一收到就畫埋一份。先塗到 45% 就贏。
    與其他大廳遊戲一致：相機跟隨、搖桿 + 鼠標、右上角小地圖、積分榜帶座標。 */
 function createPaintLobby(){
-  const W=1560, H=1560, TILE=78, N=20, PR=15, K=0.55;
+  const W=1560, H=1560, TILE=52, N=30, PR=15, K=0.55;
   const VIEW_H=900;
   const TOTAL=N*N, WIN_TILES=Math.round(TOTAL*0.45);
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
@@ -5703,8 +5712,15 @@ function createPaintLobby(){
   function paintAt(x,y){
     const k=tileOf(x,y);
     if(k<0) return;
-    if(owner[k] && owner[k]!==me.username) return;     /* 別人已塗的就唔搶（避免爭議） */
-    if(!mine.has(k)){ mine.add(k); paintDirty=true; }
+    const i=k%N, j=(k-i)/N;
+    for(let dj=-2;dj<=2;dj++) for(let di=-2;di<=2;di++){
+      if(di*di+dj*dj>4) continue;                       /* 半徑 2 圓＝13 格 */
+      const ii=i+di, jj=j+dj;
+      if(ii<0||ii>=N||jj<0||jj>=N) continue;
+      const kk=jj*N+ii;
+      if(owner[kk] && owner[kk]!==me.username) continue; /* 別人已塗的就唔搶 */
+      if(!mine.has(kk)){ mine.add(kk); paintDirty=true; }
+    }
   }
 
   function step(dt){
