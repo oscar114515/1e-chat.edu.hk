@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-AIA6fTlZeoNSiP+9fiRPZchq0iuVJk4eP7fx8sFWyPM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-CrCj9LSw9HxWfUkhBo197gA3C5fAPqm9X8NgazltD+s=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -2128,7 +2128,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.2';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.3';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -10793,6 +10793,11 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.3',date:'2026-10-27',changes:[
+'修好彩蛋只觸發第一個的問題：之前一條訊息寫「67 流星雨 do a barrel roll」，只會播流星雨，另外兩個完全冇反應。原因是判定時只取第一個命中的關鍵詞',
+'現在一條訊息含幾個關鍵詞就全部觸發：流星雨同 blink 即時一齊播；67／askew／barrel roll／隕石 因為都係改成個頁面嘅變形，會撞，所以排隊一個接一個播（最多排兩個，唔會播十幾秒）',
+'全站同步一樣：其他人收到之後都係全部一齊播，唔會只播一個',
+]},
 {ver:'v1.39.2',date:'2026-10-27',changes:[
 '六個 Google 彩蛋特效上了：喺任何輸入框（聊天框、搜尋、改名、投票選項…）打以下字詞再送出，畫面就會播對應特效，同秋葵雨一樣全站同步 —— 一個人觸發，所有人都見到',
 '打「67」（或者 6-7、six seven）→ 整頁垂直剪切抖動；打 askew 或 tilt → 整頁傾斜 1 度；打 barrel roll → 整頁轉一圈',
@@ -11889,13 +11894,21 @@ const FX_RULES=[
 ];
 const FX_SHOWER_RE=/流星雨|meteor[\s\-]*shower/i;
 
-function fxCheck(text){
-  if(!text) return null;
+/* 一條訊息可能同時含幾個關鍵詞 —— 全部收集，唔好只取第一個。
+   （之前只 return 第一個，所以「67 流星雨 barrel roll」只播流星雨。） */
+const FX_BODY_IDS=['67','askew','roll','shake'];
+function fxCheckAll(text){
+  if(!text) return [];
   const t=String(text);
-  if(FX_SHOWER_RE.test(t)) return 'shower';
-  for(let i=0;i<FX_RULES.length;i++){ if(FX_RULES[i].re.test(t)) return FX_RULES[i].id; }
-  return null;
+  const ids=[];
+  if(FX_SHOWER_RE.test(t)) ids.push('shower');
+  for(let i=0;i<FX_RULES.length;i++){
+    const id=FX_RULES[i].id;
+    if(FX_RULES[i].re.test(t)&&ids.indexOf(id)<0) ids.push(id);
+  }
+  return ids;
 }
+function fxCheck(text){ const a=fxCheckAll(text); return a.length?a[0]:null; }
 
 function fxClearBody(){
   clearTimeout(fxStopT);
@@ -11943,21 +11956,68 @@ function fxShower(){
   },4600));
 }
 
-function fxRun(id){
-  if(id==='shower'){ fxShower(); return; }
-  fxPlay(id);
+/* body 類特效（67/askew/roll/shake）都改 body 的 transform，同時播會打架，
+   所以排隊一個接一個；圖層類（流星雨/blink）不碰 body，可以同時播。 */
+let fxBodyQueue=[], fxBodyPlaying=false;
+
+function fxQueueBody(ids){
+  ids.forEach(id=>{
+    if(FX_BODY_IDS.indexOf(id)<0) return;
+    if(fxBodyQueue.indexOf(id)>=0) return;      /* 同一個不重複排 */
+    if(fxBodyQueue.length>=2) return;           /* 最多排 2 個，免得播十幾秒 */
+    fxBodyQueue.push(id);
+  });
+  fxPumpBody();
+}
+function fxPumpBody(){
+  if(fxBodyPlaying||!fxBodyQueue.length) return;
+  const id=fxBodyQueue.shift();
+  const rule=FX_RULES.filter(r=>r.id===id)[0];
+  if(!rule){ fxPumpBody(); return; }
+  fxBodyPlaying=true;
+  fxClearBody();
+  const b=document.body;
+  void b.offsetWidth;
+  b.classList.add(rule.cls);
+  fxStopT=setTimeout(()=>{
+    b.classList.remove(rule.cls);
+    fxBodyPlaying=false;
+    setTimeout(fxPumpBody,150);
+  },rule.ms);
 }
 
-function fxTrigger(id){
+function fxRun(id){
+  if(id==='shower'){ fxShower(); return; }
+  if(id==='blink'){ fxPlay('blink'); return; }  /* blink 只動 .bubble，不碰 body */
+  fxQueueBody([id]);
+}
+
+/* 一次過播多個（一條訊息含幾個關鍵詞時用） */
+function fxRunMany(ids){
+  if(!ids||!ids.length) return;
+  const bodyIds=[];
+  ids.forEach(id=>{
+    if(id==='shower') fxShower();
+    else if(id==='blink') fxPlay('blink');
+    else bodyIds.push(id);
+  });
+  if(bodyIds.length) fxQueueBody(bodyIds);
+}
+
+function fxTrigger(ids){
+  const list=Array.isArray(ids)?ids.filter(Boolean):(ids?[ids]:[]);
+  if(!list.length) return;
   const now=Date.now();
-  if(now-fxLastFire<900) return;            /* Enter 與撳掣會前後腳中，只算一次 */
-  if(id==='67'&&now-fxLast67<4000) return;  /* 67 是班上的口頭禪，太密會很煩 */
+  if(now-fxLastFire<900) return;                        /* Enter 與撳掣會前後腳中，只算一次 */
+  if(list.indexOf('67')>=0&&now-fxLast67<4000) return;  /* 67 是班上的口頭禪，太密會很煩 */
   fxLastFire=now;
-  if(id==='67') fxLast67=now;
-  fxRun(id);
+  if(list.indexOf('67')>=0) fxLast67=now;
+  fxRunMany(list);
   try{
     fxMyAt=now;
-    set(ref(db,FX_PATH),{id:id,at:now,by:(me&&me.username)||'',name:(me&&me.displayName)||''}).catch(()=>{});
+    /* 多個 id 用逗號串起，其他客戶端收到之後一樣全部播 */
+    set(ref(db,FX_PATH),{id:list.join(','),at:now,
+      by:(me&&me.username)||'',name:(me&&me.displayName)||''}).catch(()=>{});
   }catch(e){}
 }
 
@@ -11967,12 +12027,14 @@ function fxVisibleHit(){
   for(let i=0;i<els.length;i++){
     const el=els[i];
     const v=('value' in el&&typeof el.value==='string')?el.value:(el.textContent||'');
-    if(!v||!fxCheck(v)) continue;
+    if(!v) continue;
+    const ids=fxCheckAll(v);
+    if(!ids.length) continue;                 /* 先驗字，免得為每個輸入框算樣式 */
     const r=el.getBoundingClientRect();
     if(r.width<4||r.height<4) continue;
     const st=getComputedStyle(el);
     if(st.display==='none'||st.visibility==='hidden'||st.opacity==='0') continue;
-    return fxCheck(v);
+    return ids;
   }
   return null;
 }
@@ -11983,13 +12045,13 @@ document.addEventListener('keydown',e=>{
   const el=e.target;
   if(!el||el.nodeType!==1) return;
   const v=('value' in el&&typeof el.value==='string')?el.value:(el.isContentEditable?(el.textContent||''):'');
-  const id=fxCheck(v);
-  if(id) fxTrigger(id);
+  const ids=fxCheckAll(v);
+  if(ids.length) fxTrigger(ids);
 },true);
 
 document.addEventListener('submit',()=>{
-  const id=fxVisibleHit();
-  if(id) fxTrigger(id);
+  const ids=fxVisibleHit();
+  if(ids&&ids.length) fxTrigger(ids);
 },true);
 
 document.addEventListener('click',e=>{
@@ -11997,8 +12059,8 @@ document.addEventListener('click',e=>{
   if(!t||!t.closest) return;
   const b=t.closest('button,[role="button"],.pi,.nav-item,.btn');
   if(!b) return;
-  const id=fxVisibleHit();
-  if(id) fxTrigger(id);
+  const ids=fxVisibleHit();
+  if(ids&&ids.length) fxTrigger(ids);
 },true);
 
 /* 全站同步：別人觸發，我這邊也播 */
@@ -12009,7 +12071,7 @@ try{
     if(!fxReady){ fxReady=true; return; }   /* 開頁時只記住，不補播舊的 */
     if(!at) return;
     if(at===fxMyAt) return;                 /* 自己發的，本機剛剛已播 */
-    if(v.id) fxRun(String(v.id));
+    if(v.id) fxRunMany(String(v.id).split(',').filter(Boolean));
   });
 }catch(e){}
 
@@ -12022,7 +12084,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* 測試用唯讀鉤子 */
-window.__fxEgg={check:fxCheck,run:fxRun,clear:fxClearBody,
+window.__fxEgg={check:fxCheck,checkAll:fxCheckAll,run:fxRun,runMany:fxRunMany,clear:fxClearBody,
   state:()=>({cls:document.body.className,myAt:fxMyAt,ready:fxReady,
     shower:!!(fxShowerLayer&&fxShowerLayer.classList.contains('on'))})};
 
