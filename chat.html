@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tFoLYpXoMmW3TxtUcaHekJu2lh4ZMN1dUy0k75u0nDU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-AIA6fTlZeoNSiP+9fiRPZchq0iuVJk4eP7fx8sFWyPM=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -1923,6 +1923,34 @@ body.theme-dark #msgInput:focus{background:rgba(56,189,248,.09)}
 #encToggle.active .dot-check::after{transform:rotate(45deg) scale(1)}
 #encToggle:active .dot-check{transform:scale(.92)}
 
+
+/* ═══ 彩蛋特效（數值取自 Google 搜尋頁原文）══════════════════════════ */
+@keyframes six-seven-hand-tilt{
+  0%{transform:skewY(0)}10%{transform:skewY(10deg)}25%{transform:skewY(-10deg)}
+  40%{transform:skewY(10deg)}55%{transform:skewY(-10deg)}70%{transform:skewY(10deg)}
+  85%{transform:skewY(-10deg)}100%{transform:skewY(0)}}
+body.fx-67{animation:1.8s cubic-bezier(.6,.43,.68,1.11) 0s 1 normal none running six-seven-hand-tilt}
+body.fx-askew{transform:rotate(1deg)}
+@keyframes fx-roll{100%{transform:rotate(360deg)}}
+body.fx-roll{animation:4s linear 0s 1 normal none running fx-roll}
+@keyframes fx-shake{
+  10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}
+  30%,50%,70%{transform:translate3d(-4px,0,0)}40%,60%{transform:translate3d(4px,0,0)}}
+body.fx-shake{animation:.5s linear 0s 6 normal none running fx-shake}
+@keyframes fx-blink-kf{80%{opacity:0}}
+body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
+#fxShowerLayer{position:fixed;inset:0;pointer-events:none;z-index:2147483000;overflow:hidden;display:none}
+#fxShowerLayer.on{display:block}
+.fx-meteor{position:absolute;height:2px;border-radius:1px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),#fff);
+  animation:fx-falling 1.05s linear forwards,fx-fadeinout 1.05s linear forwards}
+.fx-meteor::after{content:'';position:absolute;right:0;top:0;height:100%;background:inherit;
+  animation:fx-tail 1.05s linear forwards}
+@keyframes fx-falling{0%{transform:translateX(0)}100%{transform:translateX(150vw)}}
+@keyframes fx-tail{0%{width:0}30%{width:30vw}100%{width:0}}
+@keyframes fx-fadeinout{0%{opacity:0;z-index:1000}30%{opacity:.8;z-index:1000}
+  70%{opacity:.8;z-index:1000}100%{opacity:0;z-index:1000}}
+
 </style>
 </head>
 <body>
@@ -2100,7 +2128,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.2';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -10765,6 +10793,12 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.2',date:'2026-10-27',changes:[
+'六個 Google 彩蛋特效上了：喺任何輸入框（聊天框、搜尋、改名、投票選項…）打以下字詞再送出，畫面就會播對應特效，同秋葵雨一樣全站同步 —— 一個人觸發，所有人都見到',
+'打「67」（或者 6-7、six seven）→ 整頁垂直剪切抖動；打 askew 或 tilt → 整頁傾斜 1 度；打 barrel roll → 整頁轉一圈',
+'打「隕石」或 meteorite → 階梯式震動；打 blink → 聊天氣泡不停閃；打「流星雨」→ 天空劃過一片流星',
+'全部動畫數值直接抄 Google 搜尋頁嘅原文（skewY±10°、cubic-bezier(.6,.43,.68,1.11)、1.8 秒等），冇自己調過',
+]},
 {ver:'v1.39',date:'2026-10-24',changes:[
 '聊天室大更新：點任何一則訊息會彈出操作菜單 —— 六個表情（👍❤️😂😮😢😡）一按即加、三個快捷回覆（哈哈／收到／+1）、引用回覆、複製文字、兩分鐘內撤回自己的訊息',
 '引用回覆：回覆別人的話會帶一小塊原話，點一下就跳回原本那一則，幾十人同時聊天也不會搞亂在回誰',
@@ -11828,6 +11862,170 @@ try{
 /* 測試用唯讀鉤子 */
 window.__okra={rain:okraRain,find:okraFind,visible:okraVisibleText,
   state:()=>({layer:!!okraLayer,alive:okraAlive,ready:okraReady,myAt:okraMyAt,why:okraWhy.slice()})};
+
+/* ═══════════════════════════════════════════════════════════════════
+   彩蛋：Google 特效系列
+   ── 跟秋葵雨同一套觸發：任何畫面上見得到的輸入框，輸入含關鍵詞的
+      內容並送出（Enter 或撳任何掣），就播對應特效；同時寫入
+      Firebase meta/easterEgg/fx，所有已開啟的客戶端一齊播。
+   ── 全部動畫數值取自 Google 搜尋頁運行時樣式表（2026-10-27 抓取）：
+      67 抖動 skewY±10° 1.8s cubic-bezier(.6,.43,.68,1.11)
+      askew rotate(1deg)（原文 matrix 0.999848/0.0174524 反推）
+      barrel roll rotate(360deg) 4s
+      隕石 translate3d 階梯 −1/+2/−4/+4px
+      blink opacity:0 在 80%
+      流星雨 falling + tail + fadeinout 三層
+   ═══════════════════════════════════════════════════════════════════ */
+const FX_PATH='meta/easterEgg/fx';
+let fxMyAt=0,fxLastFire=0,fxLast67=0,fxReady=false,fxStopT=null,fxShowerLayer=null,fxShowerTimers=[];
+
+/* 匹配順序很重要：先判流星雨（更具體），再逐條試 */
+const FX_RULES=[
+  {id:'roll', ms:4100, cls:'fx-roll',  re:/barrel[\s\-]*roll/i},
+  {id:'shake',ms:3100, cls:'fx-shake', re:/隕石|陨石|meteorite|chicxulub/i},
+  {id:'askew',ms:3000, cls:'fx-askew', re:/askew|(^|[^a-z])tilt([^a-z]|$)/i},
+  {id:'67',   ms:2000, cls:'fx-67',    re:/(^|[^0-9])6[\s\-]*7([^0-9]|$)|six[\s\-]*seven/i},
+  {id:'blink',ms:5200, cls:'fx-blink', re:/blink/i}
+];
+const FX_SHOWER_RE=/流星雨|meteor[\s\-]*shower/i;
+
+function fxCheck(text){
+  if(!text) return null;
+  const t=String(text);
+  if(FX_SHOWER_RE.test(t)) return 'shower';
+  for(let i=0;i<FX_RULES.length;i++){ if(FX_RULES[i].re.test(t)) return FX_RULES[i].id; }
+  return null;
+}
+
+function fxClearBody(){
+  clearTimeout(fxStopT);
+  document.body.classList.remove('fx-67','fx-askew','fx-roll','fx-shake','fx-blink');
+  document.body.style.removeProperty('transform');
+}
+
+function fxPlay(id){
+  const rule=FX_RULES.filter(r=>r.id===id)[0];
+  if(!rule) return false;
+  fxClearBody();
+  const b=document.body;
+  void b.offsetWidth;                       /* 強制 reflow，同一個 class 才能重播 */
+  b.classList.add(rule.cls);
+  fxStopT=setTimeout(()=>{ b.classList.remove(rule.cls); },rule.ms);
+  return true;
+}
+
+function fxShower(){
+  if(!fxShowerLayer){
+    const el=document.createElement('div');
+    el.id='fxShowerLayer';
+    document.body.appendChild(el);
+    fxShowerLayer=el;
+  }
+  fxShowerTimers.forEach(id=>clearTimeout(id));
+  fxShowerTimers=[];
+  fxShowerLayer.classList.add('on');
+  fxShowerLayer.innerHTML='';
+  for(let i=0;i<16;i++){
+    fxShowerTimers.push(setTimeout(()=>{
+      const m=document.createElement('div');
+      m.className='fx-meteor';
+      m.style.top=(-10+Math.random()*45)+'vh';
+      m.style.left=(-20-Math.random()*30)+'vw';
+      m.style.width='9vw';
+      m.style.transform='rotate('+(28+Math.random()*16)+'deg)';
+      fxShowerLayer.appendChild(m);
+      setTimeout(()=>{ try{ m.remove(); }catch(e){} },1250);
+    },i*120));
+  }
+  fxShowerTimers.push(setTimeout(()=>{
+    fxShowerLayer.classList.remove('on');
+    fxShowerLayer.innerHTML='';
+  },4600));
+}
+
+function fxRun(id){
+  if(id==='shower'){ fxShower(); return; }
+  fxPlay(id);
+}
+
+function fxTrigger(id){
+  const now=Date.now();
+  if(now-fxLastFire<900) return;            /* Enter 與撳掣會前後腳中，只算一次 */
+  if(id==='67'&&now-fxLast67<4000) return;  /* 67 是班上的口頭禪，太密會很煩 */
+  fxLastFire=now;
+  if(id==='67') fxLast67=now;
+  fxRun(id);
+  try{
+    fxMyAt=now;
+    set(ref(db,FX_PATH),{id:id,at:now,by:(me&&me.username)||'',name:(me&&me.displayName)||''}).catch(()=>{});
+  }catch(e){}
+}
+
+/* 讀「畫面上所有輸入框」的內容 —— 只在需要判斷時才逐個算樣式 */
+function fxVisibleHit(){
+  const els=document.querySelectorAll('input,textarea,[contenteditable="true"],[contenteditable=""]');
+  for(let i=0;i<els.length;i++){
+    const el=els[i];
+    const v=('value' in el&&typeof el.value==='string')?el.value:(el.textContent||'');
+    if(!v||!fxCheck(v)) continue;
+    const r=el.getBoundingClientRect();
+    if(r.width<4||r.height<4) continue;
+    const st=getComputedStyle(el);
+    if(st.display==='none'||st.visibility==='hidden'||st.opacity==='0') continue;
+    return fxCheck(v);
+  }
+  return null;
+}
+
+/* capture 階段：要趕在程式清空輸入框之前讀到內容 */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||e.isComposing||e.keyCode===229) return;
+  const el=e.target;
+  if(!el||el.nodeType!==1) return;
+  const v=('value' in el&&typeof el.value==='string')?el.value:(el.isContentEditable?(el.textContent||''):'');
+  const id=fxCheck(v);
+  if(id) fxTrigger(id);
+},true);
+
+document.addEventListener('submit',()=>{
+  const id=fxVisibleHit();
+  if(id) fxTrigger(id);
+},true);
+
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(!t||!t.closest) return;
+  const b=t.closest('button,[role="button"],.pi,.nav-item,.btn');
+  if(!b) return;
+  const id=fxVisibleHit();
+  if(id) fxTrigger(id);
+},true);
+
+/* 全站同步：別人觸發，我這邊也播 */
+try{
+  onValue(ref(db,FX_PATH),snap=>{
+    const v=snap.val();
+    const at=v&&+v.at?+v.at:0;
+    if(!fxReady){ fxReady=true; return; }   /* 開頁時只記住，不補播舊的 */
+    if(!at) return;
+    if(at===fxMyAt) return;                 /* 自己發的，本機剛剛已播 */
+    if(v.id) fxRun(String(v.id));
+  });
+}catch(e){}
+
+/* 切走分頁／鎖屏時收掉，避免回來播一段幾秒前的舊動畫 */
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    fxClearBody();
+    if(fxShowerLayer){ fxShowerLayer.classList.remove('on'); fxShowerLayer.innerHTML=''; }
+  }
+});
+
+/* 測試用唯讀鉤子 */
+window.__fxEgg={check:fxCheck,run:fxRun,clear:fxClearBody,
+  state:()=>({cls:document.body.className,myAt:fxMyAt,ready:fxReady,
+    shower:!!(fxShowerLayer&&fxShowerLayer.classList.contains('on'))})};
+
 
 /* ═══ 液態玻璃自動套用 ═══
    給主要容器掛 data-lg（CSS 用屬性選擇器），連之後新開的頁面都自動生效。 */
