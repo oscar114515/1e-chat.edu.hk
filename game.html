@@ -4718,9 +4718,11 @@ function createRaceLobby(){
     else speed=Math.max(0, speed-DRAG*dt*1.7);
     /* 轉向：阿克曼模型 —— 轉向率 ∝ 速度（停定轉唔到，唔會原地 360° 轉圈） */
     if(steer!==0 && speed>12){
-      const rate=steer*Math.min(2.6, speed*0.0045);
+      /* 轉向率隨速度遞減：低速約 1.46 rad/s（發夾彎），高速約 0.5（長彎），
+         封頂慢到唔會「直升機咁原地自轉」 */
+      const rate=steer*1.25/(1+speed/320);
       head+=rate*dt;
-      speed*=Math.max(0, 1-0.10*dt);       /* 過彎輕微減速 */
+      speed*=Math.max(0, 1-0.16*dt);       /* 過彎減速，逼你入彎前收油 */
     }
     meP.x+=Math.cos(head)*speed*dt;
     meP.y+=Math.sin(head)*speed*dt;
