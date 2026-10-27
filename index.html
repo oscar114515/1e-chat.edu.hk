@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tFoLYpXoMmW3TxtUcaHekJu2lh4ZMN1dUy0k75u0nDU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-ns/Tgob13gRfUyxDggGEdZVbmHmo2PXhJDtFJqyb0mw=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -2100,7 +2100,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.1';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -6471,7 +6471,9 @@ const TOOL_LIST = [
   { id:'green', name:'綠紙產生器', icon:'i-slip', color:'#1e8e3e', href:'green.html',
     desc:'揀班別、填上姓名與日期就自動排版成綠色通告，可以即時預覽、直接列印或存成 PDF' },
   { id:'live', name:'全班共享地圖', icon:'i-pin', color:'#22c55e', action:'openLiveMap',
-    desc:'只顯示已同意共享的同學，每 10 秒更新；可選擇只分享最新位置，或留下走過的路線' }
+    desc:'只顯示已同意共享的同學，每 10 秒更新；可選擇只分享最新位置，或留下走過的路線' },
+  { id:'oscarai', name:'梁喆AI', icon:'i-bot', color:'#fbbf24', href:'liangzhe-ai.html',
+    desc:'用梁喆自己 771 條真實聊天記錄訓練出的語氣 AI：講嘢、揀字、斷句都係佢自己嗰套' }
 ];
 /* 小工具清單可以完全由伺服器決定（meta/remote/tools）。
    加工具、改名、改說明、換連結、暫時收起某一款，都只要改 Firebase，
@@ -10765,6 +10767,11 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.1',date:'2026-10-27',changes:[
+'新增「梁喆AI」小程式：用梁喆自己 771 條真實聊天記錄訓練出嘅語氣 AI —— 佢揀字、斷句、發脾氣、叫你等五分鐘嘅方式，全部都係梁喆自己嗰套',
+'可以同佢傾偈，佢會以梁喆嘅性格答你：問「網站又壞了」佢會答「邊度壞 刷新咗未」，問「你係咩人」佢會答「梁喆囉 1E班14號 你邊個」',
+'語氣模型由 DeepSeek 驅動（瀏覽器直接呼叫），對話會記住喺本機，下次開返仲喺度',
+]},
 {ver:'v1.39',date:'2026-10-24',changes:[
 '聊天室大更新：點任何一則訊息會彈出操作菜單 —— 六個表情（👍❤️😂😮😢😡）一按即加、三個快捷回覆（哈哈／收到／+1）、引用回覆、複製文字、兩分鐘內撤回自己的訊息',
 '引用回覆：回覆別人的話會帶一小塊原話，點一下就跳回原本那一則，幾十人同時聊天也不會搞亂在回誰',
