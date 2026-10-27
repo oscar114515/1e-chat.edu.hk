@@ -4547,6 +4547,10 @@ function createKingLobby(){
    操作：唔再係搖桿。踩油門加速、按左右轉方向盤（速度越快越難轉）。
    視角：唔係第一人稱，但鏡頭永遠鎖住車頭朝屏幕上方 —— 車喺屏幕下方，
    賽道圍住車轉，前方一直係「要行嗰邊」。 */
+/* ═══ 迷你賽車（race v3）—— 油門 + 方向盤，追尾旋轉視角 ═══
+   操作：唔再係搖桿。踩油門加速、按左右轉方向盤（速度越快越難轉）。
+   視角：唔係第一人稱，但鏡頭永遠鎖住車頭朝屏幕上方 —— 車喺屏幕下方，
+   賽道圍住車轉，前方一直係「要行嗰邊」。 */
 function createRaceLobby(){
   const PR=15, VIEW_H=1500, TRACK_HALF=100, LAPS=3;
   const LOOK=150;                 /* 相機喺車前方幾遠 → 車喺屏幕下方 LOOK*s 像素 */
@@ -4569,10 +4573,10 @@ function createRaceLobby(){
   const MAP_DOTS=(function(){ const a=[]; for(let i=0;i<NT;i+=6) a.push({x:PTS[i].x,y:PTS[i].y,color:'rgba(148,163,184,.55)'}); return a; })();
 
   let cv=null, ctx=null, raf=0, running=false, cw=0, ch=0, dpr=1;
-  let meP={x:0,y:0}, head=0, speed=0;
+  let meP={x:0,y:0}, head=0, vx=0, vy=0;
   let cam={x:0,y:0}, camAng=0;
   let others={}, liveRef=null, unsubLive=null;
-  let throttle=false, steer=0;
+  let throttle=false, reverse=false, steer=0;
   let lastT=0, lastPush=0, _lastDraw=0;
   let lap=0, lastIdx=null, done=false, t0=0, myTime=0, curS=0;
   let unbind=null, skid=[], shake=0;
@@ -4696,28 +4700,38 @@ function createRaceLobby(){
       const nx=dx/d, ny=dy/d;
       meP.x=p.x+nx*(TRACK_HALF-PR);
       meP.y=p.y+ny*(TRACK_HALF-PR);
-      const vn=Math.cos(head)*nx+Math.sin(head)*ny;
-      if(vn>0) speed*=0.40;              /* 撞牆急減速，有阻礙但唔會完全卡死 */
+      const vn=vx*nx+vy*ny;
+      if(vn>0){ vx-=nx*vn; vy-=ny*vn; }   /* 法向速度清零 → 貼牆滑行，唔會震 */
+      vx*=0.55; vy*=0.55;                   /* 撞牆損失 */
       shake=Math.min(6,shake+2.6);
     }
   }
 
   function step(dt){
-    const ACC=560, DRAG=150, MAX=640;
-    if(throttle) speed=Math.min(MAX, speed+ACC*dt);
-    else speed=Math.max(0, speed-DRAG*dt*1.7);
-    /* 轉向：速度越快越鈍（卡丁車手感） */
-    if(steer!==0 && speed>15){
-      /* 阿克曼：轉向率∝速度（低速推頭、停定轉唔到），封頂 1.1 rad/s 唔會原地自轉 */
-      const rate=steer*Math.min(1.1, speed*0.008);
-      head+=rate*dt;
-      speed*=Math.max(0, 1-0.12*dt);
+    const ACC=560, ACC_R=340, MAX=640, MAX_R=280;
+    const fx=Math.cos(head), fy=Math.sin(head);
+    /* 速度分解：縱向（沿車頭）＋ 橫向（側滑） */
+    let fwd = vx*fx + vy*fy;
+    let lat = -vx*fy + vy*fx;
+    /* 油門／倒車 */
+    if(throttle) fwd=Math.min(MAX, fwd+ACC*dt);
+    if(reverse)  fwd=Math.max(-MAX_R, fwd-ACC_R*dt);
+    /* 無油門時滑行阻力 */
+    if(!throttle && !reverse) fwd*=Math.max(0, 1-0.25*dt);   /* 慣性滑行，好耐先停 */
+    /* 側滑抓地：橫向速度衰減 → 有慣性，高速轉彎會甩尾，唔會瞬間轉過去 */
+    lat*=Math.exp(-5.0*dt);
+    /* 阿克曼轉向：轉向率∝速度，低速推頭、停定轉唔到 */
+    if(steer!==0 && Math.abs(fwd)>15){
+      head+=steer*Math.min(1.1, Math.abs(fwd)*0.008)*dt;
     }
-    meP.x+=Math.cos(head)*speed*dt;
-    meP.y+=Math.sin(head)*speed*dt;
+    /* 合成速度 = 車頭方向 + 殘留側滑 */
+    vx = fx*fwd - fy*lat;
+    vy = fy*fwd + fx*lat;
+    meP.x+=vx*dt;
+    meP.y+=vy*dt;
     clampTrack();
-    if(speed>130 && steer!==0 && Math.random()<0.5){
-      skid.push({x:meP.x-Math.cos(head)*PR, y:meP.y-Math.sin(head)*PR, t:0.4});
+    if(Math.abs(fwd)>130 && steer!==0 && Math.random()<0.5){
+      skid.push({x:meP.x-fx*PR, y:meP.y-fy*PR, t:0.4});
     }
     skid.forEach(p=>p.t-=dt*1.5);
     while(skid.length>40) skid.shift();
@@ -4769,7 +4783,7 @@ function createRaceLobby(){
 
     ctx.font='700 15px Inter,sans-serif'; ctx.textAlign='left';
     ctx.fillStyle='rgba(226,232,240,.95)';
-    ctx.fillText('🏁 第 '+Math.min(LAPS,lap+1)+' / '+LAPS+' 圈'+(done?'  ✓ '+myTime.toFixed(1)+'s':'')+'   '+Math.round(speed)+' km/h', 16, 28);
+    ctx.fillText('🏁 第 '+Math.min(LAPS,lap+1)+' / '+LAPS+' 圈'+(done?'  ✓ '+myTime.toFixed(1)+'s':'')+'   '+Math.round(Math.hypot(vx,vy))+' km/h', 16, 28);
 
     drawMiniMap(ctx, cw, MAP_R, null, miniPlayers(meP.x,meP.y,'#38bdf8',others),
       {square:false, dots:MAP_DOTS});
@@ -4790,6 +4804,7 @@ function createRaceLobby(){
       if(k==='ArrowLeft'||k==='a'||k==='A'){ steer=-1; e.preventDefault(); }
       else if(k==='ArrowRight'||k==='d'||k==='D'){ steer=1; e.preventDefault(); }
       else if(k==='ArrowUp'||k==='w'||k==='W'||k===' '){ throttle=true; e.preventDefault(); }
+      else if(k==='ArrowDown'||k==='s'||k==='S'){ reverse=true; e.preventDefault(); }
       else return;
     };
     const onUp=e=>{
@@ -4797,6 +4812,7 @@ function createRaceLobby(){
       if(k==='ArrowLeft'||k==='a'||k==='A'){ if(steer<0) steer=0; }
       else if(k==='ArrowRight'||k==='d'||k==='D'){ if(steer>0) steer=0; }
       else if(k==='ArrowUp'||k==='w'||k==='W'||k===' '){ throttle=false; }
+      else if(k==='ArrowDown'||k==='s'||k==='S'){ reverse=false; }
     };
     window.addEventListener('keydown',onKey); window.addEventListener('keyup',onUp);
     return ()=>{window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);};
@@ -4815,13 +4831,16 @@ function createRaceLobby(){
       host.appendChild(b);
       return b;
     };
-    const L=mk('','◀',16,116,60), R=mk('','▶',84,116,60), G=mk('','油門',null,96,84);
+    const L=mk('','◀',16,116,60), R=mk('','▶',84,116,60);
+    const G=mk('','油門',null,132,76), Bk=mk('','倒車',null,46,76);
     G.style.cssText+= 'right:18px;left:auto;';
+    Bk.style.cssText+= 'right:18px;left:auto;';
     const bind=(el,on,off)=>{ el.addEventListener('pointerdown',e=>{on();e.preventDefault();}); el.addEventListener('pointerup',off); el.addEventListener('pointercancel',off); el.addEventListener('pointerleave',off); };
     bind(L,()=>steer=-1,()=>{if(steer<0)steer=0;});
     bind(R,()=>steer=1,()=>{if(steer>0)steer=0;});
     bind(G,()=>throttle=true,()=>throttle=false);
-    return ()=>{ try{L.remove();R.remove();G.remove();}catch(e){} };
+    bind(Bk,()=>reverse=true,()=>reverse=false);
+    return ()=>{ try{L.remove();R.remove();G.remove();Bk.remove();}catch(e){} };
   }
 
   return {
@@ -4830,7 +4849,7 @@ function createRaceLobby(){
       if(!me) return;
       const p=PTS[0];
       meP.x=p.x; meP.y=p.y;
-      head=Math.atan2(p.ty,p.tx); speed=0;
+      head=Math.atan2(p.ty,p.tx); vx=0; vy=0;
       camAng=head; cam={x:meP.x+Math.cos(head)*LOOK, y:meP.y+Math.sin(head)*LOOK};
       t0=Date.now(); lastIdx=null; lap=0; done=false; skid=[]; curS=0;
       liveRef=ref(db,'lobbyLive/race/'+me.username);
@@ -4882,7 +4901,7 @@ function createRaceLobby(){
           +'<div><div class="sv">'+(rows.findIndex(x=>x.me)+1)+'</div><div class="sl">排名</div></div>';
       }
     },
-    debug(){ return {x:meP.x,y:meP.y,head,speed:Math.round(speed),lap,curS,pts:NT,done,score:lap,others:Object.keys(others||{})}; },
+    debug(){ return {x:meP.x,y:meP.y,head,speed:Math.round(Math.hypot(vx,vy)),lap,curS,pts:NT,done,score:lap,others:Object.keys(others||{})}; },
     probe(x,y){ const n=nearIdx(x,y,null); return n.d<=TRACK_HALF; }
   };
 }
