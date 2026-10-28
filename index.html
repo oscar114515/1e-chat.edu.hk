@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tPWKlHX2OJ5nVoUlUxuYD7qccfoRh2huU41pYoZxrVU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-BethH9iJ/YwAjGtZ5uZHuHKW65yfdWHuT8sQSTHHu0Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -1962,6 +1962,15 @@ body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
 #netBar.on{opacity:1;transform:translate(-50%,0)}
 #netBar.ok{background:rgba(22,101,52,.96)}
 
+
+/* ═══ v1.39.6 頁面載入中（弱網時唔好白等）═══ */
+.pf-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:52px 20px;gap:14px}
+.pf-spin{width:26px;height:26px;border:3px solid var(--border-strong);
+  border-top-color:var(--accent,#3b82f6);border-radius:50%;
+  animation:btnspin .7s linear infinite}
+.pf-loading-t{font-size:13px;color:var(--text-muted);line-height:1.6;text-align:center}
+
 </style>
 </head>
 <body>
@@ -2139,7 +2148,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.5';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.6';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -5927,6 +5936,18 @@ function pGet(path, ms){
 }
 
 /* 弱網時顯示的頁面：講清楚是網的問題，並給一個可以再試一次的按鈕 */
+
+/* 載入中的整頁（個人主頁／群聊共用）：標題 + spinner + 一句話 */
+function loadingPage(title, hint, key){
+  beginPage(key);
+  setPageHTML('<div class="fullPage"><div class="fp-header">'
+    + '<button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button>'
+    + '<div class="fp-title">' + escapeHtml(title) + '</div></div>'
+    + '<div class="fp-body"><div class="pf-loading">'
+    + '<div class="pf-spin"></div>'
+    + '<div class="pf-loading-t">' + escapeHtml(hint) + '</div>'
+    + '</div></div></div>');
+}
 function netFailPage(title, act, arg, key){
   openPage({
     title: title,
@@ -5941,7 +5962,7 @@ function netFailPage(title, act, arg, key){
 }
 
 /* 弱網測試用唯讀鉤子（跟 __okra、__fxEgg 一樣，只讀不改狀態） */
-window.__netTest={pGet:pGet,openProfilePage:openProfilePage,openGroupChat:openGroupChat,netFailPage:netFailPage,
+window.__netTest={pGet:pGet,openProfilePage:openProfilePage,openGroupChat:openGroupChat,netFailPage:netFailPage,loadingPage:loadingPage,
   state:()=>({bar:(document.getElementById('netBar')||{}).textContent||'',groupMsgsReady:groupMsgsReady})};
 function navAlive(seq){ return seq===navSeq; }
 function beginPage(key){
@@ -9078,14 +9099,15 @@ async function openProfilePage(username,isSelf,fromAdmin){
      「我明明退了出去，介面自己又刷新回來」。所以先領一個導航序號，
      回來驗票，彈過頁就直接放棄。 */
   const seq=navStart();
+  /* v1.39.6：一進去就顯示「載入中」，唔好等網絡慢嗰陣畫面完全冇反應 */
+  loadingPage(isSelf?'我的主頁':'個人主頁','正在載入…<br>網絡慢的話會久一點','profile:'+username);
   let snap;
   try{
     snap=await pGet('users/'+username,10000);
   }catch(err){
-    /* 弱網：唔好再白等，直接講清楚 + 畀個「重新載入」。
-       ⚠ 這裡刻意不再檢查 navAlive —— 用戶已經等了 10 秒，
-         就算中途有其他導航把票號加過，也要給他一個交代，
-         否則又變回「按了完全沒反應」。 */
+    /* 弱網：顯示載入不到 + 重新載入。
+       用戶如果在載入期間按咗返回，就唔好再覆蓋畫面（navAlive 已變）。 */
+    if(!navAlive(seq))return;
     netFailPage('載入不到','openUserProfile',username,'profile:'+username);
     return;
   }
@@ -10234,11 +10256,12 @@ async function openGroupChat(groupKey){
   if(!me)return;
   const seq=navStart();
   groupMsgsReady=false;
+  loadingPage('群聊','正在載入…<br>網絡慢的話會久一點','groupChat:'+groupKey);
   let snap;
   try{
     snap=await pGet('groups/'+groupKey,10000);
   }catch(err){
-    /* 同上：超時一定要有反饋 */
+    if(!navAlive(seq))return;
     netFailPage('載入不到','openGroupChat',groupKey,'groupChat:'+groupKey);
     return;
   }
@@ -10927,6 +10950,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.6',date:'2026-10-28',changes:[
+'個人主頁、群聊加載時，一進去就顯示「正在載入…」加一個轉圈圈。以前地鐵、電梯網絡差的時候，點進去會有一段完全冇反應的空白，好像壞了一樣；現在至少會見到它在努力載入',
+'載入超過 10 秒仍然載不到，才會跳到「載入不到」並給「重新載入」按鈕',
+]},
 {ver:'v1.39.5',date:'2026-10-28',changes:[
 '暫時關閉「新裝置數字配對」：以前換新手機登入，要舊手機點中同一個兩位數字才進得去。現在不會再彈那個視窗，新裝置輸入密碼就直接登入',
 '所有配對相關的代碼（生成數字、舊裝置確認、白名單、拒絕流程）全部保留在程式裡，沒有刪除，之後要恢復只需要把開關改回去',
