@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-kf5MznQgg3HVu+lD9wFKm+skc4iQPJ/uNLc4VatI7SA=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-tPWKlHX2OJ5nVoUlUxuYD7qccfoRh2huU41pYoZxrVU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -2139,7 +2139,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.4';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.5';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2807,6 +2807,14 @@ function deviceIdOf(){
 function deviceLabel(){
   try{ return String(navigator.userAgent||'').replace(/^Mozilla\/5\.0 /,'').slice(0,90); }catch(e){ return ''; }
 }
+/* ═══ 新裝置數字配對開關（2026-10-28）══════════════════════════════════
+   false = 不顯示配對彈窗（目前設定）。
+   整套代碼（新裝置發起、原裝置確認、白名單寫入、三選一數字、拒絕流程）
+   一行都沒有刪，只是被這個開關擋住。要恢復：改成 true 就即刻生效。
+   關閉期間的行為：新裝置登入後直接寫入 devices 白名單並放行，
+   等於回到「知道密碼就可以登入」的做法。 */
+const DEVICE_PAIR_ON = false;
+
 function isPublicDevice(){ try{ return localStorage.getItem('publicDevice')==='1'; }catch(e){ return false; } }
 function isAdminRole(r){ return r==='admin'||r==='superadmin'; }
 function pairEl(id){ return document.getElementById(id); }
@@ -2826,6 +2834,17 @@ function ensureDeviceTrusted(u,data){
         }
         if(devs[did]){
           await update(ref(db,'users/'+u+'/devices/'+did),{lastAt:Date.now()});
+          return resolve(true);
+        }
+        /* ═══ 配對關閉：新裝置直接記入白名單放行，不彈任何東西 ═══
+           下面那整段（生成三個數字、寫 pairing、每 1.5 秒輪詢結果、
+           等原裝置點對、逾時取消）全部保留，只是永遠不會執行到。 */
+        if(!DEVICE_PAIR_ON){
+          try{
+            await set(ref(db,'users/'+u+'/devices/'+did),{
+              ua:deviceLabel(), at:Date.now(), autoAdded:true
+            });
+          }catch(e){}
           return resolve(true);
         }
         /* 公用機：非管理員帳號直接放行，8 小時後失效 */
@@ -2891,6 +2910,7 @@ function ensureDeviceTrusted(u,data){
 var pairWatch=null;
 function watchPairing(){
   if(!me) return;
+  if(!DEVICE_PAIR_ON) return;   /* 配對關閉：原裝置也不用再等別人來配對 */
   if(pairWatch){ try{ pairWatch(); }catch(e){} pairWatch=null; }
   pairWatch=onValue(ref(db,'users/'+me.username+'/pairing'),function(snap){
     var p=snap.val();
@@ -2900,6 +2920,7 @@ function watchPairing(){
   });
 }
 function showPairAsk(p){
+  if(!DEVICE_PAIR_ON) return;   /* 兜底：即使有人手動調到這裡也不會顯示 */
   var ov=pairEl('pairAsk'); if(!ov) return;
   var opts=p.options||p.codes||[];
   pairEl('askCodes').innerHTML=opts.map(function(n,i){ return '<b data-i="'+i+'">'+n+'</b>'; }).join('');
@@ -10906,6 +10927,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.5',date:'2026-10-28',changes:[
+'暫時關閉「新裝置數字配對」：以前換新手機登入，要舊手機點中同一個兩位數字才進得去。現在不會再彈那個視窗，新裝置輸入密碼就直接登入',
+'所有配對相關的代碼（生成數字、舊裝置確認、白名單、拒絕流程）全部保留在程式裡，沒有刪除，之後要恢復只需要把開關改回去',
+]},
 {ver:'v1.39.4',date:'2026-10-27',changes:[
 '修好地鐵、電梯這類弱網下「點個人主頁完全沒反應」：以前個人主頁一打開就要向伺服器拿資料，但那個請求冇設上限，訊號一差就一直在等 —— 不是壞了，是一直在等。現在超過 10 秒就停手，直接寫「網絡好像不太順」，再給一個「重新載入」按鈕',
 '群聊一樣：以前點進去會卡住、或者進去之後一片空白，還寫「還沒有訊息」令人以為被人清空了。現在分清楚「正在載入」和「真的沒有訊息」，載入失敗也可以重新載入',
