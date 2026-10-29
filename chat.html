@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-BethH9iJ/YwAjGtZ5uZHuHKW65yfdWHuT8sQSTHHu0Q=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-xVaPzZm140PPxpMGrByhd5Xh9q/Z71gVlIAhqUcDZ4E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -1985,6 +1985,7 @@ body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16.4 16.4 4.6 4.6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8.5 3v4M15.5 3v4"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
   <symbol id="i-gomoku" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="16" r="3.2"/></symbol>
@@ -2148,7 +2149,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.6';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.7';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -6621,6 +6622,8 @@ const TOOL_LIST = [
     desc:'純介面復刻的搜尋首頁：Google 大字、搜尋框、AI 模式、Gmail 與圖片入口，一按就回到熟悉的畫面' },
   { id:'green', name:'綠紙產生器', icon:'i-slip', color:'#1e8e3e', href:'green.html',
     desc:'揀班別、填上姓名與日期就自動排版成綠色通告，可以即時預覽、直接列印或存成 PDF' },
+  { id:'schcal', name:'校曆', icon:'i-cal', color:'#2563eb', href:'schcal.html',
+    desc:'2026–27 全年校曆：考試、假期、活動按顏色分類，今日自動標出，點日期看詳情' },
   { id:'live', name:'全班共享地圖', icon:'i-pin', color:'#22c55e', action:'openLiveMap',
     desc:'只顯示已同意共享的同學，每 10 秒更新；可選擇只分享最新位置，或留下走過的路線' }
 ];
@@ -10950,6 +10953,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.7',date:'2026-10-29',changes:[
+'新增「校曆」小工具：2026–27 全年校曆，考試、假期、活動按顏色分類顯示，今天會自動標出，點任何日期看當天詳情',
+'今日焦點：打開就見到今天是甚麼日子、接下來幾件大事（考試、長假、活動）',
+]},
 {ver:'v1.39.6',date:'2026-10-28',changes:[
 '個人主頁、群聊加載時，一進去就顯示「正在載入…」加一個轉圈圈。以前地鐵、電梯網絡差的時候，點進去會有一段完全冇反應的空白，好像壞了一樣；現在至少會見到它在努力載入',
 '載入超過 10 秒仍然載不到，才會跳到「載入不到」並給「重新載入」按鈕',
