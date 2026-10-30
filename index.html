@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-qmx5CNrfF84xtS/ZZroGRsyt0u3zLbpkrrD7AWC5oPk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-WIK8tEA+f2Ull0I9GQJdlKRarBgleRW9Cab+cavtQSg=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -2146,7 +2146,7 @@ body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
       <div class="pi" data-action="callClass"><span class="mt-tag">維護中</span><div class="pic"><svg class="ico"><use href="#i-video"/></svg></div><div class="pit">視訊通話</div></div>
     </div>
     <div id="stickerPanel" class="hidden">
-      <div class="sp-h"><div class="sp-tabs"><button class="sp-tab on" data-stktab="emoji">Emoji</button><button class="sp-tab" data-stktab="img">貼圖</button></div><button class="sp-x" data-action="closeStickerPanel">✕</button></div>
+      <div class="sp-h"><div class="sp-tabs"><button class="sp-tab on" data-stktab="emoji">Emoji</button><button class="sp-tab" data-stktab="img">貼圖</button><button class="sp-tab" data-stktab="bili">B站</button></div><button class="sp-x" data-action="closeStickerPanel">✕</button></div>
       <div class="sp-grid" id="stickerGrid"></div>
     </div>
 
@@ -2171,7 +2171,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.12';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.13';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -8012,6 +8012,9 @@ const STICKERS=['😂','🤣','😍','🥰','😎','🤔','😭','😡','🥺','
 /* WhatsApp 貼圖（圖片），編號對應 stk/NNN.webp */
 const IMG_STICKERS=[1,2,3,5,8,13,15,17,19,25,31,32,33,34,35,38,39,40,41,42,43,44,45,47,49,50,53,55,56,57,58,59,60,66,70,74,78,79,84,89,90,94,97,98,101,102,104,105,107,112,115,123,124,127,128,129,131,136,137,138,147,149,151,152,153,154,155,156,157,158,159,160,161,162,163,167,168,169,170,171,172,174,175,176,177,178,179,181,182,183,184,185,186,187,188,189,190,192,193,194,195,196,197,198,199,201,202,203,204,206,207,208,209,212,213,214,216,217,218,219,220,221,222,223,224,225,226,227,229,230,231,232,233,234,235,236,237,238,240,241,242,243,244,245,246,248,250,251,252,253,259,260,261,267,269,270,273,274,275,276,277];
 function stkUrl(n){ return 'stk/'+String(n).padStart(3,'0')+'.webp'; }
+/* B站表情（圖片），編號對應 bili/NNN.png */
+const BILI_STICKERS=[51,64,65,74,75,76,92,94,95,96,97,98,99,112,142,143,147,172,173,174,175,176,177,178,179,180,181,182,183,184,193,194,195,196,197,203,212,229,245,250,251,253,254,255,256,257,258,259,260,261,262,273,276,277,360];
+function biliUrl(n){ return 'bili/'+String(n).padStart(3,'0')+'.png'; }
 let _stkTab='emoji';
 function renderStickerGrid(){
   const grid=document.getElementById('stickerGrid');
@@ -8019,6 +8022,11 @@ function renderStickerGrid(){
   if(_stkTab==='img'){
     grid.innerHTML = IMG_STICKERS.map(function(n){
         const u=stkUrl(n);
+        return '<div class="sticker-cell" data-action="sendSticker" data-arg="'+escAttr(u)+'"><img loading="lazy" src="'+u+'" alt=""></div>';
+      }).join('');
+  }else if(_stkTab==='bili'){
+    grid.innerHTML = BILI_STICKERS.map(function(n){
+        const u=biliUrl(n);
         return '<div class="sticker-cell" data-action="sendSticker" data-arg="'+escAttr(u)+'"><img loading="lazy" src="'+u+'" alt=""></div>';
       }).join('');
   }else{
@@ -8048,7 +8056,7 @@ async function sendSticker(arg){
   if(!me||!arg) return;
   try{
     const id=await nextMsgId();
-    const isImg=/^stk\//.test(arg)||/\.webp$/.test(arg);
+    const isImg=/^stk\//.test(arg)||/^bili\//.test(arg)||/\.webp$/.test(arg)||/\.png$/.test(arg);
     const payload={id:id,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',
       seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,
       type:'sticker',createdAt:Date.now(),deleted:false};
@@ -11128,6 +11136,9 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.13',date:'2026-10-30',changes:[
+'表情包新增「B站」分頁：55 個 B站聯名表情（原神/鳴潮/明日方舟/FGO/洛天依等）',
+]},
 {ver:'v1.39.12',date:'2026-10-30',changes:[
 '修復表情包貼圖「疊在一起」：格子改成固定高度 52px 正方形，六列整齊排列不再重疊',
 ]},
