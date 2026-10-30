@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-aOxmCUdSqs5RQuOxZVjXsigRniPXrB+4RH43DjzGfvA=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-qmx5CNrfF84xtS/ZZroGRsyt0u3zLbpkrrD7AWC5oPk=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -107,9 +107,9 @@ body.theme-light #stickerPanel{background:#ffffff;border-color:rgba(15,23,42,.16
 #stickerPanel .sp-tab{background:rgba(148,163,184,.15);border:1px solid transparent;color:var(--text-sub);padding:5px 13px;border-radius:16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
 #stickerPanel .sp-tab.on{background:var(--brand,color-mix(in srgb,#3b82f6 22%,transparent));color:var(--text-main);border-color:rgba(59,130,246,.4)}
 #stickerPanel .sp-x{background:rgba(148,163,184,.18);border:none;color:var(--text-sub);width:28px;height:28px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
-#stickerPanel .sp-grid{overflow-y:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding-right:2px}
-#stickerPanel .sticker-cell{overflow:hidden;padding:4px}
-#stickerPanel .sticker-cell img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+#stickerPanel .sp-grid{overflow-y:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;padding-right:2px}
+#stickerPanel .sticker-cell{min-width:0;overflow:hidden;position:relative;height:52px}
+#stickerPanel .sticker-cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;display:block}
 /* 加載占位貼圖 */
 .pf-loadimg{width:120px;height:120px;object-fit:contain;margin-bottom:14px;animation:pfpulse 1.8s ease-in-out infinite}
 @keyframes pfpulse{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
@@ -2171,7 +2171,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.11';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.12';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -11128,6 +11128,9 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.12',date:'2026-10-30',changes:[
+'修復表情包貼圖「疊在一起」：格子改成固定高度 52px 正方形，六列整齊排列不再重疊',
+]},
 {ver:'v1.39.11',date:'2026-10-30',changes:[
 '表情包面板改到「輸入框」和「底欄」之間彈出，像 WhatsApp 從下方彈出，不再是浮在輸入框上面的卡片',
 '表情包分「Emoji」和「貼圖」兩個分頁，不再全堆在一起',
