@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-+sS28aPYAHtdo2Yj4MED7Xv7ZE3sL6iLlY90sDBifV4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-ZWoVgRoE/0K7nbgPuAODKsvNHacjgAfv1d1j99DZ+oU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -2152,7 +2152,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.8';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.9';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -7442,14 +7442,9 @@ async function doCheckin(){
     await set(ref(db,'checkin/'+me.username),{
       last:today, streak:streak, cycle:cycle, total:(Number(c.total)||0)+1, at:Date.now()
     });
-    const pr=await runTransaction(ref(db,'users/'+me.username+'/points'),v=>{
-      const cur=Number(v)||0;
-      return Math.min(cur+reward,9007199254740991);
-    });
-    if(!pr.committed){                       /* 交易失敗就 fallback 一次（見 MEMORY 的 runTransaction 坑） */
-      const cur=Number((await get(child(ref(db),'users/'+me.username+'/points'))).val())||0;
-      await set(ref(db,'users/'+me.username+'/points'),Math.min(cur+reward,9007199254740991));
-    }
+    /* 加積分改用 changePoints：交易失敗會自動 fallback get+set、且從不 throw，
+       這樣「寫入簽到記錄」成功後，後面的加積分即使出錯，也不會把整個簽到判成失敗。 */
+    try{ await changePoints(me.username, reward, '每日簽到'); }catch(e){}
     try{ await writeLog('checkin','簽到 第 '+streak+' 天 +'+reward); }catch(e){}
     addExp(20);
     bumpDaily('ck');
@@ -11084,6 +11079,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.9',date:'2026-10-30',changes:[
+'修好每天第一次簽到顯示「簽到失敗」、但其實已經簽到的問題：以前寫入簽到記錄之後，加積分那一步用交易，交易出錯就把整個簽到誤判成失敗，記錄其實早就寫好了',
+'現在加積分改用更穩的寫法（交易失敗自動改讀寫一次、且不會把錯誤往外丟），寫入簽到記錄成功就必定算簽到成功',
+]},
 {ver:'v1.39.8',date:'2026-10-30',changes:[
 '公共聊天室頂部新增「今天」欄：顯示今天日期、循環日（Day 幾，只顯示校曆有標註的日子）與今天有甚麼特別事，顏色跟校曆一致',
 '公告從公共聊天室頂部移到個人主頁：個人主頁多一個「公告」入口，看得到最新公告，點開看全部',
