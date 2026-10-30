@@ -93,26 +93,25 @@ h1,h2,h3{margin:0}
 .wk div{text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);padding:9px 0 7px;letter-spacing:.3px}
 .wk div.hl{color:color-mix(in srgb,#ef4444 80%,var(--muted))}
 
-/* 日期格 */
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:6px 10px 12px}
-.cell{position:relative;min-height:58px;border-radius:12px;padding:5px 4px 4px;background:var(--panel2);
-  border:1px solid transparent;display:flex;flex-direction:column;gap:3px;cursor:pointer;
+/* 日期格（正方形，內容不影響尺寸） */
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;padding:6px 10px 12px}
+.cell{position:relative;aspect-ratio:1/1;border-radius:11px;padding:5px;background:var(--panel2);
+  border:1px solid transparent;display:flex;flex-direction:column;cursor:pointer;
+  min-width:0;overflow:hidden;
   transition:border-color var(--dur) var(--ease),transform var(--dur) var(--ease)}
-.cell.blank{background:transparent;cursor:default;min-height:0}
+.cell.blank{background:transparent;cursor:default;border-color:transparent}
 .cell:not(.blank):hover{border-color:color-mix(in srgb,var(--brand) 35%,var(--line))}
-.cell:not(.blank):active{transform:scale(.97)}
-.cell .dno{font-size:13px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1;width:24px;height:24px;
-  display:grid;place-items:center;border-radius:8px;color:var(--text)}
+.cell:not(.blank):active{transform:scale(.96)}
+.cell .toprow{display:flex;justify-content:space-between;align-items:flex-start;gap:2px}
+.cell .dno{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;width:22px;height:22px;
+  display:grid;place-items:center;border-radius:7px;color:var(--text)}
 .cell .dno.wkend{color:color-mix(in srgb,#ef4444 75%,var(--text))}
 .cell.today{box-shadow:inset 0 0 0 2px var(--brand)}
 .cell.today .dno{background:var(--brand);color:#fff}
-.cell .cyc{font-size:9.5px;font-weight:800;color:var(--muted);letter-spacing:.5px;line-height:1;opacity:.85}
-.chips{display:flex;flex-direction:column;gap:2.5px;margin-top:auto}
-.chip{display:flex;align-items:center;gap:4px;font-size:10px;line-height:1.15;font-weight:600;
-  padding:2px 5px;border-radius:5px;white-space:nowrap;overflow:hidden;max-width:100%}
-.chip i{width:5px;height:5px;border-radius:50%;flex:0 0 5px}
-.chip span{overflow:hidden;text-overflow:ellipsis}
-.more{font-size:9px;font-weight:700;color:var(--muted);padding-left:5px}
+.cell .cyc{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.4px;line-height:1;padding:2px 1px 0 0}
+.dots{margin-top:auto;display:flex;gap:3px;flex-wrap:nowrap;align-items:center;overflow:hidden;max-width:100%}
+.dots i{width:7px;height:7px;border-radius:50%;flex:0 0 7px}
+.dots .more{font-size:9px;font-weight:700;color:var(--muted);line-height:1;flex:0 0 auto}
 /* 色調底色 */
 .tint-long{background:color-mix(in srgb,#fbbf24 20%,var(--panel2))}
 .tint-pub{background:color-mix(in srgb,#ef4444 16%,var(--panel2))}
@@ -161,12 +160,12 @@ h1,h2,h3{margin:0}
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
 }
 @media (max-width:520px){
-  .cell{min-height:50px;padding:3px 2px}
-  .cell .dno{width:21px;height:21px;font-size:12px}
-  .chip{font-size:0;padding:2px;gap:0;justify-content:flex-start}
-  .chip i{width:6px;height:6px;flex:0 0 6px}
-  .chip span{display:none}
-  .more{font-size:8px}
+  .cell{padding:4px}
+  .cell .dno{width:20px;height:20px;font-size:12px}
+  .cell .cyc{font-size:8px}
+  .dots i{width:6px;height:6px;flex:0 0 6px}
+  .dots{gap:2px}
+  .dots .more{font-size:8px}
   .wk div{font-size:10.5px}
   .up .tag{min-width:60px}
 }
@@ -467,25 +466,21 @@ function cellHTML(dt,evs,cyc,isToday,wkend,k){
     }
   });
   var chips=evs.filter(function(e){ return !e.cont; });
-  var shown=chips.slice(0,2);
+  var shown=chips.slice(0,3);
   var moreN=chips.length-shown.length;
 
   var cls='cell';
   if(tintCat) cls+=' tint-'+tintCat;
   if(isToday) cls+=' today';
-  if(wkend) cls+=' wkend';
 
   var c='<div class="'+cls+'" data-k="'+k+'">'
-     + '<span class="dno">'+d+'</span>';
-  if(cyc) c+='<span class="cyc">'+cyc+'</span>';
-  c+='<div class="chips">';
+     + '<div class="toprow"><span class="dno'+(wkend?' wkend':'')+'">'+d+'</span>'
+     + (cyc?'<span class="cyc">'+cyc+'</span>':'')+'</div>'
+     + '<div class="dots">';
   shown.forEach(function(e){
-    var col=CAT[e.cat].c;
-    c+='<div class="chip" style="color:'+col+';background:color-mix(in srgb,'+col+' 14%,transparent)">'
-     + '<i style="background:'+col+'"></i><span>'+esc(e.zh)+'</span></div>';
+    c+='<i style="background:'+CAT[e.cat].c+'"></i>';
   });
-  if(moreN>0) c+='<div class="more">+'+(moreN+shown.length)+'</div>';
-  else if(evs.length>0 && chips.length===0) c+='<div class="more">·</div>';
+  if(moreN>0) c+='<span class="more">+'+(moreN+shown.length)+'</span>';
   c+='</div></div>';
   return c;
 }
