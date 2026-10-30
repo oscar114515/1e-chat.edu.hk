@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-ZWoVgRoE/0K7nbgPuAODKsvNHacjgAfv1d1j99DZ+oU=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-NeGNFj08qHY2p2geceWJqU4wWgov01kOnbjDQpwsuwo=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -98,6 +98,19 @@ input::placeholder,textarea::placeholder{color:var(--text-sub);opacity:.8}
   transition:transform .15s cubic-bezier(.34,1.5,.5,1)}
 .sticker-cell:active{transform:scale(.85)}
 .msg .bubble .sticker-big{font-size:46px;line-height:1.15;display:block;text-align:center}
+.msg .bubble .sticker-img{max-width:150px;max-height:150px;width:auto;height:auto;display:block;border-radius:8px}
+/* 表情包底部面板（WhatsApp 式，從輸入列上方彈出） */
+#stickerPanel{position:absolute;bottom:calc(100% + 8px);left:12px;right:12px;background:#1e293b;border:1px solid rgba(148,163,184,.38);border-radius:var(--r-3);padding:12px;box-shadow:0 18px 48px -14px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:50;animation:panelIn .28s cubic-bezier(.34,1.42,.64,1);max-height:46vh;display:flex;flex-direction:column}
+body.theme-light #stickerPanel{background:#ffffff;border-color:rgba(15,23,42,.16);box-shadow:0 18px 48px -14px rgba(15,23,42,.30)}
+#stickerPanel .sp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0}
+#stickerPanel .sp-t{font-size:13px;font-weight:700;color:var(--text-main)}
+#stickerPanel .sp-x{background:rgba(148,163,184,.18);border:none;color:var(--text-sub);width:28px;height:28px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
+#stickerPanel .sp-grid{overflow-y:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding-right:2px}
+#stickerPanel .sticker-cell{overflow:hidden;padding:4px}
+#stickerPanel .sticker-cell img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+/* 加載占位貼圖 */
+.pf-loadimg{width:120px;height:120px;object-fit:contain;margin-bottom:14px;animation:pfpulse 1.8s ease-in-out infinite}
+@keyframes pfpulse{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
 .msg .bubble.sticker-bubble{background:transparent!important;padding:0!important;box-shadow:none!important}
 
 /* ═══ 轉賬 / 紅包 ═══ */
@@ -2129,6 +2142,10 @@ body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
     <div class="pi" data-action="openGames"><div class="pic"><svg class="ico"><use href="#i-gamepad"/></svg></div><div class="pit">小遊戲</div></div>
       <div class="pi" data-action="callClass"><span class="mt-tag">維護中</span><div class="pic"><svg class="ico"><use href="#i-video"/></svg></div><div class="pit">視訊通話</div></div>
     </div>
+    <div id="stickerPanel" class="hidden">
+      <div class="sp-h"><span class="sp-t">表情包</span><button class="sp-x" data-action="closeStickerPanel">✕</button></div>
+      <div class="sp-grid" id="stickerGrid"></div>
+    </div>
   </div>
 
   <span class="score-chip score-chip-fixed" id="scoreBottom" title="積分"></span>
@@ -2152,7 +2169,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.9';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.10';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2405,7 +2422,7 @@ const chatBox=$('chatBox'),msgInput=$('msgInput'),sendBtn=$('sendBtn');
 const classStatus=$('classStatus'),searchInput=$('searchInput');
 const mentionPopup=$('mentionPopup');
 const pageRoot=$('pageRoot');
-const plusPanel=$('plusPanel'),plusBtn=$('plusBtn');
+const plusPanel=$('plusPanel'),plusBtn=$('plusBtn'),stickerPanel=$('stickerPanel');
 const encToggle=$('encToggle'),encCheckbox=$('encCheckbox');
 const aiRoundBtn=$('aiRoundBtn');
 const navAdminBtn=$('navAdminBtn'),navAdminBadge=$('navAdminBadge');
@@ -3275,6 +3292,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='claimChallenge')return claimChallenge();
     if(action==='openStickerPage')return openStickerPage();
     if(action==='sendSticker')return sendSticker(arg);
+    if(action==='closeStickerPanel')return closeStickerPanel();
     if(action==='toggleFollow')return toggleFollow(arg);
     if(action==='openTransferSheet')return openTransferSheet();
     if(action==='openRedPacketSheet')return openRedPacketSheet();
@@ -3485,7 +3503,7 @@ if(fbToggle)fbToggle.addEventListener('click',()=>{ const box=$('feedbackBox'); 
 
 searchInput.addEventListener('input',()=>{ searchKeyword=searchInput.value.trim();render(); });
 chatBox.addEventListener('scroll',()=>{ updateScrollToBottomBtn();maybeAutoLoadEarlier(); });
-document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidden')){ if(!plusPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target))closePlus(); } });
+document.addEventListener('click',(e)=>{ if(!plusPanel.classList.contains('hidden')){ if(!plusPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target))closePlus(); } if(!stickerPanel.classList.contains('hidden')){ const trig=e.target.closest&&e.target.closest('[data-action="openStickerPage"]'); if(!stickerPanel.contains(e.target)&&e.target!==plusBtn&&!plusBtn.contains(e.target)&&!trig)closeStickerPanel(); } });
 
 /* ===== 訂閱 ===== */
 /* 一則訊息該不該顯示（管理員可以在兩小時內看到剛被下架的那幾則） */
@@ -5070,7 +5088,8 @@ function render(){
       }
     }
     else if(m.type==='sticker'){
-      body='<span class="sticker-big">'+escapeHtml(m.text||'')+'</span>';
+      if(m.img){ body='<span class="sticker-imgwrap"><img class="sticker-img" src="'+escAttr(m.img)+'" alt=""></span>'; }
+      else { body='<span class="sticker-big">'+escapeHtml(m.text||'')+'</span>'; }
     }
     else if(m.type==='transfer'){
       const isMine=(m.username===me.username), isTarget=(m.toUser===me.username);
@@ -6074,7 +6093,7 @@ function loadingPage(title, hint, key){
     + '<button class="fp-back" data-action="closePage"><svg class="ico"><use href="#i-back"/></svg></button>'
     + '<div class="fp-title">' + escapeHtml(title) + '</div></div>'
     + '<div class="fp-body"><div class="pf-loading">'
-    + '<div class="pf-spin"></div>'
+    + '<img class="pf-loadimg" src="stk/107.webp" alt="">'
     + '<div class="pf-loading-t">' + escapeHtml(hint) + '</div>'
     + '</div></div></div>');
 }
@@ -7988,24 +8007,38 @@ function openMemoryPage(){
 const STICKERS=['😂','🤣','😍','🥰','😎','🤔','😭','😡','🥺','🤯','😴','🤤',
   '👻','💀','🔥','💯','👍','👎','🙏','👏','🎉','❤️','💔','✨',
   '🐼','🦊','🐱','🐶','🐯','🦁','🐸','🐵'];
+/* WhatsApp 貼圖（圖片），編號對應 stk/NNN.webp */
+const IMG_STICKERS=[1,2,3,5,8,13,15,17,19,25,31,32,33,34,35,38,39,40,41,42,43,44,45,47,49,50,53,55,56,57,58,59,60,66,70,74,78,79,84,89,90,94,97,98,101,102,104,105,107,112,115,123,124,127,128,129,131,136,137,138,147,149,151,152,153,154,155,156,157,158,159,160,161,162,163,167,168,169,170,171,172,174,175,176,177,178,179,181,182,183,184,185,186,187,188,189,190,192,193,194,195,196,197,198,199,201,202,203,204,206,207,208,209,212,213,214,216,217,218,219,220,221,222,223,224,225,226,227,229,230,231,232,233,234,235,236,237,238,240,241,242,243,244,245,246,248,250,251,252,253,259,260,261,267,269,270,273,274,275,276,277];
+function stkUrl(n){ return 'stk/'+String(n).padStart(3,'0')+'.webp'; }
 function openStickerPage(){
   if(!me) return;
   closePlus();
-  openPage({title:'表情包', key:'stickers', bodyHTML:
-    '<div class="card" style="padding:13px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text-sub);line-height:1.7">'
-    + '點一下就發到聊天室，會用大字顯示。</div>'
-    + '<div class="sticker-grid">'+STICKERS.map(function(e){
+  const grid=document.getElementById('stickerGrid');
+  if(grid){
+    grid.innerHTML = STICKERS.map(function(e){
         return '<div class="sticker-cell" data-action="sendSticker" data-arg="'+escAttr(e)+'">'+e+'</div>';
-      }).join('')+'</div>'});
+      }).join('')
+      + IMG_STICKERS.map(function(n){
+        const u=stkUrl(n);
+        return '<div class="sticker-cell" data-action="sendSticker" data-arg="'+escAttr(u)+'"><img loading="lazy" src="'+u+'" alt=""></div>';
+      }).join('');
+  }
+  stickerPanel.classList.remove('hidden');
 }
-async function sendSticker(emoji){
-  if(!me||!emoji) return;
+function closeStickerPanel(){
+  if(!stickerPanel.classList.contains('hidden')) animHide(stickerPanel,'anim-out-panel',160).then(()=>stickerPanel.classList.add('hidden'));
+}
+async function sendSticker(arg){
+  if(!me||!arg) return;
   try{
     const id=await nextMsgId();
-    await set(ref(db,'messages/'+id),{id:id,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',
+    const isImg=/^stk\//.test(arg)||/\.webp$/.test(arg);
+    const payload={id:id,username:me.username,displayName:me.displayName,chiName:me.chiName||'',engName:me.engName||'',
       seat:me.seat,cls:me.cls||'',color:me.color,avatar:me.avatar,role:me.role,
-      text:emoji,type:'sticker',createdAt:Date.now(),deleted:false});
-    setTimeout(function(){ try{ popPage(); }catch(e){} }, 320);
+      type:'sticker',createdAt:Date.now(),deleted:false};
+    if(isImg){ payload.text=''; payload.img=arg; }
+    else { payload.text=arg; }
+    await set(ref(db,'messages/'+id),payload);
   }catch(e){ showNotif('發送失敗'); }
 }
 
@@ -11079,6 +11112,11 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.10',date:'2026-10-30',changes:[
+'表情包改成 WhatsApp 那種底部面板：從輸入列上方彈出、可捲動，不再是一整頁的大框',
+'新增 161 張 WhatsApp 貼圖（圖片貼圖），跟原本的 Emoji 放在同一個面板，點一下發大圖到聊天室',
+'網絡慢、頁面載入的時候，會顯示一張貼圖當載入占位圖',
+]},
 {ver:'v1.39.9',date:'2026-10-30',changes:[
 '修好每天第一次簽到顯示「簽到失敗」、但其實已經簽到的問題：以前寫入簽到記錄之後，加積分那一步用交易，交易出錯就把整個簽到誤判成失敗，記錄其實早就寫好了',
 '現在加積分改用更穩的寫法（交易失敗自動改讀寫一次、且不會把錯誤往外丟），寫入簽到記錄成功就必定算簽到成功',
