@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-xVaPzZm140PPxpMGrByhd5Xh9q/Z71gVlIAhqUcDZ4E=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';base-uri 'none';object-src 'none';form-action 'none';script-src 'self' 'sha256-+sS28aPYAHtdo2Yj4MED7Xv7ZE3sL6iLlY90sDBifV4=' https://www.gstatic.com https://*.firebasedatabase.app;style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https://tile.openstreetmap.org https://www.openstreetmap.org https://oscar114515.github.io;font-src 'self' data:;media-src 'self' data: blob:;connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://note3-prev-api.askdiandian.com https://nominatim.openstreetmap.org https://data.weather.gov.hk https://www.gstatic.com;frame-src 'self' intent: https://meet.jit.si https://*.firebasedatabase.app;worker-src 'self' blob:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>1E 班網站</title>
 <meta name="description" content="1E 班網站：144 位同學的班級空間。小遊戲、排行榜、班級動態、農場。">
@@ -797,13 +797,17 @@ header .right{display:flex;align-items:center;gap:5px;font-size:12px;color:var(-
 .hbtn{background:rgba(148,163,184,.15);color:var(--text-main);border:none;padding:6px 10px;border-radius:var(--r-1);font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;position:relative}
 .hbtn:hover{background:rgba(148,163,184,.3)}
 @media(max-width:520px){header{padding:6px 8px}header .title{font-size:13px}.hbtn{font-size:11px;padding:5px 8px}}
-#noticeBar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(251,191,36,.12);border-bottom:1px solid rgba(251,191,36,.25);flex-shrink:0;font-size:13px;cursor:pointer}
-body.theme-light #noticeBar{background:rgba(251,191,36,.15)}
-#noticeBar .notice-icon{color:var(--gold);font-size:14px;flex-shrink:0;font-weight:700}
-#noticeBar .notice-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#noticeBar .notice-text .label{color:var(--gold);font-weight:600;margin-right:6px}
-#noticeBar .notice-add{background:#fbbf24;color:#1c1917;border:none;width:32px;height:32px;border-radius:var(--r-1);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#noticeBar .notice-pin-count{background:rgba(251,191,36,.3);color:var(--gold);padding:2px 8px;border-radius:var(--r-1);font-size:11px;font-weight:600;flex-shrink:0}
+#todayBar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(56,189,248,.10);border-bottom:1px solid rgba(56,189,248,.22);flex-shrink:0;font-size:13px;min-height:41px}
+body.theme-light #todayBar{background:rgba(37,99,235,.07)}
+#todayBar .tb-icon{flex-shrink:0;font-size:15px}
+#todayBar .tb-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+#todayBar .tb-date{color:var(--text-main);font-weight:600;flex-shrink:0}
+#todayBar .tb-day{color:#38bdf8;font-weight:700;flex-shrink:0;background:rgba(56,189,248,.16);padding:1px 7px;border-radius:var(--r-1);font-size:11px}
+body.theme-light #todayBar .tb-day{color:#1d4ed8;background:rgba(37,99,235,.12)}
+#todayBar .tb-ev{display:inline-flex;align-items:center;gap:4px;min-width:0;overflow:hidden}
+#todayBar .tb-ev i{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+#todayBar .tb-ev span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-sub)}
+#todayBar .tb-empty{color:var(--text-sub)}
 #classStatus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 12px;background:rgba(30,41,59,.5);border-bottom:1px solid var(--border);font-size:11.5px;color:var(--text-sub);flex-shrink:0}
 body.theme-light #classStatus{background:rgba(255,255,255,.7)}
 #classStatus .online{color:var(--ok-tx);font-weight:600}
@@ -2092,10 +2096,9 @@ body.fx-blink .bubble{animation:1s step-end infinite fx-blink-kf}
     </div>
   </header>
 
-  <div id="noticeBar">
-    <span class="notice-icon">[公告]</span>
-    <div class="notice-text" id="noticeText"><span>這裏還沒有公告，你可以申請公告，使用右邊的按鈕</span></div>
-    <button class="notice-add" data-action="openNoticeCreate">+</button>
+  <div id="todayBar">
+    <span class="tb-icon">📅</span>
+    <div class="tb-text" id="todayBarText"></div>
   </div>
 
   <div id="classStatus"></div>
@@ -2149,7 +2152,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, query, orderByChild, ord
 
 const firebaseConfig={apiKey:"AIzaSyCO0QP8S01jrmSeTWg2_UxOwDM4jsFya0o",authDomain:"e-fb-a5b1d.firebaseapp.com",databaseURL:"https://e-fb-a5b1d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"e-fb-a5b1d",storageBucket:"e-fb-a5b1d.firebasestorage.app",messagingSenderId:"88151080220",appId:"1:88151080220:web:f524696c3cac1618d68ed9"};
 const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-const CURRENT_VERSION='v1.39.7';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
+const CURRENT_VERSION='v1.39.8';   // 一次部署只在尾數 +1：v1.38 → v1.38.1 → v1.38.2；極重大改動才進到 v1.39（見上方規則）
 /** 標題與登入頁的版本號一律跟著 CURRENT_VERSION，不要寫死在 HTML（以前就是這樣停在 v1.21）。 */
 function syncVersionText(){
   try{
@@ -2401,7 +2404,7 @@ const loginUsername=$('loginUsername'),loginPassword=$('loginPassword'),loginBtn
 const chatBox=$('chatBox'),msgInput=$('msgInput'),sendBtn=$('sendBtn');
 const classStatus=$('classStatus'),searchInput=$('searchInput');
 const mentionPopup=$('mentionPopup');
-const pageRoot=$('pageRoot'),noticeBar=$('noticeBar');
+const pageRoot=$('pageRoot');
 const plusPanel=$('plusPanel'),plusBtn=$('plusBtn');
 const encToggle=$('encToggle'),encCheckbox=$('encCheckbox');
 const aiRoundBtn=$('aiRoundBtn');
@@ -2789,7 +2792,7 @@ async function purgeStalePresence(){
   }catch(e){}
 }
 window.addEventListener('beforeunload',()=>{ if(me)remove(ref(db,'presence/'+me.username)).catch(()=>{}); });
-document.addEventListener('visibilitychange',()=>{ if(me&&!document.hidden)heartbeatLoop(); });
+document.addEventListener('visibilitychange',()=>{ if(me&&!document.hidden){heartbeatLoop();try{renderTodayBar();}catch(e){}} });
 
 async function ensureAIUser(){ const snap=await get(child(ref(db),'users/'+AI_NAME));if(!snap.exists()){await set(ref(db,'users/'+AI_NAME),{username:AI_NAME,displayName:AI_NAME,seat:0,color:AI_COLOR,role:'ai',avatar:'AI',bio:AI_BIO_DEFAULT,allowCantonese:false,createdAt:Date.now(),hasLoggedIn:true});} }
 async function toggleAI(){ if(!me)return;myAIOn=!myAIOn;try{await set(ref(db,'aiMode/'+me.username),myAIOn);}catch(e){}if(aiRoundBtn)aiRoundBtn.classList.toggle('on',myAIOn);showNotif(myAIOn?'AI 已開啟':'AI 已關閉'); }
@@ -3131,6 +3134,7 @@ function enterChat(){
   if(me.role==='superadmin'||me.role==='admin')navAdminBtn.classList.remove('hidden');else navAdminBtn.classList.add('hidden');
   subscribeMessages();subscribeUsers();subscribePresence();
   subscribeNotices();subscribeAllNoticeReads();
+  renderTodayBar();
   subscribePendingNotices();subscribeRequests();subscribeFeedbacks();subscribeMyRejections();
   subscribeSystemNotices();subscribeThanks();subscribeMeta();subscribeAIModeMap();
   watchPairing();
@@ -3371,6 +3375,7 @@ document.addEventListener('click',async(e)=>{
     if(action==='noticeCarousel')return noticeCarouselStep(parseInt(arg,10)||1);
     if(action==='openNoticeCreate')return openNoticeCreate();
     if(action==='openNoticeDetail')return openNoticeFullscreen(arg);
+    if(action==='openNoticeList')return openNoticeList();
     if(action==='togglePlus')return togglePlus();
     if(action==='pickImage')return pickImage();
     if(action==='pickFile')return pickFile();
@@ -3512,7 +3517,7 @@ function subscribeMessages(){
 }
 function subscribeUsers(){ if(unsubUsers)unsubUsers();unsubUsers=onValue(ref(db,'users'),snap=>{allUsers=snap.val()||{};renderClassStatus();refreshWhoRender();}); }
 function subscribePresence(){ if(unsubPresence)unsubPresence();unsubPresence=onValue(ref(db,'presence'),snap=>{presence=snap.val()||{};renderClassStatus();}); }
-function subscribeNotices(){ if(unsubNotices)unsubNotices();unsubNotices=onValue(ref(db,'notices'),snap=>{const val=snap.val()||{};notices=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(n=>!n.deleted).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));renderNoticeBar();}); }
+function subscribeNotices(){ if(unsubNotices)unsubNotices();unsubNotices=onValue(ref(db,'notices'),snap=>{const val=snap.val()||{};notices=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(n=>!n.deleted).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));}); }
 function subscribeAllNoticeReads(){ if(unsubAllNoticeReads)unsubAllNoticeReads();unsubAllNoticeReads=onValue(ref(db,'noticeReads'),snap=>{allNoticeReads=snap.val()||{};}); }
 function subscribePendingNotices(){ if(unsubPendingNotices)unsubPendingNotices();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubPendingNotices=onValue(ref(db,'noticePending'),snap=>{const val=snap.val()||{};pendingNotices=Object.keys(val).map(k=>({_key:k,...val[k]})).filter(p=>p.status==='pending').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));updateAdminBadge();}); }
 function subscribeRequests(){ if(unsubRequests)unsubRequests();if(!me||(me.role!=='superadmin'&&me.role!=='admin'))return;unsubRequests=onValue(ref(db,'requests'),snap=>{requests=snap.val()||{};for(const k in requests)if(typeof requests[k]==='object')requests[k]._key=k;updateAdminBadge();}); }
@@ -3567,16 +3572,140 @@ function renderClassStatus(){
   const onlineList=Object.keys(presence).filter(u=>isOnline(u));
   classStatus.innerHTML=`<span class="online online-pill" data-action="showOnlineList">線上 ${onlineList.length}</span>`;
 }
-function renderNoticeBar(){
+/* ═══ 校曆：今天欄（公共聊天室頂部）═══
+   資料與 schcal.html 同一來源；只有「循環日」是來源有標註的日子（約 10 天），
+   星期六日或來源沒標註 → Day 欄留空。 */
+const SCHOOL_EV = [
+ ["2026-09-01","2026-09-01","special","開學彌撒"],
+ ["2026-09-04","2026-09-04","special","中一生活營"],
+ ["2026-09-24","2026-09-24","event","水運會"],
+ ["2026-09-25","2026-09-25","stu","水運會翌日"],
+ ["2026-09-26","2026-09-26","pub","中秋節翌日"],
+ ["2026-10-01","2026-10-01","pub","國慶日"],
+ ["2026-10-14","2026-10-14","event","陸運會（第一天）"],
+ ["2026-10-19","2026-10-19","stu","重陽節翌日"],
+ ["2026-10-20","2026-10-22","exam","進展性評估"],
+ ["2026-10-24","2026-10-24","event","校友日"],
+ ["2026-10-29","2026-10-29","event","陸運會（第二天）"],
+ ["2026-10-30","2026-10-30","stu","陸運會翌日"],
+ ["2026-11-07","2026-11-07","event","家長教師會周年大會暨家長日"],
+ ["2026-11-09","2026-11-12","event","藝術週"],
+ ["2026-11-13","2026-11-13","event","越野賽"],
+ ["2026-11-15","2026-11-15","event","明愛賣物會"],
+ ["2026-11-18","2026-11-18","event","校際越野賽（第一組別）"],
+ ["2026-11-21","2026-11-21","event","資訊日暨入學講座"],
+ ["2026-11-23","2026-11-23","event","資訊日翌日"],
+ ["2026-12-04","2026-12-04","sdd","教師發展日"],
+ ["2026-12-07","2026-12-21","exam","中一至中五學年考試"],
+ ["2026-12-18","2026-12-18","event","中六活動日"],
+ ["2026-12-22","2026-12-22","event","聖誕慶祝活動"],
+ ["2026-12-23","2026-12-31","long","聖誕及新年假期"],
+ ["2027-01-01","2027-01-01","pub","元旦"],
+ ["2027-01-02","2027-01-02","long","聖誕及新年假期"],
+ ["2027-01-11","2027-01-22","exam","中六畢業試"],
+ ["2027-01-11","2027-01-15","event","中四外展訓練課程"],
+ ["2027-01-29","2027-01-29","event","第一次中三家長晚會"],
+ ["2027-01-31","2027-01-31","event","家長日（上課日）"],
+ ["2027-02-01","2027-02-01","pub","家長日補假"],
+ ["2027-02-02","2027-02-13","long","農曆新年假期"],
+ ["2027-02-18","2027-02-18","event","校際田徑賽（第一組別）"],
+ ["2027-02-20","2027-02-20","event","中三模擬選科"],
+ ["2027-02-23","2027-02-23","event","校際田徑賽（第一組別）"],
+ ["2027-02-26","2027-02-26","event","校際田徑賽（第一組別）"],
+ ["2027-03-01","2027-03-04","event","派發中六畢業試試卷"],
+ ["2027-03-05","2027-03-05","event","中一廣泛學習日"],
+ ["2027-03-06","2027-03-06","event","中一面試日"],
+ ["2027-03-07","2027-03-07","event","家教會野餐"],
+ ["2027-03-08","2027-03-08","event","中一面試日翌日"],
+ ["2027-03-16","2027-03-16","sdd","第二次教師發展日"],
+ ["2027-03-19","2027-03-19","event","派發中六成績表"],
+ ["2027-03-17","2027-03-19","exam","統一測驗"],
+ ["2027-03-22","2027-03-23","exam","統一測驗"],
+ ["2027-03-24","2027-03-24","event","四旬期禮儀"],
+ ["2027-03-25","2027-03-31","long","復活節假期"],
+ ["2027-04-01","2027-04-03","long","復活節假期"],
+ ["2027-04-05","2027-04-05","pub","清明節"],
+ ["2027-04-28","2027-04-29","exam","中三 TSA（說話考試）"],
+ ["2027-04-30","2027-04-30","event","第二次中三家長晚會"],
+ ["2027-05-01","2027-05-01","pub","勞動節"],
+ ["2027-05-06","2027-05-06","event","第二次捐血活動"],
+ ["2027-05-10","2027-05-12","event","校成就展暨價值教育展示"],
+ ["2027-05-13","2027-05-13","pub","佛誕"],
+ ["2027-05-31","2027-05-31","sdd","第三次教師發展日"],
+ ["2027-06-01","2027-06-16","exam","中一至中五期末考試"],
+ ["2027-06-09","2027-06-09","stu","端午節"],
+ ["2027-06-17","2027-06-24","event","派發期末試卷"],
+ ["2027-06-17","2027-06-18","exam","中三 TSA（紙筆考試）"],
+ ["2027-07-01","2027-07-01","pub","香港特區成立紀念日"],
+ ["2027-07-09","2027-07-09","event","派發中三成績表"],
+ ["2027-07-12","2027-07-12","event","畢業禮綵排暨升學就業講座"],
+ ["2027-07-12","2027-07-12","event","畢業暨頒獎典禮"],
+ ["2027-07-14","2027-07-14","event","文憑試放榜"],
+ ["2027-07-14","2027-07-14","event","中三選科"],
+ ["2027-07-16","2027-07-16","event","感恩彌撒及註冊"],
+ ["2027-07-16","2027-07-16","event","派發成績表"],
+ ["2027-07-19","2027-07-31","long","暑假"],
+ ["2027-08-01","2027-08-31","long","暑假"],
+];
+const SCHOOL_CYCLE = {
+ "2026-09-01":"I",
+ "2026-09-04":"I",
+ "2026-09-24":"IV",
+ "2026-09-25":"IV",
+ "2026-10-14":"III",
+ "2026-10-29":"V",
+ "2026-11-13":"V",
+ "2026-11-18":"IV",
+ "2026-11-23":"II",
+ "2026-12-04":"IV",
+};
+const SCHOOL_CAT_COLOR = { pub:'#ef4444', stu:'#f59e0b', long:'#fbbf24', exam:'#22c55e', sdd:'#8b5cf6', special:'#06b6d4', event:'#3b82f6' };
+function schoolDayInfo(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  const k=y+'-'+m+'-'+dd;
+  const evs=[];
+  for(let i=0;i<SCHOOL_EV.length;i++){
+    const e=SCHOOL_EV[i];
+    if(k>=e[0] && k<=e[1]) evs.push({cat:e[2], zh:e[3]});
+  }
+  return { key:k, cyc:SCHOOL_CYCLE[k]||'', evs:evs };
+}
+function renderTodayBar(){
+  const el=document.getElementById('todayBarText'); if(!el) return;
+  const now=new Date();
+  const wd=['日','一','二','三','四','五','六'][now.getDay()];
+  const info=schoolDayInfo(now);
+  let h='<span class="tb-date">'+(now.getMonth()+1)+'月'+now.getDate()+'日 星期'+wd+'</span>';
+  if(info.cyc) h+='<span class="tb-day">Day '+info.cyc+'</span>';
+  if(info.evs.length){
+    const shown=info.evs.slice(0,2);
+    shown.forEach(function(e){
+      const c=SCHOOL_CAT_COLOR[e.cat]||'#3b82f6';
+      h+='<span class="tb-ev"><i style="background:'+c+'"></i><span>'+escapeHtml(e.zh)+'</span></span>';
+    });
+    if(info.evs.length>2) h+='<span class="tb-ev"><span>+'+(info.evs.length-2)+'</span></span>';
+  }
+  el.innerHTML=h;
+}
+/* 公告入口移入個人主頁（v1.39.8）：原公告欄位置改為今天欄 */
+function openNoticeList(){
+  const list=notices.filter(n=>!n.deleted);
+  if(list.length===0){ showNotif('還沒有公告'); return; }
+  const sorted=list.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  openNoticeFullscreen(sorted[0]._key, sorted);
+}
+function noticeRowHTML(){
   const active=notices.filter(n=>!n.deleted);
-  if(active.length===0){noticeBar.innerHTML=`<span class="notice-icon">[公告]</span><div class="notice-text" style="color:var(--text-sub)">這裏還沒有公告，你可以申請公告，使用右邊的按鈕</div><button class="notice-add" data-action="openNoticeCreate">+</button>`;return;}
-  const pinned=active.filter(n=>n.pinned);
-  const latest=active.filter(n=>!n.pinned).sort((a,b)=>b.createdAt-a.createdAt)[0];
-  let html='<span class="notice-icon">[公告]</span>';
-  if(pinned.length>0){html+=`<span class="notice-pin-count" data-action="openPinnedList" style="cursor:pointer">置頂 x${pinned.length}</span>`;}
-  if(latest){const preview=(latest.text||'').slice(0,50);html+=`<div class="notice-text" data-action="openNoticeDetail" data-arg="${escAttr(latest._key)}" style="cursor:pointer"><span class="label">最新：</span>${escapeHtml(preview)}</div>`;}
-  html+=`<button class="notice-add" data-action="openNoticeCreate">+</button>`;
-  noticeBar.innerHTML=html;
+  if(active.length===0){
+    return '<div class="about-item" data-action="openNoticeCreate"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-megaphone"/></svg></div><div><div class="ai-title">公告</div><div class="ai-sub">還沒有公告，點此申請</div></div></div><div class="ai-arrow">›</div></div>';
+  }
+  const sorted=active.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  const latest=sorted[0];
+  const pinned=active.filter(n=>n.pinned).length;
+  const rawText=latest.text||(latest.html?String(latest.html).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim():'');
+  const preview=rawText.slice(0,30);
+  const sub=(pinned>0?'置頂 x'+pinned+' · ':'')+(preview||'（圖文公告）');
+  return '<div class="about-item" data-action="openNoticeList"><div class="ai-left"><div class="ai-icon"><svg class="ico"><use href="#i-megaphone"/></svg></div><div><div class="ai-title">公告</div><div class="ai-sub">'+escapeHtml(sub)+'</div></div></div><div class="ai-arrow">›</div></div>';
 }
 async function openPinnedList(){ const pinned=notices.filter(n=>n.pinned&&!n.deleted);if(pinned.length===0)return;openNoticeFullscreen(pinned[0]._key,pinned); }
 async function openNoticeFullscreen(key,customList){
@@ -9146,6 +9275,8 @@ async function openProfilePage(username,isSelf,fromAdmin){
       +'<div class="section-title">班級</div>'
       +aiRow('班級動態', allMoments.length+' 則', 'openMomentsPage', 'megaphone')
       +aiRow('留言板', '', 'openGuestbookPage2', 'msg')
+      +'<div class="section-title">公告</div>'
+      +noticeRowHTML()
       +'<details class="about-grp"><summary><span class="ag-ico">⋯</span><span>更多</span><span class="ag-n">15</span><span class="ag-a">›</span></summary><div class="ag-body">'
       +aiRow('今日狀態', statusText(me)||'未設定（24 小時消失）', 'openStatusPage', 'bell')
       +aiRow('金句牆', allQuotes.length+' 句', 'openQuoteWall', 'heart')
@@ -10953,6 +11084,10 @@ function closeTrailMap(){
    就算連續幾次部署都是修 bug，也只是 v1.38.1、v1.38.2、v1.38.3，不要跳。
    所以下面一版就是一版，不要把同一次部署拆成兩條記錄。 */
 const VERSION_HISTORY=[
+{ver:'v1.39.8',date:'2026-10-30',changes:[
+'公共聊天室頂部新增「今天」欄：顯示今天日期、循環日（Day 幾，只顯示校曆有標註的日子）與今天有甚麼特別事，顏色跟校曆一致',
+'公告從公共聊天室頂部移到個人主頁：個人主頁多一個「公告」入口，看得到最新公告，點開看全部',
+]},
 {ver:'v1.39.7',date:'2026-10-29',changes:[
 '新增「校曆」小工具：2026–27 全年校曆，考試、假期、活動按顏色分類顯示，今天會自動標出，點任何日期看當天詳情',
 '今日焦點：打開就見到今天是甚麼日子、接下來幾件大事（考試、長假、活動）',
